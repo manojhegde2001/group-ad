@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { Input, Password, Button, Text } from 'rizzui';
+import { Input } from '@/components/ui/input';
+import { Password } from '@/components/ui/password';
+import { Button } from '@/components/ui/button';
+import { Alert } from '@/components/ui/alert';
 import { Mail, Lock } from 'lucide-react';
 
 export function LoginForm() {
@@ -33,43 +36,38 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          prefix={<Mail className="w-4 h-4" />}
-          required
-          className="w-full"
-        />
-      </div>
-
-      <div>
-        <Password
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          prefix={<Lock className="w-4 h-4" />}
-          required
-          className="w-full"
-        />
-      </div>
-
       {error && (
-        <Text className="text-red-500 text-sm">{error}</Text>
+        <Alert variant="danger" closable onClose={() => setError('')}>
+          {error}
+        </Alert>
       )}
 
-      <Button
-        type="submit"
-        className="w-full bg-primary hover:bg-primary-600"
-        isLoading={loading}
-      >
-        Login
+      <Input
+        type="email"
+        label="Email"
+        placeholder="Enter your email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        prefix={<Mail className="w-4 h-4" />}
+        required
+        autoFocus
+      />
+
+      <Password
+        label="Password"
+        placeholder="Enter your password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        prefix={<Lock className="w-4 h-4" />}
+        required
+      />
+
+      <Button type="submit" fullWidth isLoading={loading}>
+        {loading ? 'Signing in...' : 'Sign In'}
       </Button>
 
       <div className="text-center">
-        <Text className="text-sm text-secondary-600 dark:text-secondary-400">
+        <p className="text-sm text-secondary-600 dark:text-secondary-400">
           Don't have an account?{' '}
           <button
             type="button"
@@ -78,7 +76,7 @@ export function LoginForm() {
           >
             Sign up
           </button>
-        </Text>
+        </p>
       </div>
     </form>
   );

@@ -3,9 +3,24 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { Input, Password, Button, Text, Select } from 'rizzui';
-import { Mail, Lock, User, AtSign, Briefcase } from 'lucide-react';
-import { CATEGORIES, COMPANY_SIZES, TURNOVER_RANGES } from '@/lib/constants';
+import { Input } from '@/components/ui/input';
+import { Password } from '@/components/ui/password';
+import { Select, SelectOption } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Alert } from '@/components/ui/alert';
+import { Mail, Lock, User, AtSign } from 'lucide-react';
+
+const CATEGORIES: SelectOption[] = [
+  { label: 'Technology', value: 'Technology' },
+  { label: 'Healthcare', value: 'Healthcare' },
+  { label: 'Finance', value: 'Finance' },
+  { label: 'Education', value: 'Education' },
+  { label: 'Retail', value: 'Retail' },
+  { label: 'Real Estate', value: 'Real Estate' },
+  { label: 'Food & Beverage', value: 'Food & Beverage' },
+  { label: 'Entertainment', value: 'Entertainment' },
+  { label: 'Other', value: 'Other' },
+];
 
 export function SignupForm() {
   const [formData, setFormData] = useState({
@@ -14,11 +29,6 @@ export function SignupForm() {
     name: '',
     username: '',
     category: '',
-    userType: 'INDIVIDUAL' as 'INDIVIDUAL' | 'BUSINESS',
-    companyName: '',
-    turnover: '',
-    companySize: '',
-    industry: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,6 +46,7 @@ export function SignupForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -53,11 +64,22 @@ export function SignupForm() {
     }
   };
 
+  const handleCategoryChange = (value: string) => {
+    setFormData({ ...formData, category: value });
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="danger" closable onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
       <Input
         type="text"
-        placeholder="Full Name"
+        label="Full Name"
+        placeholder="Enter your full name"
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         prefix={<User className="w-4 h-4" />}
@@ -66,7 +88,8 @@ export function SignupForm() {
 
       <Input
         type="text"
-        placeholder="Username"
+        label="Username"
+        placeholder="Choose a username"
         value={formData.username}
         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
         prefix={<AtSign className="w-4 h-4" />}
@@ -75,7 +98,8 @@ export function SignupForm() {
 
       <Input
         type="email"
-        placeholder="Email"
+        label="Email"
+        placeholder="Enter your email"
         value={formData.email}
         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         prefix={<Mail className="w-4 h-4" />}
@@ -83,7 +107,8 @@ export function SignupForm() {
       />
 
       <Password
-        placeholder="Password"
+        label="Password"
+        placeholder="Create a password"
         value={formData.password}
         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
         prefix={<Lock className="w-4 h-4" />}
@@ -91,85 +116,30 @@ export function SignupForm() {
       />
 
       <Select
-        options={CATEGORIES.map(cat => ({ label: cat, value: cat }))}
+        label="Category"
+        options={CATEGORIES}
         value={formData.category}
-        onChange={(value:any) => setFormData({ ...formData, category: value as string })}
-        placeholder="Select Category *"
-        className="w-full"
+        onChange={handleCategoryChange}
+        placeholder="Select your category"
+        searchable
+        required
       />
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => setFormData({ ...formData, userType: 'INDIVIDUAL' })}
-          className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
-            formData.userType === 'INDIVIDUAL'
-              ? 'border-primary bg-primary/10 text-primary'
-              : 'border-secondary-300 dark:border-secondary-700'
-          }`}
-        >
-          Individual
-        </button>
-        <button
-          type="button"
-          onClick={() => setFormData({ ...formData, userType: 'BUSINESS' })}
-          className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
-            formData.userType === 'BUSINESS'
-              ? 'border-primary bg-primary/10 text-primary'
-              : 'border-secondary-300 dark:border-secondary-700'
-          }`}
-        >
-          Business
-        </button>
-      </div>
-
-      {formData.userType === 'BUSINESS' && (
-        <>
-          <Input
-            type="text"
-            placeholder="Company Name"
-            value={formData.companyName}
-            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            prefix={<Briefcase className="w-4 h-4" />}
-          />
-
-          <Select
-            options={TURNOVER_RANGES.map(t => ({ label: t, value: t }))}
-            value={formData.turnover}
-            onChange={(value:any) => setFormData({ ...formData, turnover: value as string })}
-            placeholder="Annual Turnover"
-          />
-
-          <Select
-            options={COMPANY_SIZES.map(s => ({ label: s, value: s }))}
-            value={formData.companySize}
-            onChange={(value:any) => setFormData({ ...formData, companySize: value as string })}
-            placeholder="Company Size"
-          />
-        </>
-      )}
-
-      {error && <Text className="text-red-500 text-sm">{error}</Text>}
-
-      <Button
-        type="submit"
-        className="w-full bg-primary hover:bg-primary-600"
-        isLoading={loading}
-      >
-        Create Account
+      <Button type="submit" fullWidth isLoading={loading}>
+        {loading ? 'Creating account...' : 'Create Account'}
       </Button>
 
       <div className="text-center">
-        <Text className="text-sm text-secondary-600 dark:text-secondary-400">
+        <p className="text-sm text-secondary-600 dark:text-secondary-400">
           Already have an account?{' '}
           <button
             type="button"
             onClick={() => setMode('login')}
             className="text-primary hover:underline font-medium"
           >
-            Login
+            Sign in
           </button>
-        </Text>
+        </p>
       </div>
     </form>
   );

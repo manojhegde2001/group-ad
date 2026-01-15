@@ -17,6 +17,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Extract string values from Select component objects
+    const categoryValue = typeof category === 'object' ? category.value : category;
+    const turnoverValue = typeof turnover === 'object' ? turnover?.value : turnover;
+    const companySizeValue = typeof companySize === 'object' ? companySize?.value : companySize;
+
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -41,11 +46,11 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         name,
         username,
-        category,
+        category: categoryValue,
         userType: userType || 'INDIVIDUAL',
         companyName: userType === 'BUSINESS' ? companyName : undefined,
-        turnover: userType === 'BUSINESS' ? turnover : undefined,
-        companySize: userType === 'BUSINESS' ? companySize : undefined,
+        turnover: userType === 'BUSINESS' ? turnoverValue : undefined,
+        companySize: userType === 'BUSINESS' ? companySizeValue : undefined,
         industry: userType === 'BUSINESS' ? industry : undefined,
       },
       select: {

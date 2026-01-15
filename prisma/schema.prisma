@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+enum AccountVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum PostType {
+  IMAGE
+  TEXT
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  password  String
+  name      String
+  username  String   @unique
+  avatar    String?
+  bio       String?
+  
+  userType  UserType @default(INDIVIDUAL)
+  visibility AccountVisibility @default(PUBLIC)
+  
+  category  String
+  
+  companyName    String?
+  turnover       String?
+  companySize    String?
+  industry       String?
+  gstNumber      String?
+  
+  posts          Post[]
+  sentConnections     Connection[] @relation("ConnectionSender")
+  receivedConnections Connection[] @relation("ConnectionReceiver")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([category])
+}
+
+model Post {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  type        PostType
+  content     String
+  images      String[]
+  category    String
+  tags        String[]
+  
+  visibility  AccountVisibility @default(PUBLIC)
+  
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  shares      Int      @default(0)
+  
+  authorId    String   @db.ObjectId
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([authorId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Connection {
+  id         String           @id @default(auto()) @map("_id") @db.ObjectId
+  status     ConnectionStatus @default(PENDING)
+  
+  senderId   String           @db.ObjectId
+  sender     User             @relation("ConnectionSender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId String           @db.ObjectId
+  receiver   User             @relation("ConnectionReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+}

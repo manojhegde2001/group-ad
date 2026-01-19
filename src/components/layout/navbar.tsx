@@ -7,6 +7,7 @@ import { LogIn, LogOut, User, Settings, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
+import Logo from '../ui/logo';
 
 export function Navbar() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -48,10 +49,7 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">GA</span>
-            </div>
-            <span className="text-xl font-bold hidden sm:block">Group Ad</span>
+            <Logo className="w-32 h-8" />
           </Link>
 
           {/* Right Side */}

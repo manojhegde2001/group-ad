@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { Input, Select, Button } from 'rizzui';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User } from '@prisma/client';
 import { Save } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
+import { ProfileUser } from '@/types';
 
 const businessInfoSchema = z.object({
-  companyName: z.string().min(2, 'Company name is required'),
+  companyName: z.string().min(2, 'Company name is required').optional(),
   industry: z.string().optional(),
   companySize: z.string().optional(),
   turnover: z.string().optional(),
@@ -22,7 +22,7 @@ const businessInfoSchema = z.object({
 type BusinessInfoFormData = z.infer<typeof businessInfoSchema>;
 
 interface BusinessInfoTabProps {
-  user: User;
+  user: ProfileUser;
 }
 
 export default function BusinessInfoTab({ user }: BusinessInfoTabProps) {
@@ -31,17 +31,14 @@ export default function BusinessInfoTab({ user }: BusinessInfoTabProps) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isDirty },
   } = useForm<BusinessInfoFormData>({
     resolver: zodResolver(businessInfoSchema),
     defaultValues: {
-      companyName: user.companyName || '',
       industry: user.industry || '',
       companySize: user.companySize || '',
       turnover: user.turnover || '',
-      gstNumber: user.gstNumber || '',
-      establishedYear: user.establishedYear || '',
-      companyWebsite: user.companyWebsite || '',
     },
   });
 
@@ -57,6 +54,7 @@ export default function BusinessInfoTab({ user }: BusinessInfoTabProps) {
       if (!response.ok) throw new Error('Failed to update business info');
 
       Toast.success('Business information updated successfully');
+      window.location.reload();
     } catch (error) {
       Toast.error('Failed to update business information');
     } finally {
@@ -66,64 +64,74 @@ export default function BusinessInfoTab({ user }: BusinessInfoTabProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+      {/* Company Info */}
+      {user.company && (
+        <div className="bg-secondary-50 dark:bg-secondary-900 rounded-lg p-4 mb-4">
+          <p className="text-sm text-secondary-600 dark:text-secondary-400 mb-1">
+            Linked Company
+          </p>
+          <p className="font-semibold text-secondary-900 dark:text-white">
+            {user.company.name}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
-          label="Company Name"
-          placeholder="Enter company name"
-          {...register('companyName')}
-          error={errors.companyName?.message}
-        />
-
-        <Input
           label="Industry"
-          placeholder="e.g., Technology, Manufacturing"
+          placeholder="e.g., Technology, Healthcare"
           {...register('industry')}
           error={errors.industry?.message}
         />
 
-        <Input
-          label="Company Size"
-          placeholder="e.g., 10-50 employees"
-          {...register('companySize')}
-          error={errors.companySize?.message}
-        />
-
-        <Input
-          label="Annual Turnover"
-          placeholder="e.g., $1M - $5M"
-          {...register('turnover')}
-          error={errors.turnover?.message}
-        />
-
-        <Input
-          label="GST Number"
-          placeholder="Enter GST number"
-          {...register('gstNumber')}
-          error={errors.gstNumber?.message}
-        />
-
-        <Input
-          label="Established Year"
-          placeholder="e.g., 2020"
-          {...register('establishedYear')}
-          error={errors.establishedYear?.message}
-        />
-
-        <Input
-          label="Company Website"
-          placeholder="https://company.com"
-          className="md:col-span-2"
-          {...register('companyWebsite')}
-          error={errors.companyWebsite?.message}
+        <Controller
+          name="companySize"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Company Size"
+              value={field.value}
+              onChange={field.onChange}
+              options={[
+                { label: '1-10 employees', value: '1-10' },
+                { label: '11-50 employees', value: '11-50' },
+                { label: '51-200 employees', value: '51-200' },
+                { label: '201-500 employees', value: '201-500' },
+                { label: '501-1000 employees', value: '501-1000' },
+                { label: '1000+ employees', value: '1000+' },
+              ]}
+              error={errors.companySize?.message}
+            />
+          )}
         />
       </div>
 
-      <div className="flex justify-end">
+      <Controller
+        name="turnover"
+        control={control}
+        render={({ field }) => (
+          <Select
+            label="Annual Turnover"
+            value={field.value}
+            onChange={field.onChange}
+            options={[
+              { label: 'Less than 1 Cr', value: '<1cr' },
+              { label: '1-5 Cr', value: '1-5cr' },
+              { label: '5-10 Cr', value: '5-10cr' },
+              { label: '10-50 Cr', value: '10-50cr' },
+              { label: '50-100 Cr', value: '50-100cr' },
+              { label: '100+ Cr', value: '100+cr' },
+            ]}
+            error={errors.turnover?.message}
+          />
+        )}
+      />
+
+      <div className="flex justify-end gap-3">
         <Button
           type="submit"
           isLoading={isLoading}
-          disabled={!isDirty}
-          className="min-w-[120px]"
+          disabled={!isDirty || isLoading}
         >
           <Save className="w-4 h-4 mr-2" />
           Save Changes

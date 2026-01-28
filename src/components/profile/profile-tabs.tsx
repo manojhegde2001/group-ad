@@ -1,15 +1,14 @@
 'use client';
-
 import { Tab } from 'rizzui';
 import { User, Building2, Shield, Link2 } from 'lucide-react';
-import { User as UserType } from '@prisma/client';
 import BasicInfoTab from './tabs/basic-info-tab';
 import BusinessInfoTab from './tabs/business-info-tab';
 import AccountSettingsTab from './tabs/account-settings-tab';
 import SocialLinksTab from './tabs/social-links-tab';
+import { ProfileUser } from '@/types';
 
 interface ProfileTabsProps {
-  user: UserType;
+  user: ProfileUser;
 }
 
 export default function ProfileTabs({ user }: ProfileTabsProps) {
@@ -21,19 +20,16 @@ export default function ProfileTabs({ user }: ProfileTabsProps) {
             <User className="w-4 h-4 mr-2" />
             Basic Info
           </Tab.ListItem>
-
           {user.userType === 'BUSINESS' && (
             <Tab.ListItem>
               <Building2 className="w-4 h-4 mr-2" />
               Business Info
             </Tab.ListItem>
           )}
-
           <Tab.ListItem>
             <Link2 className="w-4 h-4 mr-2" />
             Social Links
           </Tab.ListItem>
-
           <Tab.ListItem>
             <Shield className="w-4 h-4 mr-2" />
             Settings
@@ -44,17 +40,14 @@ export default function ProfileTabs({ user }: ProfileTabsProps) {
           <Tab.Panel>
             <BasicInfoTab user={user} />
           </Tab.Panel>
-
           {user.userType === 'BUSINESS' && (
             <Tab.Panel>
               <BusinessInfoTab user={user} />
             </Tab.Panel>
           )}
-
           <Tab.Panel>
             <SocialLinksTab user={user} />
           </Tab.Panel>
-
           <Tab.Panel>
             <AccountSettingsTab user={user} />
           </Tab.Panel>

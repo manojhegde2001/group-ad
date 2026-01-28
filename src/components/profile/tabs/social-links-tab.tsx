@@ -5,9 +5,9 @@ import { Input, Button } from 'rizzui';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User } from '@prisma/client';
 import { Linkedin, Twitter, Facebook, Instagram, Save } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
+import { ProfileUser } from '@/types';
 
 const socialLinksSchema = z.object({
   linkedin: z.string().url('Invalid URL').optional().or(z.literal('')),
@@ -19,7 +19,7 @@ const socialLinksSchema = z.object({
 type SocialLinksFormData = z.infer<typeof socialLinksSchema>;
 
 interface SocialLinksTabProps {
-  user: User;
+  user: ProfileUser;
 }
 
 export default function SocialLinksTab({ user }: SocialLinksTabProps) {
@@ -51,6 +51,7 @@ export default function SocialLinksTab({ user }: SocialLinksTabProps) {
       if (!response.ok) throw new Error('Failed to update social links');
 
       Toast.success('Social links updated successfully');
+      window.location.reload();
     } catch (error) {
       Toast.error('Failed to update social links');
     } finally {
@@ -60,46 +61,43 @@ export default function SocialLinksTab({ user }: SocialLinksTabProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-      <div className="space-y-4">
-        <Input
-          label="LinkedIn Profile"
-          placeholder="https://linkedin.com/in/username"
-          prefix={<Linkedin className="w-4 h-4 text-blue-600" />}
-          {...register('linkedin')}
-          error={errors.linkedin?.message}
-        />
+      <Input
+        label="LinkedIn"
+        placeholder="https://linkedin.com/in/username"
+        prefix={<Linkedin className="w-4 h-4 text-secondary-500" />}
+        {...register('linkedin')}
+        error={errors.linkedin?.message}
+      />
 
-        <Input
-          label="Twitter Profile"
-          placeholder="https://twitter.com/username"
-          prefix={<Twitter className="w-4 h-4 text-sky-500" />}
-          {...register('twitter')}
-          error={errors.twitter?.message}
-        />
+      <Input
+        label="Twitter"
+        placeholder="https://twitter.com/username"
+        prefix={<Twitter className="w-4 h-4 text-secondary-500" />}
+        {...register('twitter')}
+        error={errors.twitter?.message}
+      />
 
-        <Input
-          label="Facebook Profile"
-          placeholder="https://facebook.com/username"
-          prefix={<Facebook className="w-4 h-4 text-blue-700" />}
-          {...register('facebook')}
-          error={errors.facebook?.message}
-        />
+      <Input
+        label="Facebook"
+        placeholder="https://facebook.com/username"
+        prefix={<Facebook className="w-4 h-4 text-secondary-500" />}
+        {...register('facebook')}
+        error={errors.facebook?.message}
+      />
 
-        <Input
-          label="Instagram Profile"
-          placeholder="https://instagram.com/username"
-          prefix={<Instagram className="w-4 h-4 text-pink-600" />}
-          {...register('instagram')}
-          error={errors.instagram?.message}
-        />
-      </div>
+      <Input
+        label="Instagram"
+        placeholder="https://instagram.com/username"
+        prefix={<Instagram className="w-4 h-4 text-secondary-500" />}
+        {...register('instagram')}
+        error={errors.instagram?.message}
+      />
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
         <Button
           type="submit"
           isLoading={isLoading}
-          disabled={!isDirty}
-          className="min-w-[120px]"
+          disabled={!isDirty || isLoading}
         >
           <Save className="w-4 h-4 mr-2" />
           Save Changes

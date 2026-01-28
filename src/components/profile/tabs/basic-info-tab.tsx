@@ -5,9 +5,9 @@ import { Input, Textarea, Button, Select } from 'rizzui';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User } from '@prisma/client';
 import { Save } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
+import { ProfileUser } from '@/types';
 
 const basicInfoSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -16,13 +16,14 @@ const basicInfoSchema = z.object({
   phone: z.string().optional(),
   location: z.string().optional(),
   website: z.string().url('Invalid URL').optional().or(z.literal('')),
-  category: z.string().optional(),
+  categoryId: z.string().optional(),
+  interests: z.array(z.string()).optional(),
 });
 
 type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
 
 interface BasicInfoTabProps {
-  user: User;
+  user: ProfileUser;
 }
 
 export default function BasicInfoTab({ user }: BasicInfoTabProps) {
@@ -42,7 +43,8 @@ export default function BasicInfoTab({ user }: BasicInfoTabProps) {
       phone: user.phone || '',
       location: user.location || '',
       website: user.website || '',
-      category: user.category || '',
+      categoryId: user.categoryId || '',
+      interests: user.interests || [],
     },
   });
 
@@ -58,6 +60,7 @@ export default function BasicInfoTab({ user }: BasicInfoTabProps) {
       if (!response.ok) throw new Error('Failed to update profile');
 
       Toast.success('Profile updated successfully');
+      window.location.reload();
     } catch (error) {
       Toast.error('Failed to update profile');
     } finally {
@@ -78,54 +81,47 @@ export default function BasicInfoTab({ user }: BasicInfoTabProps) {
         <Input
           label="Username"
           placeholder="Enter username"
-          prefix="@"
           {...register('username')}
           error={errors.username?.message}
         />
+      </div>
 
+      <Textarea
+        label="Bio"
+        placeholder="Tell us about yourself"
+        rows={4}
+        {...register('bio')}
+        error={errors.bio?.message}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
-          label="Phone Number"
-          placeholder="+1 234 567 8900"
+          label="Phone"
+          placeholder="+91 98765 43210"
           {...register('phone')}
           error={errors.phone?.message}
         />
 
         <Input
           label="Location"
-          placeholder="City, Country"
+          placeholder="City, State"
           {...register('location')}
           error={errors.location?.message}
         />
-
-        <Input
-          label="Website"
-          placeholder="https://example.com"
-          {...register('website')}
-          error={errors.website?.message}
-        />
-
-        <Input
-          label="Category"
-          placeholder="e.g., Technology, Healthcare"
-          {...register('category')}
-          error={errors.category?.message}
-        />
       </div>
 
-      <Textarea
-        label="Bio"
-        placeholder="Tell us about yourself..."
-        rows={4}
-        {...register('bio')}
-        error={errors.bio?.message}
+      <Input
+        label="Website"
+        placeholder="https://example.com"
+        {...register('website')}
+        error={errors.website?.message}
       />
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
         <Button
           type="submit"
           isLoading={isLoading}
-          disabled={!isDirty}
-          className="min-w-[120px]"
+          disabled={!isDirty || isLoading}
         >
           <Save className="w-4 h-4 mr-2" />
           Save Changes

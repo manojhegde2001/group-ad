@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Modal, Button, Text, Avatar } from 'rizzui';
-import { Upload, X, Check, Loader2 } from 'lucide-react';
+import { Upload, X, Check, Loader2, ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Avatar } from '@/components/ui/avatar';
 
 interface ProfileImageUploadProps {
     userId: string;
@@ -50,13 +50,11 @@ export default function ProfileImageUpload({
     };
 
     const handleFile = (file: File) => {
-        // Validate file type
         if (!file.type.startsWith('image/')) {
             toast.error('Please upload an image file');
             return;
         }
 
-        // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             toast.error('Image size should be less than 5MB');
             return;
@@ -91,12 +89,8 @@ export default function ProfileImageUpload({
                 throw new Error('Upload failed');
             }
 
-            const data = await response.json();
-
             toast.success('Profile picture updated successfully');
             onClose();
-
-            // Refresh the page to show new avatar
             window.location.reload();
         } catch (error) {
             console.error('Upload error:', error);
@@ -108,128 +102,144 @@ export default function ProfileImageUpload({
 
     const handleRemove = () => {
         setFile(null);
-        setPreview(null);
+        setPreview(currentAvatar || null);
         if (inputRef.current) {
             inputRef.current.value = '';
         }
     };
 
     return (
-        <Modal isOpen onClose={onClose}>
-            <div className="m-auto px-6 py-6 max-w-md bg-white dark:bg-gray-900 rounded-xl">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <Text className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        Update Profile Picture
-                    </Text>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                        aria-label="Close modal"
-                    >
-                        <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    </button>
-                </div>
+        <>
+          {/* Backdrop with blur */}
+          <div 
+            className="fixed inset-0 z-[9998] bg-black/70 backdrop-blur-md transition-all duration-300"
+            onClick={onClose}
+            aria-hidden="true"
+          />
 
-                {/* Preview Section */}
-                <div className="flex justify-center mb-6">
-                    {preview ? (
-                        <div className="relative">
-                            <Avatar
-                                name="Avatar"
-                                src={preview}
-                                size="xl"
-                                customSize="150"
-                                className="ring-4 ring-gray-200 dark:ring-gray-700"
-                            />
-                            {file && (
-                                <button
-                                    onClick={handleRemove}
-                                    className="absolute -top-2 -right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-colors shadow-lg"
-                                    aria-label="Remove image"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="w-36 h-36 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border-2 border-gray-200 dark:border-gray-700">
-                            <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500" />
-                        </div>
-                    )}
-                </div>
-
-                {/* Upload Area */}
-                <div
-                    className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
-                        dragActive
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-400'
-                            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-gray-50 dark:bg-gray-800/50'
-                    }`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
+          {/* Centered Modal - Compact Design */}
+          <div className="fixed inset-0 z-[9999] overflow-hidden flex items-center justify-center p-4">
+            <div 
+              className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl transform transition-all animate-in zoom-in duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              
+              {/* Compact Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  Update Profile Picture
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  aria-label="Close"
                 >
-                    <input
-                        ref={inputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleChange}
-                        className="hidden"
-                        aria-label="File input"
-                    />
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
 
-                    <Upload className="w-10 h-10 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
-
-                    <Text className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">
-                        Drag and drop your image here, or
-                    </Text>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => inputRef.current?.click()}
-                        className="mx-auto bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                        Browse Files
-                    </Button>
-
-                    <Text className="text-xs text-gray-500 dark:text-gray-500 mt-4">
-                        PNG, JPG, GIF up to 5MB
-                    </Text>
+              {/* Compact Body */}
+              <div className="px-6 py-5">
+                
+                {/* Small Avatar Preview (80px) */}
+                <div className="flex justify-center mb-5">
+                  {preview ? (
+                    <div className="relative">
+                      <Avatar
+                        name="Preview"
+                        src={preview}
+                        size="lg"
+                        className="ring-4 ring-primary-200 dark:ring-primary-800"
+                      />
+                      {file && (
+                        <button
+                          onClick={handleRemove}
+                          className="absolute -top-1 -right-1 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg hover:scale-110"
+                          aria-label="Remove"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center border-4 border-gray-300 dark:border-gray-600">
+                      <ImageIcon className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 mt-6">
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                        className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        disabled={isUploading}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleUpload}
-                        className="flex-1 bg-primary-600 dark:bg-primary-500 hover:bg-primary-700 dark:hover:bg-primary-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!file || isUploading}
-                        isLoading={isUploading}
-                    >
-                        {isUploading ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Uploading...
-                            </>
-                        ) : (
-                            <>
-                                <Check className="w-4 h-4 mr-2" />
-                                Upload
-                            </>
-                        )}
-                    </Button>
+                {/* Compact Upload Area */}
+                <div
+                  className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
+                      dragActive
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.02]'
+                          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-gray-50 dark:bg-gray-800/50'
+                  }`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleChange}
+                    className="hidden"
+                  />
+
+                  <div className="flex justify-center mb-3">
+                    <div className="p-2.5 bg-primary-100 dark:bg-primary-900/30 rounded-full">
+                      <Upload className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-gray-700 dark:text-gray-300 font-medium mb-2">
+                    Drag & drop or
+                  </p>
+
+                  <button
+                    onClick={() => inputRef.current?.click()}
+                    className="px-4 py-2 text-sm font-semibold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    Browse Files
+                  </button>
+
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
+                    PNG, JPG, GIF • Max 5MB
+                  </p>
                 </div>
+              </div>
+
+              {/* Compact Footer */}
+              <div className="flex gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl">
+                <button
+                  onClick={onClose}
+                  disabled={isUploading}
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpload}
+                  disabled={!file || isUploading}
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Upload
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-        </Modal>
+          </div>
+        </>
     );
 }

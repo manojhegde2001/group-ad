@@ -36,11 +36,11 @@ export const TURNOVER_RANGES = [
 ];
 
 export const THEMES = [
-  { name: 'Blue', value: 'blue' },
-  { name: 'Purple', value: 'purple' },
-  { name: 'Green', value: 'green' },
-  { name: 'Orange', value: 'orange' },
-  { name: 'Red', value: 'red' },
+  { name: 'Blue', value: 'blue', color: '#3b82f6' },
+  { name: 'Purple', value: 'purple', color: '#a855f7' },
+  { name: 'Green', value: 'green', color: '#22c55e' },
+  { name: 'Orange', value: 'orange', color: '#f97316' },
+  { name: 'Red', value: 'red', color: '#ef4444' },
 ];
 
 export const FONTS = [

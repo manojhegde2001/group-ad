@@ -1,78 +1,113 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useAuthModal } from '@/hooks/use-modal';
-import { Input } from '@/components/ui/input';
-import { Password } from '@/components/ui/password';
-import { Button } from '@/components/ui/button';
-import { Alert } from '@/components/ui/alert';
-import { Mail, Lock } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
+import toast from 'react-hot-toast';
+import { Input } from '../ui/input';
+import { Password } from '../ui/password';
+import { Button } from '../ui/button';
 
 export function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const { login } = useAuth();
+  const router = useRouter();
   const { close, setMode, onSuccessCallback } = useAuthModal();
+  const { refreshAuth } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(email, password);
-      close();
-      if (onSuccessCallback) onSuccessCallback();
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error('Invalid email or password');
+        return;
+      }
+
+      if (result?.ok) {
+        toast.success('Login successful! 🎉');
+        
+        // Refresh auth state
+        await refreshAuth();
+        
+        // Close modal
+        close();
+        if (onSuccessCallback) onSuccessCallback();
+        
+        // Navigate to profile
+        router.push('/profile');
+        router.refresh();
+      }
+    } catch (error) {
+      toast.error('Something went wrong. Please try again.');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {error && (
-        <Alert variant="danger" closable onClose={() => setError('')}>
-          {error}
-        </Alert>
-      )}
-
-      <Input
-        type="email"
-        label="Email"
-        placeholder="Enter your email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        prefix={<Mail className="w-4 h-4" />}
-        required
-        autoFocus
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => (
+          <Input
+            {...field}
+            type="email"
+            label="Email"
+            placeholder="Enter your email"
+            error={errors.email?.message}
+            className="w-full"
+          />
+        )}
       />
 
-      <Password
-        label="Password"
-        placeholder="Enter your password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        prefix={<Lock className="w-4 h-4" />}
-        required
+      <Controller
+        name="password"
+        control={control}
+        render={({ field }) => (
+          <Password
+            {...field}
+            label="Password"
+            placeholder="Enter your password"
+            error={errors.password?.message}
+            className="w-full"
+          />
+        )}
       />
 
-      <Button type="submit" fullWidth isLoading={loading}>
-        {loading ? 'Signing in...' : 'Sign In'}
+      <Button 
+        type="submit" 
+        className="w-full" 
+        isLoading={isSubmitting}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Logging in...' : 'Login'}
       </Button>
 
       <div className="text-center">
-        <p className="text-sm text-secondary-600 dark:text-secondary-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Don't have an account?{' '}
           <button
             type="button"
             onClick={() => setMode('signup')}
-            className="text-primary hover:underline font-medium"
+            className="text-primary-600 dark:text-primary-400 hover:underline font-medium transition-colors"
           >
             Sign up
           </button>

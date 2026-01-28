@@ -7,9 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================================
+// ENUMS
+// ============================================================================
+
 enum UserType {
   INDIVIDUAL
   BUSINESS
+  ADMIN
 }
 
 enum AccountVisibility {
@@ -17,10 +22,105 @@ enum AccountVisibility {
   PRIVATE
 }
 
+enum OnboardingStep {
+  ACCOUNT_CREATED
+  BASIC_INFO_COMPLETED
+  PROFILE_PICTURE_UPLOADED
+  BIO_COMPLETED
+  BUSINESS_INFO_COMPLETED
+  PROFILE_COMPLETED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 enum PostType {
   IMAGE
   TEXT
+  VIDEO
+  DOCUMENT
 }
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum UserTypeChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================================================
+// CATEGORY MODEL - Separate table for categories
+// ============================================================================
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?  // Icon name or emoji
+
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  posts       Post[]
+  events      Event[]
+
+  @@index([isActive])
+}
+
+// ============================================================================
+// COMPANY MODEL - Separate table for companies
+// ============================================================================
+
+model Company {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  slug        String   @unique
+  logo        String?
+
+  industry    String?
+  gstNumber   String?
+  website     String?
+
+  description String?
+  location    String?
+
+  isVerified  Boolean  @default(false)
+  verifiedAt  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  posts       Post[]   @relation("CompanyPosts")
+  events      Event[]  @relation("CompanyEvents")
+
+  @@index([isVerified])
+}
+
+// ============================================================================
+// USER MODEL - Enhanced with category relation & user type change tracking
+// ============================================================================
 
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -28,75 +128,247 @@ model User {
   password  String
   name      String
   username  String   @unique
+
   avatar    String?
   bio       String?
-  
-  userType  UserType @default(INDIVIDUAL)
+  phone     String?
+  location  String?
+  website   String?
+
+  userType   UserType @default(INDIVIDUAL)
   visibility AccountVisibility @default(PUBLIC)
-  
-  category  String
-  
-  companyName    String?
-  turnover       String?
-  companySize    String?
-  industry       String?
-  gstNumber      String?
-  
-  posts          Post[]
-  sentConnections     Connection[] @relation("ConnectionSender")
-  receivedConnections Connection[] @relation("ConnectionReceiver")
-  
+
+  // Verification
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  verifiedAt         DateTime?
+  verificationNote   String?
+
+  // Onboarding
+  onboardingStep     OnboardingStep @default(ACCOUNT_CREATED)
+  isProfileCompleted Boolean @default(false)
+  profileCompletedAt DateTime?
+
+  // Category (now relational)
+  categoryId  String?   @db.ObjectId
+  category    Category? @relation(fields: [categoryId], references: [id])
+  interests   String[]
+
+  // Company Information (for BUSINESS users)
+  companyId       String?  @db.ObjectId
+  company         Company? @relation(fields: [companyId], references: [id])
+
+  // Business-specific fields (if not using Company table)
+  companyName     String?
+  companyLogo     String?
+  turnover        String?
+  companySize     String?
+  industry        String?
+  gstNumber       String?
+  establishedYear String?
+  companyWebsite  String?
+
+  // Social Links
+  linkedin  String?
+  twitter   String?
+  facebook  String?
+  instagram String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  @@index([category])
+
+  // Relations
+  posts        Post[]
+  enrollments  EventEnrollment[]
+  organizedEvents Event[] @relation("EventOrganizer")
+  userTypeChangeRequests UserTypeChangeRequest[]
+
+  @@index([userType])
+  @@index([verificationStatus])
+  @@index([isProfileCompleted])
+  @@index([companyId])
+  @@index([categoryId])
 }
+
+// ============================================================================
+// USER TYPE CHANGE REQUEST - Track user type changes (Individual -> Business)
+// ============================================================================
+
+model UserTypeChangeRequest {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fromType  UserType
+  toType    UserType
+
+  reason    String?  // User's reason for change request
+
+  // Company details if changing to BUSINESS
+  companyId       String?  @db.ObjectId
+  companyName     String?
+  companyLogo     String?
+  turnover        String?
+  companySize     String?
+  industry        String?
+  gstNumber       String?
+  establishedYear String?
+  companyWebsite  String?
+
+  status          UserTypeChangeStatus @default(PENDING)
+
+  // Admin review
+  reviewedBy      String?  @db.ObjectId
+  reviewedAt      DateTime?
+  reviewNote      String?  // Admin's note
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// POST MODEL - Enhanced with category relation
+// ============================================================================
 
 model Post {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   type        PostType
   content     String
   images      String[]
-  category    String
   tags        String[]
-  
+
   visibility  AccountVisibility @default(PUBLIC)
-  
+
   views       Int      @default(0)
   likes       Int      @default(0)
   shares      Int      @default(0)
-  
-  authorId    String   @db.ObjectId
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
+
+  // User relation
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Company relation (optional)
+  companyId   String?  @db.ObjectId
+  company     Company? @relation("CompanyPosts", fields: [companyId], references: [id])
+
+  // Category relation (now relational)
+  categoryId  String?  @db.ObjectId
+  category    Category? @relation(fields: [categoryId], references: [id])
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  @@index([authorId])
-  @@index([category])
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([categoryId])
   @@index([createdAt])
+  @@index([visibility])
+  @@index([type])
 }
 
-enum ConnectionStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
+// ============================================================================
+// EVENT MODEL - For meetings, conferences, webinars
+// ============================================================================
+
+model Event {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  slug        String   @unique
+  description String
+
+  // Event Details
+  eventType   String   // MEETING, WEBINAR, CONFERENCE, WORKSHOP
+
+  // Category relation (now relational)
+  categoryId  String?  @db.ObjectId
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  // Date & Time
+  startDate   DateTime
+  endDate     DateTime
+  timezone    String   @default("Asia/Kolkata")
+
+  // Location
+  isOnline    Boolean  @default(false)
+  venue       String?
+  meetingLink String?
+
+  // Capacity
+  maxAttendees Int?
+  currentAttendees Int @default(0)
+
+  // Visibility & Status
+  visibility  AccountVisibility @default(PUBLIC)
+  status      EventStatus @default(DRAFT)
+
+  // Organizer (Admin or Verified Business)
+  organizerId String   @db.ObjectId
+  organizer   User     @relation("EventOrganizer", fields: [organizerId], references: [id])
+
+  // Company relation (if organized by company)
+  companyId   String?  @db.ObjectId
+  company     Company? @relation("CompanyEvents", fields: [companyId], references: [id])
+
+  // Targeting (filter who can see/enroll)
+  targetUserTypes     String[]  // ["INDIVIDUAL", "BUSINESS"]
+  targetCategoryIds   String[]  // Category IDs for targeting
+  targetTurnoverRange String?   // "1-5cr", "5-10cr", etc.
+  targetCompanySize   String?   // "1-10", "10-50", etc.
+
+  // Media
+  coverImage  String?
+  images      String[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  enrollments EventEnrollment[]
+
+  @@index([organizerId])
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([startDate])
+  @@index([status])
+  @@index([visibility])
 }
 
-model Connection {
-  id         String           @id @default(auto()) @map("_id") @db.ObjectId
-  status     ConnectionStatus @default(PENDING)
-  
-  senderId   String           @db.ObjectId
-  sender     User             @relation("ConnectionSender", fields: [senderId], references: [id], onDelete: Cascade)
-  
-  receiverId String           @db.ObjectId
-  receiver   User             @relation("ConnectionReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  
-  @@unique([senderId, receiverId])
-  @@index([senderId])
-  @@index([receiverId])
+// ============================================================================
+// EVENT ENROLLMENT - Users enrolling in events
+// ============================================================================
+
+model EventEnrollment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  eventId   String   @db.ObjectId
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status    EnrollmentStatus @default(PENDING)
+
+  // Approval
+  approvedAt DateTime?
+  approvedBy String?  @db.ObjectId
+
+  // Attendance
+  attended   Boolean  @default(false)
+  attendedAt DateTime?
+
+  // Notes
+  userNote   String?  // User's reason for enrolling
+  adminNote  String?  // Admin's approval/rejection note
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
 }

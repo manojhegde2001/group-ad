@@ -7,12 +7,18 @@ import { LogIn, LogOut, User, Settings, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
-import Logo from '../ui/logo';
+import dynamic from 'next/dynamic';
+
+const Logo = dynamic(() => import('../ui/logo'), {
+  ssr: false,
+  loading: () => <div className="w-32 h-8 bg-secondary-200 rounded animate-pulse" />,
+});
 
 export function Navbar() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, loading: isLoading, logout } = useAuth();
   const { openLogin, openSignup } = useAuthModal();
   const [mounted, setMounted] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -27,7 +33,12 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
-    await logout();
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   if (!mounted) {
@@ -43,6 +54,9 @@ export function Navbar() {
     );
   }
 
+  // Show loading or logged out state during logout process
+  const showAuthButtons = !isAuthenticated || isLoggingOut;
+
   return (
     <nav className="sticky top-0 z-50 bg-white/80 dark:bg-secondary-900/80 backdrop-blur-lg border-b border-secondary-200 dark:border-secondary-800">
       <div className="container mx-auto px-4 py-4">
@@ -56,13 +70,39 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             <ThemeSwitcher />
 
-            {isLoading ? (
+            {isLoading || isLoggingOut ? (
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            ) : isAuthenticated && user ? (
+            ) : showAuthButtons ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleLogin}
+                  variant="outline"
+                  color="primary"
+                  size="sm"
+                  className="hidden sm:flex items-center"
+                >
+                  Login
+                </Button>
+                <Button
+                  onClick={handleSignup}
+                  variant="solid"
+                  color="primary"
+                  size="sm"
+                  className="flex items-center"
+                >
+                  <LogIn className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Sign Up</span>
+                </Button>
+              </div>
+            ) : user ? (
               <Popover placement="bottom-end">
                 <Popover.Trigger>
                   <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <Avatar src={user.avatar} name={user.name} size="sm" />
+                    <Avatar
+                      src={user.avatar || undefined}
+                      name={user.name as string}
+                      size="sm"
+                    />
                     <span className="font-medium hidden sm:block text-sm">{user.name}</span>
                   </button>
                 </Popover.Trigger>
@@ -98,38 +138,26 @@ export function Navbar() {
 
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors text-sm text-left"
+                        disabled={isLoggingOut}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors text-sm text-left disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
+                        {isLoggingOut ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Logging out...</span>
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="w-4 h-4" />
+                            <span>Logout</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
                 </Popover.Content>
               </Popover>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={handleLogin}
-                  variant="outline"
-                  color="primary"
-                  size="sm"
-                  className="hidden sm:flex items-center"
-                >
-                  Login
-                </Button>
-                <Button
-                  onClick={handleSignup}
-                  variant="solid"
-                  color="primary"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <LogIn className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Sign Up</span>
-                </Button>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

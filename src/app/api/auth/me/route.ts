@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { verify } from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key');
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const token = req.cookies.get('auth-token')?.value;
+    const token = request.cookies.get('token')?.value;
 
     if (!token) {
-      return NextResponse.json({ user: null }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
     }
 
-    const verified = await jwtVerify(token, JWT_SECRET);
-    const userId = verified.payload.userId as string;
+    // Verify token
+    const decoded = verify(token, JWT_SECRET) as { userId: string };
 
+    // Fetch user with relations
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: decoded.userId },
       select: {
         id: true,
         email: true,
@@ -24,20 +28,51 @@ export async function GET(req: NextRequest) {
         username: true,
         avatar: true,
         bio: true,
+        phone: true,
+        location: true,
+        website: true,
         userType: true,
         visibility: true,
+        verificationStatus: true,
+        verifiedAt: true,
         category: true,
-        companyName: true,
+        interests: true,
+        turnover: true,
+        companySize: true,
+        industry: true,
+        linkedin: true,
+        twitter: true,
+        facebook: true,
+        instagram: true,
+        isProfileCompleted: true,
+        createdAt: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logo: true,
+            industry: true,
+            location: true,
+            isVerified: true,
+          },
+        },
       },
     });
 
     if (!user) {
-      return NextResponse.json({ user: null }, { status: 401 });
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Auth check error:', error);
-    return NextResponse.json({ user: null }, { status: 401 });
+    console.error('Session error:', error);
+    return NextResponse.json(
+      { error: 'Invalid or expired token' },
+      { status: 401 }
+    );
   }
 }

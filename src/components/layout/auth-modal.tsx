@@ -1,10 +1,10 @@
 'use client';
 
 import { useAuthModal } from '@/hooks/use-modal';
-import { LoginForm } from '@/components/auth/login-form';
-import { SignupForm } from '@/components/auth/signup-form';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { LoginForm } from '../auth/login-form';
+import SignupForm from '../auth/signup-form';
 
 export function AuthModal() {
   const { isOpen, mode, close } = useAuthModal();

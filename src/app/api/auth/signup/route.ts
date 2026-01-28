@@ -1,94 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
-import { SignJWT } from 'jose';
+import { signupSchema } from '@/lib/validations/auth';
+import { UserType } from '@prisma/client';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key');
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, password, name, username, category, userType, companyName, turnover, companySize, industry } = body;
+    const body = await request.json();
 
-    if (!email || !password || !name || !username || !category) {
-      return NextResponse.json(
-        { message: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    // Validate input
+    const validatedData = signupSchema.parse(body);
 
-    // Extract string values from Select component objects
-    const categoryValue = typeof category === 'object' ? category.value : category;
-    const turnoverValue = typeof turnover === 'object' ? turnover?.value : turnover;
-    const companySizeValue = typeof companySize === 'object' ? companySize?.value : companySize;
-
+    // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email },
-          { username },
+          { email: validatedData.email },
+          { username: validatedData.username },
         ],
       },
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { message: 'User with this email or username already exists' },
-        { status: 409 }
-      );
+      if (existingUser.email === validatedData.email) {
+        return NextResponse.json(
+          { error: 'Email already registered' },
+          { status: 400 }
+        );
+      }
+      if (existingUser.username === validatedData.username) {
+        return NextResponse.json(
+          { error: 'Username already taken' },
+          { status: 400 }
+        );
+      }
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // If company is selected, verify it exists
+    if (validatedData.companyId) {
+      const company = await prisma.company.findUnique({
+        where: { id: validatedData.companyId },
+      });
 
+      if (!company) {
+        return NextResponse.json(
+          { error: 'Selected company does not exist' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Hash password
+    const hashedPassword = await hash(validatedData.password, 10);
+
+    // Create user
     const user = await prisma.user.create({
       data: {
-        email,
+        email: validatedData.email,
         password: hashedPassword,
-        name,
-        username,
-        category: categoryValue,
-        userType: userType || 'INDIVIDUAL',
-        companyName: userType === 'BUSINESS' ? companyName : undefined,
-        turnover: userType === 'BUSINESS' ? turnoverValue : undefined,
-        companySize: userType === 'BUSINESS' ? companySizeValue : undefined,
-        industry: userType === 'BUSINESS' ? industry : undefined,
+        name: validatedData.name,
+        username: validatedData.username,
+        userType: validatedData.userType || UserType.INDIVIDUAL,
+        companyId: validatedData.companyId || undefined,
       },
       select: {
         id: true,
         email: true,
         name: true,
         username: true,
-        avatar: true,
-        bio: true,
         userType: true,
-        visibility: true,
-        category: true,
-        companyName: true,
+        verificationStatus: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            isVerified: true,
+          },
+        },
       },
     });
 
-    const token = await new SignJWT({ userId: user.id, email: user.email })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
-      .sign(JWT_SECRET);
-
-    const response = NextResponse.json({
-      message: 'Signup successful',
-      user,
-    });
-
-    response.cookies.set('auth-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    return response;
-  } catch (error) {
-    console.error('Signup error:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      {
+        message: 'Account created successfully',
+        user,
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error('Signup error:', error);
+
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Invalid input data', details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Something went wrong. Please try again.' },
       { status: 500 }
     );
   }

@@ -1,26 +1,28 @@
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { verify } from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import ProfileHeader from '@/components/profile/profile-header';
 import ProfileTabs from '@/components/profile/profile-tabs';
+import { auth } from '@/lib/auth';
 
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+export const metadata = {
+  title: 'Profile',
+  description: 'Manage your profile',
+};
 
 async function getProfile() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  // Use the auth() function from your NextAuth setup
+  const session = await auth();
 
-  if (!token) {
-    redirect('/login');
+  console.log('[Profile] Session:', session);
+
+  if (!session?.user?.email) {
+    console.log('[Profile] No session found, redirecting to home');
+    redirect('/');
   }
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { userId: string };
-
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { email: session.user.email },
       select: {
         id: true,
         email: true,
@@ -86,12 +88,15 @@ async function getProfile() {
     });
 
     if (!user) {
-      redirect('/login');
+      console.log('[Profile] User not found in database');
+      redirect('/');
     }
 
+    console.log('[Profile] User found:', user.email);
     return user;
   } catch (error) {
-    redirect('/login');
+    console.error('[Profile] Error fetching user:', error);
+    redirect('/');
   }
 }
 

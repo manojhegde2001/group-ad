@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Button, Input, Password, Select, Text } from 'rizzui';
 import Link from 'next/link';
 import { signupSchema, SignupFormData } from '@/lib/validations/auth';
@@ -37,23 +37,23 @@ export default function SignupForm() {
     register,
     handleSubmit,
     watch,
-    setValue,
+    control,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       userType: 'INDIVIDUAL',
+      categoryId: '',
+      companyId: '',
     },
   });
 
   const userType = watch('userType');
 
-  // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Fetch companies when user selects BUSINESS
   useEffect(() => {
     if (userType === 'BUSINESS') {
       fetchCompanies();
@@ -62,13 +62,12 @@ export default function SignupForm() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories');
-      if (response.ok) {
-        const data = await response.json();
+      const res = await fetch('/api/categories');
+      if (res.ok) {
+        const data = await res.json();
         setCategories(data.categories || []);
       }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
+    } catch {
       Toast.error('Failed to load categories');
     } finally {
       setLoadingCategories(false);
@@ -78,13 +77,12 @@ export default function SignupForm() {
   const fetchCompanies = async () => {
     setLoadingCompanies(true);
     try {
-      const response = await fetch('/api/companies');
-      if (response.ok) {
-        const data = await response.json();
+      const res = await fetch('/api/companies');
+      if (res.ok) {
+        const data = await res.json();
         setCompanies(data.companies || []);
       }
-    } catch (error) {
-      console.error('Error fetching companies:', error);
+    } catch {
       Toast.error('Failed to load companies');
     } finally {
       setLoadingCompanies(false);
@@ -93,45 +91,41 @@ export default function SignupForm() {
 
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
-
     try {
-      const response = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Signup failed');
-      }
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
 
       Toast.success('Account created successfully! Please login.');
       router.push('/login');
-    } catch (error: any) {
-      Toast.error(error.message || 'Something went wrong');
+    } catch (err: any) {
+      Toast.error(err.message || 'Signup failed');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Name */}
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+    >
+      {/* Full Name */}
       <Input
-        type="text"
         label="Full Name"
         placeholder="Enter your full name"
+        className="md:col-span-2"
         {...register('name')}
         error={errors.name?.message}
       />
 
       {/* Username */}
       <Input
-        type="text"
         label="Username"
         placeholder="Choose a username"
         {...register('username')}
@@ -140,8 +134,8 @@ export default function SignupForm() {
 
       {/* Email */}
       <Input
-        type="email"
         label="Email"
+        type="email"
         placeholder="Enter your email"
         {...register('email')}
         error={errors.email?.message}
@@ -151,102 +145,113 @@ export default function SignupForm() {
       <Password
         label="Password"
         placeholder="Create a strong password"
+        className="md:col-span-2"
         {...register('password')}
         error={errors.password?.message}
       />
 
-      {/* User Type */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Account Type
-        </label>
-        <Select
-          options={[
+      {/* Account Type */}
+      <Controller
+        name="userType"
+        control={control}
+        render={({ field }) => {
+          const options = [
             { label: 'Individual', value: 'INDIVIDUAL' },
             { label: 'Business', value: 'BUSINESS' },
-          ]}
-          value={userType}
-          onChange={(value) => setValue('userType', value as any)}
-          placeholder="Select account type"
-        />
-        {errors.userType && (
-          <Text className="mt-1 text-sm text-red-500">
-            {errors.userType.message}
-          </Text>
-        )}
-      </div>
+          ];
 
-      {/* Category Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Category
-        </label>
-        <Select
-          options={categories.map((cat) => ({
+          return (
+            <Select
+              label="Account Type"
+              options={options}
+              value={options.find(o => o.value === field.value)}
+              onChange={(opt: any) => field.onChange(opt?.value)}
+              error={errors.userType?.message}
+              placeholder="Select account type"
+            />
+          );
+        }}
+      />
+
+      {/* Category */}
+      <Controller
+        name="categoryId"
+        control={control}
+        render={({ field }) => {
+          const options = categories.map(cat => ({
             label: `${cat.icon} ${cat.name}`,
             value: cat.id,
-          }))}
-          value={watch('categoryId') || ''}
-          onChange={(value:any) => setValue('categoryId', value)}
-          placeholder={loadingCategories ? 'Loading categories...' : 'Select your category'}
-          disabled={loadingCategories}
-        />
-        <Text className="mt-1 text-xs text-gray-500">
-          Choose the category that best describes your profession or industry
-        </Text>
-        {errors.categoryId && (
-          <Text className="mt-1 text-sm text-red-500">
-            {errors.categoryId.message}
-          </Text>
-        )}
-      </div>
+          }));
 
-      {/* Company Selection (only for BUSINESS users) */}
+          return (
+            <Select
+              label="Category"
+              options={options}
+              value={options.find(o => o.value === field.value)}
+              onChange={(opt: any) => field.onChange(opt?.value)}
+              error={errors.categoryId?.message}
+              placeholder={
+                loadingCategories
+                  ? 'Loading categories...'
+                  : 'Select your category'
+              }
+              disabled={loadingCategories}
+            />
+          );
+        }}
+      />
+
+      {/* Company (Business Only) */}
       {userType === 'BUSINESS' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Company (Optional)
-          </label>
-          <Select
-            options={[
-              { label: 'None - I will add company details later', value: '' },
-              ...companies.map((company) => ({
-                label: `${company.name}${company.isVerified ? ' ✓' : ''}`,
-                value: company.id,
+        <Controller
+          name="companyId"
+          control={control}
+          render={({ field }) => {
+            const options = [
+              { label: 'None – add later', value: '' },
+              ...companies.map(c => ({
+                label: `${c.name}${c.isVerified ? ' ✓' : ''}`,
+                value: c.id,
               })),
-            ]}
-            value={watch('companyId') || ''}
-            onChange={(value:any) => setValue('companyId', value)}
-            placeholder={loadingCompanies ? 'Loading companies...' : 'Select your company'}
-            disabled={loadingCompanies}
-          />
-          <Text className="mt-1 text-xs text-gray-500">
-            Select if your company is already registered. ✓ indicates verified companies.
-          </Text>
-          {errors.companyId && (
-            <Text className="mt-1 text-sm text-red-500">
-              {errors.companyId.message}
-            </Text>
-          )}
-        </div>
+            ];
+
+            return (
+              <div className="md:col-span-2">
+                <Select
+                  label="Company (Optional)"
+                  options={options}
+                  value={options.find(o => o.value === field.value)}
+                  onChange={(opt: any) => field.onChange(opt?.value)}
+                  error={errors.companyId?.message}
+                  placeholder={
+                    loadingCompanies
+                      ? 'Loading companies...'
+                      : 'Select your company'
+                  }
+                  disabled={loadingCompanies}
+                />
+              </div>
+            );
+          }}
+        />
       )}
 
-      {/* Submit Button */}
+      {/* Submit */}
       <Button
         type="submit"
-        className="w-full"
         isLoading={isLoading}
         disabled={isLoading}
+        className="md:col-span-2 w-full"
       >
         Create Account
       </Button>
 
-      {/* Login Link */}
-      <Text className="text-center text-sm text-gray-600 dark:text-gray-400">
+      {/* Footer */}
+      <Text className="md:col-span-2 text-center text-sm text-gray-600">
         Already have an account?{' '}
         <Link
           href="/login"
-          className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
+          className="font-medium text-blue-600 hover:text-blue-500"
         >
           Login here
         </Link>

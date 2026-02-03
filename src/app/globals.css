@@ -29,6 +29,9 @@
 
   --background: 255 255 255;
   --foreground: 17 24 39;
+  
+  /* Fix for Rizzui overlays */
+  --overlay-bg: 0 0 0;
 }
 
 .dark {
@@ -36,7 +39,7 @@
   --foreground: 249 250 251;
 }
 
-/* Theme Variants */
+/* Theme Variants remain the same... */
 [data-theme='blue'] {
   --color-primary-50: 239 246 255;
   --color-primary-100: 219 234 254;
@@ -173,79 +176,4 @@ body {
   .animate-leave {
     animation: leave 0.2s ease-in forwards;
   }
-}
-/* ============================================================================
-   RIZZUI SELECT COMPONENT FIX FOR LIGHT/DARK THEME
-   ============================================================================ */
-
-/* Select Container */
-.rizzui-select-container,
-[class*='rizzui-select'] > div {
-  @apply bg-white dark:bg-gray-800 !important;
-  @apply border-gray-300 dark:border-gray-600 !important;
-}
-
-/* Select Trigger/Button */
-.rizzui-select-trigger,
-[class*='rizzui-select'] button {
-  @apply text-gray-900 dark:text-gray-100 !important;
-  @apply bg-white dark:bg-gray-800 !important;
-}
-
-/* Select Dropdown/Listbox - THE MAIN FIX */
-.rizzui-select-dropdown,
-[class*='rizzui-listbox'],
-[role='listbox'] {
-  @apply bg-white dark:bg-gray-800 !important;
-  @apply border border-gray-200 dark:border-gray-700 !important;
-  @apply shadow-lg dark:shadow-gray-900/50 !important;
-  @apply z-50 !important;
-}
-
-/* Select Options */
-.rizzui-select-option,
-[role='option'] {
-  @apply text-gray-900 dark:text-gray-100 !important;
-  @apply bg-transparent !important;
-}
-
-.rizzui-select-option:hover,
-[role='option']:hover {
-  @apply bg-gray-100 dark:bg-gray-700 !important;
-}
-
-.rizzui-select-option[data-selected='true'],
-[role='option'][data-selected='true'] {
-  @apply bg-primary-50 dark:bg-primary-900/20 !important;
-  @apply text-primary-600 dark:text-primary-400 !important;
-}
-
-/* Dropdown Scrollbar */
-.rizzui-select-dropdown::-webkit-scrollbar,
-[role='listbox']::-webkit-scrollbar {
-  @apply w-2;
-}
-
-.rizzui-select-dropdown::-webkit-scrollbar-track,
-[role='listbox']::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-900;
-}
-
-.rizzui-select-dropdown::-webkit-scrollbar-thumb,
-[role='listbox']::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-700 rounded;
-}
-
-/* Z-Index Fix */
-[role='listbox'] {
-  @apply z-50 !important;
-}
-
-/* HeadlessUI Fixes (used by Rizzui Select) */
-[data-headlessui-state] {
-  @apply text-gray-900 dark:text-gray-100 !important;
-}
-
-[data-headlessui-state='open'] {
-  @apply bg-white dark:bg-gray-800 !important;
 }

@@ -44,14 +44,14 @@ export function LoginForm() {
 
       if (result?.ok) {
         toast.success('Login successful! 🎉');
-        
+
         // Refresh auth state
         await refreshAuth();
-        
+
         // Close modal
         close();
         if (onSuccessCallback) onSuccessCallback();
-        
+
         // Navigate to profile
         router.push('/profile');
         router.refresh();
@@ -62,7 +62,7 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-md mx-auto">
       <Controller
         name="email"
         control={control}
@@ -92,16 +92,16 @@ export function LoginForm() {
         )}
       />
 
-      <Button 
-        type="submit" 
-        className="w-full" 
+      <Button
+        type="submit"
+        className="w-full"
         isLoading={isSubmitting}
         disabled={isSubmitting}
       >
         {isSubmitting ? 'Logging in...' : 'Login'}
       </Button>
 
-      <div className="text-center">
+      <div className="text-center pt-2">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Don't have an account?{' '}
           <button

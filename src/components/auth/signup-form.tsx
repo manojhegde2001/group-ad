@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { Button, Input, Password, Select, Text } from 'rizzui';
-import Link from 'next/link';
 import { signupSchema, SignupFormData } from '@/lib/validations/auth';
 import { Toast } from '../ui/toast';
+import { useAuthModal } from '@/hooks/use-modal';
 
 // Types
 interface Company {
@@ -27,6 +27,7 @@ interface Category {
 
 export default function SignupForm() {
   const router = useRouter();
+  const { setMode } = useAuthModal();
   const [isLoading, setIsLoading] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -102,7 +103,7 @@ export default function SignupForm() {
       if (!res.ok) throw new Error(result.error);
 
       Toast.success('Account created successfully! Please login.');
-      router.push('/login');
+      setMode('login');
     } catch (err: any) {
       Toast.error(err.message || 'Signup failed');
     } finally {
@@ -113,16 +114,17 @@ export default function SignupForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      className="grid grid-cols-1 sm:grid-cols-2 gap-5"
     >
       {/* Full Name */}
-      <Input
-        label="Full Name"
-        placeholder="Enter your full name"
-        className="md:col-span-2"
-        {...register('name')}
-        error={errors.name?.message}
-      />
+      <div className="sm:col-span-2">
+        <Input
+          label="Full Name"
+          placeholder="Enter your full name"
+          {...register('name')}
+          error={errors.name?.message}
+        />
+      </div>
 
       {/* Username */}
       <Input
@@ -142,13 +144,14 @@ export default function SignupForm() {
       />
 
       {/* Password */}
-      <Password
-        label="Password"
-        placeholder="Create a strong password"
-        className="md:col-span-2"
-        {...register('password')}
-        error={errors.password?.message}
-      />
+      <div className="sm:col-span-2">
+        <Password
+          label="Password"
+          placeholder="Create a strong password"
+          {...register('password')}
+          error={errors.password?.message}
+        />
+      </div>
 
       {/* Account Type */}
       <Controller
@@ -203,20 +206,20 @@ export default function SignupForm() {
 
       {/* Company (Business Only) */}
       {userType === 'BUSINESS' && (
-        <Controller
-          name="companyId"
-          control={control}
-          render={({ field }) => {
-            const options = [
-              { label: 'None – add later', value: '' },
-              ...companies.map(c => ({
-                label: `${c.name}${c.isVerified ? ' ✓' : ''}`,
-                value: c.id,
-              })),
-            ];
+        <div className="sm:col-span-2">
+          <Controller
+            name="companyId"
+            control={control}
+            render={({ field }) => {
+              const options = [
+                { label: 'None – add later', value: '' },
+                ...companies.map(c => ({
+                  label: `${c.name}${c.isVerified ? ' ✓' : ''}`,
+                  value: c.id,
+                })),
+              ];
 
-            return (
-              <div className="md:col-span-2">
+              return (
                 <Select
                   label="Company (Optional)"
                   options={options}
@@ -230,32 +233,37 @@ export default function SignupForm() {
                   }
                   disabled={loadingCompanies}
                 />
-              </div>
-            );
-          }}
-        />
+              );
+            }}
+          />
+        </div>
       )}
 
       {/* Submit */}
-      <Button
-        type="submit"
-        isLoading={isLoading}
-        disabled={isLoading}
-        className="md:col-span-2 w-full"
-      >
-        Create Account
-      </Button>
+      <div className="sm:col-span-2">
+        <Button
+          type="submit"
+          isLoading={isLoading}
+          disabled={isLoading}
+          className="w-full"
+        >
+          Create Account
+        </Button>
+      </div>
 
       {/* Footer */}
-      <Text className="md:col-span-2 text-center text-sm text-gray-600">
-        Already have an account?{' '}
-        <Link
-          href="/login"
-          className="font-medium text-blue-600 hover:text-blue-500"
-        >
-          Login here
-        </Link>
-      </Text>
+      <div className="sm:col-span-2">
+        <Text className="text-center text-sm text-gray-600 dark:text-gray-400">
+          Already have an account?{' '}
+          <button
+            type="button"
+            onClick={() => setMode('login')}
+            className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 hover:underline transition-colors"
+          >
+            Login here
+          </button>
+        </Text>
+      </div>
     </form>
   );
 }

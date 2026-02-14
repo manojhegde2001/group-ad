@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verify } from 'jsonwebtoken';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// ============================================================================
-// VALIDATION SCHEMAS
-// ============================================================================
 
 const createPostSchema = z.object({
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
@@ -15,41 +9,26 @@ const createPostSchema = z.object({
   images: z.array(z.string().url()).optional().default([]),
   tags: z.array(z.string()).optional().default([]),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional().default('PUBLIC'),
-  categoryId: z.string().optional(), // Optional category
-  companyId: z.string().optional(),  // Optional company (for business users)
-});
-
-const updatePostSchema = z.object({
-  content: z.string().min(1).max(5000).optional(),
-  images: z.array(z.string().url()).optional(),
-  tags: z.array(z.string()).optional(),
-  visibility: z.enum(['PUBLIC', 'PRIVATE']).optional(),
   categoryId: z.string().optional(),
+  companyId: z.string().optional(),
 });
-
-// ============================================================================
-// GET /api/posts - Fetch all posts with filters
-// ============================================================================
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    // Pagination
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
 
-    // Filters
-    const userType = searchParams.get('userType'); // INDIVIDUAL, BUSINESS, ADMIN
+    const userType = searchParams.get('userType');
     const categoryId = searchParams.get('categoryId');
     const companyId = searchParams.get('companyId');
-    const postType = searchParams.get('type'); // TEXT, IMAGE, VIDEO, DOCUMENT
+    const postType = searchParams.get('type');
     const visibility = searchParams.get('visibility') || 'PUBLIC';
-    const userId = searchParams.get('userId'); // Filter by specific user
-    const search = searchParams.get('search'); // Search in content/tags
+    const userId = searchParams.get('userId');
+    const search = searchParams.get('search');
 
-    // Build where clause
     const where: any = {
       visibility: visibility as any,
     };
@@ -60,21 +39,10 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
-
-    if (companyId) {
-      where.companyId = companyId;
-    }
-
-    if (postType) {
-      where.type = postType as any;
-    }
-
-    if (userId) {
-      where.userId = userId;
-    }
+    if (categoryId) where.categoryId = categoryId;
+    if (companyId) where.companyId = companyId;
+    if (postType) where.type = postType as any;
+    if (userId) where.userId = userId;
 
     if (search) {
       where.OR = [
@@ -83,7 +51,6 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Fetch posts
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
         where,
@@ -125,8 +92,17 @@ export async function GET(request: NextRequest) {
       prisma.post.count({ where }),
     ]);
 
+    // Add empty counts for now
+    const postsWithCounts = posts.map(post => ({
+      ...post,
+      _count: {
+        postLikes: 0,
+        postComments: 0,
+      },
+    }));
+
     return NextResponse.json({
-      posts,
+      posts: postsWithCounts,
       pagination: {
         total,
         page,
@@ -143,27 +119,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ============================================================================
-// POST /api/posts - Create a new post
-// ============================================================================
-
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const session = await auth();
 
-    if (!token) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    // Verify token
-    const decoded = verify(token, JWT_SECRET) as { userId: string };
-
-    // Get user with company info
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: session.user.id },
       select: {
         id: true,
         userType: true,
@@ -183,7 +151,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createPostSchema.parse(body);
 
-    // Validate company post (only business users can post on behalf of company)
     if (validatedData.companyId) {
       if (user.userType !== 'BUSINESS' && user.userType !== 'ADMIN') {
         return NextResponse.json(
@@ -192,7 +159,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Verify user belongs to this company
       if (user.companyId !== validatedData.companyId && user.userType !== 'ADMIN') {
         return NextResponse.json(
           { error: 'You can only post on behalf of your own company' },
@@ -201,7 +167,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create post
     const post = await prisma.post.create({
       data: {
         type: validatedData.type,
@@ -209,7 +174,7 @@ export async function POST(request: NextRequest) {
         images: validatedData.images,
         tags: validatedData.tags,
         visibility: validatedData.visibility,
-        categoryId: validatedData.categoryId || user.categoryId, // Use user's category if not provided
+        categoryId: validatedData.categoryId || user.categoryId,
         companyId: validatedData.companyId,
         userId: user.id,
       },
@@ -244,9 +209,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const postWithCount = {
+      ...post,
+      _count: {
+        postLikes: 0,
+        postComments: 0,
+      },
+    };
+
     return NextResponse.json({
       message: 'Post created successfully',
-      post,
+      post: postWithCount,
     }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating post:', error);

@@ -65,8 +65,38 @@ enum UserTypeChangeStatus {
   REJECTED
 }
 
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  VIDEO
+}
+
+enum NotificationType {
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
+  POST_LIKE
+  POST_COMMENT
+  POST_SHARE
+  EVENT_REMINDER
+  EVENT_ENROLLMENT
+  EVENT_APPROVED
+  MESSAGE_RECEIVED
+  VERIFICATION_APPROVED
+  VERIFICATION_REJECTED
+  MEETING_INVITE
+  SYSTEM_ANNOUNCEMENT
+}
+
 // ============================================================================
-// CATEGORY MODEL - Separate table for categories
+// CATEGORY MODEL
 // ============================================================================
 
 model Category {
@@ -74,7 +104,7 @@ model Category {
   name        String   @unique
   slug        String   @unique
   description String?
-  icon        String?  // Icon name or emoji
+  icon        String?
 
   isActive    Boolean  @default(true)
 
@@ -89,7 +119,7 @@ model Category {
 }
 
 // ============================================================================
-// COMPANY MODEL - Separate table for companies
+// COMPANY MODEL
 // ============================================================================
 
 model Company {
@@ -119,7 +149,7 @@ model Company {
 }
 
 // ============================================================================
-// USER MODEL - Enhanced with category relation & user type change tracking
+// USER MODEL
 // ============================================================================
 
 model User {
@@ -138,26 +168,21 @@ model User {
   userType   UserType @default(INDIVIDUAL)
   visibility AccountVisibility @default(PUBLIC)
 
-  // Verification
   verificationStatus VerificationStatus @default(UNVERIFIED)
   verifiedAt         DateTime?
   verificationNote   String?
 
-  // Onboarding
   onboardingStep     OnboardingStep @default(ACCOUNT_CREATED)
   isProfileCompleted Boolean @default(false)
   profileCompletedAt DateTime?
 
-  // Category (now relational)
   categoryId  String?   @db.ObjectId
   category    Category? @relation(fields: [categoryId], references: [id])
   interests   String[]
 
-  // Company Information (for BUSINESS users)
   companyId       String?  @db.ObjectId
   company         Company? @relation(fields: [companyId], references: [id])
 
-  // Business-specific fields (if not using Company table)
   companyName     String?
   companyLogo     String?
   turnover        String?
@@ -167,7 +192,6 @@ model User {
   establishedYear String?
   companyWebsite  String?
 
-  // Social Links
   linkedin  String?
   twitter   String?
   facebook  String?
@@ -176,11 +200,17 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   posts        Post[]
   enrollments  EventEnrollment[]
   organizedEvents Event[] @relation("EventOrganizer")
   userTypeChangeRequests UserTypeChangeRequest[]
+  
+  connectionsSent     Connection[] @relation("ConnectionsSent")
+  connectionsReceived Connection[] @relation("ConnectionsReceived")
+  messages            Message[]
+  notifications       Notification[]
+  postLikes           PostLike[]
+  postComments        PostComment[]
 
   @@index([userType])
   @@index([verificationStatus])
@@ -190,7 +220,7 @@ model User {
 }
 
 // ============================================================================
-// USER TYPE CHANGE REQUEST - Track user type changes (Individual -> Business)
+// USER TYPE CHANGE REQUEST
 // ============================================================================
 
 model UserTypeChangeRequest {
@@ -202,9 +232,8 @@ model UserTypeChangeRequest {
   fromType  UserType
   toType    UserType
 
-  reason    String?  // User's reason for change request
+  reason    String?
 
-  // Company details if changing to BUSINESS
   companyId       String?  @db.ObjectId
   companyName     String?
   companyLogo     String?
@@ -217,10 +246,9 @@ model UserTypeChangeRequest {
 
   status          UserTypeChangeStatus @default(PENDING)
 
-  // Admin review
   reviewedBy      String?  @db.ObjectId
   reviewedAt      DateTime?
-  reviewNote      String?  // Admin's note
+  reviewNote      String?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -231,7 +259,7 @@ model UserTypeChangeRequest {
 }
 
 // ============================================================================
-// POST MODEL - Enhanced with category relation
+// POST MODEL
 // ============================================================================
 
 model Post {
@@ -247,20 +275,20 @@ model Post {
   likes       Int      @default(0)
   shares      Int      @default(0)
 
-  // User relation
   userId      String   @db.ObjectId
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Company relation (optional)
   companyId   String?  @db.ObjectId
   company     Company? @relation("CompanyPosts", fields: [companyId], references: [id])
 
-  // Category relation (now relational)
   categoryId  String?  @db.ObjectId
   category    Category? @relation(fields: [categoryId], references: [id])
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  postLikes    PostLike[]
+  postComments PostComment[]
 
   @@index([userId])
   @@index([companyId])
@@ -271,7 +299,154 @@ model Post {
 }
 
 // ============================================================================
-// EVENT MODEL - For meetings, conferences, webinars
+// POST ENGAGEMENT MODELS
+// ============================================================================
+
+model PostLike {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model PostComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  content   String
+  
+  parentId  String?  @db.ObjectId
+  
+  likes     Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([postId])
+  @@index([userId])
+}
+
+// ============================================================================
+// CONNECTION MODEL
+// ============================================================================
+
+model Connection {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  requesterId String   @db.ObjectId
+  requester   User     @relation("ConnectionsSent", fields: [requesterId], references: [id], onDelete: Cascade)
+  
+  receiverId  String   @db.ObjectId
+  receiver    User     @relation("ConnectionsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  status      ConnectionStatus @default(PENDING)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([requesterId, receiverId])
+  @@index([requesterId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+// ============================================================================
+// MESSAGING MODELS
+// ============================================================================
+
+model Conversation {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  participantIds String[] @db.ObjectId
+  
+  lastMessageAt DateTime @default(now())
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  messages      Message[]
+  
+  @@index([participantIds])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  conversationId String   @db.ObjectId
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  senderId       String   @db.ObjectId
+  sender         User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  content        String
+  messageType    MessageType @default(TEXT)
+  
+  attachments    String[]
+  
+  readBy         String[] @db.ObjectId
+  readAt         DateTime?
+  
+  isEdited       Boolean  @default(false)
+  isDeleted      Boolean  @default(false)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// NOTIFICATION MODEL
+// ============================================================================
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      NotificationType
+  title     String
+  message   String
+  
+  entityType String?
+  entityId   String?  @db.ObjectId
+  
+  senderId   String?  @db.ObjectId
+  
+  isRead     Boolean  @default(false)
+  readAt     DateTime?
+  
+  emailSent  Boolean  @default(false)
+  pushSent   Boolean  @default(false)
+  
+  createdAt  DateTime @default(now())
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// ============================================================================
+// EVENT MODEL
 // ============================================================================
 
 model Event {
@@ -280,53 +455,42 @@ model Event {
   slug        String   @unique
   description String
 
-  // Event Details
-  eventType   String   // MEETING, WEBINAR, CONFERENCE, WORKSHOP
+  eventType   String
 
-  // Category relation (now relational)
   categoryId  String?  @db.ObjectId
   category    Category? @relation(fields: [categoryId], references: [id])
 
-  // Date & Time
   startDate   DateTime
   endDate     DateTime
   timezone    String   @default("Asia/Kolkata")
 
-  // Location
   isOnline    Boolean  @default(false)
   venue       String?
   meetingLink String?
 
-  // Capacity
   maxAttendees Int?
   currentAttendees Int @default(0)
 
-  // Visibility & Status
   visibility  AccountVisibility @default(PUBLIC)
   status      EventStatus @default(DRAFT)
 
-  // Organizer (Admin or Verified Business)
   organizerId String   @db.ObjectId
   organizer   User     @relation("EventOrganizer", fields: [organizerId], references: [id])
 
-  // Company relation (if organized by company)
   companyId   String?  @db.ObjectId
   company     Company? @relation("CompanyEvents", fields: [companyId], references: [id])
 
-  // Targeting (filter who can see/enroll)
-  targetUserTypes     String[]  // ["INDIVIDUAL", "BUSINESS"]
-  targetCategoryIds   String[]  // Category IDs for targeting
-  targetTurnoverRange String?   // "1-5cr", "5-10cr", etc.
-  targetCompanySize   String?   // "1-10", "10-50", etc.
+  targetUserTypes     String[]
+  targetCategoryIds   String[]
+  targetTurnoverRange String?
+  targetCompanySize   String?
 
-  // Media
   coverImage  String?
   images      String[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
   enrollments EventEnrollment[]
 
   @@index([organizerId])
@@ -338,7 +502,7 @@ model Event {
 }
 
 // ============================================================================
-// EVENT ENROLLMENT - Users enrolling in events
+// EVENT ENROLLMENT
 // ============================================================================
 
 model EventEnrollment {
@@ -352,17 +516,14 @@ model EventEnrollment {
 
   status    EnrollmentStatus @default(PENDING)
 
-  // Approval
   approvedAt DateTime?
   approvedBy String?  @db.ObjectId
 
-  // Attendance
   attended   Boolean  @default(false)
   attendedAt DateTime?
 
-  // Notes
-  userNote   String?  // User's reason for enrolling
-  adminNote  String?  // Admin's approval/rejection note
+  userNote   String?
+  adminNote  String?
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

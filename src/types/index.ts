@@ -95,38 +95,48 @@ export type ProfileUser = Prisma.UserGetPayload<{
   };
 }>;
 
-// Post type with relations
-export type PostWithRelations = Prisma.PostGetPayload<{
-  include: {
-    user: {
-      select: {
-        id: true;
-        name: true;
-        username: true;
-        avatar: true;
-        userType: true;
-        verificationStatus: true;
-      };
-    };
-    category: {
-      select: {
-        id: true;
-        name: true;
-        slug: true;
-        icon: true;
-      };
-    };
-    company: {
-      select: {
-        id: true;
-        name: true;
-        slug: true;
-        logo: true;
-        isVerified: true;
-      };
-    };
+export type PostWithRelations = {
+  id: string;
+  type: string;
+  content: string;
+  images: string[];
+  tags: string[];
+  visibility: string;
+  views: number;
+  likes: number;
+  shares: number;
+  userId: string;
+  categoryId: string | null;
+  companyId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    name: string;
+    username: string;
+    avatar: string | null;
+    userType: string;
+    verificationStatus: string;
   };
-}>;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    icon: string | null;
+  } | null;
+  company: {
+    id: string;
+    name: string;
+    slug: string;
+    logo: string | null;
+    isVerified: boolean;
+  } | null;
+  _count: {
+    postLikes: number;
+    postComments: number;
+  };
+};
+
 
 // Event type with relations
 export type EventWithRelations = Prisma.EventGetPayload<{

@@ -2,73 +2,61 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, TrendingUp, Users, Zap } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export function HeroSection() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { open } = useAuthModal();
 
+  // Hide hero for logged-in users — go straight to feed
+  if (loading || user) return null;
+
   return (
-    <section className="relative bg-gradient-to-br from-primary/5 via-secondary-50 to-primary/10 dark:from-secondary-900 dark:via-secondary-800 dark:to-secondary-900 py-20 px-4">
-      <div className="max-w-6xl mx-auto text-center">
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-primary-700 bg-clip-text text-transparent">
-          Discover & Share
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-violet-900 py-14 px-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-violet-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-600/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative max-w-3xl mx-auto text-center">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6 text-white/80 text-sm">
+          <Sparkles className="w-3.5 h-3.5 text-primary-300" />
+          Enterprise Social Networking Platform
+        </div>
+
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-4 tracking-tight">
+          Discover Ideas &{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-violet-300">
+            Grow Together
+          </span>
         </h1>
-        <p className="text-xl md:text-2xl text-secondary-700 dark:text-secondary-300 mb-8 max-w-3xl mx-auto">
-          Connect with millions of users, share your ideas, and grow your business
+
+        <p className="text-lg text-white/70 mb-8 max-w-xl mx-auto leading-relaxed">
+          A Pinterest-style platform for professionals. Share your work, find your industry, and build real connections.
         </p>
 
-        {!user && (
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button
-              variant="solid"
-              color="primary"
-              size="lg"
-              onClick={() => open('signup')}
-            >
-              Get Started Free
-            </Button>
-            <Button
-              variant="outline"
-              color="primary"
-              size="lg"
-              onClick={() => open('login')}
-            >
-              Sign In
-            </Button>
-          </div>
-        )}
-
-        <div className="max-w-2xl mx-auto mb-16">
-          <Input
-            type="search"
-            placeholder="Search for ideas, trends, people..."
-            size="lg"
-            prefix={<Search className="w-5 h-5" />}
-            className="shadow-lg"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => open('signup')}
+            className="px-8 py-3.5 bg-white text-primary-800 font-bold rounded-full hover:bg-primary-50 transition-all hover:shadow-xl hover:shadow-primary-900/30 active:scale-95 text-sm"
+          >
+            Get Started — It's Free
+          </button>
+          <button
+            onClick={() => open('login')}
+            className="px-8 py-3.5 border border-white/30 text-white font-semibold rounded-full hover:bg-white/10 transition-all text-sm"
+          >
+            Sign In
+          </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <div className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg">
-            <Users className="w-10 h-10 text-primary mx-auto mb-3" />
-            <h3 className="text-3xl font-bold mb-2">10M+</h3>
-            <p className="text-secondary-600 dark:text-secondary-400">Active Users</p>
-          </div>
-          <div className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg">
-            <TrendingUp className="w-10 h-10 text-primary mx-auto mb-3" />
-            <h3 className="text-3xl font-bold mb-2">50M+</h3>
-            <p className="text-secondary-600 dark:text-secondary-400">Posts Shared</p>
-          </div>
-          <div className="bg-white dark:bg-secondary-800 rounded-2xl p-6 shadow-lg">
-            <Zap className="w-10 h-10 text-primary mx-auto mb-3" />
-            <h3 className="text-3xl font-bold mb-2">99.9%</h3>
-            <p className="text-secondary-600 dark:text-secondary-400">Uptime</p>
-          </div>
-        </div>
+        {/* Social proof */}
+        <p className="mt-8 text-white/40 text-xs">
+          Join 10,000+ professionals already on Group Ad
+        </p>
       </div>
     </section>
   );

@@ -1,11 +1,13 @@
+import { CategoryBar } from '@/components/feed/category-bar';
+import { FeedContainer } from '@/components/feed/feed-container';
 import { HeroSection } from '@/components/home/hero-section';
-import { MasonryGrid } from '@/components/home/masonry-grid';
 
 export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <MasonryGrid />
+      <CategoryBar />
+      <FeedContainer />
     </>
   );
 }

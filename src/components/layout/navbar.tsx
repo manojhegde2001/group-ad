@@ -36,7 +36,7 @@ export function Navbar() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     setMounted(true);
@@ -196,13 +196,13 @@ export function Navbar() {
           ) : (
             <div className="flex items-center gap-2">
               <button
-                onClick={openLogin}
+                onClick={() => openLogin()}
                 className="px-4 py-2 rounded-full text-sm font-semibold text-secondary-700 dark:text-secondary-300 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
               >
                 Log in
               </button>
               <button
-                onClick={openSignup}
+                onClick={() => openSignup()}
                 className="px-4 py-2 rounded-full text-sm font-semibold bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:opacity-90 transition-all active:scale-95"
               >
                 Sign up

@@ -6,8 +6,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import {
     X, Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
-    ChevronLeft, ChevronRight, Loader2, Send, ExternalLink
+    ChevronLeft, ChevronRight, Loader2, Send,
 } from 'lucide-react';
+import { Avatar } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import type { PostWithRelations } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -123,25 +125,32 @@ export function PostDetailDrawer() {
     const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6" onClick={closePost}>
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-4 md:p-6" onClick={closePost}>
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" />
 
-            {/* Modal */}
+            {/* Modal — full screen sheet on mobile, side-by-side on md+ */}
             <div
-                className="relative z-10 w-full max-w-5xl max-h-[92vh] rounded-3xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-scale-in flex flex-col md:flex-row"
+                className="relative z-10 w-full sm:max-w-5xl h-[95vh] sm:max-h-[94vh] sm:h-auto sm:rounded-3xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row rounded-t-3xl"
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* Drag handle — mobile only */}
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-secondary-300 dark:bg-secondary-700 rounded-full sm:hidden z-20" />
+
                 {/* Close */}
                 <button
                     onClick={closePost}
-                    className="absolute top-4 right-4 z-10 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+                    className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+                    aria-label="Close"
                 >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
 
-                {/* Left — Image/Text */}
-                <div className={`relative flex-1 min-h-[300px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}>
+                {/* Left — Image/Text panel */}
+                <div
+                    className={`relative flex-1 min-h-[200px] sm:min-h-[280px] md:min-h-0 md:max-h-[94vh] bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
+                    style={{ maxHeight: 'clamp(200px, 42vh, 520px)' }}
+                >
                     {loading ? (
                         <Loader2 className="w-8 h-8 animate-spin text-secondary-400" />
                     ) : hasImages ? (
@@ -156,22 +165,22 @@ export function PostDetailDrawer() {
                                 <>
                                     <button
                                         onClick={prevImage}
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+                                        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
                                     >
-                                        <ChevronLeft className="w-5 h-5" />
+                                        <ChevronLeft className="w-4 sm:w-5 h-4 sm:h-5" />
                                     </button>
                                     <button
                                         onClick={nextImage}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+                                        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
                                     >
-                                        <ChevronRight className="w-5 h-5" />
+                                        <ChevronRight className="w-4 sm:w-5 h-4 sm:h-5" />
                                     </button>
                                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                                         {post.images.map((_, i) => (
                                             <button
                                                 key={i}
                                                 onClick={() => setCurrentImageIndex(i)}
-                                                className={`w-2 h-2 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'}`}
+                                                className={`h-2 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-4' : 'bg-white/50 w-2'}`}
                                             />
                                         ))}
                                     </div>
@@ -179,41 +188,47 @@ export function PostDetailDrawer() {
                             )}
                         </>
                     ) : (
-                        <div className="p-10 text-white">
-                            <p className="text-2xl font-bold leading-relaxed">{post.content}</p>
+                        <div className="p-5 sm:p-10 text-white">
+                            <p className="text-lg sm:text-2xl font-bold leading-relaxed">{post.content}</p>
                         </div>
                     )}
                 </div>
 
-                {/* Right — Details */}
-                <div className="w-full md:w-[380px] flex flex-col">
-                    {/* Author */}
-                    <div className="p-5 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden">
-                                {post.user.avatar ? (
-                                    <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-white text-sm font-bold">{post.user.name?.charAt(0)?.toUpperCase()}</span>
-                                )}
-                            </div>
+                {/* Right — Details panel (scrollable) */}
+                <div className="w-full md:w-[340px] lg:w-[400px] flex flex-col flex-1 md:flex-none overflow-hidden md:max-h-[94vh]">
+                    {/* Author header */}
+                    <div className="p-3 sm:p-4 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <Avatar
+                                src={post.user.avatar ?? undefined}
+                                name={post.user.name}
+                                size="sm"
+                                rounded="full"
+                                color="primary"
+                            />
                             <div>
                                 <div className="flex items-center gap-1.5">
                                     <p className="font-semibold text-sm text-secondary-900 dark:text-white">{post.user.name}</p>
                                     {post.user.verificationStatus === 'VERIFIED' && (
-                                        <BadgeCheck className="w-4 h-4 text-primary-500" />
+                                        <BadgeCheck className="w-4 h-4 text-primary-500 shrink-0" />
                                     )}
                                 </div>
                                 <p className="text-xs text-secondary-500">@{post.user.username}</p>
                             </div>
                         </div>
-                        <button className="px-4 py-1.5 border border-secondary-300 dark:border-secondary-700 rounded-full text-xs font-semibold text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
+                        <Button
+                            variant="outline"
+                            color="secondary"
+                            size="sm"
+                            rounded="pill"
+                            className="text-xs px-3 py-1.5 shrink-0"
+                        >
                             Follow
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 sm:space-y-4">
                         {/* Tags */}
                         {post.tags && post.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
@@ -233,7 +248,7 @@ export function PostDetailDrawer() {
                         )}
 
                         {/* Meta */}
-                        <div className="flex items-center gap-3 text-xs text-secondary-400">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-secondary-400">
                             {post.category && (
                                 <span className="flex items-center gap-1">
                                     {post.category.icon} {post.category.name}
@@ -246,21 +261,21 @@ export function PostDetailDrawer() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-4 py-1">
+                        <div className="flex items-center gap-3 sm:gap-4 py-1">
                             <button
                                 onClick={handleLike}
-                                className={`flex items-center gap-2 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-600 dark:text-secondary-400 hover:text-red-500'}`}
+                                className={`flex items-center gap-1.5 sm:gap-2 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-600 dark:text-secondary-400 hover:text-red-500'}`}
                             >
                                 <Heart className={`w-5 h-5 transition-transform active:scale-125 ${liked ? 'fill-red-500' : ''}`} />
                                 <span>{likeCount}</span>
                             </button>
-                            <button className="flex items-center gap-2 text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary-500 transition-colors">
+                            <button className="flex items-center gap-1.5 sm:gap-2 text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary-500 transition-colors">
                                 <MessageCircle className="w-5 h-5" />
                                 <span>{(post._count?.postComments || 0) + comments.length}</span>
                             </button>
                             <button
                                 onClick={() => requireAuth(() => setSaved((s) => !s))}
-                                className={`flex items-center gap-2 text-sm transition-colors ${saved ? 'text-primary-600' : 'text-secondary-600 dark:text-secondary-400 hover:text-primary-500'}`}
+                                className={`flex items-center gap-1.5 sm:gap-2 text-sm transition-colors ${saved ? 'text-primary-600' : 'text-secondary-600 dark:text-secondary-400 hover:text-primary-500'}`}
                             >
                                 <Bookmark className={`w-5 h-5 ${saved ? 'fill-primary-600' : ''}`} />
                             </button>
@@ -275,9 +290,14 @@ export function PostDetailDrawer() {
 
                             {comments.map((c) => (
                                 <div key={c.id} className="flex gap-2.5">
-                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-300 to-primary-500 flex items-center justify-center shrink-0 text-white text-xs font-bold overflow-hidden">
-                                        {c.user.avatar ? <img src={c.user.avatar} alt="" className="w-full h-full object-cover" /> : c.user.name.charAt(0)}
-                                    </div>
+                                    <Avatar
+                                        src={c.user.avatar ?? undefined}
+                                        name={c.user.name}
+                                        size="sm"
+                                        rounded="full"
+                                        color="primary"
+                                        className="w-7 h-7 shrink-0"
+                                    />
                                     <div className="flex-1">
                                         <div className="bg-secondary-50 dark:bg-secondary-800 rounded-2xl px-3 py-2">
                                             <p className="text-xs font-semibold text-secondary-800 dark:text-white mb-0.5">{c.user.name}</p>
@@ -294,18 +314,23 @@ export function PostDetailDrawer() {
                     </div>
 
                     {/* Comment Input */}
-                    <div className="p-4 border-t border-secondary-100 dark:border-secondary-800">
-                        <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden shrink-0 text-white text-xs font-bold">
-                                {user?.avatar ? <img src={user.avatar as string} alt="" className="w-full h-full object-cover" /> : (user?.name as string)?.charAt(0)?.toUpperCase() || '?'}
-                            </div>
-                            <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-4 py-2 gap-2">
+                    <div className="p-3 sm:p-4 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
+                        <form onSubmit={handleCommentSubmit} className="flex items-center gap-2 sm:gap-3">
+                            <Avatar
+                                src={user?.avatar as string | undefined}
+                                name={(user?.name as string) || '?'}
+                                size="sm"
+                                rounded="full"
+                                color="primary"
+                                className="w-8 h-8 shrink-0"
+                            />
+                            <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-3 sm:px-4 py-2 gap-2">
                                 <input
                                     type="text"
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
                                     placeholder={user ? 'Add a comment...' : 'Login to comment'}
-                                    className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400"
+                                    className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
                                     onClick={() => !user && openLogin()}
                                     readOnly={!user}
                                 />
@@ -313,7 +338,8 @@ export function PostDetailDrawer() {
                                     <button
                                         type="submit"
                                         disabled={submittingComment}
-                                        className="text-primary-600 hover:text-primary-700 transition-colors"
+                                        className="text-primary-600 hover:text-primary-700 transition-colors shrink-0"
+                                        aria-label="Send comment"
                                     >
                                         {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                     </button>

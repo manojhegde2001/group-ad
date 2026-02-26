@@ -91,6 +91,7 @@ const breakpointCols = {
   768: 2,
   640: 2,
   480: 1,
+  0: 1,
 };
 
 export function FeedContainer() {
@@ -177,13 +178,15 @@ export function FeedContainer() {
 
   if (loading) {
     return (
-      <div>
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className={`mb-4 break-inside-avoid rounded-2xl bg-secondary-100 dark:bg-secondary-800 animate-pulse ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-40' : 'h-52'}`} />
-            ))}
-          </div>
+      <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-6">
+        <div className="columns-1 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-3">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className={`mb-3 break-inside-avoid rounded-2xl bg-secondary-100 dark:bg-secondary-800 animate-pulse ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-40' : 'h-52'
+                }`}
+            />
+          ))}
         </div>
       </div>
     );
@@ -204,7 +207,7 @@ export function FeedContainer() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-3 py-5">
+    <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-5">
       {useDemoData && (
         <p className="text-center text-xs text-secondary-400 mb-4">
           Showing sample posts — create posts to see real content

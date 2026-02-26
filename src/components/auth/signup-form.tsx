@@ -167,7 +167,7 @@ export default function SignupForm() {
             <Select
               label="Account Type"
               options={options}
-              value={options.find(o => o.value === field.value)}
+              value={options.find(o => o.value === field.value) ?? null}
               onChange={(opt: any) => field.onChange(opt?.value)}
               error={errors.userType?.message}
               placeholder="Select account type"
@@ -190,7 +190,7 @@ export default function SignupForm() {
             <Select
               label="Category"
               options={options}
-              value={options.find(o => o.value === field.value)}
+              value={options.find(o => o.value === field.value) ?? null}
               onChange={(opt: any) => field.onChange(opt?.value)}
               error={errors.categoryId?.message}
               placeholder={
@@ -223,7 +223,7 @@ export default function SignupForm() {
                 <Select
                   label="Company (Optional)"
                   options={options}
-                  value={options.find(o => o.value === field.value)}
+                  value={options.find(o => o.value === field.value) ?? null}
                   onChange={(opt: any) => field.onChange(opt?.value)}
                   error={errors.companyId?.message}
                   placeholder={

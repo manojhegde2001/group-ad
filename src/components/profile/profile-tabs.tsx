@@ -1,10 +1,11 @@
 'use client';
 import { Tab } from 'rizzui';
-import { User, Building2, Shield, Link2 } from 'lucide-react';
+import { User, Building2, Shield, Link2, LayoutGrid } from 'lucide-react';
 import BasicInfoTab from './tabs/basic-info-tab';
 import BusinessInfoTab from './tabs/business-info-tab';
 import AccountSettingsTab from './tabs/account-settings-tab';
 import SocialLinksTab from './tabs/social-links-tab';
+import MyPostsTab from './tabs/my-posts-tab';
 import { ProfileUser } from '@/types';
 
 interface ProfileTabsProps {
@@ -15,28 +16,35 @@ export default function ProfileTabs({ user }: ProfileTabsProps) {
   return (
     <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm">
       <Tab>
-        <Tab.List className="border-b border-secondary-200 dark:border-secondary-700 px-6">
+        <Tab.List className="border-b border-secondary-200 dark:border-secondary-700 px-4 sm:px-6 overflow-x-auto flex-nowrap">
           <Tab.ListItem>
-            <User className="w-4 h-4 mr-2" />
+            <LayoutGrid className="w-4 h-4 mr-1.5" />
+            My Posts
+          </Tab.ListItem>
+          <Tab.ListItem>
+            <User className="w-4 h-4 mr-1.5" />
             Basic Info
           </Tab.ListItem>
           {user.userType === 'BUSINESS' && (
             <Tab.ListItem>
-              <Building2 className="w-4 h-4 mr-2" />
-              Business Info
+              <Building2 className="w-4 h-4 mr-1.5" />
+              Business
             </Tab.ListItem>
           )}
           <Tab.ListItem>
-            <Link2 className="w-4 h-4 mr-2" />
+            <Link2 className="w-4 h-4 mr-1.5" />
             Social Links
           </Tab.ListItem>
           <Tab.ListItem>
-            <Shield className="w-4 h-4 mr-2" />
+            <Shield className="w-4 h-4 mr-1.5" />
             Settings
           </Tab.ListItem>
         </Tab.List>
 
         <Tab.Panels>
+          <Tab.Panel>
+            <MyPostsTab />
+          </Tab.Panel>
           <Tab.Panel>
             <BasicInfoTab user={user} />
           </Tab.Panel>

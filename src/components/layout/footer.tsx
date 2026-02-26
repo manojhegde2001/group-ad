@@ -1,59 +1,63 @@
-import { Text } from 'rizzui';
 import Link from 'next/link';
+import Logo from '../ui/logo';
+
+const footerLinks = {
+  Product: [
+    { label: 'Features', href: '/features' },
+    { label: 'Pricing', href: '/pricing' },
+  ],
+  Company: [
+    { label: 'About Us', href: '/about' },
+    { label: 'Contact', href: '/contact' },
+  ],
+  Legal: [
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
+  ],
+};
 
 export function Footer() {
   return (
     <footer className="bg-secondary-50 dark:bg-secondary-900 border-t border-secondary-200 dark:border-secondary-800 mt-auto">
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <Text className="font-bold text-lg mb-4">Group Ad</Text>
-            <Text className="text-sm text-secondary-600 dark:text-secondary-400">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        {/* Top — brand + link columns */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+          {/* Brand */}
+          <div className="col-span-2 sm:col-span-1">
+            <Logo className="w-24 h-7 mb-3" />
+            <p className="text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed max-w-xs">
               Business-focused social networking platform for professionals and enterprises.
-            </Text>
+            </p>
           </div>
 
-          <div>
-            <Text className="font-semibold mb-4">Product</Text>
-            <div className="space-y-2">
-              <Link href="/features" className="block text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary">
-                Features
-              </Link>
-              <Link href="/pricing" className="block text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary">
-                Pricing
-              </Link>
+          {/* Link columns */}
+          {Object.entries(footerLinks).map(([section, links]) => (
+            <div key={section}>
+              <p className="font-semibold text-sm text-secondary-800 dark:text-secondary-200 mb-3">{section}</p>
+              <ul className="space-y-2">
+                {links.map(({ label, href }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="text-sm text-secondary-500 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-
-          <div>
-            <Text className="font-semibold mb-4">Company</Text>
-            <div className="space-y-2">
-              <Link href="/about" className="block text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary">
-                About Us
-              </Link>
-              <Link href="/contact" className="block text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary">
-                Contact
-              </Link>
-            </div>
-          </div>
-
-          <div>
-            <Text className="font-semibold mb-4">Legal</Text>
-            <div className="space-y-2">
-              <Link href="/privacy" className="block text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="block text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="mt-8 pt-8 border-t border-secondary-200 dark:border-secondary-800 text-center">
-          <Text className="text-sm text-secondary-600 dark:text-secondary-400">
+        {/* Bottom bar */}
+        <div className="mt-8 sm:mt-10 pt-6 border-t border-secondary-200 dark:border-secondary-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <p className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400">
             © {new Date().getFullYear()} Group Ad. All rights reserved.
-          </Text>
+          </p>
+          <p className="text-xs text-secondary-400 dark:text-secondary-500">
+            Made with ❤️ for professionals
+          </p>
         </div>
       </div>
     </footer>

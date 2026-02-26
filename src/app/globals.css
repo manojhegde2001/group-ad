@@ -32,7 +32,7 @@
   --background: 255 255 255;
   --foreground: 17 24 39;
   --overlay-bg: 0 0 0;
-  
+
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -115,9 +115,14 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .font-jakarta {
     font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* Safe-area inset for mobile bottom sheets */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
@@ -173,6 +178,7 @@ body {
       opacity: 0;
       transform: translateY(-8px);
     }
+
     100% {
       opacity: 1;
       transform: translateY(0);
@@ -184,6 +190,7 @@ body {
       opacity: 1;
       transform: translateY(0);
     }
+
     100% {
       opacity: 0;
       transform: translateY(-8px);
@@ -195,6 +202,7 @@ body {
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -202,8 +210,13 @@ body {
   }
 
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes scale-in {
@@ -211,6 +224,7 @@ body {
       opacity: 0;
       transform: scale(0.95);
     }
+
     to {
       opacity: 1;
       transform: scale(1);
@@ -237,10 +251,21 @@ body {
     animation: scale-in 0.2s ease-out forwards;
   }
 
-  .stagger-1 { animation-delay: 0.05s; }
-  .stagger-2 { animation-delay: 0.1s; }
-  .stagger-3 { animation-delay: 0.15s; }
-  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-1 {
+    animation-delay: 0.05s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.15s;
+  }
+
+  .stagger-4 {
+    animation-delay: 0.2s;
+  }
 }
 
 /* Modal backdrop */
@@ -270,6 +295,20 @@ body {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-6 {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

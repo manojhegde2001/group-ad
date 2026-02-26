@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCreatePost } from '@/hooks/use-feed';
 import { useAuth } from '@/hooks/use-auth';
-import { X, Image as ImageIcon, Type, Tag, Globe, Lock, Upload, Loader2, CheckCircle } from 'lucide-react';
+import { X, Image as ImageIcon, Type, Tag, Globe, Lock, Upload, Loader2, CheckCircle, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Button } from '@/components/ui/button';
+import { Avatar } from '@/components/ui/avatar';
 
 interface Category {
     id: string;
@@ -156,21 +158,29 @@ export function CreatePostModal() {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={handleClose}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={handleClose}>
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
 
-            {/* Modal */}
+            {/* Modal — full width sheet on mobile, constrained on sm+ */}
             <div
-                className="relative w-full max-w-2xl bg-white dark:bg-secondary-900 rounded-3xl shadow-2xl overflow-hidden animate-scale-in max-h-[90vh] flex flex-col"
+                className="relative w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-3xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-100 dark:border-secondary-800">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden text-white text-xs font-bold">
-                            {user?.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : (user?.name as string)?.charAt(0)?.toUpperCase()}
-                        </div>
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
+                    {/* Drag handle — mobile only */}
+                    <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-secondary-300 dark:bg-secondary-700 rounded-full sm:hidden" />
+
+                    <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
+                        <Avatar
+                            src={user?.avatar as string | undefined}
+                            name={(user?.name as string) || 'User'}
+                            size="sm"
+                            rounded="full"
+                            color="primary"
+                            className="w-8 h-8"
+                        />
                         <div>
                             <p className="text-sm font-semibold text-secondary-900 dark:text-white">{user?.name as string}</p>
                             <button
@@ -182,7 +192,11 @@ export function CreatePostModal() {
                             </button>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors">
+                    <button
+                        onClick={handleClose}
+                        className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors mt-2 sm:mt-0"
+                        aria-label="Close"
+                    >
                         <X className="w-5 h-5 text-secondary-500" />
                     </button>
                 </div>
@@ -190,36 +204,38 @@ export function CreatePostModal() {
                 {/* Success state */}
                 {success ? (
                     <div className="flex-1 flex flex-col items-center justify-center py-16 gap-4">
-                        <CheckCircle className="w-16 h-16 text-green-500" />
-                        <p className="text-xl font-semibold text-secondary-800 dark:text-white">Post Published!</p>
+                        <CheckCircle className="w-14 sm:w-16 h-14 sm:h-16 text-green-500" />
+                        <p className="text-lg sm:text-xl font-semibold text-secondary-800 dark:text-white">Post Published!</p>
                         <p className="text-secondary-500 text-sm">Your post is now live</p>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col">
                         {/* Post Type Toggle */}
-                        <div className="flex gap-2 px-6 pt-4">
+                        <div className="flex gap-2 px-4 sm:px-6 pt-4 shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setPostType('IMAGE')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${postType === 'IMAGE' ? 'bg-primary-600 text-white' : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'}`}
+                                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${postType === 'IMAGE' ? 'bg-primary-600 text-white' : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'}`}
                             >
-                                <ImageIcon className="w-4 h-4" /> Image Post
+                                <ImageIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                                <span>Image Post</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setPostType('TEXT')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${postType === 'TEXT' ? 'bg-primary-600 text-white' : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'}`}
+                                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${postType === 'TEXT' ? 'bg-primary-600 text-white' : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'}`}
                             >
-                                <Type className="w-4 h-4" /> Text Post
+                                <Type className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                                <span>Text Post</span>
                             </button>
                         </div>
 
-                        <div className="px-6 py-4 space-y-4">
+                        <div className="px-4 sm:px-6 py-4 space-y-4 flex-1">
                             {/* Image Upload Area */}
                             {postType === 'IMAGE' && (
                                 <div>
                                     {imagePreviews.length > 0 ? (
-                                        <div className={`grid gap-2 ${imagePreviews.length === 1 ? 'grid-cols-1' : imagePreviews.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
+                                        <div className={`grid gap-2 ${imagePreviews.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                                             {imagePreviews.map((src, i) => (
                                                 <div key={i} className="relative rounded-xl overflow-hidden group aspect-square">
                                                     <img src={src} alt="" className="w-full h-full object-cover" />
@@ -238,7 +254,7 @@ export function CreatePostModal() {
                                                     onClick={() => fileInputRef.current?.click()}
                                                     className="aspect-square border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-xl flex flex-col items-center justify-center gap-2 text-secondary-400 hover:border-primary-400 hover:text-primary-400 transition-colors"
                                                 >
-                                                    <Plus />
+                                                    <Plus className="w-6 h-6" />
                                                     <span className="text-xs">Add more</span>
                                                 </button>
                                             )}
@@ -247,12 +263,12 @@ export function CreatePostModal() {
                                         <button
                                             type="button"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="w-full border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-2xl p-10 flex flex-col items-center gap-3 text-secondary-400 hover:border-primary-400 hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all"
+                                            className="w-full border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-2xl p-6 sm:p-10 flex flex-col items-center gap-3 text-secondary-400 hover:border-primary-400 hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all"
                                         >
-                                            <Upload className="w-10 h-10" />
+                                            <Upload className="w-8 sm:w-10 h-8 sm:h-10" />
                                             <div className="text-center">
-                                                <p className="font-medium">Click to upload images</p>
-                                                <p className="text-sm text-secondary-400 mt-1">PNG, JPG, GIF up to 10MB · Max 4 images</p>
+                                                <p className="font-medium text-sm sm:text-base">Click to upload images</p>
+                                                <p className="text-xs sm:text-sm text-secondary-400 mt-1">PNG, JPG, GIF up to 10MB · Max 4 images</p>
                                             </div>
                                         </button>
                                     )}
@@ -271,9 +287,9 @@ export function CreatePostModal() {
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                placeholder={postType === 'IMAGE' ? 'Add a description...' : 'What\'s on your mind?'}
-                                rows={postType === 'TEXT' ? 6 : 3}
-                                className={`w-full resize-none bg-transparent outline-none text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 text-sm leading-relaxed ${postType === 'TEXT' ? 'text-base min-h-[160px]' : ''}`}
+                                placeholder={postType === 'IMAGE' ? 'Add a description...' : "What's on your mind?"}
+                                rows={postType === 'TEXT' ? 5 : 3}
+                                className={`w-full resize-none bg-transparent outline-none text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 text-sm leading-relaxed ${postType === 'TEXT' ? 'text-base min-h-[120px] sm:min-h-[160px]' : ''}`}
                                 maxLength={5000}
                             />
                             <div className="text-right text-xs text-secondary-400">{content.length}/5000</div>
@@ -285,8 +301,8 @@ export function CreatePostModal() {
                                     type="text"
                                     value={tags}
                                     onChange={(e) => setTags(e.target.value)}
-                                    placeholder="Add tags, comma separated (e.g. design, ai, startup)"
-                                    className="flex-1 bg-transparent outline-none text-sm text-secondary-700 dark:text-secondary-300 placeholder:text-secondary-400"
+                                    placeholder="Add tags (e.g. design, ai, startup)"
+                                    className="flex-1 bg-transparent outline-none text-sm text-secondary-700 dark:text-secondary-300 placeholder:text-secondary-400 min-w-0"
                                 />
                             </div>
 
@@ -294,15 +310,15 @@ export function CreatePostModal() {
                             {categories.length > 0 && (
                                 <div>
                                     <p className="text-xs font-medium text-secondary-500 mb-2">Category</p>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                         {categories.slice(0, 10).map((cat) => (
                                             <button
                                                 key={cat.id}
                                                 type="button"
                                                 onClick={() => setCategoryId(categoryId === cat.id ? '' : cat.id)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${categoryId === cat.id
-                                                        ? 'bg-primary-600 text-white'
-                                                        : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
+                                                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium transition-all ${categoryId === cat.id
+                                                    ? 'bg-primary-600 text-white'
+                                                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
                                                     }`}
                                             >
                                                 {cat.icon} {cat.name}
@@ -314,30 +330,34 @@ export function CreatePostModal() {
                         </div>
 
                         {/* Footer */}
-                        <div className="sticky bottom-0 bg-white dark:bg-secondary-900 px-6 py-4 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-3">
-                            <button type="button" onClick={handleClose} className="px-5 py-2.5 rounded-full text-sm font-semibold text-secondary-600 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors">
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={submitting || uploading}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white rounded-full text-sm font-semibold transition-all active:scale-95"
+                        <div className="sticky bottom-0 bg-white dark:bg-secondary-900 px-4 sm:px-6 py-3 sm:py-4 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+                            <Button
+                                type="button"
+                                onClick={handleClose}
+                                variant="text"
+                                color="secondary"
+                                size="sm"
+                                rounded="pill"
                             >
-                                {(submitting || uploading) && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="solid"
+                                color="primary"
+                                size="sm"
+                                rounded="pill"
+                                isLoading={submitting || uploading}
+                                disabled={submitting || uploading}
+                                leftIcon={!submitting && !uploading ? undefined : undefined}
+                                className="px-5 sm:px-6"
+                            >
                                 {uploading ? 'Uploading...' : submitting ? 'Publishing...' : 'Publish'}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 )}
             </div>
         </div>
-    );
-}
-
-function Plus({ className = '' }) {
-    return (
-        <svg className={`w-6 h-6 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
     );
 }

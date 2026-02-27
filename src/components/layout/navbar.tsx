@@ -208,7 +208,7 @@ export function Navbar() {
                   aria-expanded={dropdownOpen}
                 >
                   <Avatar
-                    src={user.avatar as string | undefined}
+                    src={(user.avatar as string | null | undefined) ?? undefined}
                     name={(user.name as string) || 'User'}
                     size="sm"
                     rounded="full"

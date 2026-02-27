@@ -92,12 +92,13 @@ export default function ProfileImageUpload({
         throw new Error('Upload failed');
       }
 
-      // Refresh the JWT session so the new avatar propagates to navbar immediately
-      await updateSession();
-
-      toast.success('Profile picture updated successfully');
+      toast.success('Profile picture updated successfully!');
       onClose();
-      window.location.reload();
+
+      // Refresh the JWT session so the new avatar propagates to navbar immediately.
+      // Use a small delay then hard-navigate so the refreshed token is picked up cleanly.
+      await updateSession();
+      window.location.href = window.location.href;
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Failed to upload image');
@@ -177,8 +178,8 @@ export default function ProfileImageUpload({
             {/* Compact Upload Area */}
             <div
               className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${dragActive
-                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.02]'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-gray-50 dark:bg-gray-800/50'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.02]'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-gray-50 dark:bg-gray-800/50'
                 }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}

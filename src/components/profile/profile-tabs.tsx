@@ -1,11 +1,12 @@
 'use client';
 import { Tab } from 'rizzui';
-import { User, Building2, Shield, Link2, LayoutGrid } from 'lucide-react';
+import { User, Building2, Shield, Link2, LayoutGrid, Bookmark } from 'lucide-react';
 import BasicInfoTab from './tabs/basic-info-tab';
 import BusinessInfoTab from './tabs/business-info-tab';
 import AccountSettingsTab from './tabs/account-settings-tab';
 import SocialLinksTab from './tabs/social-links-tab';
 import MyPostsTab from './tabs/my-posts-tab';
+import SavedPostsTab from './tabs/saved-posts-tab';
 import { ProfileUser } from '@/types';
 
 interface ProfileTabsProps {
@@ -20,6 +21,10 @@ export default function ProfileTabs({ user }: ProfileTabsProps) {
           <Tab.ListItem>
             <LayoutGrid className="w-4 h-4 mr-1.5" />
             My Posts
+          </Tab.ListItem>
+          <Tab.ListItem>
+            <Bookmark className="w-4 h-4 mr-1.5" />
+            Saved
           </Tab.ListItem>
           <Tab.ListItem>
             <User className="w-4 h-4 mr-1.5" />
@@ -44,6 +49,9 @@ export default function ProfileTabs({ user }: ProfileTabsProps) {
         <Tab.Panels>
           <Tab.Panel>
             <MyPostsTab />
+          </Tab.Panel>
+          <Tab.Panel>
+            <SavedPostsTab />
           </Tab.Panel>
           <Tab.Panel>
             <BasicInfoTab user={user} />

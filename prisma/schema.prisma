@@ -211,6 +211,10 @@ model User {
   notifications       Notification[]
   postLikes           PostLike[]
   postComments        PostComment[]
+  bookmarks           Bookmark[]
+
+  followers           Follow[]     @relation("Followers")
+  following           Follow[]     @relation("Following")
 
   @@index([userType])
   @@index([verificationStatus])
@@ -289,6 +293,7 @@ model Post {
 
   postLikes    PostLike[]
   postComments PostComment[]
+  bookmarks    Bookmark[]
 
   @@index([userId])
   @@index([companyId])
@@ -338,6 +343,46 @@ model PostComment {
   
   @@index([postId])
   @@index([userId])
+}
+
+// ============================================================================
+// FOLLOW MODEL
+// ============================================================================
+
+model Follow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  followerId  String   @db.ObjectId
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+
+  followingId String   @db.ObjectId
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// ============================================================================
+// BOOKMARK MODEL
+// ============================================================================
+
+model Bookmark {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
 }
 
 // ============================================================================

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
     Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
     Link2, Twitter, Facebook, Check, Video,
@@ -21,9 +22,10 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
     const { openPost } = usePostDetail();
 
     const [liked, setLiked] = useState<boolean>((post as any).isLikedByUser ?? false);
-    const [saved, setSaved] = useState(false);
+    const [saved, setSaved] = useState((post as any).isBookmarked ?? false);
     const [likeCount, setLikeCount] = useState(post._count?.postLikes ?? post.likes ?? 0);
     const [isLiking, setIsLiking] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
     const [copied, setCopied] = useState(false);
 
@@ -107,9 +109,23 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
         });
     };
 
-    const handleSave = (e: React.MouseEvent) => {
+    const handleSave = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        requireAuth(() => setSaved((s) => !s));
+        if (!user) { openLogin(); return; }
+        if (isSaving) return;
+        const prev = saved;
+        setSaved(!prev);
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/bookmarks/${post.id}`, {
+                method: prev ? 'DELETE' : 'POST',
+            });
+            if (!res.ok) setSaved(prev);
+        } catch {
+            setSaved(prev);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`;
@@ -201,7 +217,11 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
 
                     {/* Author + Like row */}
                     <div className="pin-card-overlay absolute bottom-0 left-0 right-0 flex items-end justify-between p-3">
-                        <div className="flex items-center gap-1.5 min-w-0">
+                        <Link
+                            href={`/profile/${post.user.username}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1.5 min-w-0 hover:opacity-90 transition-opacity"
+                        >
                             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden ring-1 ring-white/50 shrink-0">
                                 {post.user.avatar ? (
                                     <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover" />
@@ -214,7 +234,7 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                             <p className="text-white text-xs font-medium truncate max-w-[80px] drop-shadow-sm">
                                 {post.user.name}
                             </p>
-                        </div>
+                        </Link>
 
                         {/* Like pill */}
                         <button

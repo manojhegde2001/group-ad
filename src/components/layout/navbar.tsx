@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import {
   Search,
   Plus,
-  Bell,
   LogOut,
   User,
   Settings,
@@ -22,6 +21,7 @@ import {
   Menu,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -191,13 +191,7 @@ export function Navbar() {
               </Button>
 
               {/* Notifications */}
-              <button
-                className="relative p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-secondary-950" />
-              </button>
+              <NotificationBell />
 
               {/* User dropdown */}
               <div className="relative" ref={dropdownRef}>

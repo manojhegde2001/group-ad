@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
 
     const paramsToSign: Record<string, string | number> = {
       folder,
+      invalidate: 'true',
+      overwrite: 'true',
       public_id: publicId,
       timestamp,
     };

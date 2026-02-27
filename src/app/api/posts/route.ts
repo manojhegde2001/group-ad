@@ -15,8 +15,10 @@ const createPostSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const session = await auth();
+    const currentUserId = session?.user?.id ?? null;
 
+    const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
@@ -33,12 +35,7 @@ export async function GET(request: NextRequest) {
       visibility: visibility as any,
     };
 
-    if (userType) {
-      where.user = {
-        userType: userType as any,
-      };
-    }
-
+    if (userType) where.user = { userType: userType as any };
     if (categoryId) where.categoryId = categoryId;
     if (companyId) where.companyId = companyId;
     if (postType) where.type = postType as any;
@@ -56,9 +53,7 @@ export async function GET(request: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: { createdAt: 'desc' },
         include: {
           user: {
             select: {
@@ -71,38 +66,39 @@ export async function GET(request: NextRequest) {
             },
           },
           category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              icon: true,
-            },
+            select: { id: true, name: true, slug: true, icon: true },
           },
           company: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              logo: true,
-              isVerified: true,
-            },
+            select: { id: true, name: true, slug: true, logo: true, isVerified: true },
           },
+          _count: {
+            select: { postLikes: true, postComments: true },
+          },
+          // Include user's like record if logged in
+          ...(currentUserId
+            ? {
+              postLikes: {
+                where: { userId: currentUserId },
+                select: { userId: true },
+                take: 1,
+              },
+            }
+            : {}),
         },
       }),
       prisma.post.count({ where }),
     ]);
 
-    // Add empty counts for now
-    const postsWithCounts = posts.map(post => ({
+    const postsWithMeta = posts.map((post: any) => ({
       ...post,
-      _count: {
-        postLikes: 0,
-        postComments: 0,
-      },
+      isLikedByUser: currentUserId
+        ? Array.isArray(post.postLikes) && post.postLikes.length > 0
+        : false,
+      postLikes: undefined, // strip from response
     }));
 
     return NextResponse.json({
-      posts: postsWithCounts,
+      posts: postsWithMeta,
       pagination: {
         total,
         page,
@@ -112,40 +108,24 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching posts:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch posts' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: {
-        id: true,
-        userType: true,
-        companyId: true,
-        categoryId: true,
-        verificationStatus: true,
-      },
+      select: { id: true, userType: true, companyId: true, categoryId: true, verificationStatus: true },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -158,7 +138,6 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-
       if (user.companyId !== validatedData.companyId && user.userType !== 'ADMIN') {
         return NextResponse.json(
           { error: 'You can only post on behalf of your own company' },
@@ -180,60 +159,23 @@ export async function POST(request: NextRequest) {
       },
       include: {
         user: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            avatar: true,
-            userType: true,
-            verificationStatus: true,
-          },
+          select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true },
         },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            icon: true,
-          },
-        },
-        company: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            logo: true,
-            isVerified: true,
-          },
-        },
+        category: { select: { id: true, name: true, slug: true, icon: true } },
+        company: { select: { id: true, name: true, slug: true, logo: true, isVerified: true } },
+        _count: { select: { postLikes: true, postComments: true } },
       },
     });
 
-    const postWithCount = {
-      ...post,
-      _count: {
-        postLikes: 0,
-        postComments: 0,
-      },
-    };
-
-    return NextResponse.json({
-      message: 'Post created successfully',
-      post: postWithCount,
-    }, { status: 201 });
+    return NextResponse.json(
+      { message: 'Post created successfully', post: { ...post, isLikedByUser: false } },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error('Error creating post:', error);
-
     if (error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
     }
-
-    return NextResponse.json(
-      { error: 'Failed to create post' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
   }
 }

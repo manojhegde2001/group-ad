@@ -21,7 +21,7 @@ interface Category {
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
 export function CreatePostModal() {
-    const { isOpen, close } = useCreatePost();
+    const { isOpen, close, notifyCreated } = useCreatePost();
     const { user } = useAuth();
 
     const [postType, setPostType] = useState<PostType>('IMAGE');
@@ -184,12 +184,14 @@ export function CreatePostModal() {
                 throw new Error(err.error || 'Failed to create post');
             }
 
+            const data = await res.json();
             setSuccess(true);
             toast.success('Post published! 🎉');
+            // Prepend to feed without page reload
             setTimeout(() => {
-                handleClose();
-                window.location.reload();
-            }, 1500);
+                reset();
+                notifyCreated(data.post);
+            }, 1200);
         } catch (err: any) {
             toast.error(err.message || 'Failed to publish post');
         } finally {

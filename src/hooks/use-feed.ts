@@ -8,12 +8,21 @@ interface CreatePostStore {
     isOpen: boolean;
     open: () => void;
     close: () => void;
+    onCreated?: (post: PostWithRelations) => void;
+    setOnCreated: (cb: (post: PostWithRelations) => void) => void;
+    notifyCreated: (post: PostWithRelations) => void;
 }
 
-export const useCreatePost = create<CreatePostStore>((set) => ({
+export const useCreatePost = create<CreatePostStore>((set, get) => ({
     isOpen: false,
     open: () => set({ isOpen: true }),
     close: () => set({ isOpen: false }),
+    onCreated: undefined,
+    setOnCreated: (cb) => set({ onCreated: cb }),
+    notifyCreated: (post) => {
+        set({ isOpen: false });
+        get().onCreated?.(post);
+    },
 }));
 
 // ---- Post Detail Drawer Store ----

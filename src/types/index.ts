@@ -135,6 +135,7 @@ export type PostWithRelations = {
     postLikes: number;
     postComments: number;
   };
+  isLikedByUser?: boolean;
 };
 
 

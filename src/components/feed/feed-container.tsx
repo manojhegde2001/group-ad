@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Masonry from 'react-masonry-css';
 import { PostCard } from './post-card';
 import { CategoryBar } from './category-bar';
-import { useFeedFilter } from '@/hooks/use-feed';
+import { useFeedFilter, useCreatePost } from '@/hooks/use-feed';
 import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
 
@@ -96,6 +96,7 @@ const breakpointCols = {
 
 export function FeedContainer() {
   const { selectedCategoryId, searchQuery } = useFeedFilter();
+  const { setOnCreated } = useCreatePost();
   const [posts, setPosts] = useState<PostWithRelations[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -145,6 +146,14 @@ export function FeedContainer() {
     },
     [selectedCategoryId, searchQuery]
   );
+
+  // Prepend new posts to the feed when created
+  useEffect(() => {
+    setOnCreated((newPost: PostWithRelations) => {
+      setPosts((prev) => [newPost, ...prev]);
+      setUseDemoData(false);
+    });
+  }, [setOnCreated]);
 
   // Reset + refetch when filters change
   useEffect(() => {

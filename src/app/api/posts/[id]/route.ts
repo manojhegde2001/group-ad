@@ -20,67 +20,52 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await auth();
+    const currentUserId = session?.user?.id ?? null;
     const { id: postId } = await params;
 
-    const post = await prisma.post.findUnique({
+    const postRaw = await prisma.post.findUnique({
       where: { id: postId },
       include: {
         user: {
           select: {
-            id: true,
-            name: true,
-            username: true,
-            avatar: true,
-            userType: true,
-            verificationStatus: true,
-            bio: true,
-            location: true,
+            id: true, name: true, username: true, avatar: true,
+            userType: true, verificationStatus: true, bio: true, location: true,
           },
         },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            icon: true,
-            description: true,
-          },
-        },
+        category: { select: { id: true, name: true, slug: true, icon: true, description: true } },
         company: {
           select: {
-            id: true,
-            name: true,
-            slug: true,
-            logo: true,
-            isVerified: true,
-            industry: true,
-            location: true,
-            website: true,
+            id: true, name: true, slug: true, logo: true,
+            isVerified: true, industry: true, location: true, website: true,
           },
         },
+        _count: { select: { postLikes: true, postComments: true } },
+        ...(currentUserId
+          ? { postLikes: { where: { userId: currentUserId }, select: { userId: true }, take: 1 } }
+          : {}),
       },
     });
 
-    if (!post) {
-      return NextResponse.json(
-        { error: 'Post not found' },
-        { status: 404 }
-      );
+    if (!postRaw) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    // Increment view count
-    await prisma.post.update({
-      where: { id: postId },
-      data: { views: { increment: 1 } },
-    });
+    // Increment view count fire-and-forget
+    prisma.post.update({ where: { id: postId }, data: { views: { increment: 1 } } }).catch(() => { });
+
+    const post = {
+      ...(postRaw as any),
+      isLikedByUser: currentUserId
+        ? Array.isArray((postRaw as any).postLikes) && (postRaw as any).postLikes.length > 0
+        : false,
+      postLikes: undefined, // strip raw join data
+    };
 
     return NextResponse.json({ post });
   } catch (error) {
     console.error('Error fetching post:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch post' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
   }
 }
 
@@ -123,6 +108,7 @@ export async function PATCH(
         user: { select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true } },
         category: { select: { id: true, name: true, slug: true, icon: true } },
         company: { select: { id: true, name: true, slug: true, logo: true, isVerified: true } },
+        _count: { select: { postLikes: true, postComments: true } },
       },
     });
 

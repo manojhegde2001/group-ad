@@ -5,7 +5,6 @@ import { X } from 'lucide-react';
 import { LoginForm } from '../auth/login-form';
 import SignupForm from '../auth/signup-form';
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 
 export function AuthModal() {
   const { isOpen, mode, close, setMode } = useAuthModal();
@@ -25,7 +24,7 @@ export function AuthModal() {
     };
     if (isOpen) document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
+  }, [isOpen, close]);
 
   if (!isOpen) return null;
 
@@ -34,34 +33,36 @@ export function AuthModal() {
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
 
-      {/* Modal — bottom sheet on mobile, centered on sm+ */}
+      {/* Modal */}
       <div
-        className="relative w-full sm:max-w-md bg-white dark:bg-secondary-900 sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in rounded-t-3xl"
+        className="relative z-10 w-full sm:max-w-md bg-white dark:bg-secondary-900 sm:rounded-2xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in rounded-t-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle — mobile only */}
-        <div className="flex justify-center pt-3 sm:hidden">
-          <div className="w-10 h-1 bg-secondary-300 dark:bg-secondary-700 rounded-full" />
+        {/* Header bar */}
+        <div className="flex items-center justify-between px-5 sm:px-6 pt-4 sm:pt-5 pb-3 border-b border-secondary-100 dark:border-secondary-800">
+          {/* Drag handle — mobile only */}
+          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-secondary-200 dark:bg-secondary-700 rounded-full sm:hidden" />
+
+          <h2 className="text-base font-bold text-secondary-900 dark:text-white mt-1 sm:mt-0">
+            {mode === 'login' ? 'Welcome back 👋' : 'Join Group Ad'}
+          </h2>
+
+          {/* Close button — always top-right, never misaligned */}
+          <button
+            onClick={close}
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors text-secondary-500 mt-1 sm:mt-0"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Top gradient bar */}
-        <div className="h-1.5 bg-gradient-to-r from-primary-400 via-violet-500 to-primary-600 sm:rounded-t-3xl hidden sm:block" />
-
-        {/* Close button */}
-        <button
-          onClick={close}
-          className="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors text-secondary-400"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
         {/* Tab Toggle */}
-        <div className="px-5 sm:px-8 pt-4 sm:pt-6 pb-2">
+        <div className="px-5 sm:px-6 pt-4 pb-1">
           <div className="flex bg-secondary-100 dark:bg-secondary-800 rounded-xl p-1">
             <button
               onClick={() => setMode('login')}
-              className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${mode === 'login'
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${mode === 'login'
                 ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-sm'
                 : 'text-secondary-500 hover:text-secondary-700 dark:hover:text-secondary-300'
                 }`}
@@ -70,7 +71,7 @@ export function AuthModal() {
             </button>
             <button
               onClick={() => setMode('signup')}
-              className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${mode === 'signup'
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${mode === 'signup'
                 ? 'bg-white dark:bg-secondary-700 text-secondary-900 dark:text-white shadow-sm'
                 : 'text-secondary-500 hover:text-secondary-700 dark:hover:text-secondary-300'
                 }`}
@@ -80,19 +81,17 @@ export function AuthModal() {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="px-5 sm:px-8 py-4 sm:py-6 overflow-y-auto max-h-[75vh] sm:max-h-[80vh]">
-          <div className="mb-4 sm:mb-5">
-            <h2 className="text-lg sm:text-xl font-bold text-secondary-900 dark:text-white">
-              {mode === 'login' ? 'Welcome back 👋' : 'Create your account'}
-            </h2>
-            <p className="text-sm text-secondary-500 mt-1">
-              {mode === 'login'
-                ? 'Sign in to continue to Group Ad'
-                : 'Join thousands of professionals on Group Ad'}
-            </p>
-          </div>
+        {/* Subtitle */}
+        <div className="px-5 sm:px-6 pt-3">
+          <p className="text-xs text-secondary-400">
+            {mode === 'login'
+              ? 'Sign in to continue to Group Ad'
+              : 'Join thousands of professionals on Group Ad'}
+          </p>
+        </div>
 
+        {/* Content */}
+        <div className="px-5 sm:px-6 py-4 overflow-y-auto max-h-[70vh] sm:max-h-[78vh]">
           {mode === 'login' ? <LoginForm /> : <SignupForm />}
         </div>
       </div>

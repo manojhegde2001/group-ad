@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePostDetail } from '@/hooks/use-feed';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import {
     X, Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
-    ChevronLeft, ChevronRight, Loader2, Send,
+    ChevronLeft, ChevronRight, Loader2, Send, Link2,
+    Twitter, Facebook, Check, Video,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,20 @@ export function PostDetailDrawer() {
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState<Comment[]>([]);
     const [submittingComment, setSubmittingComment] = useState(false);
+    const [shareOpen, setShareOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const shareRef = useRef<HTMLDivElement>(null);
+
+    // Close share dropdown on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+                setShareOpen(false);
+            }
+        };
+        if (shareOpen) document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [shareOpen]);
 
     useEffect(() => {
         if (isOpen && postId) {
@@ -45,7 +60,9 @@ export function PostDetailDrawer() {
             setLiked(false);
             setSaved(false);
             setComment('');
-            // Fetch full post detail
+            setComments([]);
+            setShareOpen(false);
+
             setLoading(true);
             fetch(`/api/posts/${postId}`)
                 .then((r) => r.json())
@@ -75,11 +92,7 @@ export function PostDetailDrawer() {
         };
     }, [isOpen, currentImageIndex, post]);
 
-    const requireAuth = (cb: () => void) => {
-        if (!user) { openLogin(); return; }
-        cb();
-    };
-
+    const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
     const handleLike = () => requireAuth(() => {
         setLiked((l) => !l);
         setLikeCount((c) => liked ? Math.max(0, c - 1) : c + 1);
@@ -100,12 +113,16 @@ export function PostDetailDrawer() {
         if (!comment.trim()) return;
         setSubmittingComment(true);
         try {
-            // Optimistic add
             const optimistic: Comment = {
                 id: Date.now().toString(),
                 content: comment.trim(),
                 createdAt: new Date().toISOString(),
-                user: { id: user.id as string, name: user.name as string, username: (user as any).username, avatar: (user as any).avatar || null },
+                user: {
+                    id: user.id as string,
+                    name: user.name as string,
+                    username: (user as any).username,
+                    avatar: (user as any).avatar || null,
+                },
             };
             setComments((prev) => [optimistic, ...prev]);
             setComment('');
@@ -114,13 +131,28 @@ export function PostDetailDrawer() {
         }
     };
 
+    const postUrl = typeof window !== 'undefined' && post
+        ? `${window.location.origin}/posts/${post.id}`
+        : '';
+    const postTitle = post?.content?.slice(0, 60) || 'Check out this post';
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(postUrl);
+            setCopied(true);
+            setTimeout(() => { setCopied(false); setShareOpen(false); }, 1500);
+        } catch { }
+    };
+
     if (!isOpen || !post) return null;
 
     const hasImages = post.images && post.images.length > 0;
+    const isVideoPost = post.type === 'VIDEO';
     const isTextPost = !hasImages;
     const gradients = [
-        'from-violet-500 to-indigo-600', 'from-rose-400 to-pink-600', 'from-amber-400 to-orange-500',
-        'from-emerald-400 to-teal-600', 'from-sky-400 to-blue-600', 'from-fuchsia-500 to-purple-700',
+        'from-violet-500 to-indigo-600', 'from-rose-400 to-pink-600',
+        'from-amber-400 to-orange-500', 'from-emerald-400 to-teal-600',
+        'from-sky-400 to-blue-600', 'from-fuchsia-500 to-purple-700',
     ];
     const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
 
@@ -129,76 +161,82 @@ export function PostDetailDrawer() {
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" />
 
-            {/* Modal — full screen sheet on mobile, side-by-side on md+ */}
+            {/* Modal */}
             <div
-                className="relative z-10 w-full sm:max-w-5xl h-[95vh] sm:max-h-[94vh] sm:h-auto sm:rounded-3xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row rounded-t-3xl"
+                className="relative z-10 w-full sm:max-w-5xl h-[95vh] sm:max-h-[94vh] sm:h-auto sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row rounded-t-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Drag handle — mobile only */}
-                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-secondary-300 dark:bg-secondary-700 rounded-full sm:hidden z-20" />
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-9 h-1 bg-secondary-200 dark:bg-secondary-700 rounded-full md:hidden z-20" />
 
-                {/* Close */}
-                <button
-                    onClick={closePost}
-                    className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
-                    aria-label="Close"
-                >
-                    <X className="w-4 sm:w-5 h-4 sm:h-5" />
-                </button>
-
-                {/* Left — Image/Text panel */}
+                {/* ── Left panel — Media ── */}
                 <div
-                    className={`relative flex-1 min-h-[200px] sm:min-h-[280px] md:min-h-0 md:max-h-[94vh] bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
-                    style={{ maxHeight: 'clamp(200px, 42vh, 520px)' }}
+                    className={`relative flex-1 min-h-[220px] md:min-h-0 md:max-h-[94vh] bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                 >
                     {loading ? (
                         <Loader2 className="w-8 h-8 animate-spin text-secondary-400" />
                     ) : hasImages ? (
                         <>
-                            <img
-                                src={post.images[currentImageIndex]}
-                                alt={post.content || 'Post image'}
-                                className="w-full h-full object-contain"
-                                style={{ maxHeight: '80vh' }}
-                            />
+                            {isVideoPost ? (
+                                <video
+                                    src={post.images[currentImageIndex]}
+                                    className="w-full h-full object-contain"
+                                    controls
+                                    playsInline
+                                    style={{ maxHeight: '80vh' }}
+                                />
+                            ) : (
+                                <img
+                                    src={post.images[currentImageIndex]}
+                                    alt={post.content || 'Post image'}
+                                    className="w-full h-full object-contain"
+                                    style={{ maxHeight: '80vh' }}
+                                />
+                            )}
                             {post.images.length > 1 && (
                                 <>
                                     <button
                                         onClick={prevImage}
-                                        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
                                     >
-                                        <ChevronLeft className="w-4 sm:w-5 h-4 sm:h-5" />
+                                        <ChevronLeft className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={nextImage}
-                                        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
                                     >
-                                        <ChevronRight className="w-4 sm:w-5 h-4 sm:h-5" />
+                                        <ChevronRight className="w-5 h-5" />
                                     </button>
                                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                                         {post.images.map((_, i) => (
                                             <button
                                                 key={i}
                                                 onClick={() => setCurrentImageIndex(i)}
-                                                className={`h-2 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-4' : 'bg-white/50 w-2'}`}
+                                                className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-5' : 'bg-white/50 w-1.5'}`}
                                             />
                                         ))}
                                     </div>
                                 </>
                             )}
+                            {/* Video badge */}
+                            {isVideoPost && (
+                                <div className="absolute top-3 left-3 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
+                                    <Video className="w-3 h-3" /> Video
+                                </div>
+                            )}
                         </>
                     ) : (
-                        <div className="p-5 sm:p-10 text-white">
-                            <p className="text-lg sm:text-2xl font-bold leading-relaxed">{post.content}</p>
+                        <div className="p-8 sm:p-12 text-white">
+                            <p className="text-xl sm:text-2xl font-bold leading-relaxed">{post.content}</p>
                         </div>
                     )}
                 </div>
 
-                {/* Right — Details panel (scrollable) */}
-                <div className="w-full md:w-[340px] lg:w-[400px] flex flex-col flex-1 md:flex-none overflow-hidden md:max-h-[94vh]">
-                    {/* Author header */}
-                    <div className="p-3 sm:p-4 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-2 sm:gap-3">
+                {/* ── Right panel — Details ── */}
+                <div className="w-full md:w-[360px] lg:w-[400px] flex flex-col flex-1 md:flex-none overflow-hidden md:max-h-[94vh] bg-white dark:bg-secondary-900">
+                    {/* Header row — author + close */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
                             <Avatar
                                 src={post.user.avatar ?? undefined}
                                 name={post.user.name}
@@ -206,29 +244,40 @@ export function PostDetailDrawer() {
                                 rounded="full"
                                 color="primary"
                             />
-                            <div>
-                                <div className="flex items-center gap-1.5">
-                                    <p className="font-semibold text-sm text-secondary-900 dark:text-white">{post.user.name}</p>
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-1">
+                                    <p className="font-semibold text-sm text-secondary-900 dark:text-white truncate">{post.user.name}</p>
                                     {post.user.verificationStatus === 'VERIFIED' && (
                                         <BadgeCheck className="w-4 h-4 text-primary-500 shrink-0" />
                                     )}
                                 </div>
-                                <p className="text-xs text-secondary-500">@{post.user.username}</p>
+                                <p className="text-xs text-secondary-400 truncate">@{post.user.username}</p>
                             </div>
                         </div>
-                        <Button
-                            variant="outline"
-                            color="secondary"
-                            size="sm"
-                            rounded="pill"
-                            className="text-xs px-3 py-1.5 shrink-0"
-                        >
-                            Follow
-                        </Button>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                                variant="outline"
+                                color="secondary"
+                                size="sm"
+                                rounded="pill"
+                                className="text-xs px-3 h-7"
+                            >
+                                Follow
+                            </Button>
+                            {/* Close button — proper, always aligned */}
+                            <button
+                                onClick={closePost}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors text-secondary-500"
+                                aria-label="Close"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 sm:space-y-4">
+                    {/* Scrollable content */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {/* Tags */}
                         {post.tags && post.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
@@ -248,11 +297,9 @@ export function PostDetailDrawer() {
                         )}
 
                         {/* Meta */}
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-secondary-400">
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-secondary-400">
                             {post.category && (
-                                <span className="flex items-center gap-1">
-                                    {post.category.icon} {post.category.name}
-                                </span>
+                                <span>{post.category.icon} {post.category.name}</span>
                             )}
                             <span>·</span>
                             <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
@@ -260,34 +307,90 @@ export function PostDetailDrawer() {
                             <span>{post.views || 0} views</span>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-3 sm:gap-4 py-1">
+                        {/* Actions row */}
+                        <div className="flex items-center gap-4 py-1">
+                            {/* Like */}
                             <button
                                 onClick={handleLike}
-                                className={`flex items-center gap-1.5 sm:gap-2 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-600 dark:text-secondary-400 hover:text-red-500'}`}
+                                className={`flex items-center gap-1.5 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-red-500'}`}
                             >
                                 <Heart className={`w-5 h-5 transition-transform active:scale-125 ${liked ? 'fill-red-500' : ''}`} />
                                 <span>{likeCount}</span>
                             </button>
-                            <button className="flex items-center gap-1.5 sm:gap-2 text-sm text-secondary-600 dark:text-secondary-400 hover:text-primary-500 transition-colors">
+
+                            {/* Comment count */}
+                            <button className="flex items-center gap-1.5 text-sm text-secondary-500 dark:text-secondary-400 hover:text-primary-500 transition-colors">
                                 <MessageCircle className="w-5 h-5" />
                                 <span>{(post._count?.postComments || 0) + comments.length}</span>
                             </button>
+
+                            {/* Save */}
                             <button
                                 onClick={() => requireAuth(() => setSaved((s) => !s))}
-                                className={`flex items-center gap-1.5 sm:gap-2 text-sm transition-colors ${saved ? 'text-primary-600' : 'text-secondary-600 dark:text-secondary-400 hover:text-primary-500'}`}
+                                className={`flex items-center gap-1.5 text-sm transition-colors ${saved ? 'text-primary-600' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
                             >
                                 <Bookmark className={`w-5 h-5 ${saved ? 'fill-primary-600' : ''}`} />
                             </button>
-                            <button className="ml-auto text-secondary-400 hover:text-primary-500 transition-colors">
-                                <Share2 className="w-5 h-5" />
-                            </button>
+
+                            {/* Share dropdown */}
+                            <div className="relative ml-auto" ref={shareRef}>
+                                <button
+                                    onClick={() => setShareOpen((o) => !o)}
+                                    className={`text-sm transition-colors ${shareOpen ? 'text-primary-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
+                                    title="Share"
+                                >
+                                    <Share2 className="w-5 h-5" />
+                                </button>
+
+                                {shareOpen && (
+                                    <div className="absolute bottom-8 right-0 z-50 bg-white dark:bg-secondary-800 rounded-xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-1.5 w-48 animate-scale-in">
+                                        <button
+                                            onClick={handleCopyLink}
+                                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                        >
+                                            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
+                                            {copied ? 'Copied!' : 'Copy link'}
+                                        </button>
+                                        <a
+                                            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(postTitle)}&url=${encodeURIComponent(postUrl)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                        >
+                                            <Twitter className="w-4 h-4 text-sky-500" />
+                                            Share on X
+                                        </a>
+                                        <a
+                                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                        >
+                                            <Facebook className="w-4 h-4 text-blue-600" />
+                                            Share on Facebook
+                                        </a>
+                                        {typeof navigator !== 'undefined' && navigator.share && (
+                                            <button
+                                                onClick={() => {
+                                                    navigator.share({ title: postTitle, url: postUrl });
+                                                    setShareOpen(false);
+                                                }}
+                                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                            >
+                                                <Share2 className="w-4 h-4" />
+                                                More options
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Comments */}
-                        <div className="space-y-3">
-                            <p className="text-xs font-semibold text-secondary-500 uppercase tracking-wide">Comments</p>
-
+                        <div className="space-y-3 pt-1">
+                            <p className="text-[11px] font-semibold text-secondary-400 uppercase tracking-wide">
+                                Comments
+                            </p>
                             {comments.map((c) => (
                                 <div key={c.id} className="flex gap-2.5">
                                     <Avatar
@@ -303,19 +406,23 @@ export function PostDetailDrawer() {
                                             <p className="text-xs font-semibold text-secondary-800 dark:text-white mb-0.5">{c.user.name}</p>
                                             <p className="text-xs text-secondary-600 dark:text-secondary-400">{c.content}</p>
                                         </div>
+                                        <p className="text-[10px] text-secondary-400 mt-0.5 ml-2">
+                                            {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
-
                             {comments.length === 0 && (
-                                <p className="text-xs text-secondary-400 text-center py-4">No comments yet. Be the first!</p>
+                                <p className="text-xs text-secondary-400 text-center py-4">
+                                    No comments yet. Be the first!
+                                </p>
                             )}
                         </div>
                     </div>
 
-                    {/* Comment Input */}
-                    <div className="p-3 sm:p-4 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
-                        <form onSubmit={handleCommentSubmit} className="flex items-center gap-2 sm:gap-3">
+                    {/* Comment input */}
+                    <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
+                        <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
                             <Avatar
                                 src={user?.avatar as string | undefined}
                                 name={(user?.name as string) || '?'}
@@ -324,7 +431,7 @@ export function PostDetailDrawer() {
                                 color="primary"
                                 className="w-8 h-8 shrink-0"
                             />
-                            <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-3 sm:px-4 py-2 gap-2">
+                            <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-4 py-2 gap-2">
                                 <input
                                     type="text"
                                     value={comment}
@@ -341,7 +448,10 @@ export function PostDetailDrawer() {
                                         className="text-primary-600 hover:text-primary-700 transition-colors shrink-0"
                                         aria-label="Send comment"
                                     >
-                                        {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                        {submittingComment
+                                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                                            : <Send className="w-4 h-4" />
+                                        }
                                     </button>
                                 )}
                             </div>

@@ -3,7 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCreatePost } from '@/hooks/use-feed';
 import { useAuth } from '@/hooks/use-auth';
-import { X, Image as ImageIcon, Type, Tag, Globe, Lock, Upload, Loader2, CheckCircle, Plus } from 'lucide-react';
+import {
+    X, Image as ImageIcon, Type, Tag, Globe, Lock,
+    Upload, Loader2, CheckCircle, Plus, Video, Film,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -15,23 +18,26 @@ interface Category {
     icon?: string | null;
 }
 
+type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
+
 export function CreatePostModal() {
     const { isOpen, close } = useCreatePost();
     const { user } = useAuth();
 
-    const [postType, setPostType] = useState<'IMAGE' | 'TEXT'>('IMAGE');
+    const [postType, setPostType] = useState<PostType>('IMAGE');
     const [content, setContent] = useState('');
     const [tags, setTags] = useState('');
     const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC');
     const [categoryId, setCategoryId] = useState('');
-    const [images, setImages] = useState<string[]>([]);
-    const [imageFiles, setImageFiles] = useState<File[]>([]);
-    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+    const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
     const [success, setSuccess] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const videoInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -42,16 +48,22 @@ export function CreatePostModal() {
         }
     }, [isOpen]);
 
+    // Lock body scroll
+    useEffect(() => {
+        if (isOpen) document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, [isOpen]);
+
     const reset = () => {
         setContent('');
         setTags('');
         setVisibility('PUBLIC');
         setCategoryId('');
-        setImages([]);
-        setImageFiles([]);
-        setImagePreviews([]);
+        setMediaFiles([]);
+        setMediaPreviews([]);
         setPostType('IMAGE');
         setSuccess(false);
+        setUploadProgress(0);
     };
 
     const handleClose = () => {
@@ -59,41 +71,72 @@ export function CreatePostModal() {
         close();
     };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
-        const total = imageFiles.length + files.length;
-        if (total > 4) {
-            toast.error('Maximum 4 images allowed');
-            return;
+        if (type === 'video') {
+            // Only 1 video allowed
+            const videoFile = files[0];
+            if (!videoFile.type.startsWith('video/')) {
+                toast.error('Please select a valid video file');
+                return;
+            }
+            if (videoFile.size > 100 * 1024 * 1024) {
+                toast.error('Video must be under 100MB');
+                return;
+            }
+            setMediaFiles([videoFile]);
+            setMediaPreviews([URL.createObjectURL(videoFile)]);
+        } else {
+            const total = mediaFiles.length + files.length;
+            if (total > 4) {
+                toast.error('Maximum 4 images allowed');
+                return;
+            }
+            const newFiles = files.filter((f) => f.type.startsWith('image/'));
+            if (newFiles.length === 0) {
+                toast.error('Please select valid image files');
+                return;
+            }
+            const previews = newFiles.map((f) => URL.createObjectURL(f));
+            setMediaFiles((prev) => [...prev, ...newFiles]);
+            setMediaPreviews((prev) => [...prev, ...previews]);
         }
 
-        const previews = files.map((f) => URL.createObjectURL(f));
-        setImageFiles((prev) => [...prev, ...files]);
-        setImagePreviews((prev) => [...prev, ...previews]);
+        // Reset input value so same file can be re-selected
+        e.target.value = '';
     };
 
-    const removeImage = (index: number) => {
-        URL.revokeObjectURL(imagePreviews[index]);
-        setImageFiles((prev) => prev.filter((_, i) => i !== index));
-        setImagePreviews((prev) => prev.filter((_, i) => i !== index));
-        setImages((prev) => prev.filter((_, i) => i !== index));
+    const removeMedia = (index: number) => {
+        URL.revokeObjectURL(mediaPreviews[index]);
+        setMediaFiles((prev) => prev.filter((_, i) => i !== index));
+        setMediaPreviews((prev) => prev.filter((_, i) => i !== index));
     };
 
-    const uploadImages = async (): Promise<string[]> => {
-        if (imageFiles.length === 0) return images;
+    const uploadToCloudinary = async (): Promise<string[]> => {
+        if (mediaFiles.length === 0) return [];
         setUploading(true);
+        setUploadProgress(0);
+
+        const resourceType = postType === 'VIDEO' ? 'video' : 'image';
+        const uploaded: string[] = [];
+
         try {
-            const uploaded: string[] = [];
-            for (const file of imageFiles) {
+            for (let i = 0; i < mediaFiles.length; i++) {
+                const file = mediaFiles[i];
                 const formData = new FormData();
                 formData.append('file', file);
-                const res = await fetch('/api/user/upload-avatar', { method: 'POST', body: formData });
-                if (res.ok) {
-                    const data = await res.json();
-                    uploaded.push(data.url || data.avatar || '');
+                formData.append('resource_type', resourceType);
+
+                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Upload failed');
                 }
+                const data = await res.json();
+                uploaded.push(data.url);
+                setUploadProgress(Math.round(((i + 1) / mediaFiles.length) * 100));
             }
             return uploaded;
         } finally {
@@ -107,17 +150,14 @@ export function CreatePostModal() {
             toast.error('Please add some content');
             return;
         }
-        if (postType === 'IMAGE' && imageFiles.length === 0 && images.length === 0) {
-            toast.error('Please add at least one image for an image post');
+        if ((postType === 'IMAGE' || postType === 'VIDEO') && mediaFiles.length === 0) {
+            toast.error(`Please add at least one ${postType === 'VIDEO' ? 'video' : 'image'}`);
             return;
         }
 
         setSubmitting(true);
         try {
-            let finalImages = images;
-            if (imageFiles.length > 0) {
-                finalImages = await uploadImages();
-            }
+            const mediaUrls = await uploadToCloudinary();
 
             const parsedTags = tags
                 .split(',')
@@ -130,7 +170,9 @@ export function CreatePostModal() {
                 body: JSON.stringify({
                     type: postType,
                     content: content.trim(),
-                    images: finalImages,
+                    images: postType !== 'VIDEO' ? mediaUrls : [],
+                    // Store video URL in images array for simplicity (or you can extend schema)
+                    ...(postType === 'VIDEO' && { images: mediaUrls }),
                     tags: parsedTags,
                     visibility,
                     categoryId: categoryId || undefined,
@@ -157,22 +199,24 @@ export function CreatePostModal() {
 
     if (!isOpen) return null;
 
+    const isMediaPost = postType === 'IMAGE' || postType === 'VIDEO';
+
     return (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={handleClose}>
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
 
-            {/* Modal — full width sheet on mobile, constrained on sm+ */}
+            {/* Modal */}
             <div
-                className="relative w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-3xl"
+                className="relative z-10 w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-2xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
                     {/* Drag handle — mobile only */}
-                    <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-secondary-300 dark:bg-secondary-700 rounded-full sm:hidden" />
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-9 h-1 bg-secondary-200 dark:bg-secondary-700 rounded-full sm:hidden" />
 
-                    <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
+                    <div className="flex items-center gap-2.5 mt-1.5 sm:mt-0">
                         <Avatar
                             src={user?.avatar as string | undefined}
                             name={(user?.name as string) || 'User'}
@@ -182,143 +226,191 @@ export function CreatePostModal() {
                             className="w-8 h-8"
                         />
                         <div>
-                            <p className="text-sm font-semibold text-secondary-900 dark:text-white">{user?.name as string}</p>
+                            <p className="text-sm font-semibold text-secondary-900 dark:text-white leading-tight">
+                                {user?.name as string}
+                            </p>
                             <button
                                 onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
-                                className="flex items-center gap-1 text-xs text-secondary-500 hover:text-primary-500 transition-colors"
+                                className="flex items-center gap-1 text-[11px] text-secondary-400 hover:text-primary-500 transition-colors"
                             >
-                                {visibility === 'PUBLIC' ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                                {visibility === 'PUBLIC' ? 'Public' : 'Private'}
+                                {visibility === 'PUBLIC'
+                                    ? <><Globe className="w-3 h-3" /> Public</>
+                                    : <><Lock className="w-3 h-3" /> Private</>
+                                }
                             </button>
                         </div>
                     </div>
+
+                    {/* Close — in-flow, never overlapping content */}
                     <button
                         onClick={handleClose}
-                        className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors mt-2 sm:mt-0"
-                        aria-label="Close"
+                        className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors mt-1.5 sm:mt-0"
+                        aria-label="Close modal"
                     >
-                        <X className="w-5 h-5 text-secondary-500" />
+                        <X className="w-4 h-4 text-secondary-500" />
                     </button>
                 </div>
 
                 {/* Success state */}
                 {success ? (
                     <div className="flex-1 flex flex-col items-center justify-center py-16 gap-4">
-                        <CheckCircle className="w-14 sm:w-16 h-14 sm:h-16 text-green-500" />
-                        <p className="text-lg sm:text-xl font-semibold text-secondary-800 dark:text-white">Post Published!</p>
-                        <p className="text-secondary-500 text-sm">Your post is now live</p>
+                        <CheckCircle className="w-14 h-14 text-green-500" />
+                        <p className="text-lg font-semibold text-secondary-800 dark:text-white">Post Published!</p>
+                        <p className="text-secondary-400 text-sm">Your post is now live</p>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col">
-                        {/* Post Type Toggle */}
-                        <div className="flex gap-2 px-4 sm:px-6 pt-4 shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => setPostType('IMAGE')}
-                                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${postType === 'IMAGE' ? 'bg-primary-600 text-white' : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'}`}
-                            >
-                                <ImageIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                                <span>Image Post</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setPostType('TEXT')}
-                                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${postType === 'TEXT' ? 'bg-primary-600 text-white' : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'}`}
-                            >
-                                <Type className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                                <span>Text Post</span>
-                            </button>
+                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col min-h-0">
+                        {/* Post Type Tabs */}
+                        <div className="flex gap-1.5 px-4 sm:px-5 pt-3.5 shrink-0">
+                            {([
+                                { type: 'IMAGE', icon: ImageIcon, label: 'Photo' },
+                                { type: 'VIDEO', icon: Film, label: 'Video' },
+                                { type: 'TEXT', icon: Type, label: 'Text' },
+                            ] as const).map(({ type, icon: Icon, label }) => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => { setPostType(type); setMediaFiles([]); setMediaPreviews([]); }}
+                                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${postType === type
+                                        ? 'bg-primary-600 text-white shadow-sm shadow-primary-200 dark:shadow-primary-900'
+                                        : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-500 hover:bg-secondary-200 dark:hover:bg-secondary-700'
+                                        }`}
+                                >
+                                    <Icon className="w-3.5 h-3.5" />
+                                    {label}
+                                </button>
+                            ))}
                         </div>
 
-                        <div className="px-4 sm:px-6 py-4 space-y-4 flex-1">
-                            {/* Image Upload Area */}
-                            {postType === 'IMAGE' && (
+                        <div className="px-4 sm:px-5 py-4 space-y-4 flex-1">
+                            {/* Media Upload Area */}
+                            {isMediaPost && (
                                 <div>
-                                    {imagePreviews.length > 0 ? (
-                                        <div className={`grid gap-2 ${imagePreviews.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                                            {imagePreviews.map((src, i) => (
-                                                <div key={i} className="relative rounded-xl overflow-hidden group aspect-square">
-                                                    <img src={src} alt="" className="w-full h-full object-cover" />
+                                    {mediaPreviews.length > 0 ? (
+                                        <div className={`grid gap-2 ${mediaPreviews.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                            {mediaPreviews.map((src, i) => (
+                                                <div key={i} className="relative rounded-xl overflow-hidden group aspect-square bg-secondary-100 dark:bg-secondary-800">
+                                                    {postType === 'VIDEO' ? (
+                                                        <video
+                                                            src={src}
+                                                            className="w-full h-full object-cover"
+                                                            muted
+                                                            playsInline
+                                                            onMouseEnter={(e) => e.currentTarget.play()}
+                                                            onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                                        />
+                                                    ) : (
+                                                        <img src={src} alt="" className="w-full h-full object-cover" />
+                                                    )}
+                                                    {/* Video badge */}
+                                                    {postType === 'VIDEO' && (
+                                                        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-medium flex items-center gap-1">
+                                                            <Video className="w-3 h-3" /> Video
+                                                        </div>
+                                                    )}
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeImage(i)}
-                                                        className="absolute top-2 right-2 p-1 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={() => removeMedia(i)}
+                                                        className="absolute top-2 right-2 w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
                                                         <X className="w-3 h-3" />
                                                     </button>
                                                 </div>
                                             ))}
-                                            {imagePreviews.length < 4 && (
+                                            {postType === 'IMAGE' && mediaPreviews.length < 4 && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="aspect-square border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-xl flex flex-col items-center justify-center gap-2 text-secondary-400 hover:border-primary-400 hover:text-primary-400 transition-colors"
+                                                    onClick={() => imageInputRef.current?.click()}
+                                                    className="aspect-square border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-xl flex flex-col items-center justify-center gap-1.5 text-secondary-400 hover:border-primary-400 hover:text-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/10 transition-all"
                                                 >
-                                                    <Plus className="w-6 h-6" />
-                                                    <span className="text-xs">Add more</span>
+                                                    <Plus className="w-5 h-5" />
+                                                    <span className="text-xs font-medium">Add more</span>
                                                 </button>
                                             )}
                                         </div>
                                     ) : (
                                         <button
                                             type="button"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="w-full border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-2xl p-6 sm:p-10 flex flex-col items-center gap-3 text-secondary-400 hover:border-primary-400 hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all"
+                                            onClick={() => postType === 'VIDEO' ? videoInputRef.current?.click() : imageInputRef.current?.click()}
+                                            className="w-full border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-3 text-secondary-400 hover:border-primary-400 hover:text-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/10 transition-all group"
                                         >
-                                            <Upload className="w-8 sm:w-10 h-8 sm:h-10" />
+                                            {postType === 'VIDEO' ? (
+                                                <Film className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                                            ) : (
+                                                <Upload className="w-10 h-10 group-hover:scale-110 transition-transform" />
+                                            )}
                                             <div className="text-center">
-                                                <p className="font-medium text-sm sm:text-base">Click to upload images</p>
-                                                <p className="text-xs sm:text-sm text-secondary-400 mt-1">PNG, JPG, GIF up to 10MB · Max 4 images</p>
+                                                <p className="font-semibold text-sm">
+                                                    {postType === 'VIDEO' ? 'Upload a video' : 'Upload photos'}
+                                                </p>
+                                                <p className="text-xs text-secondary-400 mt-1">
+                                                    {postType === 'VIDEO'
+                                                        ? 'MP4, MOV, WebM up to 100MB'
+                                                        : 'PNG, JPG, WebP up to 25MB · Max 4 images'}
+                                                </p>
                                             </div>
                                         </button>
                                     )}
+
+                                    {/* Hidden file inputs */}
                                     <input
-                                        ref={fileInputRef}
+                                        ref={imageInputRef}
                                         type="file"
                                         accept="image/*"
                                         multiple
-                                        onChange={handleFileSelect}
+                                        onChange={(e) => handleFileSelect(e, 'image')}
+                                        className="hidden"
+                                    />
+                                    <input
+                                        ref={videoInputRef}
+                                        type="file"
+                                        accept="video/*"
+                                        onChange={(e) => handleFileSelect(e, 'video')}
                                         className="hidden"
                                     />
                                 </div>
                             )}
 
-                            {/* Content */}
+                            {/* Content / Caption */}
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                placeholder={postType === 'IMAGE' ? 'Add a description...' : "What's on your mind?"}
+                                placeholder={
+                                    postType === 'IMAGE' ? 'Add a caption...'
+                                        : postType === 'VIDEO' ? 'Describe your video...'
+                                            : "What's on your mind?"
+                                }
                                 rows={postType === 'TEXT' ? 5 : 3}
-                                className={`w-full resize-none bg-transparent outline-none text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 text-sm leading-relaxed ${postType === 'TEXT' ? 'text-base min-h-[120px] sm:min-h-[160px]' : ''}`}
+                                className={`w-full resize-none bg-transparent outline-none text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 text-sm leading-relaxed ${postType === 'TEXT' ? 'min-h-[140px]' : ''}`}
                                 maxLength={5000}
                             />
-                            <div className="text-right text-xs text-secondary-400">{content.length}/5000</div>
+                            <div className="text-right text-[11px] text-secondary-300 -mt-3">{content.length}/5000</div>
 
                             {/* Tags */}
-                            <div className="flex items-center gap-2 bg-secondary-50 dark:bg-secondary-800 rounded-xl px-3 py-2">
+                            <div className="flex items-center gap-2 bg-secondary-50 dark:bg-secondary-800/60 rounded-xl px-3 py-2.5 border border-secondary-100 dark:border-secondary-700">
                                 <Tag className="w-4 h-4 text-secondary-400 shrink-0" />
                                 <input
                                     type="text"
                                     value={tags}
                                     onChange={(e) => setTags(e.target.value)}
-                                    placeholder="Add tags (e.g. design, ai, startup)"
+                                    placeholder="Add tags, comma separated (design, ai, startup)"
                                     className="flex-1 bg-transparent outline-none text-sm text-secondary-700 dark:text-secondary-300 placeholder:text-secondary-400 min-w-0"
                                 />
                             </div>
 
-                            {/* Category */}
+                            {/* Category Pills */}
                             {categories.length > 0 && (
                                 <div>
-                                    <p className="text-xs font-medium text-secondary-500 mb-2">Category</p>
-                                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                        {categories.slice(0, 10).map((cat) => (
+                                    <p className="text-[11px] font-semibold text-secondary-400 uppercase tracking-wide mb-2">Category</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {categories.slice(0, 12).map((cat) => (
                                             <button
                                                 key={cat.id}
                                                 type="button"
                                                 onClick={() => setCategoryId(categoryId === cat.id ? '' : cat.id)}
-                                                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium transition-all ${categoryId === cat.id
-                                                    ? 'bg-primary-600 text-white'
-                                                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${categoryId === cat.id
+                                                    ? 'bg-primary-600 text-white shadow-sm'
+                                                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700'
                                                     }`}
                                             >
                                                 {cat.icon} {cat.name}
@@ -329,8 +421,24 @@ export function CreatePostModal() {
                             )}
                         </div>
 
+                        {/* Upload progress bar */}
+                        {uploading && (
+                            <div className="px-4 sm:px-5 pb-2 shrink-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-500" />
+                                    <span className="text-xs text-secondary-500">Uploading media... {uploadProgress}%</span>
+                                </div>
+                                <div className="h-1.5 bg-secondary-100 dark:bg-secondary-800 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                                        style={{ width: `${uploadProgress}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Footer */}
-                        <div className="sticky bottom-0 bg-white dark:bg-secondary-900 px-4 sm:px-6 py-3 sm:py-4 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+                        <div className="sticky bottom-0 bg-white dark:bg-secondary-900 px-4 sm:px-5 py-3 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-2 shrink-0">
                             <Button
                                 type="button"
                                 onClick={handleClose}
@@ -349,8 +457,7 @@ export function CreatePostModal() {
                                 rounded="pill"
                                 isLoading={submitting || uploading}
                                 disabled={submitting || uploading}
-                                leftIcon={!submitting && !uploading ? undefined : undefined}
-                                className="px-5 sm:px-6"
+                                className="px-6 font-semibold"
                             >
                                 {uploading ? 'Uploading...' : submitting ? 'Publishing...' : 'Publish'}
                             </Button>

@@ -88,8 +88,9 @@ export default function ProfileImageUpload({
         body: formData,
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error('Upload failed');
+        throw new Error(data.error || 'Upload failed');
       }
 
       toast.success('Profile picture updated successfully!');
@@ -99,9 +100,9 @@ export default function ProfileImageUpload({
       // Use a small delay then hard-navigate so the refreshed token is picked up cleanly.
       await updateSession();
       window.location.href = window.location.href;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload image');
+      toast.error(error?.message || 'Failed to upload image');
     } finally {
       setIsUploading(false);
     }

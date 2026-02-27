@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 
 export default function MyPostsTab() {
     const { openPost } = usePostDetail();
-    const { open: openCreatePost } = useCreatePost();
+    const { open: openCreatePost, setOnCreated } = useCreatePost();
 
     const [posts, setPosts] = useState<PostWithRelations[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +38,13 @@ export default function MyPostsTab() {
     useEffect(() => {
         fetchMyPosts();
     }, [fetchMyPosts]);
+
+    // Prepend newly created post to this list without re-fetching
+    useEffect(() => {
+        setOnCreated((newPost: PostWithRelations) => {
+            setPosts((prev) => [newPost, ...prev]);
+        });
+    }, [setOnCreated]);
 
     const handleDelete = async (postId: string) => {
         if (!confirm('Delete this post permanently?')) return;

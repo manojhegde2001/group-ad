@@ -71,6 +71,18 @@ export async function POST(
             });
         }
 
+        // Notify user
+        await prisma.notification.create({
+            data: {
+                userId: session.user.id,
+                type: 'EVENT_ENROLLMENT' as any,
+                title: 'Enrollment Received',
+                message: `You have successfully enrolled in "${event.title}". We will keep you updated.`,
+                entityType: 'event',
+                entityId: eventId,
+            }
+        });
+
         // Email confirmation to user (fire-and-forget)
         if (user?.email) {
             sendMail({

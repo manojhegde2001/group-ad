@@ -68,7 +68,10 @@ export default function CalendarView({ events }: CalendarViewProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to enroll');
 
-      toast.success('Successfully enrolled! We\'ve sent you an email confirmation.');
+      toast.success('Successfully enrolled! Check your notifications and email.');
+
+      // Update local state for the selected event
+      selectedEvent.resource.isEnrolled = true;
       closeModal();
     } catch (err: any) {
       toast.error(err.message);
@@ -116,6 +119,17 @@ export default function CalendarView({ events }: CalendarViewProps) {
           transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(2, 132, 199, 0.2);
           filter: brightness(1.1);
+        }
+        .rbc-event-enrolled {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        }
+        .rbc-event-enrolled:hover {
+          box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        }
+        .rbc-event-enrolled::after {
+          content: '✓';
+          margin-left: 4px;
+          font-size: 0.6rem;
         }
         .rbc-today {
           background-color: rgba(2, 132, 199, 0.03);
@@ -173,6 +187,12 @@ export default function CalendarView({ events }: CalendarViewProps) {
         defaultView={Views.MONTH}
         views={['month', 'week', 'day', 'agenda']}
         onSelectEvent={handleSelectEvent}
+        eventPropGetter={(event: any) => ({
+          className: event.resource.isEnrolled ? 'rbc-event-enrolled' : '',
+          style: event.resource.isEnrolled ? {
+            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+          } : {}
+        })}
         popup
         className="dark:text-secondary-100"
       />
@@ -276,16 +296,26 @@ export default function CalendarView({ events }: CalendarViewProps) {
                         </div>
 
                         <div className="flex items-center gap-4">
-                          <Button
-                            onClick={handleEnroll}
-                            disabled={enrolling}
-                            variant="solid"
-                            color="primary"
-                            className="flex-1 py-6 rounded-2xl text-base font-bold shadow-lg shadow-primary-200 dark:shadow-none"
-                          >
-                            {enrolling ? 'Enrolling...' : 'Reserve Spot Now'}
-                            {!enrolling && <ArrowRight className="w-5 h-5 ml-2" />}
-                          </Button>
+                          {selectedEvent.resource.isEnrolled ? (
+                            <div className="flex-1 flex items-center gap-3 px-6 py-4 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 text-green-700 dark:text-green-400">
+                              <CheckCircle2 className="w-6 h-6 shrink-0" />
+                              <div className="text-left">
+                                <p className="text-sm font-black leading-none mb-1">You're Enrolled!</p>
+                                <p className="text-[10px] opacity-80 font-bold uppercase tracking-wider">Spot Reserved</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={handleEnroll}
+                              disabled={enrolling}
+                              variant="solid"
+                              color="primary"
+                              className="flex-1 py-6 rounded-2xl text-base font-bold shadow-lg shadow-primary-200 dark:shadow-none"
+                            >
+                              {enrolling ? 'Enrolling...' : 'Reserve Spot Now'}
+                              {!enrolling && <ArrowRight className="w-5 h-5 ml-2" />}
+                            </Button>
+                          )}
 
                           <a
                             href={`/events/${selectedEvent.resource.slug}`}

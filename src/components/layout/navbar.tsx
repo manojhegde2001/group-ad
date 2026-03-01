@@ -19,6 +19,7 @@ import {
   Loader2,
   X,
   Menu,
+  Calendar,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -140,10 +141,16 @@ export function Navbar() {
       <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2 sm:gap-3">
 
         {/* ZONE 1 — Logo (start, fixed width) */}
-        <div className="flex items-center shrink-0">
+        <div className="flex items-center shrink-0 gap-8">
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <Logo className="w-24 sm:w-28 h-7 sm:h-8" />
           </Link>
+
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/" className="text-sm font-medium text-secondary-600 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+              Feed
+            </Link>
+          </nav>
         </div>
 
         {/* ZONE 2 — Search (center, grows) */}
@@ -176,6 +183,20 @@ export function Navbar() {
 
             /* ── Logged in actions ───────────────────────────────────────── */
             <>
+              {/* Events Calendar — hidden on sm, icon+label on md+ */}
+              <Link href="/events/calendar">
+                <Button
+                  variant="text"
+                  color="secondary"
+                  size="sm"
+                  rounded="pill"
+                  leftIcon={<Calendar className="w-4 h-4" />}
+                  className="!text-secondary-700 dark:!text-secondary-300 hover:!bg-secondary-100 dark:hover:!bg-secondary-800 !px-3 md:!px-4"
+                >
+                  <span className="hidden md:inline">Events</span>
+                </Button>
+              </Link>
+
               {/* Create — icon-only on sm, full label on md+ */}
               <Button
                 onClick={openCreatePost}
@@ -236,6 +257,18 @@ export function Navbar() {
                         <User className="w-4 h-4" />
                         <span>My Profile</span>
                       </Link>
+
+                      {(user as any).userType === 'ADMIN' && (
+                        <Link
+                          href="/admin/events"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary-50/50 dark:bg-primary-900/10 hover:bg-primary-100 dark:hover:bg-primary-900/20 transition-colors text-sm text-primary-700 dark:text-primary-400 font-medium"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      )}
+
                       <Link
                         href="/settings"
                         onClick={() => setDropdownOpen(false)}
@@ -302,6 +335,14 @@ export function Navbar() {
                 {mobileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-secondary-900 rounded-2xl shadow-xl border border-secondary-100 dark:border-secondary-800 overflow-hidden animate-scale-in">
                     <div className="p-1.5">
+                      <Link
+                        href="/events/calendar"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors text-sm text-secondary-700 dark:text-secondary-300"
+                      >
+                        <Calendar className="w-4 h-4" />
+                        <span>Events</span>
+                      </Link>
                       <button
                         onClick={() => { openLogin(); setMobileMenuOpen(false); }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors text-sm text-secondary-700 dark:text-secondary-300"

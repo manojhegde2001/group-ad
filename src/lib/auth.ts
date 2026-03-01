@@ -40,6 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           username: user.username,
           avatar: user.avatar,
+          userType: user.userType,
         };
       },
     }),
@@ -58,6 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.username = (user as any).username;
         token.avatar = (user as any).avatar;
+        token.userType = (user as any).userType;
       }
       // On manual update() call (e.g. after avatar upload) re-fetch from DB
       if (trigger === 'update' && token.id) {
@@ -80,6 +82,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.username = token.username as string;
         session.user.avatar = token.avatar as string;
+        (session.user as any).userType = token.userType as string;
       }
       return session;
     },

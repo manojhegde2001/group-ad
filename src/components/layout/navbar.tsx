@@ -145,12 +145,6 @@ export function Navbar() {
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <Logo className="w-24 sm:w-28 h-7 sm:h-8" />
           </Link>
-
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium text-secondary-600 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-              Feed
-            </Link>
-          </nav>
         </div>
 
         {/* ZONE 2 — Search (center, grows) */}

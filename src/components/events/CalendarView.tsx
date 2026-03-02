@@ -80,25 +80,57 @@ export default function CalendarView({ events }: CalendarViewProps) {
     }
   };
 
+  const handleWithdraw = async () => {
+    if (!selectedEvent) return;
+    if (!confirm('Are you sure you want to withdraw from this event?')) return;
+
+    setEnrolling(true);
+    try {
+      const res = await fetch(`/api/events/${selectedEvent.resource.id}/enroll`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to withdraw');
+
+      toast.success('Successfully withdrawn from the event.');
+
+      // Update local state
+      selectedEvent.resource.isEnrolled = false;
+      closeModal();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   return (
-    <div className="h-[750px] bg-white dark:bg-secondary-900 rounded-[2.5rem] p-4 sm:p-8 shadow-2xl border border-secondary-100 dark:border-secondary-800 transition-all">
+    <div className="min-h-[500px] h-[calc(100vh-10rem)] md:h-[750px] bg-white dark:bg-secondary-900 rounded-3xl md:rounded-[2.5rem] p-2 sm:p-4 md:p-8 shadow-2xl border border-secondary-100 dark:border-secondary-800 transition-all overflow-hidden flex flex-col">
       <style jsx global>{`
         .rbc-calendar {
           font-family: inherit;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
         }
         .rbc-header {
-          padding: 16px 0;
+          padding: 8px 0;
+          md:padding: 16px 0;
           font-weight: 700;
-          font-size: 0.8rem;
+          font-size: 0.65rem;
+          md:font-size: 0.8rem;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: #94a3b8;
           border-bottom: 1px solid #f1f5f9;
         }
         .rbc-month-view {
-          border-radius: 1.5rem;
+          border-radius: 1rem;
+          md:border-radius: 1.5rem;
           overflow: hidden;
           border: 1px solid #f1f5f9;
+          flex: 1;
         }
         .rbc-day-bg + .rbc-day-bg, .rbc-month-row + .rbc-month-row {
           border-left: 1px solid #f1f5f9;
@@ -106,14 +138,20 @@ export default function CalendarView({ events }: CalendarViewProps) {
         }
         .rbc-event {
           background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-          border-radius: 8px;
-          border: none;
-          font-size: 0.7rem;
+          border-radius: 4px;
+          md:border-radius: 8px;
+          font-size: 0.6rem;
+          md:font-size: 0.7rem;
           font-weight: 600;
-          padding: 4px 8px;
+          padding: 2px 4px;
+          md:padding: 4px 8px;
           margin: 1px 2px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.05);
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (max-width: 640px) {
+          .rbc-event-label { display: none; }
+          .rbc-event-content { font-size: 0.55rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         }
         .rbc-event:hover {
           transform: translateY(-1px);
@@ -129,7 +167,8 @@ export default function CalendarView({ events }: CalendarViewProps) {
         .rbc-event-enrolled::after {
           content: '✓';
           margin-left: 4px;
-          font-size: 0.6rem;
+          font-size: 0.5rem;
+          md:font-size: 0.6rem;
         }
         .rbc-today {
           background-color: rgba(2, 132, 199, 0.03);
@@ -138,19 +177,43 @@ export default function CalendarView({ events }: CalendarViewProps) {
           background-color: #f8fafc;
         }
         .rbc-toolbar {
-          margin-bottom: 2rem;
+          margin-bottom: 1rem;
+          md:margin-bottom: 2rem;
+          flex-wrap: wrap;
+          gap: 8px;
+          justify-content: center;
         }
         .rbc-toolbar-label {
           font-weight: 800;
-          font-size: 1.5rem;
+          font-size: 1.1rem;
+          md:font-size: 1.5rem;
           color: #0f172a;
           letter-spacing: -0.02em;
+          width: 100%;
+          text-align: center;
+          margin: 8px 0;
+          order: -1;
+        }
+        @media (min-width: 768px) {
+          .rbc-toolbar-label {
+            width: auto;
+            margin: 0;
+            order: 0;
+          }
+           .rbc-toolbar {
+            justify-content: space-between;
+           }
+        }
+        .rbc-btn-group {
+          margin: 0 !important;
         }
         .rbc-btn-group button {
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-          padding: 8px 20px;
-          font-size: 0.85rem;
+          border-radius: 8px;
+          md:border-radius: 12px;
+          padding: 6px 12px;
+          md:padding: 8px 20px;
+          font-size: 0.75rem;
+          md:font-size: 0.85rem;
           font-weight: 600;
           color: #475569;
           transition: all 0.2s;
@@ -295,14 +358,24 @@ export default function CalendarView({ events }: CalendarViewProps) {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col gap-4">
                           {selectedEvent.resource.isEnrolled ? (
-                            <div className="flex-1 flex items-center gap-3 px-6 py-4 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 text-green-700 dark:text-green-400">
-                              <CheckCircle2 className="w-6 h-6 shrink-0" />
-                              <div className="text-left">
-                                <p className="text-sm font-black leading-none mb-1">You're Enrolled!</p>
-                                <p className="text-[10px] opacity-80 font-bold uppercase tracking-wider">Spot Reserved</p>
+                            <div className="flex flex-col gap-3">
+                              <div className="flex-1 flex items-center gap-3 px-6 py-4 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 text-green-700 dark:text-green-400">
+                                <CheckCircle2 className="w-6 h-6 shrink-0" />
+                                <div className="text-left">
+                                  <p className="text-sm font-black leading-none mb-1">You're Enrolled!</p>
+                                  <p className="text-[10px] opacity-80 font-bold uppercase tracking-wider">Spot Reserved</p>
+                                </div>
                               </div>
+                              <Button
+                                onClick={handleWithdraw}
+                                disabled={enrolling}
+                                variant="outline"
+                                className="w-full py-4 rounded-xl text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 border-red-200 hover:border-red-300 transition-all"
+                              >
+                                {enrolling ? 'Processing...' : 'Withdraw from Event'}
+                              </Button>
                             </div>
                           ) : (
                             <Button
@@ -310,19 +383,21 @@ export default function CalendarView({ events }: CalendarViewProps) {
                               disabled={enrolling}
                               variant="solid"
                               color="primary"
-                              className="flex-1 py-6 rounded-2xl text-base font-bold shadow-lg shadow-primary-200 dark:shadow-none"
+                              className="w-full py-6 rounded-2xl text-base font-bold shadow-lg shadow-primary-200 dark:shadow-none"
                             >
                               {enrolling ? 'Enrolling...' : 'Reserve Spot Now'}
                               {!enrolling && <ArrowRight className="w-5 h-5 ml-2" />}
                             </Button>
                           )}
 
-                          <a
-                            href={`/events/${selectedEvent.resource.slug}`}
-                            className="text-xs font-bold text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200 transition-colors uppercase tracking-widest whitespace-nowrap"
-                          >
-                            Details Page
-                          </a>
+                          <div className="flex justify-center">
+                            <a
+                              href={`/events/${selectedEvent.resource.slug}`}
+                              className="text-xs font-bold text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200 transition-colors uppercase tracking-widest whitespace-nowrap"
+                            >
+                              Details Page
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>

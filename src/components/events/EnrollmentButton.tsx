@@ -46,15 +46,46 @@ export default function EnrollmentButton({
         }
     };
 
+    const handleWithdraw = async () => {
+        if (!confirm('Are you sure you want to withdraw from this event?')) return;
+
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/events/${eventId}/enroll`, {
+                method: 'DELETE',
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to withdraw');
+
+            toast.success('Successfully withdrawn from the event.');
+            setIsEnrolled(false);
+        } catch (err: any) {
+            toast.error(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (isEnrolled) {
         return (
-            <div className="w-full bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-2xl p-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400 font-bold mb-1">
-                    <CheckCircle2 className="w-5 h-5" /> You're Enrolled!
+            <div className="space-y-4 w-full">
+                <div className="w-full bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-2xl p-4 text-center">
+                    <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400 font-bold mb-1">
+                        <CheckCircle2 className="w-5 h-5" /> You're Enrolled!
+                    </div>
+                    <p className="text-xs text-green-600 dark:text-green-500">
+                        Check your email for access instructions and calendar invite.
+                    </p>
                 </div>
-                <p className="text-xs text-green-600 dark:text-green-500">
-                    Check your email for access instructions and calendar invite.
-                </p>
+                <Button
+                    onClick={handleWithdraw}
+                    variant="outline"
+                    className="w-full py-4 rounded-xl text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 border-red-200 hover:border-red-300 transition-all"
+                    disabled={loading}
+                >
+                    {loading ? 'Processing...' : 'Withdraw from Event'}
+                </Button>
             </div>
         );
     }

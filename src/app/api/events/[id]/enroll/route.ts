@@ -120,6 +120,7 @@ export async function DELETE(
 
         const enrollment = await prisma.eventEnrollment.findUnique({
             where: { eventId_userId: { eventId, userId: session.user.id } },
+            include: { event: { select: { title: true, organizerId: true } } }
         });
 
         if (!enrollment) {
@@ -137,6 +138,43 @@ export async function DELETE(
         await prisma.eventEnrollment.delete({
             where: { id: enrollment.id },
         });
+
+        // Notify user about cancellation
+        await prisma.notification.create({
+            data: {
+                userId: session.user.id,
+                type: 'EVENT_ENROLLMENT' as any,
+                title: 'Enrollment Cancelled',
+                message: `You have successfully withdrawn from "${enrollment.event.title}".`,
+                entityType: 'event',
+                entityId: eventId,
+            }
+        });
+
+        // Notify admin(s)
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { name: true },
+        });
+
+        const admins = await prisma.user.findMany({
+            where: { userType: 'ADMIN' },
+            select: { id: true },
+        });
+
+        if (admins.length > 0) {
+            await prisma.notification.createMany({
+                data: admins.map((admin) => ({
+                    userId: admin.id,
+                    type: 'EVENT_ENROLLMENT' as any,
+                    title: 'Event Withdrawal',
+                    message: `${user?.name || 'A user'} has withdrawn from "${enrollment.event.title}"`,
+                    entityType: 'event',
+                    entityId: eventId,
+                    senderId: session.user!.id,
+                })),
+            });
+        }
 
         return NextResponse.json({ message: 'Enrollment cancelled' });
     } catch (error) {

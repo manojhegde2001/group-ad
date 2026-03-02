@@ -45,6 +45,21 @@ export function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [queryStarted, setQueryStarted] = useState(false);
+
+  // Check for auth=required in URL on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !queryStarted) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('auth') === 'required') {
+        openLogin();
+        // Clean up URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+      setQueryStarted(true);
+    }
+  }, [openLogin, queryStarted]);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -87,6 +102,13 @@ export function Navbar() {
       await logout();
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const handleRestrictedAction = (e: React.MouseEvent, href: string) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      openLogin();
     }
   };
 
@@ -184,7 +206,7 @@ export function Navbar() {
               <Loader2 className="w-5 h-5 animate-spin text-primary-500 mx-1 sm:mx-2" />
             ) : isAuthenticated && user ? (
               <>
-                <Link href="/events/calendar">
+                <Link href="/events/calendar" onClick={(e) => handleRestrictedAction(e, '/events/calendar')}>
                   <Button
                     variant="text"
                     color="secondary"
@@ -284,7 +306,7 @@ export function Navbar() {
                 )}
 
                 <div className="p-2 space-y-1">
-                  <Link href="/events/calendar" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
+                  <Link href="/events/calendar" onClick={(e) => { handleRestrictedAction(e, '/events/calendar'); setMobileMenuOpen(false); }} className="flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
                     <Calendar className="w-5 h-5 text-secondary-500" />
                     <span className="font-semibold text-secondary-800 dark:text-secondary-200">Events Calendar</span>
                   </Link>

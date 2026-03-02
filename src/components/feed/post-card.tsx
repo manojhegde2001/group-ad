@@ -140,7 +140,7 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
         } catch { /* fallback */ }
     };
 
-    const handleCardClick = () => openPost(post.id, post);
+    const handleCardClick = () => requireAuth(() => openPost(post.id, post));
 
     const hasImage = post.images && post.images.length > 0;
     const isVideoPost = post.type === 'VIDEO';
@@ -219,7 +219,7 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                     <div className="pin-card-overlay absolute bottom-0 left-0 right-0 flex items-end justify-between p-3">
                         <Link
                             href={`/profile/${post.user.username}`}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); requireAuth(() => { }); }}
                             className="flex items-center gap-1.5 min-w-0 hover:opacity-90 transition-opacity"
                         >
                             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden ring-1 ring-white/50 shrink-0">

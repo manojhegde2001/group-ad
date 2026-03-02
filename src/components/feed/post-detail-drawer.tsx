@@ -210,7 +210,7 @@ export function PostDetailDrawer() {
         } catch { }
     };
 
-    if (!isOpen || !post) return null;
+    if (!isOpen || !post || !user) return null;
 
     const hasImages = post.images && post.images.length > 0;
     const isVideoPost = post.type === 'VIDEO';

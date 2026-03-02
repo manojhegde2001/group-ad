@@ -136,7 +136,7 @@ export function Navbar() {
       >
         <Search className="w-4 h-4 text-secondary-400 shrink-0" />
         <input
-          type="search"
+          type="text"
           value={localSearch}
           onChange={(e) => handleSearchChange(e.target.value)}
           onFocus={() => setSearchFocused(true)}

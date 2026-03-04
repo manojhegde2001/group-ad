@@ -46,6 +46,16 @@ export function Navbar() {
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [queryStarted, setQueryStarted] = useState(false);
+  const [notifsOpen, setNotifsOpen] = useState(false);
+
+  // Close mobile menu when notifications open, and vice-versa
+  useEffect(() => {
+    if (notifsOpen) setMobileMenuOpen(false);
+  }, [notifsOpen]);
+
+  useEffect(() => {
+    if (mobileMenuOpen) setNotifsOpen(false);
+  }, [mobileMenuOpen]);
 
   // Check for auth=required in URL on mount
   useEffect(() => {
@@ -281,17 +291,23 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Unified Mobile Hamburger */}
-          <div className="sm:hidden relative" ref={mobileMenuRef}>
+          {/* Unified Mobile Hamburger area */}
+          <div className="sm:hidden flex items-center gap-1" ref={mobileMenuRef}>
+            {isAuthenticated && user && (
+              <NotificationBell
+                isOpen={notifsOpen}
+                onOpenChange={setNotifsOpen}
+              />
+            )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors flex items-center gap-1"
+              className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
             >
-              {isAuthenticated && user && <NotificationBell />}
               <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-400" />
             </button>
 
             {mobileMenuOpen && (
+
               <div className="absolute right-0 mt-2 w-[85vw] max-w-xs bg-white dark:bg-secondary-900 rounded-3xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden animate-scale-in z-50">
                 {isAuthenticated && user && (
                   <div className="px-6 py-5 bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-primary-900/20 dark:to-primary-800/10 border-b border-secondary-100 dark:border-secondary-800">

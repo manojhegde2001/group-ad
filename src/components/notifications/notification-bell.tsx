@@ -37,10 +37,24 @@ const NOTIFICATION_ICONS: Record<string, string> = {
     SYSTEM_ANNOUNCEMENT: '📢',
 };
 
-export function NotificationBell() {
+interface NotificationBellProps {
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+}
+
+export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: NotificationBellProps) {
     const { isAuthenticated } = useAuth();
-    const [open, setOpen] = useState(false);
+    const [internalOpen, setInternalOpen] = useState(false);
+
+    const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+    const setOpen = useCallback((val: boolean | ((v: boolean) => boolean)) => {
+        const next = typeof val === 'function' ? val(open) : val;
+        if (onOpenChange) onOpenChange(next);
+        else setInternalOpen(next);
+    }, [open, onOpenChange]);
+
     const [notifications, setNotifications] = useState<Notification[]>([]);
+
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [markingAll, setMarkingAll] = useState(false);
@@ -119,8 +133,12 @@ export function NotificationBell() {
         <div className="relative" ref={panelRef}>
             {/* Bell icon */}
             <button
-                onClick={handleOpen}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpen();
+                }}
                 className="relative p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
+
                 aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
             >
                 <Bell className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />

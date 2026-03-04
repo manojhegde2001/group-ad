@@ -19,6 +19,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: {
             email: credentials.email as string,
           },
+          include: {
+            category: true,
+          },
         });
 
         if (!user || !user.password) {
@@ -41,7 +44,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           username: user.username,
           avatar: user.avatar,
           userType: user.userType,
+          colorTheme: user.category?.colorTheme || null,
+          fontFamily: user.category?.fontFamily || null,
         };
+
       },
     }),
   ],
@@ -60,18 +66,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.username = (user as any).username;
         token.avatar = (user as any).avatar;
         token.userType = (user as any).userType;
+        token.colorTheme = (user as any).colorTheme;
+        token.fontFamily = (user as any).fontFamily;
       }
       // On manual update() call (e.g. after avatar upload) re-fetch from DB
       if (trigger === 'update' && token.id) {
         try {
           const fresh = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { avatar: true, username: true, name: true },
+            select: {
+              avatar: true,
+              username: true,
+              name: true,
+              category: {
+                select: {
+                  colorTheme: true,
+                  fontFamily: true,
+                }
+              }
+            },
           });
           if (fresh) {
             token.avatar = fresh.avatar;
             token.username = fresh.username;
             if (fresh.name) token.name = fresh.name;
+            token.colorTheme = fresh.category?.colorTheme;
+            token.fontFamily = fresh.category?.fontFamily;
           }
         } catch { /* keep existing token if DB unreachable */ }
       }
@@ -83,6 +103,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.username = token.username as string;
         session.user.avatar = token.avatar as string;
         (session.user as any).userType = token.userType as string;
+        (session.user as any).colorTheme = token.colorTheme as string;
+        (session.user as any).fontFamily = token.fontFamily as string;
       }
       return session;
     },

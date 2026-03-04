@@ -7,8 +7,10 @@ import { CategoryBar } from './category-bar';
 import { useFeedFilter, useCreatePost } from '@/hooks/use-feed';
 import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Demo posts used as fallback when DB is empty  
+
 const DEMO_POSTS: any[] = [
   {
     id: 'demo-1', type: 'IMAGE', content: 'Modern UI Design Trends for 2026 — clean interfaces, micro-animations, and purposeful whitespace.',
@@ -190,9 +192,9 @@ export function FeedContainer() {
       <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-6">
         <div className="columns-1 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-3">
           {[...Array(12)].map((_, i) => (
-            <div
+            <Skeleton
               key={i}
-              className={`mb-3 break-inside-avoid rounded-2xl bg-secondary-100 dark:bg-secondary-800 animate-pulse ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-40' : 'h-52'
+              className={`mb-3 break-inside-avoid rounded-2xl ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-40' : 'h-52'
                 }`}
             />
           ))}

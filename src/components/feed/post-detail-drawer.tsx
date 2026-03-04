@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { PostWithRelations } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -241,8 +242,19 @@ export function PostDetailDrawer() {
                     <div
                         className={`relative flex-1 min-h-[220px] md:min-h-0 md:max-h-[94vh] bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                     >
+                        {/* Close button - Top Right for Mobile & consistency */}
+                        <button
+                            onClick={closePost}
+                            className="absolute top-4 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md transition-all text-white border border-white/20 shadow-xl active:scale-95"
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
                         {loading ? (
-                            <Loader2 className="w-8 h-8 animate-spin text-secondary-400" />
+                            <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
+                                <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
+                            </div>
                         ) : hasImages ? (
                             <>
                                 {isVideoPost ? (
@@ -322,13 +334,6 @@ export function PostDetailDrawer() {
                                 <Button variant="outline" color="secondary" size="sm" rounded="pill" className="text-xs px-3 h-7">
                                     Follow
                                 </Button>
-                                <button
-                                    onClick={closePost}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors text-secondary-500"
-                                    aria-label="Close"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
                             </div>
                         </div>
 
@@ -396,11 +401,19 @@ export function PostDetailDrawer() {
                             </div>
 
                             {/* Comments */}
-                            <div className="space-y-3 pt-1">
-                                <p className="text-[11px] font-semibold text-secondary-400 uppercase tracking-wide">Comments</p>
+                            <div className="space-y-4 pt-2">
+                                <p className="text-[11px] font-bold text-secondary-400 uppercase tracking-widest">Comments</p>
                                 {loadingComments ? (
-                                    <div className="flex justify-center py-4">
-                                        <Loader2 className="w-5 h-5 animate-spin text-secondary-400" />
+                                    <div className="space-y-4">
+                                        {[...Array(3)].map((_, i) => (
+                                            <div key={i} className="flex gap-3">
+                                                <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                                                <div className="flex-1 space-y-2 pt-1">
+                                                    <Skeleton className="h-3 w-24 rounded" />
+                                                    <Skeleton className="h-10 w-full rounded-2xl" />
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : comments.length === 0 ? (
                                     <p className="text-xs text-secondary-400 text-center py-4">No comments yet. Be the first!</p>

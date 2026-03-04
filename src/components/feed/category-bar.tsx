@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useFeedFilter } from '@/hooks/use-feed';
 import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Category {
     id: string;
@@ -55,7 +56,7 @@ export function CategoryBar() {
             <div className="sticky top-[57px] z-40 bg-white/90 dark:bg-secondary-950/90 backdrop-blur-md border-b border-secondary-100 dark:border-secondary-800/50">
                 <div className="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-hidden">
                     {[...Array(8)].map((_, i) => (
-                        <div key={i} className="shrink-0 h-8 w-20 bg-secondary-100 dark:bg-secondary-800 rounded-full animate-pulse" />
+                        <Skeleton key={i} className="shrink-0 h-8 w-20 rounded-full" />
                     ))}
                 </div>
             </div>
@@ -97,8 +98,8 @@ export function CategoryBar() {
                                 key={cat.id ?? 'all'}
                                 onClick={() => setCategory(cat.id)}
                                 className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${active
-                                        ? 'bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md'
-                                        : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700'
+                                    ? 'bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md'
+                                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700'
                                     }`}
                             >
                                 {cat.id === null ? (

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
+import { SearchBar } from './search-bar';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -39,12 +40,9 @@ export function Navbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [localSearch, setLocalSearch] = useState(searchQuery);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [queryStarted, setQueryStarted] = useState(false);
   const [notifsOpen, setNotifsOpen] = useState(false);
 
@@ -73,11 +71,6 @@ export function Navbar() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Sync localSearch when the Zustand searchQuery is reset externally (e.g. category change)
-  useEffect(() => {
-    setLocalSearch(searchQuery);
-  }, [searchQuery]);
-
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -91,18 +84,6 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Debounced search
-  const handleSearchChange = (val: string) => {
-    setLocalSearch(val);
-    clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => setSearch(val), 400);
-  };
-
-  const clearSearch = () => {
-    setLocalSearch('');
-    setSearch('');
-  };
 
   const handleLogout = async () => {
     setDropdownOpen(false);
@@ -134,39 +115,6 @@ export function Navbar() {
       </nav>
     );
   }
-
-  // ── Search bar shared component ─────────────────────────────────────────────
-  const SearchBar = ({ className = '', autoFocus = false }: { className?: string; autoFocus?: boolean }) => (
-    <div className={`relative ${className}`}>
-      <div
-        className={`flex items-center gap-2 bg-secondary-100 dark:bg-secondary-800 rounded-full px-4 py-2 transition-all duration-200 ${searchFocused
-          ? 'ring-2 ring-primary-400 bg-white dark:bg-secondary-700 shadow-sm'
-          : 'hover:bg-secondary-200 dark:hover:bg-secondary-700'
-          }`}
-      >
-        <Search className="w-4 h-4 text-secondary-400 shrink-0" />
-        <input
-          type="text"
-          value={localSearch}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-          placeholder="Search posts, people, ideas…"
-          autoFocus={autoFocus}
-          className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
-        />
-        {localSearch && (
-          <button
-            onClick={clearSearch}
-            className="text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200 transition-colors shrink-0"
-            aria-label="Clear search"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <nav className="sticky top-0 z-50 glass border-b border-secondary-200/60 dark:border-secondary-800/60">

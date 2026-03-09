@@ -1,44 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { usePostDetail } from '@/hooks/use-feed';
-import { Bookmark, ImageOff, Loader2, X } from 'lucide-react';
-import type { PostWithRelations } from '@/types';
-import toast from 'react-hot-toast';
+import { Bookmark, X } from 'lucide-react';
+import { useSavedPosts, useBookmarkPost } from '@/hooks/use-api/use-posts';
 
 export default function SavedPostsTab() {
     const { openPost } = usePostDetail();
-    const [posts, setPosts] = useState<PostWithRelations[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading: loading } = useSavedPosts();
+    const bookmarkMutation = useBookmarkPost();
 
-    const fetchSaved = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/bookmarks?limit=50');
-            if (!res.ok) throw new Error('Failed');
-            const data = await res.json();
-            setPosts(data.posts || []);
-        } catch {
-            toast.error('Failed to load saved posts');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchSaved(); }, [fetchSaved]);
+    const posts = data?.posts || [];
 
     const handleUnsave = async (postId: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        setPosts((prev) => prev.filter((p) => p.id !== postId));
-        try {
-            const res = await fetch(`/api/bookmarks/${postId}`, { method: 'DELETE' });
-            if (!res.ok) {
-                await fetchSaved(); // re-fetch on error
-                toast.error('Failed to remove bookmark');
-            }
-        } catch {
-            await fetchSaved();
-        }
+        bookmarkMutation.mutate({ postId, isBookmarked: true });
     };
 
     const gradients = [
@@ -77,7 +52,7 @@ export default function SavedPostsTab() {
             </p>
 
             <div className="columns-2 sm:columns-3 md:columns-4 gap-3">
-                {posts.map((post) => {
+                {posts.map((post: any) => {
                     const hasImage = post.images && post.images.length > 0;
                     const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
 
@@ -122,15 +97,15 @@ export default function SavedPostsTab() {
                             {/* Author */}
                             <div className="px-2.5 py-2 flex items-center gap-2">
                                 <div className="w-5 h-5 rounded-full overflow-hidden bg-primary-100 shrink-0">
-                                    {post.user.avatar ? (
-                                        <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover" />
+                                    {(post.user as any)?.avatar ? (
+                                        <img src={(post.user as any).avatar} alt={(post.user as any).name} className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="w-full h-full flex items-center justify-center text-[9px] font-bold text-primary-600">
-                                            {post.user.name?.charAt(0)?.toUpperCase()}
+                                            {(post.user as any).name?.charAt(0)?.toUpperCase()}
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-xs text-secondary-600 dark:text-secondary-400 truncate">{post.user.name}</p>
+                                <p className="text-xs text-secondary-600 dark:text-secondary-400 truncate">{(post.user as any).name}</p>
                             </div>
                         </div>
                     );

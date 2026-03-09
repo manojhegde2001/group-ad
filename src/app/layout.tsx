@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme/theme-provider';
 import { Navbar } from '@/components/layout/navbar';
 import { AuthModal } from '@/components/layout/auth-modal';;
 import ToastProvider from '@/components/providers/toast-provider';
+import QueryProvider from '@/components/providers/query-provider';
 import { Footer } from '@/components/layout/footer';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
 import { PostDetailDrawer } from '@/components/feed/post-detail-drawer';
@@ -53,23 +54,25 @@ export default function RootLayout({
       </head>
       <body className={plusJakarta.variable}>
         <NextAuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            storageKey="theme"
-          >
-            <div className="min-h-screen bg-background text-foreground flex flex-col">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <AuthModal />
-              <CreatePostModal />
-              <PostDetailDrawer />
-              <Analytics />
-            </div>
-            <ToastProvider />
-          </ThemeProvider>
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem={false}
+              storageKey="theme"
+            >
+              <div className="min-h-screen bg-background text-foreground flex flex-col">
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <AuthModal />
+                <CreatePostModal />
+                <PostDetailDrawer />
+                <Analytics />
+              </div>
+              <ToastProvider />
+            </ThemeProvider>
+          </QueryProvider>
         </NextAuthProvider>
       </body>
     </html>

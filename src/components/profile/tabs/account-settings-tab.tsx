@@ -5,6 +5,7 @@ import { Select, Switch, Button, Text } from 'rizzui';
 import { Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
 import { ProfileUser } from '@/types';
+import { useUpdateProfile, useUpgradeToBusiness } from '@/hooks/use-api/use-user';
 
 interface AccountSettingsTabProps {
   user: ProfileUser;
@@ -12,27 +13,12 @@ interface AccountSettingsTabProps {
 
 export default function AccountSettingsTab({ user }: AccountSettingsTabProps) {
   const [visibility, setVisibility] = useState(user.visibility);
-  const [isLoading, setIsLoading] = useState(false);
+  const updateProfile = useUpdateProfile();
+  const upgradeToBusiness = useUpgradeToBusiness();
 
   const handleVisibilityChange = async (newVisibility: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visibility: newVisibility }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update settings');
-
-      setVisibility(newVisibility as any);
-      Toast.success('Account visibility updated');
-      window.location.reload();
-    } catch (error) {
-      Toast.error('Failed to update settings');
-    } finally {
-      setIsLoading(false);
-    }
+    updateProfile.mutate({ visibility: newVisibility });
+    setVisibility(newVisibility as any);
   };
 
   return (
@@ -49,12 +35,11 @@ export default function AccountSettingsTab({ user }: AccountSettingsTabProps) {
         <div className="space-y-3">
           <button
             onClick={() => handleVisibilityChange('PUBLIC')}
-            disabled={isLoading}
-            className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-              visibility === 'PUBLIC'
-                ? 'border-primary bg-primary/5'
-                : 'border-secondary-200 dark:border-secondary-700 hover:border-secondary-300'
-            }`}
+            disabled={updateProfile.isPending}
+            className={`w-full p-4 rounded-lg border-2 text-left transition-all ${visibility === 'PUBLIC'
+              ? 'border-primary bg-primary/5'
+              : 'border-secondary-200 dark:border-secondary-700 hover:border-secondary-300'
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -76,12 +61,11 @@ export default function AccountSettingsTab({ user }: AccountSettingsTabProps) {
 
           <button
             onClick={() => handleVisibilityChange('PRIVATE')}
-            disabled={isLoading}
-            className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-              visibility === 'PRIVATE'
-                ? 'border-primary bg-primary/5'
-                : 'border-secondary-200 dark:border-secondary-700 hover:border-secondary-300'
-            }`}
+            disabled={updateProfile.isPending}
+            className={`w-full p-4 rounded-lg border-2 text-left transition-all ${visibility === 'PRIVATE'
+              ? 'border-primary bg-primary/5'
+              : 'border-secondary-200 dark:border-secondary-700 hover:border-secondary-300'
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -125,7 +109,12 @@ export default function AccountSettingsTab({ user }: AccountSettingsTabProps) {
               </Text>
             </div>
             {user.userType === 'INDIVIDUAL' && (
-              <Button size="sm" variant="outline">
+              <Button
+                size="sm"
+                variant="outline"
+                isLoading={upgradeToBusiness.isPending}
+                onClick={() => upgradeToBusiness.mutate(undefined)}
+              >
                 Upgrade
               </Button>
             )}
@@ -143,22 +132,20 @@ export default function AccountSettingsTab({ user }: AccountSettingsTabProps) {
         </div>
 
         <div
-          className={`p-4 rounded-lg ${
-            user.verificationStatus === 'VERIFIED'
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-              : user.verificationStatus === 'PENDING'
+          className={`p-4 rounded-lg ${user.verificationStatus === 'VERIFIED'
+            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+            : user.verificationStatus === 'PENDING'
               ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
               : 'bg-secondary-50 dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-700'
-          }`}
+            }`}
         >
           <Text
-            className={`font-semibold mb-1 ${
-              user.verificationStatus === 'VERIFIED'
-                ? 'text-green-700 dark:text-green-300'
-                : user.verificationStatus === 'PENDING'
+            className={`font-semibold mb-1 ${user.verificationStatus === 'VERIFIED'
+              ? 'text-green-700 dark:text-green-300'
+              : user.verificationStatus === 'PENDING'
                 ? 'text-orange-700 dark:text-orange-300'
                 : 'text-secondary-900 dark:text-white'
-            }`}
+              }`}
           >
             {user.verificationStatus}
           </Text>
@@ -166,8 +153,8 @@ export default function AccountSettingsTab({ user }: AccountSettingsTabProps) {
             {user.verificationStatus === 'VERIFIED'
               ? 'Your account is verified'
               : user.verificationStatus === 'PENDING'
-              ? 'Your verification request is under review'
-              : 'Request verification to get verified badge'}
+                ? 'Your verification request is under review'
+                : 'Request verification to get verified badge'}
           </Text>
           {user.verificationStatus === 'UNVERIFIED' && (
             <Button size="sm" className="mt-3">

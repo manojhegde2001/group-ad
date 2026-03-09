@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Save } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
 import { ProfileUser } from '@/types';
+import { useUpdateProfile } from '@/hooks/use-api/use-user';
 
 const basicInfoSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -27,7 +28,7 @@ interface BasicInfoTabProps {
 }
 
 export default function BasicInfoTab({ user }: BasicInfoTabProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const updateProfile = useUpdateProfile();
 
   const {
     register,
@@ -49,23 +50,7 @@ export default function BasicInfoTab({ user }: BasicInfoTabProps) {
   });
 
   const onSubmit = async (data: BasicInfoFormData) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error('Failed to update profile');
-
-      Toast.success('Profile updated successfully');
-      window.location.reload();
-    } catch (error) {
-      Toast.error('Failed to update profile');
-    } finally {
-      setIsLoading(false);
-    }
+    updateProfile.mutate(data);
   };
 
   return (
@@ -120,8 +105,8 @@ export default function BasicInfoTab({ user }: BasicInfoTabProps) {
       <div className="flex justify-end gap-3">
         <Button
           type="submit"
-          isLoading={isLoading}
-          disabled={!isDirty || isLoading}
+          isLoading={updateProfile.isPending}
+          disabled={!isDirty || updateProfile.isPending}
         >
           <Save className="w-4 h-4 mr-2" />
           Save Changes

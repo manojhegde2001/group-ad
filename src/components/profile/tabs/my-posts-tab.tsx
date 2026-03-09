@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { usePostDetail } from '@/hooks/use-feed';
 import { useCreatePost } from '@/hooks/use-feed';
 import type { PostWithRelations } from '@/types';
@@ -10,78 +10,42 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
+import { useMyPosts, useDeletePost, useUpdatePost } from '@/hooks/use-api/use-posts';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function MyPostsTab() {
     const { openPost } = usePostDetail();
     const { open: openCreatePost, setOnCreated } = useCreatePost();
+    const queryClient = useQueryClient();
 
-    const [posts, setPosts] = useState<PostWithRelations[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const { data, isLoading: loading } = useMyPosts();
+    const deletePost = useDeletePost();
+    const updatePost = useUpdatePost();
+
+    const posts = data?.posts || [];
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
     const [filter, setFilter] = useState<'ALL' | 'PUBLIC' | 'PRIVATE'>('ALL');
 
-    const fetchMyPosts = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/posts/my-posts');
-            if (!res.ok) throw new Error('Failed');
-            const data = await res.json();
-            setPosts(data.posts || []);
-        } catch {
-            toast.error('Failed to load your posts');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
+    // Prepend newly created post to this list by invalidating
     useEffect(() => {
-        fetchMyPosts();
-    }, [fetchMyPosts]);
-
-    // Prepend newly created post to this list without re-fetching
-    useEffect(() => {
-        setOnCreated((newPost: PostWithRelations) => {
-            setPosts((prev) => [newPost, ...prev]);
+        setOnCreated(() => {
+            queryClient.invalidateQueries({ queryKey: ['posts', 'my'] });
         });
-    }, [setOnCreated]);
+    }, [setOnCreated, queryClient]);
 
     const handleDelete = async (postId: string) => {
         if (!confirm('Delete this post permanently?')) return;
-        setDeletingId(postId);
         setMenuOpenId(null);
-        try {
-            const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error('Failed');
-            setPosts((prev) => prev.filter((p) => p.id !== postId));
-            toast.success('Post deleted');
-        } catch {
-            toast.error('Failed to delete post');
-        } finally {
-            setDeletingId(null);
-        }
+        deletePost.mutate(postId);
     };
 
     const handleToggleVisibility = async (post: PostWithRelations) => {
         setMenuOpenId(null);
         const newVis = post.visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC';
-        try {
-            const res = await fetch(`/api/posts/${post.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ visibility: newVis }),
-            });
-            if (!res.ok) throw new Error('Failed');
-            setPosts((prev) =>
-                prev.map((p) => (p.id === post.id ? { ...p, visibility: newVis } : p))
-            );
-            toast.success(`Post set to ${newVis.toLowerCase()}`);
-        } catch {
-            toast.error('Failed to update post visibility');
-        }
+        updatePost.mutate({ postId: post.id, data: { visibility: newVis } });
     };
 
-    const filteredPosts = posts.filter((p) => {
+    const filteredPosts = posts.filter((p: PostWithRelations) => {
         if (filter === 'ALL') return true;
         return p.visibility === filter;
     });
@@ -162,7 +126,7 @@ export default function MyPostsTab() {
             {/* Post Grid — Pinterest-style masonry using columns */}
             {filteredPosts.length > 0 && (
                 <div className="columns-2 sm:columns-3 md:columns-4 gap-3">
-                    {filteredPosts.map((post) => {
+                    {filteredPosts.map((post: PostWithRelations) => {
                         const hasImage = post.images && post.images.length > 0;
                         const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
 
@@ -218,10 +182,10 @@ export default function MyPostsTab() {
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(post.id)}
-                                                    disabled={deletingId === post.id}
+                                                    disabled={deletePost.isPending && deletePost.variables === post.id}
                                                     className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/10 text-sm text-red-500 transition-colors disabled:opacity-50"
                                                 >
-                                                    {deletingId === post.id
+                                                    {deletePost.isPending && deletePost.variables === post.id
                                                         ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Deleting…</span></>
                                                         : <><Trash2 className="w-4 h-4" /><span>Delete Post</span></>
                                                     }

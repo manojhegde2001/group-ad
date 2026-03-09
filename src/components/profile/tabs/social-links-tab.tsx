@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Linkedin, Twitter, Facebook, Instagram, Save } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
 import { ProfileUser } from '@/types';
+import { useUpdateProfile } from '@/hooks/use-api/use-user';
 
 const socialLinksSchema = z.object({
   linkedin: z.string().url('Invalid URL').optional().or(z.literal('')),
@@ -23,7 +24,7 @@ interface SocialLinksTabProps {
 }
 
 export default function SocialLinksTab({ user }: SocialLinksTabProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const updateProfile = useUpdateProfile();
 
   const {
     register,
@@ -40,23 +41,7 @@ export default function SocialLinksTab({ user }: SocialLinksTabProps) {
   });
 
   const onSubmit = async (data: SocialLinksFormData) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error('Failed to update social links');
-
-      Toast.success('Social links updated successfully');
-      window.location.reload();
-    } catch (error) {
-      Toast.error('Failed to update social links');
-    } finally {
-      setIsLoading(false);
-    }
+    updateProfile.mutate(data);
   };
 
   return (
@@ -96,8 +81,8 @@ export default function SocialLinksTab({ user }: SocialLinksTabProps) {
       <div className="flex justify-end gap-3">
         <Button
           type="submit"
-          isLoading={isLoading}
-          disabled={!isDirty || isLoading}
+          isLoading={updateProfile.isPending}
+          disabled={!isDirty || updateProfile.isPending}
         >
           <Save className="w-4 h-4 mr-2" />
           Save Changes

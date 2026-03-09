@@ -16,19 +16,21 @@ import {
 import { formatDate } from '@/lib/utils';
 import { useState } from 'react';
 import ProfileImageUpload from './profile-image-upload';
+import { useMe } from '@/hooks/use-api/use-user';
 
 interface ProfileHeaderProps {
   user: ProfileUser;
 }
 
-export default function ProfileHeader({ user }: ProfileHeaderProps) {
+export default function ProfileHeader({ user: initialUser }: ProfileHeaderProps) {
+  const { data: user = initialUser } = useMe();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   return (
     <>
       <div className="bg-white dark:bg-secondary-800 rounded-2xl shadow-lg border border-secondary-200 dark:border-secondary-700 overflow-hidden mb-6">
-        
+
         {/* Compact Cover Photo */}
         <div className="relative h-32 sm:h-40 bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600">
           <div className="absolute inset-0 opacity-20">
@@ -39,9 +41,9 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
 
         {/* Main Content - More Compact */}
         <div className="relative px-4 sm:px-6 lg:px-8 pb-6">
-          
+
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 -mt-16 sm:-mt-20">
-            
+
             {/* Larger Avatar with Next.js Image */}
             <div className="flex-shrink-0 self-center sm:self-start">
               <div className="relative">
@@ -62,7 +64,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
                     </span>
                   </div>
                 )}
-                
+
                 <button
                   onClick={() => setShowUploadModal(true)}
                   className="absolute bottom-0 right-0 p-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200 border-3 border-white dark:border-secondary-800"
@@ -75,7 +77,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
 
             {/* User Information - Condensed */}
             <div className="flex-1 sm:pt-4">
-              
+
               {/* Name & Badges */}
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -86,26 +88,26 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
                     <Verified className="w-6 h-6 text-blue-500 fill-blue-500" />
                   )}
                 </div>
-                
+
                 <p className="text-base text-secondary-600 dark:text-secondary-400 mb-3">
                   @{user.username}
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  <Badge 
+                  <Badge
                     variant={user.userType === 'BUSINESS' ? 'solid' : 'outline'}
                     className="capitalize text-xs font-semibold px-3 py-1"
                   >
                     {user.userType.toLowerCase()}
                   </Badge>
-                  
+
                   {user.category && (
                     <Badge variant="outline" className="text-xs font-semibold px-3 py-1">
                       <span className="mr-1">{user.category.icon}</span>
                       {user.category.name}
                     </Badge>
                   )}
-                  
+
                   {user.company && (
                     <Badge variant="outline" className="text-xs font-semibold px-3 py-1">
                       <Building2 className="w-3.5 h-3.5 mr-1" />
@@ -135,7 +137,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
                     Posts
                   </div>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="text-xl font-bold text-purple-700 dark:text-purple-400">
                     {user._count.organizedEvents}
@@ -144,7 +146,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
                     Events
                   </div>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="text-xl font-bold text-pink-700 dark:text-pink-400">
                     {user._count.enrollments}
@@ -191,7 +193,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
 
           {/* Bottom Section - Social & Interests */}
           <div className="mt-4 pt-4 border-t border-secondary-200 dark:border-secondary-700 flex flex-col sm:flex-row gap-3 justify-between items-start">
-            
+
             {/* Social Links - Smaller */}
             {(user.linkedin || user.twitter || user.facebook || user.instagram || user.website) && (
               <div className="flex flex-wrap gap-2">
@@ -252,9 +254,9 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
             {/* Interests - Compact */}
             {user.interests && user.interests.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {user.interests.slice(0, 3).map((interest, idx) => (
-                  <Badge 
-                    key={idx} 
+                {user.interests.slice(0, 3).map((interest: string, idx: number) => (
+                  <Badge
+                    key={idx}
                     variant="outline"
                     className="text-xs px-2 py-0.5"
                   >

@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import { usePostDetail } from '@/hooks/use-feed';
+import { useLikePost, useBookmarkPost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 
 interface PostCardProps {
@@ -21,26 +22,22 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
     const { openLogin } = useAuthModal();
     const { openPost } = usePostDetail();
 
-    const [liked, setLiked] = useState<boolean>((post as any).isLikedByUser ?? false);
-    const [saved, setSaved] = useState((post as any).isBookmarked ?? false);
-    const [likeCount, setLikeCount] = useState(post._count?.postLikes ?? post.likes ?? 0);
-    const [isLiking, setIsLiking] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
+    const likeMutation = useLikePost();
+    const bookmarkMutation = useBookmarkPost();
+
     const [shareOpen, setShareOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    const liked = (post as any).isLikedByUser ?? false;
+    const likeCount = post._count?.postLikes ?? post.likes ?? 0;
+    const saved = (post as any).isBookmarked ?? false;
 
     // Share popover anchor — we measure its position to render a FIXED popover
     // that is never clipped by any overflow:hidden ancestor.
     const shareButtonRef = useRef<HTMLButtonElement>(null);
     const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
-    // Sync like state if the post prop changes (e.g. after feed refetch)
-    useEffect(() => {
-        setLiked((post as any).isLikedByUser ?? false);
-        setLikeCount(post._count?.postLikes ?? post.likes ?? 0);
-    }, [post.id, (post as any).isLikedByUser, post._count?.postLikes, post.likes]);
-
-    // Open share popover and compute position
+    // Open share popover...
     const handleShareOpen = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (shareOpen) {
@@ -49,7 +46,6 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
         }
         if (shareButtonRef.current) {
             const rect = shareButtonRef.current.getBoundingClientRect();
-            // Place above the button, aligned right
             setPopoverPos({
                 top: rect.top + window.scrollY - 8,
                 left: rect.right + window.scrollX,
@@ -90,42 +86,20 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
 
     const handleLike = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        requireAuth(async () => {
-            if (isLiking) return;
-            setIsLiking(true);
+        requireAuth(() => {
+            if (likeMutation.isPending) return;
             const newLiked = !liked;
-            setLiked(newLiked);
-            setLikeCount((c) => (newLiked ? c + 1 : Math.max(0, c - 1)));
             onLikeChange?.(post.id, newLiked);
-            try {
-                await fetch(`/api/posts/${post.id}/like`, { method: newLiked ? 'POST' : 'DELETE' });
-            } catch {
-                // revert on error
-                setLiked(!newLiked);
-                setLikeCount((c) => (!newLiked ? c + 1 : Math.max(0, c - 1)));
-            } finally {
-                setIsLiking(false);
-            }
+            likeMutation.mutate({ postId: post.id, liked: newLiked });
         });
     };
 
     const handleSave = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!user) { openLogin(); return; }
-        if (isSaving) return;
-        const prev = saved;
-        setSaved(!prev);
-        setIsSaving(true);
-        try {
-            const res = await fetch(`/api/bookmarks/${post.id}`, {
-                method: prev ? 'DELETE' : 'POST',
-            });
-            if (!res.ok) setSaved(prev);
-        } catch {
-            setSaved(prev);
-        } finally {
-            setIsSaving(false);
-        }
+        requireAuth(() => {
+            if (bookmarkMutation.isPending) return;
+            bookmarkMutation.mutate({ postId: post.id, isBookmarked: saved });
+        });
     };
 
     const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`;
@@ -239,7 +213,7 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                         {/* Like pill */}
                         <button
                             onClick={handleLike}
-                            disabled={isLiking}
+                            disabled={likeMutation.isPending}
                             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full font-semibold text-xs transition-all duration-200 active:scale-90 ${liked
                                 ? 'bg-red-500 text-white'
                                 : 'bg-white/90 text-secondary-700 hover:bg-white'

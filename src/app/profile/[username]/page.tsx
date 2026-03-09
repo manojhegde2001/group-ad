@@ -12,6 +12,8 @@ import {
     MapPin, Globe, BadgeCheck, CalendarDays, Loader2, ImageOff,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useUserByUsername } from '@/hooks/use-api/use-user';
+import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 
 const breakpointCols = {
     default: 4, 1280: 3, 1024: 3, 768: 2, 640: 2, 0: 1,
@@ -20,55 +22,33 @@ const breakpointCols = {
 export default function PublicProfilePage() {
     const { username } = useParams<{ username: string }>();
 
-    const [profile, setProfile] = useState<any>(null);
-    const [posts, setPosts] = useState<any[]>([]);
-    const [loadingProfile, setLoadingProfile] = useState(true);
-    const [loadingPosts, setLoadingPosts] = useState(true);
+    const {
+        data: profileData,
+        isLoading: loadingProfile,
+    } = useUserByUsername(username);
+
+    const profile = profileData?.user;
+
+    const {
+        data: postsData,
+        isLoading: loadingPosts,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfinitePosts({
+        userId: profile?.id,
+        visibility: 'PUBLIC',
+        limit: '30',
+    }, { enabled: !!profile?.id });
+
+    const posts = postsData?.pages.flatMap((page: any) => page.posts) || [];
     const [followerCount, setFollowerCount] = useState(0);
 
     useEffect(() => {
-        if (!username) return;
-
-        // Fetch user by username
-        const fetchProfile = async () => {
-            try {
-                // We search by username via the users/by-username route
-                const res = await fetch(`/api/users/by-username/${username}`);
-                if (!res.ok) {
-                    setLoadingProfile(false);
-                    return;
-                }
-                const data = await res.json();
-                setProfile(data.user);
-                setFollowerCount(data.user._count?.followers ?? 0);
-            } catch {
-                // silent
-            } finally {
-                setLoadingProfile(false);
-            }
-        };
-
-        fetchProfile();
-    }, [username]);
-
-    useEffect(() => {
-        if (!profile?.id) return;
-
-        const fetchPosts = async () => {
-            try {
-                const res = await fetch(`/api/posts?userId=${profile.id}&visibility=PUBLIC&limit=30`);
-                if (!res.ok) return;
-                const data = await res.json();
-                setPosts(data.posts ?? []);
-            } catch {
-                // silent
-            } finally {
-                setLoadingPosts(false);
-            }
-        };
-
-        fetchPosts();
-    }, [profile?.id]);
+        if (profile) {
+            setFollowerCount(profile._count?.followers ?? 0);
+        }
+    }, [profile]);
 
     if (loadingProfile) {
         return (

@@ -1,6 +1,4 @@
-import { prisma } from '@/lib/prisma';
 import CalendarView from '@/components/events/CalendarView';
-import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -8,47 +6,7 @@ export const metadata: Metadata = {
     description: 'Browse all upcoming events, meetings, and workshops in one place.',
 };
 
-export default async function EventsCalendarPage() {
-    const session = await auth();
-
-    const events = await prisma.event.findMany({
-        where: {
-            status: 'PUBLISHED',
-            visibility: 'PUBLIC',
-        },
-        select: {
-            id: true,
-            title: true,
-            description: true,
-            venue: true,
-            isOnline: true,
-            startDate: true,
-            endDate: true,
-            slug: true,
-            coverImage: true,
-            eventType: true,
-        },
-    });
-
-    // Fetch user's enrollments if they are logged in
-    const enrollments = session?.user?.id ? await prisma.eventEnrollment.findMany({
-        where: { userId: session.user.id },
-        select: { eventId: true },
-    }) : [];
-
-    const enrolledEventIds = new Set(enrollments.map(e => e.eventId));
-
-    const formattedEvents = events.map((e) => ({
-        id: e.id,
-        title: e.title,
-        start: new Date(e.startDate),
-        end: new Date(e.endDate),
-        resource: {
-            ...e,
-            isEnrolled: enrolledEventIds.has(e.id)
-        },
-    }));
-
+export default function EventsCalendarPage() {
     return (
         <div className="max-w-screen-xl mx-auto px-4 py-8">
             <div className="mb-8">
@@ -59,7 +17,7 @@ export default async function EventsCalendarPage() {
             </div>
 
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
-                <CalendarView events={formattedEvents} />
+                <CalendarView />
             </div>
         </div>
     );

@@ -6,10 +6,11 @@ import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, Calendar as CalendarIcon, MapPin, Clock, Info, CheckCircle2, ArrowRight } from 'lucide-react';
+import { X, Calendar as CalendarIcon, MapPin, Clock, Info, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { useEvents, useEnrollEvent, useUnenrollEvent } from '@/hooks/use-api/use-events';
 
 const locales = {
   'en-US': enUS,
@@ -31,15 +32,27 @@ interface CalendarEvent {
   resource: any;
 }
 
-interface CalendarViewProps {
-  events: CalendarEvent[];
-}
-
-export default function CalendarView({ events }: CalendarViewProps) {
-  const { isAuthenticated, user } = useAuth();
+export default function CalendarView() {
+  const { isAuthenticated } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [enrolling, setEnrolling] = useState(false);
+
+  const { data, isLoading } = useEvents();
+  const enrollMutation = useEnrollEvent();
+  const unenrollMutation = useUnenrollEvent();
+
+  const events: CalendarEvent[] = (data?.events || []).map((e: any) => ({
+    id: e.id,
+    title: e.title,
+    start: new Date(e.startDate),
+    end: new Date(e.endDate),
+    resource: {
+      ...e,
+      // For simplicity, we might need a way to know if user is enrolled
+      // Usually the API should return this info if authenticated
+      // Since it's a list, we might need to cross-reference or trust the API
+    }
+  }));
 
   const handleSelectEvent = (event: CalendarEvent) => {
     setSelectedEvent(event);
@@ -58,52 +71,33 @@ export default function CalendarView({ events }: CalendarViewProps) {
     }
     if (!selectedEvent) return;
 
-    setEnrolling(true);
-    try {
-      const res = await fetch(`/api/events/${selectedEvent.resource.id}/enroll`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to enroll');
-
-      toast.success('Successfully enrolled! Check your notifications and email.');
-
-      // Update local state for the selected event
-      selectedEvent.resource.isEnrolled = true;
-      closeModal();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setEnrolling(false);
-    }
+    enrollMutation.mutate(selectedEvent.resource.id, {
+      onSuccess: () => {
+        closeModal();
+      }
+    });
   };
 
   const handleWithdraw = async () => {
     if (!selectedEvent) return;
     if (!confirm('Are you sure you want to withdraw from this event?')) return;
 
-    setEnrolling(true);
-    try {
-      const res = await fetch(`/api/events/${selectedEvent.resource.id}/enroll`, {
-        method: 'DELETE',
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to withdraw');
-
-      toast.success('Successfully withdrawn from the event.');
-
-      // Update local state
-      selectedEvent.resource.isEnrolled = false;
-      closeModal();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setEnrolling(false);
-    }
+    unenrollMutation.mutate(selectedEvent.resource.id, {
+      onSuccess: () => {
+        closeModal();
+      }
+    });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[500px] h-[calc(100vh-10rem)] md:h-[750px] bg-white dark:bg-secondary-900 rounded-3xl md:rounded-[2.5rem] p-8 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const enrolling = enrollMutation.isPending || unenrollMutation.isPending;
 
   return (
     <div className="min-h-[500px] h-[calc(100vh-10rem)] md:h-[750px] bg-white dark:bg-secondary-900 rounded-3xl md:rounded-[2.5rem] p-2 sm:p-4 md:p-8 shadow-2xl border border-secondary-100 dark:border-secondary-800 transition-all overflow-hidden flex flex-col">

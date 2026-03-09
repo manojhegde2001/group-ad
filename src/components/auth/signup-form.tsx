@@ -8,6 +8,8 @@ import { Button, Input, Password, Select, Text } from 'rizzui';
 import { signupSchema, SignupFormData } from '@/lib/validations/auth';
 import { Toast } from '../ui/toast';
 import { useAuthModal } from '@/hooks/use-modal';
+import { useSignup } from '@/hooks/use-api/use-auth';
+import { useCategories, useCompanies } from '@/hooks/use-api/use-common';
 
 // Types
 interface Company {
@@ -28,11 +30,10 @@ interface Category {
 export default function SignupForm() {
   const router = useRouter();
   const { setMode } = useAuthModal();
-  const [isLoading, setIsLoading] = useState(false);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  const { data: categories = [], isLoading: loadingCategories } = useCategories();
+  const { data: companies = [], isLoading: loadingCompanies } = useCompanies();
+  const signupMutation = useSignup();
 
   const {
     register,
@@ -51,64 +52,12 @@ export default function SignupForm() {
 
   const userType = watch('userType');
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    if (userType === 'BUSINESS') {
-      fetchCompanies();
-    }
-  }, [userType]);
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch('/api/categories');
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.categories || []);
-      }
-    } catch {
-      Toast.error('Failed to load categories');
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
-  const fetchCompanies = async () => {
-    setLoadingCompanies(true);
-    try {
-      const res = await fetch('/api/companies');
-      if (res.ok) {
-        const data = await res.json();
-        setCompanies(data.companies || []);
-      }
-    } catch {
-      Toast.error('Failed to load companies');
-    } finally {
-      setLoadingCompanies(false);
-    }
-  };
-
   const onSubmit = async (data: SignupFormData) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error);
-
-      Toast.success('Account created successfully! Please login.');
-      setMode('login');
-    } catch (err: any) {
-      Toast.error(err.message || 'Signup failed');
-    } finally {
-      setIsLoading(false);
-    }
+    signupMutation.mutate(data, {
+      onSuccess: () => {
+        setMode('login');
+      },
+    });
   };
 
   return (
@@ -243,8 +192,8 @@ export default function SignupForm() {
       <div className="sm:col-span-2">
         <Button
           type="submit"
-          isLoading={isLoading}
-          disabled={isLoading}
+          isLoading={signupMutation.isPending}
+          disabled={signupMutation.isPending}
           className="w-full"
         >
           Create Account

@@ -5,12 +5,12 @@ import Masonry from 'react-masonry-css';
 import { PostCard } from './post-card';
 import { CategoryBar } from './category-bar';
 import { useFeedFilter, useCreatePost } from '@/hooks/use-feed';
+import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Demo posts used as fallback when DB is empty  
-
 const DEMO_POSTS: any[] = [
   {
     id: 'demo-1', type: 'IMAGE', content: 'Modern UI Design Trends for 2026 — clean interfaces, micro-animations, and purposeful whitespace.',
@@ -99,95 +99,58 @@ const breakpointCols = {
 export function FeedContainer() {
   const { selectedCategoryId, searchQuery } = useFeedFilter();
   const { setOnCreated } = useCreatePost();
-  const [posts, setPosts] = useState<PostWithRelations[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [useDemoData, setUseDemoData] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const fetchPosts = useCallback(
-    async (pageNum: number, reset = false) => {
-      try {
-        const params = new URLSearchParams({
-          page: String(pageNum),
-          limit: '20',
-          visibility: 'PUBLIC',
-        });
-        if (selectedCategoryId) params.set('categoryId', selectedCategoryId);
-        if (searchQuery) params.set('search', searchQuery);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfinitePosts({
+    categoryId: selectedCategoryId,
+    search: searchQuery,
+    visibility: 'PUBLIC',
+    limit: '20',
+  });
 
-        const res = await fetch(`/api/posts?${params}`);
-        if (!res.ok) throw new Error('Failed');
-        const data = await res.json();
-        const newPosts: PostWithRelations[] = data.posts || [];
+  const posts = data?.pages.flatMap((page: any) => page.posts) || [];
+  const isEmpty = !isLoading && posts.length === 0;
+  const useDemoData = isEmpty && !searchQuery && !selectedCategoryId;
 
-        if (reset) {
-          if (newPosts.length === 0 && pageNum === 1) {
-            setUseDemoData(true);
-            setPosts(DEMO_POSTS as any);
-            setHasMore(false);
-          } else {
-            setUseDemoData(false);
-            setPosts(newPosts);
-            setHasMore(pageNum < data.pagination?.totalPages);
-          }
-        } else {
-          setPosts((prev) => [...prev, ...newPosts]);
-          setHasMore(pageNum < data.pagination?.totalPages);
-        }
-      } catch {
-        if (pageNum === 1) {
-          setUseDemoData(true);
-          setPosts(DEMO_POSTS as any);
-          setHasMore(false);
-        }
-      }
-    },
-    [selectedCategoryId, searchQuery]
-  );
+  const displayPosts = useDemoData ? DEMO_POSTS : posts;
 
-  // Prepend new posts to the feed when created
+  // Prepend new posts...
+  // In a real app we'd mutate the cache, but following the existing pattern:
+  const [localPosts, setLocalPosts] = useState<PostWithRelations[]>([]);
+
   useEffect(() => {
     setOnCreated((newPost: PostWithRelations) => {
-      setPosts((prev) => [newPost, ...prev]);
-      setUseDemoData(false);
+      setLocalPosts(prev => [newPost, ...prev]);
     });
   }, [setOnCreated]);
 
-  // Reset + refetch when filters change
-  useEffect(() => {
-    setPage(1);
-    setHasMore(true);
-    setLoading(true);
-    setPosts([]);
-    fetchPosts(1, true).finally(() => setLoading(false));
-  }, [selectedCategoryId, searchQuery, fetchPosts]);
+  const allPosts = [...localPosts, ...displayPosts];
 
   // Infinite scroll
   useEffect(() => {
-    if (useDemoData) return;
-    if (observerRef.current) observerRef.current.disconnect();
+    if (!hasNextPage || isFetchingNextPage) return;
 
-    observerRef.current = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          setLoadingMore(true);
-          const nextPage = page + 1;
-          setPage(nextPage);
-          fetchPosts(nextPage, false).finally(() => setLoadingMore(false));
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
         }
       },
       { rootMargin: '300px' }
     );
 
-    if (sentinelRef.current) observerRef.current.observe(sentinelRef.current);
-    return () => observerRef.current?.disconnect();
-  }, [hasMore, loadingMore, page, fetchPosts, useDemoData]);
+    if (sentinelRef.current) observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-6">
         <div className="columns-1 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-3">
@@ -203,7 +166,7 @@ export function FeedContainer() {
     );
   }
 
-  if (posts.length === 0) {
+  if (allPosts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center px-4">
         <ImageOff className="w-16 h-16 text-secondary-300 mb-4" />
@@ -230,7 +193,7 @@ export function FeedContainer() {
         className="flex -ml-3 w-auto"
         columnClassName="pl-3 bg-clip-padding"
       >
-        {posts.map((post, i) => (
+        {allPosts.map((post, i) => (
           <div
             key={post.id}
             className="mb-3 animate-slide-up opacity-0"
@@ -244,13 +207,13 @@ export function FeedContainer() {
       {/* Infinite scroll sentinel */}
       <div ref={sentinelRef} className="h-4" />
 
-      {loadingMore && (
+      {isFetchingNextPage && (
         <div className="flex justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
         </div>
       )}
 
-      {!hasMore && posts.length > 0 && !useDemoData && (
+      {!hasNextPage && allPosts.length > 0 && !useDemoData && (
         <p className="text-center text-sm text-secondary-400 py-8">
           You've seen all posts ✨
         </p>

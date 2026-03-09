@@ -12,60 +12,32 @@ interface EnrollmentButtonProps {
     isPast: boolean;
 }
 
+import { useEnrollEvent, useUnenrollEvent } from '@/hooks/use-api/use-events';
+
 export default function EnrollmentButton({
     eventId,
     isEnrolledInitial,
     isPast
 }: EnrollmentButtonProps) {
     const { isAuthenticated } = useAuth();
-    const [isEnrolled, setIsEnrolled] = useState(isEnrolledInitial);
-    const [loading, setLoading] = useState(false);
+    const enrollMutation = useEnrollEvent();
+    const unenrollMutation = useUnenrollEvent();
 
     const handleEnroll = async () => {
         if (!isAuthenticated) {
             toast.error('Please log in to enroll');
             return;
         }
-
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/events/${eventId}/enroll`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to enroll');
-
-            toast.success('Successfully enrolled! Check your email.');
-            setIsEnrolled(true);
-        } catch (err: any) {
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
-        }
+        enrollMutation.mutate(eventId);
     };
 
     const handleWithdraw = async () => {
         if (!confirm('Are you sure you want to withdraw from this event?')) return;
-
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/events/${eventId}/enroll`, {
-                method: 'DELETE',
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to withdraw');
-
-            toast.success('Successfully withdrawn from the event.');
-            setIsEnrolled(false);
-        } catch (err: any) {
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
-        }
+        unenrollMutation.mutate(eventId);
     };
+
+    const isEnrolled = isEnrolledInitial; // This might need careful sync or the parent should re-render
+    const loading = enrollMutation.isPending || unenrollMutation.isPending;
 
     if (isEnrolled) {
         return (

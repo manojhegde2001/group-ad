@@ -4,8 +4,8 @@ import { useState, useRef } from 'react';
 import { Upload, X, Check, Loader2, ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Avatar } from '@/components/ui/avatar';
-
 import { useSession } from 'next-auth/react';
+import { useUploadAvatar } from '@/hooks/use-api/use-user';
 
 interface ProfileImageUploadProps {
   userId: string;
@@ -21,9 +21,9 @@ export default function ProfileImageUpload({
   const { update: updateSession } = useSession();
   const [preview, setPreview] = useState<string | null>(currentAvatar || null);
   const [file, setFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadAvatarMutation = useUploadAvatar();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -77,36 +77,19 @@ export default function ProfileImageUpload({
       return;
     }
 
-    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
 
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await fetch('/api/user/upload-avatar', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
+    uploadAvatarMutation.mutate(formData, {
+      onSuccess: async () => {
+        onClose();
+        await updateSession();
+        window.location.reload();
       }
-
-      toast.success('Profile picture updated successfully!');
-      onClose();
-
-      // Refresh the JWT session so the new avatar propagates to navbar immediately.
-      // Use a small delay then hard-navigate so the refreshed token is picked up cleanly.
-      await updateSession();
-      window.location.href = window.location.href;
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error(error?.message || 'Failed to upload image');
-    } finally {
-      setIsUploading(false);
-    }
+    });
   };
+
+  const isUploading = uploadAvatarMutation.isPending;
 
   const handleRemove = () => {
     setFile(null);

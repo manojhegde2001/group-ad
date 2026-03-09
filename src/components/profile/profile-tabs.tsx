@@ -9,11 +9,14 @@ import MyPostsTab from './tabs/my-posts-tab';
 import SavedPostsTab from './tabs/saved-posts-tab';
 import { ProfileUser } from '@/types';
 
+import { useMe } from '@/hooks/use-api/use-user';
+
 interface ProfileTabsProps {
   user: ProfileUser;
 }
 
-export default function ProfileTabs({ user }: ProfileTabsProps) {
+export default function ProfileTabs({ user: initialUser }: ProfileTabsProps) {
+  const { data: user = initialUser } = useMe();
   return (
     <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm">
       <Tab>

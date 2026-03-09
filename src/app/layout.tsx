@@ -10,7 +10,7 @@ import QueryProvider from '@/components/providers/query-provider';
 import { Footer } from '@/components/layout/footer';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
 import { PostDetailDrawer } from '@/components/feed/post-detail-drawer';
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/next';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],

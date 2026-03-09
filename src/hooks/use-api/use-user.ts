@@ -40,7 +40,10 @@ export const useChangePassword = () => {
 export const useMe = () => {
     return useQuery({
         queryKey: ['me'],
-        queryFn: () => userService.getMe(),
+        queryFn: async () => {
+            const response = await userService.getMe();
+            return response.user;
+        },
     });
 };
 

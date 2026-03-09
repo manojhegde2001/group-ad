@@ -52,6 +52,13 @@ export async function GET() {
             isVerified: true,
           },
         },
+        _count: {
+          select: {
+            posts: true,
+            organizedEvents: true,
+            enrollments: true,
+          },
+        },
       },
     });
 

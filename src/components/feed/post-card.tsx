@@ -102,8 +102,8 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
         });
     };
 
-    const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`;
-    const postTitle = post.content?.slice(0, 60) || 'Check out this post';
+    const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`.toWellFormed?.() || `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`;
+    const postTitle = (post.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post').toWellFormed?.() || (post.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post');
 
     const handleCopyLink = async (e: React.MouseEvent) => {
         e.stopPropagation();

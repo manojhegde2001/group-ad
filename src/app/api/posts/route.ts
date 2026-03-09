@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
     };
 
     if (userType) where.user = { userType: userType as any };
-    if (categoryId) where.categoryId = categoryId;
-    if (companyId) where.companyId = companyId;
+    if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') where.categoryId = categoryId;
+    if (companyId && companyId !== 'null' && companyId !== 'undefined') where.companyId = companyId;
     if (postType) where.type = postType as any;
-    if (userId) where.userId = userId;
+    if (userId && userId !== 'null' && userId !== 'undefined') where.userId = userId;
 
     if (search) {
       where.OR = [

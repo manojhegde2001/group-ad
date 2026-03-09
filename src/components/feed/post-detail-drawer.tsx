@@ -191,8 +191,8 @@ export function PostDetailDrawer() {
     };
 
     const postUrl = typeof window !== 'undefined' && post
-        ? `${window.location.origin}/posts/${post.id}` : '';
-    const postTitle = post?.content?.slice(0, 60) || 'Check out this post';
+        ? `${window.location.origin}/posts/${post.id}`.toWellFormed?.() || `${window.location.origin}/posts/${post.id}` : '';
+    const postTitle = (post?.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post').toWellFormed?.() || (post?.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post');
 
     const handleShareOpen = () => {
         if (shareOpen) { setShareOpen(false); return; }

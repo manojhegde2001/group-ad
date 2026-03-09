@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
             where.startDate = { gte: new Date() };
         }
 
-        if (categoryId) where.categoryId = categoryId;
+        if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') where.categoryId = categoryId;
 
         if (search) {
             where.OR = [

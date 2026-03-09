@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verify } from 'jsonwebtoken';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Validation schema for upgrade request
 const upgradeSchema = z.object({
@@ -21,21 +19,18 @@ const upgradeSchema = z.object({
 // POST /api/user/upgrade-to-business - Request to upgrade from INDIVIDUAL to BUSINESS
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const session = await auth();
 
-    if (!token) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    // Verify token
-    const decoded = verify(token, JWT_SECRET) as { userId: string };
-
     // Get current user
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: session.user.id },
       select: {
         id: true,
         userType: true,
@@ -127,22 +122,20 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/user/upgrade-to-business - Get user's upgrade requests
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const token = request.cookies.get('token')?.value;
+    const session = await auth();
 
-    if (!token) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    const decoded = verify(token, JWT_SECRET) as { userId: string };
-
     const requests = await prisma.userTypeChangeRequest.findMany({
       where: {
-        userId: decoded.userId,
+        userId: session.user.id,
       },
       orderBy: {
         createdAt: 'desc',

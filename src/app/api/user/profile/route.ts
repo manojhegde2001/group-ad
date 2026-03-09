@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verify } from 'jsonwebtoken';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -67,19 +65,17 @@ const changePasswordSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const session = await auth();
 
-    if (!token) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    const decoded = verify(token, JWT_SECRET) as { userId: string };
-
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: session.user.id },
       select: {
         id: true,
         email: true,
@@ -189,16 +185,14 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const session = await auth();
 
-    if (!token) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
-
-    const decoded = verify(token, JWT_SECRET) as { userId: string };
 
     const body = await request.json();
     const validatedData = updateProfileSchema.parse(body);
@@ -210,7 +204,7 @@ export async function PATCH(request: NextRequest) {
         select: { id: true },
       });
 
-      if (existingUser && existingUser.id !== decoded.userId) {
+      if (existingUser && existingUser.id !== session.user.id) {
         return NextResponse.json(
           { error: 'Username already taken' },
           { status: 400 }
@@ -220,7 +214,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update user
     const updatedUser = await prisma.user.update({
-      where: { id: decoded.userId },
+      where: { id: session.user.id },
       data: {
         name: validatedData.name,
         username: validatedData.username,
@@ -318,23 +312,21 @@ export async function PATCH(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const session = await auth();
 
-    if (!token) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    const decoded = verify(token, JWT_SECRET) as { userId: string };
-
     const body = await request.json();
     const validatedData = changePasswordSchema.parse(body);
 
     // Get user's current password
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: session.user.id },
       select: {
         id: true,
         password: true,
@@ -366,7 +358,7 @@ export async function PUT(request: NextRequest) {
 
     // Update password
     await prisma.user.update({
-      where: { id: decoded.userId },
+      where: { id: session.user.id },
       data: {
         password: hashedPassword,
       },

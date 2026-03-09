@@ -23,7 +23,7 @@ const updateProfileSchema = z.object({
   avatar: z.string().url('Invalid avatar URL').optional().or(z.literal('')),
 
   // Category
-  categoryId: z.string().optional(),
+  categoryId: z.string().optional().or(z.literal('')),
   interests: z.array(z.string()).optional(),
 
   // Business fields (for BUSINESS users)
@@ -224,15 +224,15 @@ export async function PATCH(request: NextRequest) {
         website: validatedData.website || null,
         avatar: validatedData.avatar || null,
 
-        categoryId: validatedData.categoryId,
+        categoryId: validatedData.categoryId || null,
         interests: validatedData.interests,
 
         // Business fields
-        turnover: validatedData.turnover,
-        companySize: validatedData.companySize,
-        industry: validatedData.industry,
-        gstNumber: validatedData.gstNumber,
-        establishedYear: validatedData.establishedYear,
+        turnover: validatedData.turnover || null,
+        companySize: validatedData.companySize || null,
+        industry: validatedData.industry || null,
+        gstNumber: validatedData.gstNumber || null,
+        establishedYear: validatedData.establishedYear || null,
         companyWebsite: validatedData.companyWebsite || null,
 
         // Social links

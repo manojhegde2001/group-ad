@@ -6,10 +6,12 @@ export class ApiError extends Error {
 }
 
 async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
+    const isFormData = options?.body instanceof FormData;
+
     const response = await fetch(url, {
         ...options,
         headers: {
-            'Content-Type': 'application/json',
+            ...(!isFormData && { 'Content-Type': 'application/json' }),
             ...options?.headers,
         },
     });
@@ -26,10 +28,22 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
 export const apiClient = {
     get: <T>(url: string, options?: RequestInit) => fetcher<T>(url, { ...options, method: 'GET' }),
     post: <T>(url: string, body?: any, options?: RequestInit) =>
-        fetcher<T>(url, { ...options, method: 'POST', body: JSON.stringify(body) }),
+        fetcher<T>(url, {
+            ...options,
+            method: 'POST',
+            body: body instanceof FormData ? body : JSON.stringify(body)
+        }),
     patch: <T>(url: string, body?: any, options?: RequestInit) =>
-        fetcher<T>(url, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
+        fetcher<T>(url, {
+            ...options,
+            method: 'PATCH',
+            body: body instanceof FormData ? body : JSON.stringify(body)
+        }),
     put: <T>(url: string, body?: any, options?: RequestInit) =>
-        fetcher<T>(url, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+        fetcher<T>(url, {
+            ...options,
+            method: 'PUT',
+            body: body instanceof FormData ? body : JSON.stringify(body)
+        }),
     delete: <T>(url: string, options?: RequestInit) => fetcher<T>(url, { ...options, method: 'DELETE' }),
 };

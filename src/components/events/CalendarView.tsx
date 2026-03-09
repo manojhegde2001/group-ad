@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useEvents, useEnrollEvent, useUnenrollEvent } from '@/hooks/use-api/use-events';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 const locales = {
   'en-US': enUS,
@@ -36,6 +37,7 @@ export default function CalendarView() {
   const { isAuthenticated } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmWithdrawOpen, setIsConfirmWithdrawOpen] = useState(false);
 
   const { data, isLoading } = useEvents();
   const enrollMutation = useEnrollEvent();
@@ -80,10 +82,14 @@ export default function CalendarView() {
 
   const handleWithdraw = async () => {
     if (!selectedEvent) return;
-    if (!confirm('Are you sure you want to withdraw from this event?')) return;
+    setIsConfirmWithdrawOpen(true);
+  };
 
+  const onConfirmWithdraw = () => {
+    if (!selectedEvent) return;
     unenrollMutation.mutate(selectedEvent.resource.id, {
       onSuccess: () => {
+        setIsConfirmWithdrawOpen(false);
         closeModal();
       }
     });
@@ -402,6 +408,17 @@ export default function CalendarView() {
           </div>
         </Dialog>
       </Transition>
+
+      <ConfirmModal
+        isOpen={isConfirmWithdrawOpen}
+        onClose={() => setIsConfirmWithdrawOpen(false)}
+        onConfirm={onConfirmWithdraw}
+        title="Withdraw from Event"
+        message="Are you sure you want to withdraw from this event? You can always enroll again later if spots are available."
+        confirmLabel="Withdraw"
+        isLoading={unenrollMutation.isPending}
+        variant="danger"
+      />
     </div>
   );
 }

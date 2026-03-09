@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import { useMyPosts, useDeletePost, useUpdatePost } from '@/hooks/use-api/use-posts';
 import { useQueryClient } from '@tanstack/react-query';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function MyPostsTab() {
     const { openPost } = usePostDetail();
@@ -25,6 +26,7 @@ export default function MyPostsTab() {
     const posts = data?.posts || [];
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
     const [filter, setFilter] = useState<'ALL' | 'PUBLIC' | 'PRIVATE'>('ALL');
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     // Prepend newly created post to this list by invalidating
     useEffect(() => {
@@ -34,9 +36,17 @@ export default function MyPostsTab() {
     }, [setOnCreated, queryClient]);
 
     const handleDelete = async (postId: string) => {
-        if (!confirm('Delete this post permanently?')) return;
         setMenuOpenId(null);
-        deletePost.mutate(postId);
+        setConfirmDeleteId(postId);
+    };
+
+    const confirmDelete = () => {
+        if (!confirmDeleteId) return;
+        deletePost.mutate(confirmDeleteId, {
+            onSuccess: () => {
+                setConfirmDeleteId(null);
+            }
+        });
     };
 
     const handleToggleVisibility = async (post: PostWithRelations) => {
@@ -226,6 +236,17 @@ export default function MyPostsTab() {
                     })}
                 </div>
             )}
+            {/* Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                onConfirm={confirmDelete}
+                title="Delete Post"
+                message="Are you sure you want to delete this post permanently? This action cannot be undone."
+                confirmLabel="Delete Post"
+                isLoading={deletePost.isPending}
+                variant="danger"
+            />
         </div>
     );
 }

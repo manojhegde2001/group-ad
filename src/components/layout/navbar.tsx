@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
+import { useMe } from '@/hooks/use-api/use-user';
 import { useAuthModal } from '@/hooks/use-modal';
 import { useCreatePost } from '@/hooks/use-feed';
 import { useFeedFilter } from '@/hooks/use-feed';
@@ -32,7 +33,11 @@ const Logo = dynamic(() => import('../ui/logo'), {
 });
 
 export function Navbar() {
-  const { user, isAuthenticated, loading, logout } = useAuth();
+  const { user: authUser, isAuthenticated, loading: authLoading, logout } = useAuth();
+  const { data: meUser, isLoading: meLoading } = useMe();
+  const user = meUser || authUser;
+  const loading = authLoading || (isAuthenticated && meLoading && !meUser);
+
   const { openLogin, openSignup } = useAuthModal();
   const { open: openCreatePost } = useCreatePost();
   const { searchQuery, setSearch } = useFeedFilter();

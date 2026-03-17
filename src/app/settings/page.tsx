@@ -12,8 +12,9 @@ import {
   Moon, Loader2, CheckCircle, LogOut, Eye, EyeOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
+import ProfileImageUpload from '@/components/profile/profile-image-upload';
 
 type Tab = 'profile' | 'security' | 'privacy' | 'notifications';
 
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const { mutate: changePassword, isPending: changingPassword } = useChangePassword();
 
   const [tab, setTab] = useState<Tab>('profile');
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   // Profile form
   const [name, setName] = useState('');
@@ -167,18 +169,34 @@ export default function SettingsPage() {
             {tab === 'profile' && (
               <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
                 <div className="flex items-center gap-4 pb-4 border-b border-secondary-100 dark:border-secondary-800">
-                  <Avatar
-                    src={(user as any)?.avatar}
-                    name={(user?.name as string) || ''}
-                    size="lg"
-                    rounded="full"
-                    className="w-16 h-16 ring-4 ring-primary-100 dark:ring-primary-900/30"
-                  />
+                  <div className="relative group">
+                    <Avatar
+                      src={(user as any)?.avatar}
+                      name={(user?.name as string) || ''}
+                      size="lg"
+                      rounded="full"
+                      className="w-16 h-16 ring-4 ring-primary-100 dark:ring-primary-900/30"
+                    />
+                    <button 
+                      onClick={() => setIsAvatarModalOpen(true)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className="text-[10px] font-bold uppercase">Edit</span>
+                    </button>
+                  </div>
                   <div>
                     <p className="font-bold text-secondary-900 dark:text-white">{(user?.name as string) || ''}</p>
                     <p className="text-sm text-secondary-500">@{(user as any)?.username}</p>
                   </div>
                 </div>
+
+                {isAvatarModalOpen && (
+                  <ProfileImageUpload 
+                    userId={user?.id || ''} 
+                    currentAvatar={(user as any)?.avatar}
+                    onClose={() => setIsAvatarModalOpen(false)}
+                  />
+                )}
 
                 {profileLoading ? (
                   <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary-500" /></div>

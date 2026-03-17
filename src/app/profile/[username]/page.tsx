@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { FollowButton } from '@/components/profile/follow-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
-import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2 } from 'lucide-react';
-import { useUserByUsername } from '@/hooks/use-api/use-user';
-import { useInfinitePosts } from '@/hooks/use-api/use-posts';
+import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings } from 'lucide-react';
+import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
+import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
+import { useCreatePost } from '@/hooks/use-feed';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -19,26 +20,55 @@ const breakpointCols = {
 
 export default function PublicProfilePage() {
     const { username } = useParams<{ username: string }>();
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'created' | 'saved'>('created');
+    const { data: me } = useMe();
+    const isOwnProfile = me?.username === username;
 
     const {
         data: profileData,
         isLoading: loadingProfile,
+        refetch: refetchProfile
     } = useUserByUsername(username);
 
     const profile = profileData?.user;
 
+    // Refresh logic when a post is created
+    const { setOnCreated } = useCreatePost();
+    useEffect(() => {
+        setOnCreated((newPost) => {
+            // Refetch posts if we are on the 'created' tab
+            if (activeTab === 'created') {
+                refetchCreated();
+            }
+        });
+    }, [activeTab, setOnCreated]);
+
     const {
-        data: postsData,
-        isLoading: loadingPosts,
+        data: createdPostsData,
+        isLoading: loadingCreated,
+        refetch: refetchCreated
     } = useInfinitePosts({
         userId: profile?.id,
         visibility: 'PUBLIC',
         limit: '30',
-        // In a real app, 'saved' would hit a different endpoint or filter
     }, { enabled: !!profile?.id });
 
-    const posts = postsData?.pages.flatMap((page: any) => page.posts) || [];
+    const {
+        data: savedPostsData,
+        isLoading: loadingSaved,
+    } = useSavedPosts({
+        limit: '30'
+    });
+
+    const posts = useMemo(() => {
+        if (activeTab === 'saved') {
+            return savedPostsData?.posts || [];
+        }
+        return createdPostsData?.pages.flatMap((page: any) => page.posts) || [];
+    }, [activeTab, createdPostsData, savedPostsData]);
+
+    const loadingPosts = activeTab === 'created' ? loadingCreated : loadingSaved;
 
     if (loadingProfile) {
         return (
@@ -63,102 +93,130 @@ export default function PublicProfilePage() {
 
     return (
         <div className="min-h-screen bg-white dark:bg-secondary-950">
-            {/* Header Section - Horizontal Layout like Instagram/Pinterest */}
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-16 pt-12 pb-16 px-4 max-w-5xl mx-auto">
-                {/* Left Side: Large Avatar */}
-                <div className="relative shrink-0">
-                    <div className="w-40 h-40 md:w-52 md:h-52 rounded-full border-[6px] border-white dark:border-secondary-900 shadow-2xl overflow-hidden bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center transition-transform hover:scale-105 duration-300">
+            {/* Pinterest/Lummi Style Header - Centered & Premium */}
+            <div className="pt-16 pb-8 px-4 max-w-4xl mx-auto flex flex-col items-center text-center">
+                {/* Large Avatar with Hover Effect */}
+                <div className="relative mb-6 group">
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-secondary-900 shadow-xl overflow-hidden bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center transition-all duration-500 group-hover:shadow-2xl">
                         {profile.avatar ? (
                             <img 
                                 src={profile.avatar} 
                                 alt={profile.name} 
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                         ) : (
-                            <span className="text-5xl md:text-7xl font-bold text-primary-600 dark:text-primary-400 uppercase">
+                            <span className="text-4xl md:text-6xl font-black text-secondary-300 dark:text-secondary-600 uppercase">
                                 {profile.name.charAt(0)}
                             </span>
                         )}
                     </div>
                 </div>
 
-                {/* Right Side: User Details */}
-                <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-                    <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-                        <h1 className="text-3xl md:text-4xl font-black text-secondary-900 dark:text-white tracking-tight">
+                {/* User Info */}
+                <div className="space-y-2 mb-8">
+                    <div className="flex items-center justify-center gap-2">
+                        <h1 className="text-3xl md:text-5xl font-black text-secondary-900 dark:text-white tracking-tight">
                             {profile.name}
                         </h1>
                         {profile.verificationStatus === 'VERIFIED' && (
-                            <BadgeCheck className="w-7 h-7 text-primary-500 fill-primary-500/10 hidden md:block" />
+                            <BadgeCheck className="w-6 h-6 md:w-8 md:h-8 text-primary-500 fill-primary-500/10" />
                         )}
-                        
-                        <div className="flex items-center gap-2 md:ml-4">
-                            <FollowButton 
-                                userId={profile.id} 
-                                initialFollowing={profile.isFollowing ?? false}
-                                initialFollowerCount={profile._count?.followers ?? 0}
-                                size="sm"
-                            />
-                            <Button variant="outline" rounded="pill" size="sm" className="font-bold px-4 border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 h-9">
-                                <Share2 className="w-4 h-4 mr-2" />
-                                Share
-                            </Button>
-                        </div>
                     </div>
+                    <p className="text-secondary-500 font-bold text-lg">@{profile.username}</p>
+                </div>
 
-                    <p className="text-secondary-500 font-bold text-lg mb-6">@{profile.username}</p>
-
-                    <div className="flex items-center gap-6 mb-8 text-base font-bold text-secondary-800 dark:text-secondary-200">
-                        <button className="hover:underline transition-all">
-                            <span className="text-secondary-900 dark:text-white mr-1">{profile._count?.followers ?? 0}</span> 
-                            followers
-                        </button>
-                        <span className="w-1.5 h-1.5 bg-secondary-300 rounded-full" />
-                        <button className="hover:underline transition-all">
-                            <span className="text-secondary-900 dark:text-white mr-1">{profile._count?.following ?? 0}</span> 
-                            following
-                        </button>
-                    </div>
-
+                {/* Stats & Actions */}
+                <div className="flex flex-col items-center gap-6 w-full">
                     {profile.bio && (
-                        <p className="text-secondary-600 dark:text-secondary-400 max-w-xl text-lg leading-relaxed font-medium">
+                        <p className="text-secondary-600 dark:text-secondary-400 max-w-lg text-lg leading-relaxed font-medium mb-2">
                             {profile.bio}
                         </p>
                     )}
+
+                    <div className="flex items-center gap-8 text-base font-bold text-secondary-800 dark:text-secondary-200">
+                        <div className="flex flex-col items-center">
+                            <span className="text-secondary-900 dark:text-white text-xl">{profile._count?.followers ?? 0}</span>
+                            <span className="text-sm text-secondary-400 font-medium">followers</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-secondary-900 dark:text-white text-xl">{profile._count?.following ?? 0}</span>
+                            <span className="text-sm text-secondary-400 font-medium">following</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {isOwnProfile ? (
+                            <>
+                                <Button 
+                                    variant="solid" 
+                                    color="primary" 
+                                    rounded="pill" 
+                                    className="font-bold px-8 h-12 text-base shadow-lg shadow-primary-500/20"
+                                    onClick={() => useCreatePost.getState().open()}
+                                >
+                                    <Plus className="w-5 h-5 mr-2" />
+                                    Create
+                                </Button>
+                                <Button 
+                                    variant="outline" 
+                                    rounded="pill" 
+                                    className="font-bold px-6 h-12 border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                    onClick={() => router.push('/settings')}
+                                >
+                                    <Settings className="w-5 h-5" />
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <FollowButton 
+                                    userId={profile.id} 
+                                    initialFollowing={profile.isFollowing ?? false}
+                                    initialFollowerCount={profile._count?.followers ?? 0}
+                                    size="lg"
+                                />
+                                <Button variant="outline" rounded="pill" className="font-bold px-6 h-12 border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50">
+                                    <Share2 className="w-5 h-5 mr-2" />
+                                    Share
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Tabs Navigation */}
-            <div className="border-t border-secondary-100 dark:border-secondary-800 sticky top-16 md:top-20 bg-white/80 dark:bg-secondary-950/80 backdrop-blur-md z-30">
-                <div className="flex justify-center gap-8 py-4">
+            <div className="border-t border-secondary-100 dark:border-secondary-800 sticky top-16 md:top-20 bg-white/90 dark:bg-secondary-950/90 backdrop-blur-md z-30">
+                <div className="flex justify-center gap-10 py-5">
                     <button
                         onClick={() => setActiveTab('created')}
                         className={cn(
-                            "pb-2 text-sm font-bold transition-all relative",
+                            "pb-2 text-base font-bold transition-all relative",
                             activeTab === 'created' 
-                                ? "text-secondary-900 dark:text-white" 
-                                : "text-secondary-500 hover:text-secondary-700"
+                                ? "text-secondary-900 dark:text-white scale-110" 
+                                : "text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200"
                         )}
                     >
                         Created
                         {activeTab === 'created' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-secondary-900 dark:bg-white rounded-full" />
+                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-secondary-900 dark:bg-white rounded-full animate-in fade-in slide-in-from-bottom-1" />
                         )}
                     </button>
-                    <button
-                        onClick={() => setActiveTab('saved')}
-                        className={cn(
-                            "pb-2 text-sm font-bold transition-all relative",
-                            activeTab === 'saved' 
-                                ? "text-secondary-900 dark:text-white" 
-                                : "text-secondary-500 hover:text-secondary-700"
-                        )}
-                    >
-                        Saved
-                        {activeTab === 'saved' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-secondary-900 dark:bg-white rounded-full" />
-                        )}
-                    </button>
+                    {isOwnProfile && (
+                        <button
+                            onClick={() => setActiveTab('saved')}
+                            className={cn(
+                                "pb-2 text-base font-bold transition-all relative",
+                                activeTab === 'saved' 
+                                    ? "text-secondary-900 dark:text-white scale-110" 
+                                    : "text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200"
+                            )}
+                        >
+                            Saved
+                            {activeTab === 'saved' && (
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-secondary-900 dark:bg-white rounded-full animate-in fade-in slide-in-from-bottom-1" />
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 

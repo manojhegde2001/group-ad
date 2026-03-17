@@ -17,20 +17,29 @@ export default function Logo({ className, iconOnly = false }: LogoProps) {
     )}>
       {iconOnly ? (
         <Image
-          src="/auth/logo-small.png"
+          src="/auth/logo-small.svg"
           alt="Logo"
           fill
           className="object-contain"
           priority
         />
       ) : (
-        <Image
-          src="/auth/logo-full.png"
-          alt="Logo"
-          fill
-          className="object-contain"
-          priority
-        />
+        <>
+          <Image
+            src="/auth/logo-full.svg"
+            alt="Logo"
+            fill
+            className="object-contain dark:hidden"
+            priority
+          />
+          <Image
+            src="/auth/logo-full-dark.svg"
+            alt="Logo"
+            fill
+            className="object-contain hidden dark:block"
+            priority
+          />
+        </>
       )}
     </div>
   );

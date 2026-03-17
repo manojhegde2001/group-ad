@@ -31,11 +31,18 @@ export async function GET(
         const session = await auth();
         const { id } = await params;
 
-        const event = await prisma.event.findUnique({
-            where: { id },
+        // Support both MongoDB ObjectId and human-readable slug
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+        const event = await prisma.event.findFirst({
+            where: {
+                OR: [
+                    ...(isObjectId ? [{ id }] : []),
+                    { slug: id },
+                ],
+            },
             include: {
                 category: { select: { id: true, name: true, slug: true, icon: true } },
-                organizer: { select: { id: true, name: true, username: true, avatar: true, userType: true } },
+                organizer: { select: { id: true, name: true, username: true, avatar: true, userType: true, bio: true } },
                 company: { select: { id: true, name: true, logo: true } },
                 _count: { select: { enrollments: true } },
             },
@@ -55,7 +62,7 @@ export async function GET(
         let userEnrollment = null;
         if (session?.user?.id) {
             userEnrollment = await prisma.eventEnrollment.findUnique({
-                where: { eventId_userId: { eventId: id, userId: session.user.id } },
+                where: { eventId_userId: { eventId: event.id, userId: session.user.id } },
                 select: { id: true, status: true, createdAt: true },
             });
         }
@@ -66,6 +73,7 @@ export async function GET(
         return NextResponse.json({ error: 'Failed to fetch event' }, { status: 500 });
     }
 }
+
 
 export async function PATCH(
     request: NextRequest,

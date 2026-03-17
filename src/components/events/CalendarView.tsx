@@ -38,8 +38,10 @@ export default function CalendarView() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmWithdrawOpen, setIsConfirmWithdrawOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [location, setLocation] = useState('');
 
-  const { data, isLoading } = useEvents();
+  const { data, isLoading } = useEvents({ search, location });
   const enrollMutation = useEnrollEvent();
   const unenrollMutation = useUnenrollEvent();
 
@@ -97,7 +99,7 @@ export default function CalendarView() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[500px] h-[calc(100vh-10rem)] md:h-[750px] bg-white dark:bg-secondary-900 rounded-3xl md:rounded-[2.5rem] p-8 flex items-center justify-center">
+      <div className="h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] bg-white dark:bg-secondary-900 rounded-3xl md:rounded-[2.5rem] p-8 flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-primary-500 animate-spin" />
       </div>
     );
@@ -106,7 +108,25 @@ export default function CalendarView() {
   const enrolling = enrollMutation.isPending || unenrollMutation.isPending;
 
   return (
-    <div className="min-h-[500px] h-[calc(100vh-10rem)] md:h-[750px] bg-white dark:bg-secondary-900 rounded-3xl md:rounded-[2.5rem] p-2 sm:p-4 md:p-8 shadow-2xl border border-secondary-100 dark:border-secondary-800 transition-all overflow-hidden flex flex-col">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-2">
+         <input 
+            type="text" 
+            placeholder="Search events by title..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-800 bg-white dark:bg-secondary-900 focus:ring-2 focus:ring-primary-500 text-sm"
+         />
+         <input 
+            type="text" 
+            placeholder="Filter by City or State..." 
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="w-full sm:w-64 px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-800 bg-white dark:bg-secondary-900 focus:ring-2 focus:ring-primary-500 text-sm"
+         />
+      </div>
+
+    <div className="h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] bg-white dark:bg-secondary-900 rounded-3xl md:rounded-[2.5rem] p-2 sm:p-4 md:p-8 shadow-2xl border border-secondary-100 dark:border-secondary-800 transition-all overflow-hidden flex flex-col">
       <style jsx global>{`
         .rbc-calendar {
           font-family: inherit;
@@ -419,6 +439,7 @@ export default function CalendarView() {
         isLoading={unenrollMutation.isPending}
         variant="danger"
       />
+    </div>
     </div>
   );
 }

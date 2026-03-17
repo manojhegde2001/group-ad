@@ -11,13 +11,6 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 
-interface Category {
-    id: string;
-    name: string;
-    slug: string;
-    icon?: string | null;
-}
-
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
 export function CreatePostModal() {
@@ -28,25 +21,14 @@ export function CreatePostModal() {
     const [content, setContent] = useState('');
     const [tags, setTags] = useState('');
     const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC');
-    const [categoryId, setCategoryId] = useState('');
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [categories, setCategories] = useState<Category[]>([]);
     const [success, setSuccess] = useState(false);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (isOpen) {
-            fetch('/api/categories')
-                .then((r) => r.json())
-                .then((d) => setCategories(d.categories || []))
-                .catch(() => { });
-        }
-    }, [isOpen]);
 
     // Lock body scroll
     useEffect(() => {
@@ -58,7 +40,6 @@ export function CreatePostModal() {
         setContent('');
         setTags('');
         setVisibility('PUBLIC');
-        setCategoryId('');
         setMediaFiles([]);
         setMediaPreviews([]);
         setPostType('IMAGE');
@@ -175,7 +156,6 @@ export function CreatePostModal() {
                     ...(postType === 'VIDEO' && { images: mediaUrls }),
                     tags: parsedTags,
                     visibility,
-                    categoryId: categoryId || undefined,
                 }),
             });
 
@@ -400,27 +380,7 @@ export function CreatePostModal() {
                                 />
                             </div>
 
-                            {/* Category Pills */}
-                            {categories.length > 0 && (
-                                <div>
-                                    <p className="text-[11px] font-semibold text-secondary-400 uppercase tracking-wide mb-2">Category</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {categories.slice(0, 12).map((cat) => (
-                                            <button
-                                                key={cat.id}
-                                                type="button"
-                                                onClick={() => setCategoryId(categoryId === cat.id ? '' : cat.id)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${categoryId === cat.id
-                                                    ? 'bg-primary-600 text-white shadow-sm'
-                                                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700'
-                                                    }`}
-                                            >
-                                                {cat.icon} {cat.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+
                         </div>
 
                         {/* Upload progress bar */}

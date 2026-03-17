@@ -85,7 +85,8 @@ const DEMO_POSTS: any[] = [
 ];
 
 const breakpointCols = {
-  default: 5,
+  default: 6,
+  2560: 6,
   1800: 5,
   1536: 4,
   1280: 4,
@@ -152,7 +153,7 @@ export function FeedContainer() {
 
   if (isLoading) {
     return (
-      <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-6">
+      <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-6">
         <div className="columns-1 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-3">
           {[...Array(12)].map((_, i) => (
             <Skeleton
@@ -181,7 +182,7 @@ export function FeedContainer() {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-5">
+    <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 2xl:px-12 py-5">
       {useDemoData && (
         <p className="text-center text-xs text-secondary-400 mb-4">
           Showing sample posts — create posts to see real content

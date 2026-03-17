@@ -1,114 +1,27 @@
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import ProfileHeader from '@/components/profile/profile-header';
-import ProfileTabs from '@/components/profile/profile-tabs';
-import { auth } from '@/lib/auth';
+'use client';
 
-export const metadata = {
-  title: 'Profile',
-  description: 'Manage your profile',
-};
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { Loader2 } from 'lucide-react';
 
-async function getProfile() {
-  // Use the auth() function from your NextAuth setup
-  const session = await auth();
+export default function ProfileRedirectPage() {
+  const { user, isAuthenticated, loading } = useAuth();
+  const router = useRouter();
 
-  console.log('[Profile] Session:', session);
-
-  if (!session?.user?.email) {
-    console.log('[Profile] No session found, redirecting to home');
-    redirect('/');
-  }
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        username: true,
-        avatar: true,
-        bio: true,
-        phone: true,
-        location: true,
-        website: true,
-
-        userType: true,
-        visibility: true,
-
-        verificationStatus: true,
-        verifiedAt: true,
-
-        onboardingStep: true,
-        isProfileCompleted: true,
-
-        categoryId: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            icon: true,
-          },
-        },
-        interests: true,
-
-        companyId: true,
-        company: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            logo: true,
-            isVerified: true,
-          },
-        },
-
-        turnover: true,
-        companySize: true,
-        industry: true,
-
-        linkedin: true,
-        twitter: true,
-        facebook: true,
-        instagram: true,
-
-        createdAt: true,
-        updatedAt: true,
-
-        _count: {
-          select: {
-            posts: true,
-            organizedEvents: true,
-            enrollments: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      console.log('[Profile] User not found in database');
-      redirect('/');
+  useEffect(() => {
+    if (!loading) {
+      if (isAuthenticated && (user as any)?.username) {
+        router.replace(`/profile/${(user as any).username}`);
+      } else if (!isAuthenticated) {
+        router.replace('/');
+      }
     }
-
-    console.log('[Profile] User found:', user.email);
-    return user;
-  } catch (error) {
-    console.error('[Profile] Error fetching user:', error);
-    redirect('/');
-  }
-}
-
-export default async function ProfilePage() {
-  const user = await getProfile();
+  }, [loading, isAuthenticated, user, router]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <ProfileHeader user={user} />
-        <ProfileTabs user={user} />
-      </div>
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
     </div>
   );
 }

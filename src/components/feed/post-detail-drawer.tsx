@@ -191,8 +191,16 @@ export function PostDetailDrawer() {
     };
 
     const postUrl = typeof window !== 'undefined' && post
-        ? `${window.location.origin}/posts/${post.id}`.toWellFormed?.() || `${window.location.origin}/posts/${post.id}` : '';
-    const postTitle = (post?.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post').toWellFormed?.() || (post?.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post');
+        ? `${window.location.origin}/posts/${post.id}` : '';
+    const postTitle = post?.content ? post.content.slice(0, 60) : 'Check out this post';
+
+    const safeEncode = (str: string) => {
+        try {
+            return encodeURIComponent(str.toWellFormed ? str.toWellFormed() : str.replace(/[\uD800-\uDFFF]/g, ''));
+        } catch {
+            return encodeURIComponent(str.replace(/[^\x00-\x7F]/g, ''));
+        }
+    };
 
     const handleShareOpen = () => {
         if (shareOpen) { setShareOpen(false); return; }
@@ -261,7 +269,7 @@ export function PostDetailDrawer() {
                                     <video
                                         src={post.images[currentImageIndex]}
                                         className="w-full h-full object-contain"
-                                        controls playsInline
+                                        controls playsInline autoPlay
                                         style={{ maxHeight: '80vh' }}
                                     />
                                 ) : (
@@ -502,14 +510,14 @@ export function PostDetailDrawer() {
                         {copied ? 'Copied!' : 'Copy link'}
                     </button>
                     <a
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(postTitle)}&url=${encodeURIComponent(postUrl)}`}
+                        href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`}
                         target="_blank" rel="noopener noreferrer"
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
                     >
                         <Twitter className="w-4 h-4 text-sky-500" /> Share on X
                     </a>
                     <a
-                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`}
+                        href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`}
                         target="_blank" rel="noopener noreferrer"
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
                     >

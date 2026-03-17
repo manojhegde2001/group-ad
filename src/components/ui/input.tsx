@@ -37,6 +37,7 @@ interface InputProps {
   step?: number | string;
   pattern?: string;
   className?: string;
+  inputClassName?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -54,6 +55,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       clearable = false,
       onClear,
       className,
+      inputClassName,
       required,
       type = 'text',
       ...props
@@ -80,6 +82,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           clearable={clearable}
           onClear={onClear}
           className={cn(className)}
+          inputClassName={inputClassName}
           {...props}
         />
         {error && <p className="mt-1.5 text-sm text-red-500">{error}</p>}

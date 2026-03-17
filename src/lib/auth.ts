@@ -7,17 +7,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        identifier: { label: 'Email or Phone', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.identifier || !credentials?.password) {
           throw new Error('Invalid credentials');
         }
 
-        const user = await prisma.user.findUnique({
+        const identifierStr = credentials.identifier as string;
+
+        const user = await prisma.user.findFirst({
           where: {
-            email: credentials.email as string,
+            OR: [
+              { email: identifierStr },
+              { phone: identifierStr }
+            ]
           },
           include: {
             category: true,

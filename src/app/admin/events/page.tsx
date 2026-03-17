@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Plus, Users, Edit, Eye, AlertCircle } from 'lucide-react';
+import { Plus, Users, Edit, Eye, AlertCircle, MapPin } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-secondary-100 text-secondary-600 dark:bg-secondary-800 dark:text-secondary-400',
@@ -33,12 +33,20 @@ export default async function AdminEventsPage() {
                     <h1 className="text-2xl font-bold text-secondary-900 dark:text-white">Events Dashboard</h1>
                     <p className="text-sm text-secondary-500 mt-0.5">Manage all meetings and events</p>
                 </div>
-                <Link
-                    href="/admin/events/create"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm"
-                >
-                    <Plus className="w-4 h-4" /> New Event
-                </Link>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/admin/venues"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-100 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-200 transition-colors shadow-sm"
+                    >
+                        <MapPin className="w-4 h-4" /> Manage Venues
+                    </Link>
+                    <Link
+                        href="/admin/events/create"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm"
+                    >
+                        <Plus className="w-4 h-4" /> New Event
+                    </Link>
+                </div>
             </div>
 
             {/* Stats */}

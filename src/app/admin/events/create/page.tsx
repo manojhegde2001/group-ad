@@ -18,6 +18,8 @@ interface FormData {
     timezone: string;
     isOnline: boolean;
     venue: string;
+    city: string;
+    state: string;
     meetingLink: string;
     maxAttendees: string;
     visibility: 'PUBLIC' | 'PRIVATE';
@@ -48,6 +50,8 @@ export default function CreateEventPage() {
         timezone: 'Asia/Kolkata',
         isOnline: false,
         venue: '',
+        city: '',
+        state: '',
         meetingLink: '',
         maxAttendees: '',
         visibility: 'PUBLIC',
@@ -72,6 +76,8 @@ export default function CreateEventPage() {
                 meetingLink: form.meetingLink || undefined,
                 categoryId: form.categoryId || undefined,
                 coverImage: form.coverImage || undefined,
+                city: form.city || undefined,
+                state: form.state || undefined,
             };
 
             const res = await fetch('/api/events', {
@@ -222,14 +228,37 @@ export default function CreateEventPage() {
                         </div>
 
                         {!form.isOnline && (
-                            <div>
-                                <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">Venue / Address</label>
-                                <input
-                                    value={form.venue}
-                                    onChange={(e) => set('venue', e.target.value)}
-                                    placeholder="e.g. WeWork, Koramangala, Bangalore"
-                                    className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-                                />
+                            <div className="space-y-4 border p-4 rounded-xl border-secondary-200 dark:border-secondary-700">
+                                <h3 className="font-medium text-secondary-800 dark:text-white text-sm">Location Details</h3>
+                                <div>
+                                    <label className="block text-sm text-secondary-700 dark:text-secondary-300 mb-1">Venue / Address</label>
+                                    <input
+                                        value={form.venue}
+                                        onChange={(e) => set('venue', e.target.value)}
+                                        placeholder="e.g. WeWork, Koramangala"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm text-secondary-700 dark:text-secondary-300 mb-1">City</label>
+                                        <input
+                                            value={form.city}
+                                            onChange={(e) => set('city', e.target.value)}
+                                            placeholder="e.g. Bangalore"
+                                            className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-secondary-700 dark:text-secondary-300 mb-1">State</label>
+                                        <input
+                                            value={form.state}
+                                            onChange={(e) => set('state', e.target.value)}
+                                            placeholder="e.g. Karnataka"
+                                            className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         )}
 

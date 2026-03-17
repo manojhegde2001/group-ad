@@ -23,7 +23,7 @@ import { useEvent } from '@/hooks/use-api/use-events';
 import { notFound } from 'next/navigation';
 
 export default function EventDetailClient({ slug }: { slug: string }) {
-    const { data: event, isLoading, error } = useEvent(slug);
+    const { data, isLoading, error } = useEvent(slug);
 
     if (isLoading) {
         return (
@@ -33,11 +33,13 @@ export default function EventDetailClient({ slug }: { slug: string }) {
         );
     }
 
+    const event = data?.event;
     if (!event || error) {
         notFound();
     }
 
-    const isEnrolled = event.isEnrolled;
+    const userEnrollment = data?.userEnrollment;
+    const isEnrolled = userEnrollment?.status === 'APPROVED' || userEnrollment?.status === 'PENDING';
     const isPast = new Date(event.endDate) < new Date();
 
     return (

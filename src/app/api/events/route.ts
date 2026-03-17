@@ -14,6 +14,8 @@ const createEventSchema = z.object({
     timezone: z.string().default('Asia/Kolkata'),
     isOnline: z.boolean().default(false),
     venue: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
     meetingLink: z.string().url().optional().or(z.literal('')),
     maxAttendees: z.number().int().positive().optional(),
     visibility: z.enum(['PUBLIC', 'PRIVATE']).default('PUBLIC'),
@@ -34,6 +36,7 @@ export async function GET(request: NextRequest) {
         const skip = (page - 1) * limit;
         const categoryId = searchParams.get('categoryId');
         const search = searchParams.get('search');
+        const location = searchParams.get('location');
         const upcoming = searchParams.get('upcoming') === 'true';
         const all = searchParams.get('all') === 'true'; // admin: show all statuses
 
@@ -57,6 +60,14 @@ export async function GET(request: NextRequest) {
             where.OR = [
                 { title: { contains: search, mode: 'insensitive' } },
                 { description: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
+        if (location) {
+            where.OR = [
+                ...(where.OR || []),
+                { city: { contains: location, mode: 'insensitive' } },
+                { state: { contains: location, mode: 'insensitive' } },
             ];
         }
 
@@ -118,6 +129,8 @@ export async function POST(request: NextRequest) {
                 timezone: data.timezone,
                 isOnline: data.isOnline,
                 venue: data.venue || null,
+                city: data.city || null,
+                state: data.state || null,
                 meetingLink: data.meetingLink || null,
                 maxAttendees: data.maxAttendees || null,
                 visibility: data.visibility,

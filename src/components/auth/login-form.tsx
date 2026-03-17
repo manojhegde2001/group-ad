@@ -24,7 +24,7 @@ export function LoginForm() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      identifier: '',
       password: '',
     },
   });
@@ -32,13 +32,13 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const result = await signIn('credentials', {
-        email: data.email,
+        identifier: data.identifier,
         password: data.password,
         redirect: false,
       });
 
       if (result?.error) {
-        toast.error('Invalid email or password');
+        toast.error('Invalid email/phone or password');
         return;
       }
 
@@ -64,15 +64,15 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-md mx-auto">
       <Controller
-        name="email"
+        name="identifier"
         control={control}
         render={({ field }) => (
           <Input
             {...field}
-            type="email"
-            label="Email"
-            placeholder="Enter your email"
-            error={errors.email?.message}
+            type="text"
+            label="Email or Phone Number"
+            placeholder="Enter your email or phone number"
+            error={errors.identifier?.message}
             className="w-full"
           />
         )}

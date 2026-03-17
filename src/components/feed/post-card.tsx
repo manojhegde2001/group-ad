@@ -102,8 +102,16 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
         });
     };
 
-    const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`.toWellFormed?.() || `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`;
-    const postTitle = (post.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post').toWellFormed?.() || (post.content ? Array.from(post.content).slice(0, 60).join('') : 'Check out this post');
+    const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/posts/${post.id}` : '';
+    const postTitle = post.content ? post.content.slice(0, 60) : 'Check out this post';
+
+    const safeEncode = (str: string) => {
+        try {
+            return encodeURIComponent(str.toWellFormed ? str.toWellFormed() : str.replace(/[\uD800-\uDFFF]/g, ''));
+        } catch {
+            return encodeURIComponent(str.replace(/[^\x00-\x7F]/g, ''));
+        }
+    };
 
     const handleCopyLink = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -293,7 +301,7 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                         {copied ? 'Copied!' : 'Copy link'}
                     </button>
                     <a
-                        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(postTitle)}&url=${encodeURIComponent(postUrl)}`}
+                        href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`}
                         target="_blank" rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
@@ -301,7 +309,7 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                         <Twitter className="w-3.5 h-3.5 text-sky-500" /> Share on X
                     </a>
                     <a
-                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`}
+                        href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`}
                         target="_blank" rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"

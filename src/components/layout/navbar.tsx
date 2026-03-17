@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useMe } from '@/hooks/use-api/use-user';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -11,12 +12,8 @@ import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-  Search,
-  Plus,
   LogOut,
-  User,
   Settings,
-  ChevronDown,
   Loader2,
   X,
   Menu,
@@ -26,10 +23,11 @@ import {
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { SearchBar } from './search-bar';
+import { cn } from '@/lib/utils';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
-  loading: () => <div className="w-28 h-7 bg-secondary-200 dark:bg-secondary-700 rounded animate-pulse" />,
+  loading: () => <div className="w-8 h-8 md:w-28 md:h-7 bg-secondary-200 dark:bg-secondary-700 rounded-full md:rounded animate-pulse" />,
 });
 
 export function Navbar() {
@@ -39,34 +37,22 @@ export function Navbar() {
   const loading = authLoading || (isAuthenticated && meLoading && !meUser);
 
   const { openLogin, openSignup } = useAuthModal();
-  const { open: openCreatePost } = useCreatePost();
   const { searchQuery, setSearch } = useFeedFilter();
+  const pathname = usePathname();
+
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const [queryStarted, setQueryStarted] = useState(false);
-  const [notifsOpen, setNotifsOpen] = useState(false);
 
-  // Close mobile menu when notifications open, and vice-versa
-  useEffect(() => {
-    if (notifsOpen) setMobileMenuOpen(false);
-  }, [notifsOpen]);
-
-  useEffect(() => {
-    if (mobileMenuOpen) setNotifsOpen(false);
-  }, [mobileMenuOpen]);
-
-  // Check for auth=required in URL on mount
   useEffect(() => {
     if (typeof window !== 'undefined' && !queryStarted) {
       const params = new URLSearchParams(window.location.search);
       if (params.get('auth') === 'required') {
         openLogin();
-        // Clean up URL
         const newUrl = window.location.pathname;
         window.history.replaceState({}, '', newUrl);
       }
@@ -76,23 +62,28 @@ export function Navbar() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
-      }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
-        setMobileMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (mobileDrawerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; }
+  }, [mobileDrawerOpen]);
+
   const handleLogout = async () => {
     setDropdownOpen(false);
-    setMobileMenuOpen(false);
+    setMobileDrawerOpen(false);
     setIsLoggingOut(true);
     try {
       await logout();
@@ -101,236 +92,165 @@ export function Navbar() {
     }
   };
 
-  const handleRestrictedAction = (e: React.MouseEvent, href: string) => {
-    if (!isAuthenticated) {
-      e.preventDefault();
-      openLogin();
-    }
-  };
-
-  // ── Skeleton while not mounted ──────────────────────────────────────────────
   if (!mounted) {
     return (
-      <nav className="sticky top-0 z-50 glass border-b border-secondary-200/60 dark:border-secondary-800/60">
-        <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 flex items-center gap-3">
-          <div className="w-28 h-7 bg-secondary-200 dark:bg-secondary-700 rounded animate-pulse shrink-0" />
-          <div className="flex-1 h-9 bg-secondary-100 dark:bg-secondary-800 rounded-full animate-pulse hidden sm:block" />
-          <div className="w-20 h-8 bg-secondary-100 dark:bg-secondary-700 rounded animate-pulse ml-auto" />
+      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-transparent h-16 md:h-20" />
+    );
+  }
+
+  // --- Guest View (Logged Out) ---
+  if (!isAuthenticated) {
+    return (
+      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 h-16 md:h-20 flex items-center">
+        <div className="max-w-[1440px] mx-auto w-full flex items-center justify-between px-4 md:px-8 gap-4">
+          {/* Logo */}
+          <Link href="/" className="shrink-0 flex items-center">
+            <Logo className="w-28 md:w-32 h-8 md:h-10" />
+          </Link>
+
+          {/* Guest Links */}
+          <div className="hidden lg:flex items-center gap-6 font-bold text-secondary-900 dark:text-white">
+             <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
+             <Link href="/about" className="hover:text-primary-500 transition-colors">About</Link>
+             <Link href="/businesses" className="hover:text-primary-500 transition-colors">Businesses</Link>
+             <Link href="/create" className="hover:text-primary-500 transition-colors">Create</Link>
+             <Link href="/news" className="hover:text-primary-500 transition-colors">News</Link>
+          </div>
+
+          {/* Search Bar (Static/Small for Guests) */}
+          <div className="flex-1 max-w-[400px] hidden md:block">
+            <SearchBar className="w-full bg-secondary-100 dark:bg-secondary-800" />
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-3 shrink-0">
+             <Button onClick={() => openLogin()} variant="text" color="secondary" className="font-bold text-secondary-900 dark:text-white px-4">Log in</Button>
+             <Button onClick={() => openSignup()} variant="solid" color="danger" className="font-bold px-4 py-2 bg-[#e60023] hover:bg-[#ad081b] rounded-full text-white">Sign up</Button>
+          </div>
         </div>
       </nav>
     );
   }
 
+  // --- User View (Logged In) ---
   return (
-    <nav className="sticky top-0 z-50 glass border-b border-secondary-200/60 dark:border-secondary-800/60">
-      {/* ── Main bar ─────────────────────────────────────────────────────── */}
-      <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2 sm:gap-3">
-
-        {/* ZONE 1 — Logo (start, fixed width) */}
-        <div className="flex items-center shrink-0 gap-8">
-          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <Logo className="w-24 sm:w-28 h-7 sm:h-8" />
-          </Link>
+    <nav className={cn(
+        "sticky top-0 z-50 bg-white/80 dark:bg-secondary-900/80 backdrop-blur-md transition-all duration-300",
+        "h-16 md:h-20 flex items-center",
+        isAuthenticated ? "md:ml-0" : "" // Margin handled by layout flex
+    )}>
+      <div className="flex-1 flex items-center px-4 md:px-6 gap-2 md:gap-4 h-full">
+        
+        {/* Mobile Logo / Menu */}
+        <div className="flex md:hidden items-center gap-2 shrink-0">
+            <Link href="/" className="p-2">
+                <Logo className="w-8 h-8" iconOnly />
+            </Link>
         </div>
 
-        {/* ZONE 2 — Search (center, grows) */}
-        <div className="hidden sm:flex flex-1 justify-center px-2 md:px-4">
-          <SearchBar className="w-full max-w-xl" />
+        {/* Home/Explore for logged in (Pinterest often keeps these in navbar too) */}
+        {/* But user said "dont repeat the thinhhs whch is in navbar and side bar" */}
+        {/* Since they are in sidebar, we remove them from navbar */}
+
+        {/* Fluid Search Bar */}
+        <div className="flex-1 flex items-center">
+            <SearchBar className="w-full" />
         </div>
 
-        {/* ZONE 3 — Actions (end) */}
-        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
+        {/* User Actions */}
+        <div className="flex items-center gap-1 md:gap-2 shrink-0">
+          <div className="hidden sm:flex items-center gap-1">
+            <NotificationBell />
+          </div>
 
-          {/* Mobile search toggle */}
-          <button
-            className="sm:hidden p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
-            onClick={() => setMobileSearchOpen((v) => !v)}
-            aria-label="Toggle search"
-          >
-            {mobileSearchOpen
-              ? <X className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
-              : <Search className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
-            }
-          </button>
-
-          {/* Theme switcher */}
           <ThemeSwitcher />
 
-          {/* Notifications (Show on sm+ if authenticated) */}
-          {isAuthenticated && user && (
-            <div className="hidden sm:block">
-              <NotificationBell />
-            </div>
-          )}
-
-          {/* Auth state Desktop */}
-          <div className="hidden sm:flex items-center gap-1.5">
+          {/* Profile Dropdown */}
+          <div className="relative ml-1 md:ml-2" ref={dropdownRef}>
             {loading || isLoggingOut ? (
-              <Loader2 className="w-5 h-5 animate-spin text-primary-500 mx-1 sm:mx-2" />
-            ) : isAuthenticated && user ? (
-              <>
-                <Link href="/events/calendar" onClick={(e) => handleRestrictedAction(e, '/events/calendar')}>
-                  <Button
-                    variant="text"
-                    color="secondary"
-                    size="sm"
-                    rounded="pill"
-                    leftIcon={<Calendar className="w-4 h-4" />}
-                    className="!text-secondary-700 dark:!text-secondary-300 hover:!bg-secondary-100 dark:hover:!bg-secondary-800 !px-3 md:!px-4"
-                  >
-                    <span className="hidden md:inline">Events</span>
-                  </Button>
-                </Link>
-
-                <Button
-                  onClick={openCreatePost}
-                  variant="solid"
-                  color="primary"
-                  size="sm"
-                  rounded="pill"
-                  leftIcon={<Plus className="w-4 h-4" />}
-                  className="!px-3 md:!px-4 gap-1 shadow-sm hover:shadow-md transition-all"
-                >
-                  <span className="hidden md:inline">Create</span>
-                </Button>
-
-                <div className="relative" ref={dropdownRef}>
-                  <button
+                <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+            ) : (
+                <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1.5 p-1 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
-                  >
+                    className="flex items-center justify-center w-10 h-10 rounded-full hover:ring-4 ring-secondary-100 dark:ring-secondary-800 transition-all"
+                >
                     <Avatar
-                      src={(user.avatar as string | null | undefined) ?? undefined}
-                      name={(user.name as string) || 'User'}
-                      size="sm"
-                      rounded="full"
-                      color="primary"
-                      className="w-8 h-8 ring-2 ring-primary-200 dark:ring-primary-800"
+                        src={(user?.avatar as string) ?? undefined}
+                        name={(user?.name as string) || 'User'}
+                        size="sm"
+                        rounded="full"
+                        className="w-10 h-10 object-cover"
                     />
-                    <ChevronDown className={`w-3.5 h-3.5 text-secondary-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
+                </button>
+            )}
 
-                  {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-secondary-900 rounded-2xl shadow-xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-50">
-                      <div className="px-4 py-3 bg-primary-50/50 dark:bg-primary-900/10 border-b border-secondary-100 dark:border-secondary-800">
-                        <p className="font-semibold text-sm text-secondary-900 dark:text-white truncate">{user.name}</p>
-                        <p className="text-xs text-secondary-500">@{(user as any).username}</p>
-                      </div>
-                      <div className="p-1.5">
-                        <Link href="/profile" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors text-sm">
-                          <User className="w-4 h-4" /> My Profile
+            {dropdownOpen && (
+                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200">
+                    <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
+                        <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
+                            <div className="flex items-center gap-3">
+                                <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="sm" className="w-12 h-12" />
+                                <div>
+                                    <p className="font-bold leading-tight">{user?.name}</p>
+                                    <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal'}</p>
+                                </div>
+                            </div>
                         </Link>
+                    </div>
+                    
+                    <div className="space-y-1">
+                         <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                           <Calendar className="w-5 h-5" /> Events
+                         </Link>
+                        
                         {(user as any).userType === 'ADMIN' && (
-                          <Link href="/admin/events" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-primary-600 hover:bg-primary-50 transition-colors text-sm">
-                            <Plus className="w-4 h-4" /> Admin Panel
+                          <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                            <ShieldCheck className="w-5 h-5" /> Admin Panel
                           </Link>
                         )}
-                        <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors text-sm">
-                          <Settings className="w-4 h-4" /> Settings
+                        <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                          <Settings className="w-5 h-5" /> Settings
                         </Link>
-                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors text-sm">
-                          <LogOut className="w-4 h-4" /> Logout
+                        <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                          <LogOut className="w-5 h-5" /> Log out
                         </button>
-                      </div>
                     </div>
-                  )}
                 </div>
-              </>
-            ) : (
-              <>
-                <Button onClick={() => openLogin()} variant="text" color="secondary" size="sm">Log in</Button>
-                <Button onClick={() => openSignup()} variant="solid" size="sm" rounded="pill" className="!bg-secondary-900 dark:!bg-white !text-white dark:!text-secondary-900">Sign up</Button>
-              </>
             )}
           </div>
 
-          {/* Unified Mobile Hamburger area */}
-          <div className="sm:hidden flex items-center gap-1" ref={mobileMenuRef}>
-            {isAuthenticated && user && (
-              <NotificationBell
-                isOpen={notifsOpen}
-                onOpenChange={setNotifsOpen}
-              />
-            )}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
-            >
-              <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-400" />
-            </button>
-
-            {mobileMenuOpen && (
-
-              <div className="absolute right-0 mt-2 w-[85vw] max-w-xs bg-white dark:bg-secondary-900 rounded-3xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden animate-scale-in z-50">
-                {isAuthenticated && user && (
-                  <div className="px-6 py-5 bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-primary-900/20 dark:to-primary-800/10 border-b border-secondary-100 dark:border-secondary-800">
-                    <div className="flex items-center gap-3 mb-1">
-                      <Avatar src={(user.avatar as string) || undefined} name={user.name || 'U'} size="sm" />
-                      <div>
-                        <p className="font-bold text-secondary-900 dark:text-white truncate">{user.name}</p>
-                        <p className="text-xs text-secondary-500">@{(user as any).username}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="p-2 space-y-1">
-                  <Link href="/events/calendar" onClick={(e) => { handleRestrictedAction(e, '/events/calendar'); setMobileMenuOpen(false); }} className="flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
-                    <Calendar className="w-5 h-5 text-secondary-500" />
-                    <span className="font-semibold text-secondary-800 dark:text-secondary-200">Events Calendar</span>
-                  </Link>
-
-                  {isAuthenticated ? (
-                    <>
-                      <button onClick={() => { openCreatePost(); setMobileMenuOpen(false); }} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-colors text-primary-600">
-                        <Plus className="w-5 h-5" />
-                        <span className="font-bold">Create Post</span>
-                      </button>
-                      <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
-                        <User className="w-5 h-5 text-secondary-500" />
-                        <span className="font-semibold text-secondary-800 dark:text-secondary-200">My Profile</span>
-                      </Link>
-                      {(user as any).userType === 'ADMIN' && (
-                        <Link href="/admin/events" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary-50/50 dark:bg-primary-900/10 text-primary-700">
-                          <ShieldCheck className="w-5 h-5" />
-                          <span className="font-bold">Admin Panel</span>
-                        </Link>
-                      )}
-                      <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
-                        <Settings className="w-5 h-5 text-secondary-500" />
-                        <span className="font-semibold text-secondary-800 dark:text-secondary-200">Settings</span>
-                      </Link>
-                      <div className="my-2 border-t border-secondary-100 dark:border-secondary-800 mx-2" />
-                      <button onClick={handleLogout} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-red-50 text-red-500 transition-colors">
-                        <LogOut className="w-5 h-5" />
-                        <span className="font-bold">Logout</span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => { openLogin(); setMobileMenuOpen(false); }} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
-                        <User className="w-5 h-5 text-secondary-500" />
-                        <span className="font-semibold">Log in</span>
-                      </button>
-                      <button onClick={() => { openSignup(); setMobileMenuOpen(false); }} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-bold">
-                        <Plus className="w-5 h-5" />
-                        <span>Sign up</span>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Mobile Menu Trigger */}
+          <button
+              className="md:hidden p-3 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
+              onClick={() => setMobileDrawerOpen(true)}
+          >
+              <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-300" />
+          </button>
         </div>
       </div>
-
-      {/* ── Mobile expanded search ─────────────────────────────────────────── */}
-      {mobileSearchOpen && (
-        <div className="sm:hidden px-3 pb-3 animate-slide-up">
-          <SearchBar className="w-full" autoFocus />
-        </div>
+      
+      {/* Mobile Drawer (simplified) */}
+      {mobileDrawerOpen && (
+          <div className="fixed inset-0 z-[100] md:hidden">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileDrawerOpen(false)} />
+              <div className="absolute top-0 right-0 w-[80vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl flex flex-col p-4 animate-slide-in-right">
+                <div className="flex items-center justify-between mb-8">
+                    <span className="font-bold text-lg">Menu</span>
+                    <button onClick={() => setMobileDrawerOpen(false)} className="p-2 bg-secondary-100 dark:bg-secondary-800 rounded-full"><X className="w-5 h-5" /></button>
+                </div>
+                <nav className="flex flex-col gap-4 font-bold text-secondary-900 dark:text-white">
+                    <Link href="/" onClick={() => setMobileDrawerOpen(false)}>Home</Link>
+                    <Link href="/explore" onClick={() => setMobileDrawerOpen(false)}>Explore</Link>
+                    <Link href="/messages" onClick={() => setMobileDrawerOpen(false)}>Messages</Link>
+                    <Link href="/updates" onClick={() => setMobileDrawerOpen(false)}>Notifications</Link>
+                    <div className="h-[1px] bg-secondary-100 dark:bg-secondary-800 my-2" />
+                    <Link href="/settings" onClick={() => setMobileDrawerOpen(false)}>Settings</Link>
+                    <button onClick={handleLogout} className="text-left text-red-500">Log out</button>
+                </nav>
+              </div>
+          </div>
       )}
     </nav>
   );
 }
+

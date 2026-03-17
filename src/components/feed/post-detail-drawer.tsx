@@ -240,7 +240,7 @@ export function PostDetailDrawer() {
 
                 {/* Modal */}
                 <div
-                    className="relative z-10 w-full sm:max-w-5xl h-[95vh] sm:max-h-[94vh] sm:h-auto sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row rounded-t-2xl"
+                    className="relative z-10 w-full sm:max-w-6xl h-[100vh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Mobile drag handle */}
@@ -248,12 +248,12 @@ export function PostDetailDrawer() {
 
                     {/* ── Left panel — Media ── */}
                     <div
-                        className={`relative flex-1 min-h-[220px] md:min-h-0 md:max-h-[94vh] bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
+                        className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                     >
                         {/* Close button - Top Right for Mobile & consistency */}
                         <button
                             onClick={closePost}
-                            className="absolute top-4 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md transition-all text-white border border-white/20 shadow-xl active:scale-95"
+                            className="absolute top-4 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md transition-all text-white border border-white/20 shadow-xl active:scale-95 sm:hidden"
                             aria-label="Close"
                         >
                             <X className="w-5 h-5" />
@@ -319,9 +319,18 @@ export function PostDetailDrawer() {
                     </div>
 
                     {/* ── Right panel — Details ── */}
-                    <div className="w-full md:w-[360px] lg:w-[400px] flex flex-col flex-1 md:flex-none overflow-hidden md:max-h-[94vh] bg-white dark:bg-secondary-900">
+                    <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800">
+                        {/* Desktop Close Button */}
+                        <button
+                            onClick={closePost}
+                            className="absolute top-4 right-4 z-50 w-8 h-8 hidden sm:flex items-center justify-center rounded-full bg-secondary-100/50 hover:bg-secondary-200 dark:bg-secondary-800/50 dark:hover:bg-secondary-700 transition-all text-secondary-600 dark:text-secondary-300 active:scale-95"
+                            aria-label="Close"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+
                         {/* Header */}
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
+                        <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 pr-12">
                             <div className="flex items-center gap-2.5 min-w-0">
                                 <Avatar
                                     src={post.user.avatar ?? undefined}

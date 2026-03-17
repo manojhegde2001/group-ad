@@ -123,331 +123,328 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
-      <div className="max-w-5xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-4xl mx-auto px-4 py-8 md:py-16">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight">Settings</h1>
-          <p className="text-secondary-500 mt-1 font-medium">Manage your account preferences and privacy</p>
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-black text-secondary-900 dark:text-white tracking-tight mb-3">Account Settings</h1>
+          <p className="text-secondary-500 font-medium">Manage your profile, security, and preferences</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Sidebar Nav */}
-          <aside className="w-full md:w-60 shrink-0">
-            <Card className="overflow-hidden rounded-2xl p-1 gap-0.5 flex flex-col bg-white dark:bg-secondary-900 shadow-sm border-0">
-              {TABS.map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={cn(
-                    'flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-left transition-all',
-                    tab === key
-                      ? 'bg-primary-500 text-white shadow-sm'
-                      : 'text-secondary-600 dark:text-secondary-400 hover:bg-secondary-50 dark:hover:bg-secondary-800'
-                  )}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {label}
-                  {tab !== key && <ChevronRight className="w-3.5 h-3.5 ml-auto opacity-40" />}
-                </button>
-              ))}
+        {/* Horizontal Navigation */}
+        <div className="mb-8 overflow-x-auto no-scrollbar">
+          <div className="flex items-center justify-center p-1 gap-1 min-w-max border-b border-secondary-200 dark:border-secondary-800">
+            {TABS.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={cn(
+                  'relative flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all',
+                  tab === key
+                    ? 'text-primary-600 dark:text-primary-400'
+                    : 'text-secondary-500 hover:text-secondary-900 dark:hover:text-secondary-200'
+                )}
+              >
+                <Icon className={cn("w-4 h-4", tab === key ? "text-primary-500" : "text-secondary-400")} />
+                {label}
+                {tab === key && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-500 rounded-full" />
+                )}
+              </button>
+            ))}
+            
+            <div className="ml-4 pl-4 border-l border-secondary-200 dark:border-secondary-800">
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
-              <div className="mt-2 pt-2 border-t border-secondary-100 dark:border-secondary-800">
-                <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
-              </div>
-            </Card>
-          </aside>
-
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            {/* ── PROFILE ── */}
-            {tab === 'profile' && (
-              <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
-                <div className="flex items-center gap-4 pb-4 border-b border-secondary-100 dark:border-secondary-800">
-                  <div className="relative group">
-                    <Avatar
-                      src={(user as any)?.avatar}
-                      name={(user?.name as string) || ''}
-                      size="lg"
-                      rounded="full"
-                      className="w-16 h-16 ring-4 ring-primary-100 dark:ring-primary-900/30"
-                    />
-                    <button 
-                      onClick={() => setIsAvatarModalOpen(true)}
-                      className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <span className="text-[10px] font-bold uppercase">Edit</span>
-                    </button>
-                  </div>
-                  <div>
-                    <p className="font-bold text-secondary-900 dark:text-white">{(user?.name as string) || ''}</p>
-                    <p className="text-sm text-secondary-500">@{(user as any)?.username}</p>
-                  </div>
-                </div>
-
-                {isAvatarModalOpen && (
-                  <ProfileImageUpload 
-                    userId={user?.id || ''} 
-                    currentAvatar={(user as any)?.avatar}
-                    onClose={() => setIsAvatarModalOpen(false)}
+        {/* Main Content Area */}
+        <div className="min-w-0">
+          {tab === 'profile' && (
+            <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
+              <div className="flex items-center gap-6 pb-8 border-b border-secondary-100 dark:border-secondary-800">
+                <div className="relative">
+                  <Avatar
+                    src={(user as any)?.avatar}
+                    name={(user?.name as string) || ''}
+                    size="lg"
+                    rounded="full"
+                    className="w-24 h-24 ring-4 ring-white dark:ring-secondary-900 shadow-xl"
                   />
-                )}
-
-                {profileLoading ? (
-                  <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary-500" /></div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Full Name</label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Bio</label>
-                      <textarea
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        rows={3}
-                        maxLength={300}
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all resize-none"
-                        placeholder="Tell people a bit about yourself..."
-                      />
-                      <p className="text-[11px] text-secondary-400 text-right mt-0.5">{bio.length}/300</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Location</label>
-                      <input
-                        type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder="City, Country"
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Website</label>
-                      <input
-                        type="url"
-                        value={website}
-                        onChange={(e) => setWebsite(e.target.value)}
-                        placeholder="https://yoursite.com"
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">LinkedIn</label>
-                      <input
-                        type="text"
-                        value={linkedin}
-                        onChange={(e) => setLinkedin(e.target.value)}
-                        placeholder="linkedin.com/in/yourprofile"
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Twitter / X</label>
-                      <input
-                        type="text"
-                        value={twitter}
-                        onChange={(e) => setTwitter(e.target.value)}
-                        placeholder="@yourhandle"
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={handleProfileSave}
-                    disabled={savingProfile || profileLoading}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-primary-500/20 disabled:opacity-50"
+                  <button 
+                    onClick={() => setIsAvatarModalOpen(true)}
+                    className="absolute bottom-0 right-0 p-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg transition-all active:scale-90 border-4 border-white dark:border-secondary-900"
+                    aria-label="Edit Profile Picture"
                   >
-                    {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    {savingProfile ? 'Saving...' : 'Save Changes'}
+                    <User className="w-4 h-4" />
                   </button>
                 </div>
-              </Card>
-            )}
-
-            {/* ── SECURITY ── */}
-            {tab === 'security' && (
-              <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
-                <div className="pb-4 border-b border-secondary-100 dark:border-secondary-800">
-                  <h2 className="font-bold text-lg text-secondary-900 dark:text-white">Change Password</h2>
-                  <p className="text-sm text-secondary-500 mt-0.5">Make sure to use a strong, unique password</p>
+                <div className="space-y-1">
+                  <p className="font-black text-2xl text-secondary-900 dark:text-white">{(user?.name as string) || ''}</p>
+                  <p className="text-secondary-500 font-medium">@{(user as any)?.username}</p>
                 </div>
+              </div>
 
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Current Password</label>
-                    <div className="relative">
-                      <input
-                        type={showCurrent ? 'text' : 'password'}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 pr-10 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
-                      />
-                      <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 transition-colors">
-                        {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+              {isAvatarModalOpen && (
+                <ProfileImageUpload 
+                  userId={user?.id || ''} 
+                  currentAvatar={(user as any)?.avatar}
+                  onClose={() => setIsAvatarModalOpen(false)}
+                />
+              )}
 
-                  <div>
-                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">New Password</label>
-                    <div className="relative">
-                      <input
-                        type={showNew ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 pr-10 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
-                      />
-                      <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 transition-colors">
-                        {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Confirm New Password</label>
+              {profileLoading ? (
+                <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary-500" /></div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Full Name</label>
                     <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Bio</label>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      rows={3}
+                      maxLength={300}
+                      className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all resize-none"
+                      placeholder="Tell people a bit about yourself..."
+                    />
+                    <p className="text-[11px] text-secondary-400 text-right mt-0.5">{bio.length}/300</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Location</label>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="City, Country"
+                      className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Website</label>
+                    <input
+                      type="url"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      placeholder="https://yoursite.com"
+                      className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">LinkedIn</label>
+                    <input
+                      type="text"
+                      value={linkedin}
+                      onChange={(e) => setLinkedin(e.target.value)}
+                      placeholder="linkedin.com/in/yourprofile"
+                      className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Twitter / X</label>
+                    <input
+                      type="text"
+                      value={twitter}
+                      onChange={(e) => setTwitter(e.target.value)}
+                      placeholder="@yourhandle"
                       className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
                     />
                   </div>
                 </div>
+              )}
 
-                <div className="flex justify-start pt-2">
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleProfileSave}
+                  disabled={savingProfile || profileLoading}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-primary-500/20 disabled:opacity-50"
+                >
+                  {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {savingProfile ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'security' && (
+            <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
+              <div className="pb-4 border-b border-secondary-100 dark:border-secondary-800">
+                <h2 className="font-bold text-lg text-secondary-900 dark:text-white">Change Password</h2>
+                <p className="text-sm text-secondary-500 mt-0.5">Make sure to use a strong, unique password</p>
+              </div>
+
+              <div className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Current Password</label>
+                  <div className="relative">
+                    <input
+                      type={showCurrent ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 pr-10 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
+                    />
+                    <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 transition-colors">
+                      {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNew ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 pr-10 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
+                    />
+                    <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 transition-colors">
+                      {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 rounded-xl px-4 py-2.5 text-sm text-secondary-900 dark:text-white outline-none focus:ring-2 ring-primary-500/30 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-start pt-2">
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={changingPassword}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50"
+                >
+                  {changingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                  {changingPassword ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'privacy' && (
+            <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
+              <div className="pb-4 border-b border-secondary-100 dark:border-secondary-800">
+                <h2 className="font-bold text-lg text-secondary-900 dark:text-white">Privacy Settings</h2>
+                <p className="text-sm text-secondary-500 mt-0.5">Control who can see your content and profile</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary-50 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                      <Globe className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-secondary-900 dark:text-white text-sm">Public Account</p>
+                      <p className="text-xs text-secondary-500 mt-0.5">Anyone can see your posts and profile</p>
+                    </div>
+                  </div>
                   <button
-                    onClick={handlePasswordChange}
-                    disabled={changingPassword}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50"
+                    onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
+                    className={cn(
+                      'relative w-12 h-6 rounded-full transition-all duration-300 shrink-0',
+                      visibility === 'PUBLIC' ? 'bg-primary-500' : 'bg-secondary-300 dark:bg-secondary-600'
+                    )}
                   >
-                    {changingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                    {changingPassword ? 'Updating...' : 'Update Password'}
+                    <span className={cn(
+                      'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-300',
+                      visibility === 'PUBLIC' ? 'left-7' : 'left-1'
+                    )} />
                   </button>
                 </div>
-              </Card>
-            )}
 
-            {/* ── PRIVACY ── */}
-            {tab === 'privacy' && (
-              <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
-                <div className="pb-4 border-b border-secondary-100 dark:border-secondary-800">
-                  <h2 className="font-bold text-lg text-secondary-900 dark:text-white">Privacy Settings</h2>
-                  <p className="text-sm text-secondary-500 mt-0.5">Control who can see your content and profile</p>
-                </div>
+                <p className="text-xs text-secondary-400 px-1">
+                  {visibility === 'PUBLIC'
+                    ? 'Your profile and posts are visible to everyone on the platform.'
+                    : 'Your profile is private. Only approved followers can see your posts.'}
+                </p>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary-50 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-                        <Globe className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-secondary-900 dark:text-white text-sm">Public Account</p>
-                        <p className="text-xs text-secondary-500 mt-0.5">Anyone can see your posts and profile</p>
-                      </div>
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleVisibilitySave}
+                  disabled={savingProfile}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50"
+                >
+                  {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                  Save Privacy
+                </button>
+              </div>
+            </Card>
+          )}
+
+          {tab === 'notifications' && (
+            <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
+              <div className="pb-4 border-b border-secondary-100 dark:border-secondary-800">
+                <h2 className="font-bold text-lg text-secondary-900 dark:text-white">Notification Preferences</h2>
+                <p className="text-sm text-secondary-500 mt-0.5">Choose when and how you want to be notified</p>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  { label: 'Email Notifications', desc: 'Receive notifications via email', value: emailNotifs, onChange: setEmailNotifs },
+                  { label: 'Push Notifications', desc: 'Receive push notifications in browser', value: pushNotifs, onChange: setPushNotifs },
+                  { label: 'Connection Requests', desc: 'Notify when someone sends a connection request', value: connectionNotifs, onChange: setConnectionNotifs },
+                  { label: 'New Messages', desc: 'Notify when you receive a new message', value: messageNotifs, onChange: setMessageNotifs },
+                ].map(({ label, desc, value, onChange }) => (
+                  <div key={label} className="flex items-center justify-between p-4 rounded-2xl bg-secondary-50 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700">
+                    <div>
+                      <p className="font-semibold text-secondary-900 dark:text-white text-sm">{label}</p>
+                      <p className="text-xs text-secondary-500 mt-0.5">{desc}</p>
                     </div>
                     <button
-                      onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
+                      onClick={() => onChange(!value)}
                       className={cn(
                         'relative w-12 h-6 rounded-full transition-all duration-300 shrink-0',
-                        visibility === 'PUBLIC' ? 'bg-primary-500' : 'bg-secondary-300 dark:bg-secondary-600'
+                        value ? 'bg-primary-500' : 'bg-secondary-300 dark:bg-secondary-600'
                       )}
                     >
                       <span className={cn(
                         'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-300',
-                        visibility === 'PUBLIC' ? 'left-7' : 'left-1'
+                        value ? 'left-7' : 'left-1'
                       )} />
                     </button>
                   </div>
+                ))}
+              </div>
 
-                  <p className="text-xs text-secondary-400 px-1">
-                    {visibility === 'PUBLIC'
-                      ? 'Your profile and posts are visible to everyone on the platform.'
-                      : 'Your profile is private. Only approved followers can see your posts.'}
-                  </p>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={handleVisibilitySave}
-                    disabled={savingProfile}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50"
-                  >
-                    {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                    Save Privacy
-                  </button>
-                </div>
-              </Card>
-            )}
-
-            {/* ── NOTIFICATIONS ── */}
-            {tab === 'notifications' && (
-              <Card className="p-6 md:p-8 rounded-2xl bg-white dark:bg-secondary-900 shadow-sm border-0 space-y-6">
-                <div className="pb-4 border-b border-secondary-100 dark:border-secondary-800">
-                  <h2 className="font-bold text-lg text-secondary-900 dark:text-white">Notification Preferences</h2>
-                  <p className="text-sm text-secondary-500 mt-0.5">Choose when and how you want to be notified</p>
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { label: 'Email Notifications', desc: 'Receive notifications via email', value: emailNotifs, onChange: setEmailNotifs },
-                    { label: 'Push Notifications', desc: 'Receive push notifications in browser', value: pushNotifs, onChange: setPushNotifs },
-                    { label: 'Connection Requests', desc: 'Notify when someone sends a connection request', value: connectionNotifs, onChange: setConnectionNotifs },
-                    { label: 'New Messages', desc: 'Notify when you receive a new message', value: messageNotifs, onChange: setMessageNotifs },
-                  ].map(({ label, desc, value, onChange }) => (
-                    <div key={label} className="flex items-center justify-between p-4 rounded-2xl bg-secondary-50 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700">
-                      <div>
-                        <p className="font-semibold text-secondary-900 dark:text-white text-sm">{label}</p>
-                        <p className="text-xs text-secondary-500 mt-0.5">{desc}</p>
-                      </div>
-                      <button
-                        onClick={() => onChange(!value)}
-                        className={cn(
-                          'relative w-12 h-6 rounded-full transition-all duration-300 shrink-0',
-                          value ? 'bg-primary-500' : 'bg-secondary-300 dark:bg-secondary-600'
-                        )}
-                      >
-                        <span className={cn(
-                          'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-300',
-                          value ? 'left-7' : 'left-1'
-                        )} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={() => toast.success('Notification preferences saved!')}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Save Preferences
-                  </button>
-                </div>
-              </Card>
-            )}
-          </div>
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => toast.success('Notification preferences saved!')}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Save Preferences
+                </button>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

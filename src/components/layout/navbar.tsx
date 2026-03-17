@@ -185,7 +185,7 @@ export function Navbar() {
             )}
 
             {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200">
+                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200">
                     <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
                         <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
                             <div className="flex items-center gap-3">
@@ -236,7 +236,10 @@ export function Navbar() {
               <div className="absolute top-0 right-0 w-[80vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl flex flex-col p-4 animate-slide-in-right">
                 <div className="flex items-center justify-between mb-8">
                     <span className="font-bold text-lg">Menu</span>
-                    <button onClick={() => setMobileDrawerOpen(false)} className="p-2 bg-secondary-100 dark:bg-secondary-800 rounded-full"><X className="w-5 h-5" /></button>
+                    <button onClick={() => setMobileDrawerOpen(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary-100 dark:bg-secondary-800 rounded-full text-secondary-600 dark:text-secondary-300">
+                        <span className="text-xs font-bold">Close</span>
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
                 <nav className="flex flex-col gap-4 font-bold text-secondary-900 dark:text-white">
                     <Link href="/" onClick={() => setMobileDrawerOpen(false)}>Home</Link>

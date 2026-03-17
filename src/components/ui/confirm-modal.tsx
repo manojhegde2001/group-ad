@@ -73,8 +73,9 @@ export function ConfirmModal({
                                     </div>
                                     <button
                                         onClick={onClose}
-                                        className="p-1.5 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-400 transition-colors"
+                                        className="p-1.5 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-400 transition-colors flex items-center"
                                     >
+                                        <span className="sm:hidden text-xs font-bold mr-1">Close</span>
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>

@@ -120,6 +120,8 @@ export default function SignupForm() {
               onChange={(opt: any) => field.onChange(opt?.value)}
               error={errors.userType?.message}
               placeholder="Select account type"
+              dropdownClassName="z-[200] !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
+              selectClassName="dark:bg-secondary-800"
             />
           );
         }}
@@ -148,6 +150,8 @@ export default function SignupForm() {
                   : 'Select your category'
               }
               disabled={loadingCategories}
+              dropdownClassName="z-[200] !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
+              selectClassName="dark:bg-secondary-800"
             />
           );
         }}
@@ -181,6 +185,8 @@ export default function SignupForm() {
                       : 'Select your company'
                   }
                   disabled={loadingCompanies}
+                  dropdownClassName="z-[200] !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
+                  selectClassName="dark:bg-secondary-800"
                 />
               );
             }}

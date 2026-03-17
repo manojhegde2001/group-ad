@@ -53,6 +53,7 @@ export function AuthModal() {
             className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors text-secondary-500 mt-1 sm:mt-0"
             aria-label="Close"
           >
+            <span className="sm:hidden text-xs font-bold mr-1">Close</span>
             <X className="w-4 h-4" />
           </button>
         </div>

@@ -250,13 +250,14 @@ export function PostDetailDrawer() {
                     <div
                         className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                     >
-                        {/* Close button - Top Right for Mobile & consistency */}
+                        {/* Back button - Top Left for Mobile (more natural for drawers) */}
                         <button
                             onClick={closePost}
-                            className="absolute top-4 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md transition-all text-white border border-white/20 shadow-xl active:scale-95 sm:hidden"
-                            aria-label="Close"
+                            className="absolute top-4 left-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md transition-all text-white border border-white/20 shadow-xl active:scale-95 sm:hidden"
+                            aria-label="Back"
                         >
-                            <X className="w-5 h-5" />
+                            <ChevronLeft className="w-5 h-5" />
+                            <span className="text-sm font-medium pr-1">Back</span>
                         </button>
 
                         {loading ? (

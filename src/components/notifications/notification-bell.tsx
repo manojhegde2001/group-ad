@@ -204,7 +204,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
 
             {/* Dropdown panel */}
             {open && (
-                <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden animate-scale-in z-50">
+                <div className="absolute right-[-60px] sm:right-0 top-full mt-2 w-[calc(100vw-32px)] sm:w-96 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden animate-scale-in z-50">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-secondary-100 dark:border-secondary-800">
                         <h3 className="font-semibold text-sm text-secondary-900 dark:text-white">Notifications</h3>

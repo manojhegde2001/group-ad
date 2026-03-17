@@ -10,7 +10,7 @@ interface FollowButtonProps {
     userId: string;
     initialFollowing: boolean;
     initialFollowerCount: number;
-    size?: 'sm' | 'md';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     onFollowChange?: (isFollowing: boolean, followerCount: number) => void;
 }
 

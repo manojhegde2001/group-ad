@@ -13,6 +13,7 @@ import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
 import { useCreatePost } from '@/hooks/use-feed';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { PostWithRelations } from '@/types';
 
 const breakpointCols = {
     default: 5, 1536: 4, 1280: 4, 1024: 3, 768: 2, 640: 2, 0: 1,
@@ -237,7 +238,7 @@ export default function PublicProfilePage() {
                         className="flex -ml-4 w-auto"
                         columnClassName="pl-4 bg-clip-padding"
                     >
-                        {posts.map((post, i) => (
+                        {posts.map((post: PostWithRelations, i: number) => (
                             <div
                                 key={post.id}
                                 className="mb-4 animate-slide-up opacity-0"

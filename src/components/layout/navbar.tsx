@@ -119,7 +119,7 @@ export function Navbar() {
 
           {/* Search Bar (Static/Small for Guests) */}
           <div className="flex-1 max-w-[400px] hidden md:block">
-            <SearchBar className="w-full bg-secondary-100 dark:bg-secondary-800" />
+            <SearchBar className="w-full" />
           </div>
 
           {/* Auth Buttons */}

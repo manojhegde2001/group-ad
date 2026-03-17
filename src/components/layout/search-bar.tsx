@@ -43,8 +43,8 @@ export function SearchBar({ className = '', autoFocus = false }: SearchBarProps)
                 prefix={<Search className="w-4 h-4 text-secondary-500" />}
                 clearable={!!localSearch}
                 onClear={clearSearch}
-                className="w-full rounded-full bg-secondary-100 dark:bg-secondary-800 border-none hover:bg-secondary-200 transition-colors"
-                inputClassName="bg-transparent border-none focus:ring-0 placeholder:text-secondary-400 placeholder:font-medium text-[15px]"
+                // className="w-full rounded-full bg-secondary-100 dark:bg-secondary-800 border-none hover:bg-secondary-200 transition-colors"
+                // inputClassName="bg-transparent border-none focus:ring-0 placeholder:text-secondary-400 placeholder:font-medium text-[15px]"
             />
         </div>
     );

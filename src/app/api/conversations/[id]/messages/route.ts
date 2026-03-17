@@ -5,16 +5,17 @@ import { prisma } from '@/lib/prisma';
 // GET /api/conversations/[id]/messages
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!conversation) {
@@ -32,7 +33,7 @@ export async function GET(
 
     const messages = await prisma.message.findMany({
       where: {
-        conversationId: params.id,
+        conversationId: id,
         isDeleted: false,
       },
       orderBy: { createdAt: 'asc' },
@@ -55,16 +56,17 @@ export async function GET(
 // POST /api/conversations/[id]/messages
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!conversation) {
@@ -84,7 +86,7 @@ export async function POST(
     const [message] = await prisma.$transaction([
       prisma.message.create({
         data: {
-          conversationId: params.id,
+          conversationId: id,
           senderId: session.user.id,
           content: content.trim(),
           messageType,
@@ -97,7 +99,7 @@ export async function POST(
         },
       }),
       prisma.conversation.update({
-        where: { id: params.id },
+        where: { id },
         data: { lastMessageAt: new Date() },
       }),
     ]);

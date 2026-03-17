@@ -5,9 +5,10 @@ import { prisma } from '@/lib/prisma';
 // PATCH /api/connections/[id] - accept or reject
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -16,7 +17,7 @@ export async function PATCH(
     const { action } = await request.json(); // 'ACCEPT' | 'REJECT'
 
     const connection = await prisma.connection.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!connection) {
@@ -28,7 +29,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.connection.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: action === 'ACCEPT' ? 'ACCEPTED' : 'REJECTED',
       },
@@ -58,16 +59,17 @@ export async function PATCH(
 // DELETE /api/connections/[id] - remove/cancel connection
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const connection = await prisma.connection.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!connection) {
@@ -79,7 +81,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    await prisma.connection.delete({ where: { id: params.id } });
+    await prisma.connection.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { ActionIcon } from '@/components/ui/action-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PostWithRelations } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
@@ -251,14 +252,16 @@ export function PostDetailDrawer() {
                         className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                     >
                         {/* Back button - Top Left for Mobile (more natural for drawers) */}
-                        <button
-                            onClick={closePost}
-                            className="absolute top-4 left-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md transition-all text-white border border-white/20 shadow-xl active:scale-95 sm:hidden"
-                            aria-label="Back"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                            <span className="text-sm font-medium pr-1">Back</span>
-                        </button>
+                        <div className="absolute top-4 left-4 z-50 sm:hidden">
+                            <ActionIcon
+                                variant="flat"
+                                rounded="full"
+                                onClick={closePost}
+                                className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 shadow-xl"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </ActionIcon>
+                        </div>
 
                         {loading ? (
                             <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
@@ -322,16 +325,20 @@ export function PostDetailDrawer() {
                     {/* ── Right panel — Details ── */}
                     <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800">
                         {/* Desktop Close Button */}
-                        <button
-                            onClick={closePost}
-                            className="absolute top-4 right-4 z-50 w-8 h-8 hidden sm:flex items-center justify-center rounded-full bg-secondary-100/50 hover:bg-secondary-200 dark:bg-secondary-800/50 dark:hover:bg-secondary-700 transition-all text-secondary-600 dark:text-secondary-300 active:scale-95"
-                            aria-label="Close"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
+                        <div className="absolute top-4 right-4 z-50 hidden sm:block">
+                            <ActionIcon
+                                variant="flat"
+                                color="secondary"
+                                rounded="full"
+                                onClick={closePost}
+                                className="bg-secondary-100/80 hover:bg-secondary-200 dark:bg-secondary-800/80 dark:hover:bg-secondary-700 shadow-sm"
+                            >
+                                <X className="w-4 h-4" />
+                            </ActionIcon>
+                        </div>
 
                         {/* Header */}
-                        <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 pr-12">
+                        <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 sm:pr-14 pr-4">
                             <div className="flex items-center gap-2.5 min-w-0">
                                 <Avatar
                                     src={post.user.avatar ?? undefined}

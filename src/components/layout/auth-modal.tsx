@@ -2,6 +2,7 @@
 
 import { useAuthModal } from '@/hooks/use-modal';
 import { X } from 'lucide-react';
+import { ActionIcon } from '../ui/action-icon';
 import { LoginForm } from '../auth/login-form';
 import SignupForm from '../auth/signup-form';
 import { useEffect } from 'react';
@@ -47,15 +48,16 @@ export function AuthModal() {
             {mode === 'login' ? 'Welcome back 👋' : 'Join Group Ad'}
           </h2>
 
-          {/* Close button — always top-right, never misaligned */}
-          <button
-            onClick={close}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors text-secondary-500 mt-1 sm:mt-0"
-            aria-label="Close"
-          >
-            <span className="sm:hidden text-xs font-bold mr-1">Close</span>
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex-shrink-0 mt-1 sm:mt-0">
+            <ActionIcon
+              variant="flat"
+              color="secondary"
+              rounded="full"
+              onClick={close}
+            >
+              <X className="w-4 h-4" />
+            </ActionIcon>
+          </div>
         </div>
 
         {/* Tab Toggle */}

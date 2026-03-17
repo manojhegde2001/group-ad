@@ -4,6 +4,7 @@ import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X, AlertTriangle, AlertCircle, Trash2, HelpCircle } from 'lucide-react';
 import { Button } from './button';
+import { ActionIcon } from './action-icon';
 
 interface ConfirmModalProps {
     isOpen: boolean;
@@ -71,13 +72,14 @@ export function ConfirmModal({
                                     <div className={`p-3 rounded-2xl ring-4 ${variantStyles[variant]}`}>
                                         {icons[variant]}
                                     </div>
-                                    <button
+                                    <ActionIcon
+                                        variant="flat"
+                                        color="secondary"
+                                        rounded="full"
                                         onClick={onClose}
-                                        className="p-1.5 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-400 transition-colors flex items-center"
                                     >
-                                        <span className="sm:hidden text-xs font-bold mr-1">Close</span>
                                         <X className="w-5 h-5" />
-                                    </button>
+                                    </ActionIcon>
                                 </div>
 
                                 <Dialog.Title

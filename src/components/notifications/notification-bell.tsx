@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, Check, CheckCheck, Loader2, X } from 'lucide-react';
+import { ActionIcon } from '@/components/ui/action-icon';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -202,95 +203,169 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                 )}
             </button>
 
-            {/* Dropdown panel */}
+            {/* Notifications Panel */}
             {open && (
-                <div className="absolute right-[-60px] sm:right-0 top-full mt-2 w-[calc(100vw-32px)] sm:w-96 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden animate-scale-in z-50">
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-secondary-100 dark:border-secondary-800">
-                        <h3 className="font-semibold text-sm text-secondary-900 dark:text-white">Notifications</h3>
-                        {unreadCount > 0 && (
-                            <button
-                                onClick={markAll}
-                                disabled={markingAll}
-                                className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline disabled:opacity-50"
-                            >
-                                {markingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />}
-                                Mark all read
-                            </button>
-                        )}
-                    </div>
-
-                    {/* List */}
-                    <div className="max-h-[420px] overflow-y-auto">
-                        {loading ? (
-                            <div className="flex justify-center py-10">
-                                <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
-                            </div>
-                        ) : notifications.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-                                <Bell className="w-10 h-10 text-secondary-300 mb-3" />
-                                <p className="text-sm text-secondary-500 dark:text-secondary-400">You're all caught up!</p>
-                            </div>
-                        ) : (
-                            notifications.map((notif) => (
-                                <button
-                                    key={notif.id}
-                                    onClick={() => !notif.isRead && markOne(notif.id)}
-                                    className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-secondary-50 dark:hover:bg-secondary-800/60 transition-colors group ${!notif.isRead ? 'bg-primary-50/40 dark:bg-primary-900/10' : ''
-                                        }`}
-                                >
-                                    {/* Sender avatar or icon */}
-                                    {notif.sender ? (
-                                        <Avatar
-                                            src={notif.sender.avatar ?? undefined}
-                                            name={notif.sender.name}
-                                            size="sm"
-                                            rounded="full"
-                                            className="w-9 h-9 shrink-0 mt-0.5"
-                                        />
-                                    ) : (
-                                        <span className="w-9 h-9 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center text-base mt-0.5">
-                                            {NOTIFICATION_ICONS[notif.type] ?? '🔔'}
+                <>
+                    {/* Mobile Notification Drawer */}
+                    <div className="fixed inset-0 z-[150] md:hidden">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
+                        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-secondary-900 rounded-t-3xl shadow-2xl p-4 animate-slide-up flex flex-col max-h-[85vh]">
+                            <div className="flex items-center justify-between mb-4 px-2">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-bold text-lg text-secondary-900 dark:text-white">Notifications</h3>
+                                    {unreadCount > 0 && (
+                                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                            {unreadCount}
                                         </span>
                                     )}
-
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-medium text-secondary-900 dark:text-white leading-snug line-clamp-2">
-                                            {notif.message}
-                                        </p>
-                                        <p className="text-[10px] text-secondary-400 mt-0.5">
-                                            {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                                        {!notif.isRead && (
-                                            <span className="w-2 h-2 rounded-full bg-primary-500 shrink-0" />
-                                        )}
-                                        <button
-                                            onClick={(e) => deleteOne(notif.id, e)}
-                                            className="opacity-0 group-hover:opacity-100 p-0.5 text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200 transition-all"
-                                            aria-label="Dismiss"
-                                        >
-                                            <X className="w-3 h-3" />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {unreadCount > 0 && (
+                                        <button onClick={markAll} disabled={markingAll} className="text-xs font-semibold text-primary-600">
+                                            Mark all read
                                         </button>
+                                    )}
+                                    <ActionIcon
+                                        variant="flat"
+                                        color="secondary"
+                                        rounded="full"
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </ActionIcon>
+                                </div>
+                            </div>
+
+                            <div className="overflow-y-auto flex-1 min-h-0 pb-6">
+                                {loading ? (
+                                    <div className="flex justify-center py-10">
+                                        <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
                                     </div>
-                                </button>
-                            ))
-                        )}
+                                ) : notifications.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <Bell className="w-12 h-12 text-secondary-300 mb-3" />
+                                        <p className="text-secondary-500">No notifications yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1">
+                                        {notifications.map((notif) => (
+                                            <button
+                                                key={notif.id}
+                                                onClick={() => !notif.isRead && markOne(notif.id)}
+                                                className={`w-full text-left flex items-start gap-4 p-4 rounded-2xl transition-colors ${!notif.isRead ? 'bg-primary-50/50 dark:bg-primary-900/10' : 'hover:bg-secondary-50 dark:hover:bg-secondary-800/50'}`}
+                                            >
+                                                {notif.sender ? (
+                                                    <Avatar src={notif.sender.avatar ?? undefined} name={notif.sender.name} size="sm" className="w-10 h-10 mt-0.5" />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center text-lg">
+                                                        {NOTIFICATION_ICONS[notif.type] ?? '🔔'}
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-secondary-900 dark:text-white leading-snug">{notif.message}</p>
+                                                    <p className="text-[11px] text-secondary-400 mt-1">{formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}</p>
+                                                </div>
+                                                {!notif.isRead && <div className="w-2 h-2 rounded-full bg-primary-500 mt-2" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
-                    {notifications.length > 0 && (
-                        <div className="border-t border-secondary-100 dark:border-secondary-800 px-4 py-2 flex justify-center">
-                            <button
-                                onClick={() => setOpen(false)}
-                                className="text-xs text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-300 transition-colors"
-                            >
-                                Close
-                            </button>
+                    {/* Desktop Panel */}
+                    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden animate-scale-in z-50 hidden md:block">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-secondary-100 dark:border-secondary-800">
+                            <h3 className="font-semibold text-sm text-secondary-900 dark:text-white">Notifications</h3>
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={markAll}
+                                    disabled={markingAll}
+                                    className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline disabled:opacity-50"
+                                >
+                                    {markingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />}
+                                    Mark all read
+                                </button>
+                            )}
                         </div>
-                    )}
-                </div>
+
+                        {/* List */}
+                        <div className="max-h-[420px] overflow-y-auto">
+                            {loading ? (
+                                <div className="flex justify-center py-10">
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
+                                </div>
+                            ) : notifications.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                                    <Bell className="w-10 h-10 text-secondary-300 mb-3" />
+                                    <p className="text-sm text-secondary-500 dark:text-secondary-400">You're all caught up!</p>
+                                </div>
+                            ) : (
+                                notifications.map((notif) => (
+                                    <button
+                                        key={notif.id}
+                                        onClick={() => !notif.isRead && markOne(notif.id)}
+                                        className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-secondary-50 dark:hover:bg-secondary-800/60 transition-colors group ${!notif.isRead ? 'bg-primary-50/40 dark:bg-primary-900/10' : ''
+                                            }`}
+                                    >
+                                        {/* Sender avatar or icon */}
+                                        {notif.sender ? (
+                                            <Avatar
+                                                src={notif.sender.avatar ?? undefined}
+                                                name={notif.sender.name}
+                                                size="sm"
+                                                rounded="full"
+                                                className="w-9 h-9 shrink-0 mt-0.5"
+                                            />
+                                        ) : (
+                                            <span className="w-9 h-9 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center text-base mt-0.5">
+                                                {NOTIFICATION_ICONS[notif.type] ?? '🔔'}
+                                            </span>
+                                        )}
+
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-medium text-secondary-900 dark:text-white leading-snug line-clamp-2">
+                                                {notif.message}
+                                            </p>
+                                            <p className="text-[10px] text-secondary-400 mt-0.5">
+                                                {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                                            {!notif.isRead && (
+                                                <span className="w-2 h-2 rounded-full bg-primary-500 shrink-0" />
+                                            )}
+                                            <ActionIcon
+                                                variant="text"
+                                                color="secondary"
+                                                rounded="full"
+                                                size="sm"
+                                                onClick={(e) => deleteOne(notif.id, e)}
+                                                className="opacity-0 group-hover:opacity-100"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </ActionIcon>
+                                        </div>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+
+                        {notifications.length > 0 && (
+                            <div className="border-t border-secondary-100 dark:border-secondary-800 px-4 py-2 flex justify-center">
+                                <button
+                                    onClick={() => setOpen(false)}
+                                    className="text-xs text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-300 transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
         </div>
     );

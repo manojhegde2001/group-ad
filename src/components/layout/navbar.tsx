@@ -23,6 +23,7 @@ import {
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { SearchBar } from './search-bar';
+import { ActionIcon } from '../ui/action-icon';
 import { cn } from '@/lib/utils';
 
 const Logo = dynamic(() => import('../ui/logo'), {
@@ -185,37 +186,88 @@ export function Navbar() {
             )}
 
             {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200">
-                    <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
-                        <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
-                            <div className="flex items-center gap-3">
-                                <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="sm" className="w-12 h-12" />
-                                <div>
-                                    <p className="font-bold leading-tight">{user?.name}</p>
-                                    <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal'}</p>
+                <>
+                    {/* Mobile Profile Drawer */}
+                    <div className="fixed inset-0 z-[150] md:hidden">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDropdownOpen(false)} />
+                        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-secondary-900 rounded-t-3xl shadow-2xl p-4 animate-slide-up flex flex-col max-h-[80vh]">
+                            <div className="flex items-center justify-between mb-4 px-2">
+                                <span className="font-bold text-lg text-secondary-900 dark:text-white">Profile</span>
+                                <ActionIcon
+                                    variant="flat"
+                                    color="secondary"
+                                    rounded="full"
+                                    onClick={() => setDropdownOpen(false)}
+                                >
+                                    <X className="w-5 h-5" />
+                                </ActionIcon>
+                            </div>
+                            
+                            <div className="overflow-y-auto space-y-4 pb-6">
+                                <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
+                                    <div className="flex items-center gap-4 p-4 bg-secondary-50 dark:bg-secondary-800 rounded-2xl">
+                                        <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-16 h-16" />
+                                        <div>
+                                            <p className="font-bold text-lg text-secondary-900 dark:text-white leading-tight">{user?.name}</p>
+                                            <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
+                                        </div>
+                                    </div>
+                                </Link>
+                                
+                                <div className="space-y-1">
+                                    <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                                        <Calendar className="w-5 h-5" /> Events
+                                    </Link>
+                                    
+                                    {(user as any).userType === 'ADMIN' && (
+                                        <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                                            <ShieldCheck className="w-5 h-5" /> Admin Panel
+                                        </Link>
+                                    )}
+                                    <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                                        <Settings className="w-5 h-5" /> Settings
+                                    </Link>
+                                    <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-red-500">
+                                        <LogOut className="w-5 h-5" /> Log out
+                                    </button>
                                 </div>
                             </div>
-                        </Link>
+                        </div>
                     </div>
-                    
-                    <div className="space-y-1">
-                         <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                           <Calendar className="w-5 h-5" /> Events
-                         </Link>
+
+                    {/* Desktop Dropdown */}
+                    <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200 hidden md:block">
+                        <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
+                            <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
+                                <div className="flex items-center gap-3">
+                                    <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="sm" className="w-12 h-12" />
+                                    <div>
+                                        <p className="font-bold leading-tight">{user?.name}</p>
+                                        <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal'}</p>
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
                         
-                        {(user as any).userType === 'ADMIN' && (
-                          <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
-                            <ShieldCheck className="w-5 h-5" /> Admin Panel
-                          </Link>
-                        )}
-                        <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                          <Settings className="w-5 h-5" /> Settings
-                        </Link>
-                        <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                          <LogOut className="w-5 h-5" /> Log out
-                        </button>
+                        <div className="space-y-1">
+                            <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                                <Calendar className="w-5 h-5" /> Events
+                            </Link>
+                            
+                            {(user as any).userType === 'ADMIN' && (
+                            <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                                <ShieldCheck className="w-5 h-5" /> Admin Panel
+                            </Link>
+                            )}
+                            <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                            <Settings className="w-5 h-5" /> Settings
+                            </Link>
+                            <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                            <LogOut className="w-5 h-5" /> Log out
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </>
             )}
           </div>
 
@@ -235,11 +287,15 @@ export function Navbar() {
               <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileDrawerOpen(false)} />
               <div className="absolute top-0 right-0 w-[80vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl flex flex-col p-4 animate-slide-in-right">
                 <div className="flex items-center justify-between mb-8">
-                    <span className="font-bold text-lg">Menu</span>
-                    <button onClick={() => setMobileDrawerOpen(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary-100 dark:bg-secondary-800 rounded-full text-secondary-600 dark:text-secondary-300">
-                        <span className="text-xs font-bold">Close</span>
+                    <span className="font-bold text-lg text-secondary-900 dark:text-white">Menu</span>
+                    <ActionIcon
+                        variant="flat"
+                        color="secondary"
+                        rounded="full"
+                        onClick={() => setMobileDrawerOpen(false)}
+                    >
                         <X className="w-5 h-5" />
-                    </button>
+                    </ActionIcon>
                 </div>
                 <nav className="flex flex-col gap-4 font-bold text-secondary-900 dark:text-white">
                     <Link href="/" onClick={() => setMobileDrawerOpen(false)}>Home</Link>

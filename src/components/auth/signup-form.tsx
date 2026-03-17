@@ -146,12 +146,12 @@ export default function SignupForm() {
               error={errors.categoryId?.message}
               placeholder={
                 loadingCategories
-                  ? 'Loading categories...'
-                  : 'Select your category'
+                  ? 'Loading...'
+                  : 'Select category'
               }
               disabled={loadingCategories}
-              dropdownClassName="z-[200] !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
-              selectClassName="dark:bg-secondary-800"
+              dropdownClassName="z-[200] sm:!bg-white sm:dark:!bg-secondary-900 !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
+              className="w-full"
             />
           );
         }}

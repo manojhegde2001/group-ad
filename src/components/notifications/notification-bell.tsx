@@ -54,12 +54,46 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
     }, [open, onOpenChange]);
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
-
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [markingAll, setMarkingAll] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // Track previously seen notification IDs to detect new ones between polls
+    const seenIdsRef = useRef<Set<string>>(new Set());
+    const isFirstFetchRef = useRef(true);
+
+    // Request browser notification permission once on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+    }, []);
+
+    const fireBrowserNotification = useCallback((notif: Notification) => {
+        if (
+            typeof window === 'undefined' ||
+            !('Notification' in window) ||
+            Notification.permission !== 'granted'
+        ) return;
+
+        const title = notif.sender
+            ? `New message from ${notif.sender.name}`
+            : notif.title || 'New notification';
+        const body = notif.message;
+
+        try {
+            const n = new Notification(title, {
+                body,
+                icon: '/auth/logo-small.png',
+                tag: notif.id, // prevents duplicate toasts for same notification
+            });
+            // Auto-close after 5 seconds
+            setTimeout(() => n.close(), 5000);
+        } catch { /* silent — some browsers block programmatic Notifications */ }
+    }, []);
 
     const fetchNotifications = useCallback(async () => {
         if (!isAuthenticated) return;
@@ -67,10 +101,29 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
             const res = await fetch('/api/notifications?limit=15');
             if (!res.ok) return;
             const data = await res.json();
-            setNotifications(data.notifications ?? []);
+            const fetched: Notification[] = data.notifications ?? [];
+
+            // Detect brand-new unread MESSAGE_RECEIVED notifications
+            if (!isFirstFetchRef.current) {
+                fetched.forEach((notif) => {
+                    if (
+                        !notif.isRead &&
+                        notif.type === 'MESSAGE_RECEIVED' &&
+                        !seenIdsRef.current.has(notif.id)
+                    ) {
+                        fireBrowserNotification(notif);
+                    }
+                });
+            }
+
+            // Update seen IDs
+            fetched.forEach((n) => seenIdsRef.current.add(n.id));
+            isFirstFetchRef.current = false;
+
+            setNotifications(fetched);
             setUnreadCount(data.unreadCount ?? 0);
         } catch { /* silent */ }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, fireBrowserNotification]);
 
     // Initial fetch + polling every 30s
     useEffect(() => {

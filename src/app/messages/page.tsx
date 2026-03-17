@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { Search, Send, Plus, MessageSquare, X, Loader2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
+import { useUnreadMessages } from '@/hooks/use-unread-messages';
 
 interface Conversation {
   id: string;
@@ -25,6 +26,7 @@ interface Message {
 
 export default function MessagesPage() {
   const { user } = useAuth();
+  const { refresh: refreshUnreadBadge } = useUnreadMessages();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
@@ -39,17 +41,46 @@ export default function MessagesPage() {
   const [showMobileChat, setShowMobileChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pollConvsRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollMsgsRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
   const otherUser = selectedConv?.participants[0];
 
-  // Load conversations
+  const fetchConversations = useCallback(async () => {
+    try {
+      const r = await fetch('/api/conversations');
+      const d = await r.json();
+      setConversations(d.conversations || []);
+    } catch { /* silent */ }
+  }, []);
+
+  // Load conversations on mount + poll every 15s for new messages
   useEffect(() => {
-    fetch('/api/conversations')
-      .then((r) => r.json())
-      .then((d) => setConversations(d.conversations || []))
-      .catch(() => {})
-      .finally(() => setLoadingConvs(false));
+    fetchConversations().finally(() => setLoadingConvs(false));
+    pollConvsRef.current = setInterval(fetchConversations, 15_000);
+    return () => { if (pollConvsRef.current) clearInterval(pollConvsRef.current); };
+  }, [fetchConversations]);
+
+  // Mark messages as read when a conversation is selected
+  const markConversationRead = useCallback(async (convId: string) => {
+    try {
+      await fetch(`/api/conversations/${convId}/read`, { method: 'PATCH' });
+      // Update local state to clear the badge for this conversation
+      setConversations((prev) =>
+        prev.map((c) => (c.id === convId ? { ...c, unreadCount: 0 } : c))
+      );
+      // Refresh the sidebar badge
+      refreshUnreadBadge();
+    } catch { /* silent */ }
+  }, [refreshUnreadBadge]);
+
+  const fetchMessages = useCallback(async (convId: string) => {
+    try {
+      const r = await fetch(`/api/conversations/${convId}/messages`);
+      const d = await r.json();
+      setMessages(d.messages || []);
+    } catch { /* silent */ }
   }, []);
 
   // Load messages when conversation changes
@@ -57,12 +88,13 @@ export default function MessagesPage() {
     if (!selectedConvId) return;
     setLoadingMsgs(true);
     setMessages([]);
-    fetch(`/api/conversations/${selectedConvId}/messages`)
-      .then((r) => r.json())
-      .then((d) => setMessages(d.messages || []))
-      .catch(() => {})
-      .finally(() => setLoadingMsgs(false));
-  }, [selectedConvId]);
+    fetchMessages(selectedConvId).finally(() => setLoadingMsgs(false));
+    markConversationRead(selectedConvId);
+
+    // Poll for new messages in the open conversation every 10s
+    pollMsgsRef.current = setInterval(() => fetchMessages(selectedConvId), 10_000);
+    return () => { if (pollMsgsRef.current) clearInterval(pollMsgsRef.current); };
+  }, [selectedConvId, fetchMessages, markConversationRead]);
 
   // Scroll to bottom
   useEffect(() => {

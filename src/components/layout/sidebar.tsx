@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useCreatePost } from '@/hooks/use-feed';
+import { useUnreadMessages } from '@/hooks/use-unread-messages';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -25,6 +26,7 @@ export function Sidebar() {
   const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
   const { open: openCreatePost } = useCreatePost();
+  const { totalUnread } = useUnreadMessages();
 
   if (!isAuthenticated) return null;
 
@@ -48,6 +50,7 @@ export function Sidebar() {
 
   const SidebarLink = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
     const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+    const showBadge = href === '/messages' && totalUnread > 0;
     return (
       <Link
         href={href}
@@ -60,6 +63,12 @@ export function Sidebar() {
         )}
       >
         <Icon className={cn("w-6 h-6", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
+        {/* Unread badge */}
+        {showBadge && (
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-0.5 ring-2 ring-white dark:ring-secondary-900 leading-none pointer-events-none">
+            {totalUnread > 99 ? '99+' : totalUnread}
+          </span>
+        )}
         {/* Tooltip */}
         <span className="absolute left-16 px-2 py-1 bg-secondary-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
           {label}

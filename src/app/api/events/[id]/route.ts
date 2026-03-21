@@ -23,10 +23,10 @@ const updateEventSchema = z.object({
     status: z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED']).optional(),
 });
 
-export async function GET(
-    request: NextRequest,
+export const GET = async (
+    request: Request,
     { params }: { params: Promise<{ id: string }> }
-) {
+) => {
     try {
         const session = await auth();
         const { id } = await params;

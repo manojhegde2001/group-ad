@@ -6,6 +6,26 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
+  console.log('🧹 Cleaning database...');
+  await prisma.postLike.deleteMany();
+  await prisma.postComment.deleteMany();
+  await prisma.bookmark.deleteMany();
+  await prisma.boardPost.deleteMany();
+  await prisma.board.deleteMany();
+  await prisma.post.deleteMany();
+  await prisma.eventEnrollment.deleteMany();
+  await prisma.event.deleteMany();
+  await prisma.userTypeChangeRequest.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.connection.deleteMany();
+  await prisma.follow.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.company.deleteMany();
+  await prisma.category.deleteMany();
+  console.log('✅ Database cleaned.');
+
   // ============================================================================
   // 1. CREATE CATEGORIES
   // ============================================================================

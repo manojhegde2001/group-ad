@@ -225,24 +225,23 @@ export function PostDetailDrawer() {
                 className="relative z-10 w-full sm:max-w-6xl h-[100vh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Mobile drag handle */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-9 h-1 bg-secondary-200 dark:bg-secondary-700 rounded-full md:hidden z-20" />
+                {/* Mobile Header */}
+                <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 shrink-0 z-[100] sticky top-0">
+                    <button 
+                        onClick={closePost} 
+                        className="p-2 -ml-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors"
+                        aria-label="Back to feed"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <span className="font-bold text-sm text-secondary-900 dark:text-white">Post</span>
+                    <div className="w-10" /> {/* Spacer to perfectly center the title */}
+                </div>
 
                 {/* ── Left panel — Media ── */}
                 <div
                     className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                 >
-                    {/* Back button - Top Left for Mobile (more natural for drawers) */}
-                    <div className="absolute top-4 left-4 z-50 sm:hidden">
-                        <ActionIcon
-                            variant="flat"
-                            rounded="full"
-                            onClick={closePost}
-                            className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 shadow-xl"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </ActionIcon>
-                    </div>
 
                     {loading ? (
                         <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">

@@ -222,11 +222,11 @@ export function PostDetailDrawer() {
 
             {/* Modal */}
             <div
-                className="relative z-10 w-full sm:max-w-6xl h-[100vh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
+                className="relative z-10 w-full sm:max-w-6xl h-[100dvh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Mobile Header */}
-                <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 shrink-0 z-[100] sticky top-0">
+                <div className="md:hidden flex items-center px-4 py-3 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 shrink-0 z-[100] sticky top-0">
                     <button 
                         onClick={closePost} 
                         className="p-2 -ml-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors"
@@ -234,8 +234,6 @@ export function PostDetailDrawer() {
                     >
                         <ChevronLeft className="w-6 h-6" />
                     </button>
-                    <span className="font-bold text-sm text-secondary-900 dark:text-white">Post</span>
-                    <div className="w-10" /> {/* Spacer to perfectly center the title */}
                 </div>
 
                 {/* ── Left panel — Media ── */}

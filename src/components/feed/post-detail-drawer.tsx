@@ -43,7 +43,6 @@ export function PostDetailDrawer() {
     const [loadingComments, setLoadingComments] = useState(false);
     const [submittingComment, setSubmittingComment] = useState(false);
 
-    // Share & Save state
     const { open: openSaveToBoard } = useSaveToBoard();
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const shareOpen = activePostId === post?.id && source === 'drawer';

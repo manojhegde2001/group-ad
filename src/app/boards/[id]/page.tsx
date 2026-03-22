@@ -2,8 +2,9 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Loader2, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Loader2, MoreVertical, Library } from 'lucide-react';
 import Link from 'next/link';
+import { useMe } from '@/hooks/use-api/use-user';
 import { FeedContainer } from '@/components/feed/feed-container';
 import { toast } from 'react-hot-toast';
 
@@ -18,6 +19,7 @@ export default function BoardDetailPage() {
   const { id } = useParams();
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
+  const { data: me } = useMe();
 
   useEffect(() => {
     if (id) {
@@ -71,9 +73,20 @@ export default function BoardDetailPage() {
             </div>
           </div>
 
-          <button className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors">
-            <MoreVertical className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-3">
+            {me?.username && (
+              <Link 
+                href={`/profile/${me.username}`}
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-50 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-300 text-xs font-bold hover:text-primary-500 transition-colors"
+              >
+                <Library className="w-3.5 h-3.5" />
+                My Posts
+              </Link>
+            )}
+            <button className="p-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors">
+              <MoreVertical className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </div>
 

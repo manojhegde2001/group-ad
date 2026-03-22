@@ -136,6 +136,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    if (user.userType === 'INDIVIDUAL') {
+      return NextResponse.json(
+        { error: 'Individuals are not allowed to create posts' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = createPostSchema.parse(body);
 

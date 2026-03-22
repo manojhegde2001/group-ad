@@ -265,7 +265,7 @@ export default function PublicProfilePage() {
                                 className="mb-4 animate-slide-up opacity-0"
                                 style={{ animationDelay: `${Math.min(i * 40, 400)}ms`, animationFillMode: 'forwards' }}
                             >
-                                <PostCard post={post} />
+                                <PostCard post={post} showActions={isOwnProfile && activeTab === 'created'} />
                             </div>
                         ))}
                     </Masonry>

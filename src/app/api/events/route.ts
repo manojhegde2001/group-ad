@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
             select: { id: true, userType: true },
         });
 
-        if (!dbUser || (dbUser.userType !== 'ADMIN' && dbUser.userType !== 'BUSINESS')) {
-            return NextResponse.json({ error: 'Admin or Business access required' }, { status: 403 });
+        if (!dbUser || dbUser.userType !== 'ADMIN') {
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
         const body = await request.json();

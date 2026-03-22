@@ -4,22 +4,24 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
-    Link2, Twitter, Facebook, Check, Video,
+    Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import { usePostDetail, useSaveToBoard, useSharePost } from '@/hooks/use-feed';
-import { useLikePost } from '@/hooks/use-api/use-posts';
+import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
-import { Popover } from 'rizzui';
+import { Popover, Dropdown } from 'rizzui';
+import { ActionIcon } from '../ui/action-icon';
 
 interface PostCardProps {
     post: PostWithRelations;
     onLikeChange?: (postId: string, liked: boolean) => void;
+    showActions?: boolean;
 }
 
-export function PostCard({ post, onLikeChange }: PostCardProps) {
+export function PostCard({ post, onLikeChange, showActions = false }: PostCardProps) {
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
     const { user } = useAuth();
@@ -28,6 +30,7 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
     const { open: openSaveToBoard } = useSaveToBoard();
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const likeMutation = useLikePost();
+    const deletePostMutation = useDeletePost();
 
     // ── Local optimistic like state ──────────────────────────────────────────
     const [liked, setLiked] = useState<boolean>((post as any).isLikedByUser ?? false);
@@ -165,6 +168,34 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                         <p className="text-white text-sm font-semibold leading-snug line-clamp-6">
                             {post.content}
                         </p>
+                    </div>
+                )}
+
+                {/* --- Ownership Actions (Meatball Menu) --- */}
+                {showActions && user?.id === post.userId && (
+                    <div className="absolute top-2.5 right-2.5 z-30" onClick={e => e.stopPropagation()}>
+                        <Dropdown placement="bottom-end">
+                            <Dropdown.Trigger>
+                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md border border-white/10 shrink-0 transition-all cursor-pointer">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </span>
+                            </Dropdown.Trigger>
+                            <Dropdown.Menu className="w-40 p-1">
+                                <Dropdown.Item className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer">
+                                    <Edit2 className="w-4 h-4" /> Edit Post
+                                </Dropdown.Item>
+                                <Dropdown.Item 
+                                    onClick={() => {
+                                        if (window.confirm('Are you sure you want to delete this post?')) {
+                                            deletePostMutation.mutate(post.id);
+                                        }
+                                    }}
+                                    className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4" /> Delete
+                                </Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown>
                     </div>
                 )}
 

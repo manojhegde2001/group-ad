@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Calendar, MapPin, Users, Search, Globe, Clock, Filter, ChevronRight, Video } from 'lucide-react';
+import { Calendar, MapPin, Users, Search, Globe, Clock, Filter, ChevronRight, Video, Plus } from 'lucide-react';
 import { format, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
+import { useCreateEvent } from '@/hooks/use-feed';
+import { Button } from '@/components/ui/button';
 
 function useEvents(params: Record<string, any> = {}) {
   const query = new URLSearchParams();
@@ -24,6 +27,8 @@ export default function EventsPage() {
   const [search, setSearch] = useState('');
   const [upcoming, setUpcoming] = useState(true);
   const [searchInput, setSearchInput] = useState('');
+  const { user } = useAuth();
+  const { open: openCreateEvent } = useCreateEvent();
 
   const { data, isLoading } = useEvents({
     search,
@@ -109,6 +114,20 @@ export default function EventsPage() {
             <Calendar className="w-3.5 h-3.5" />
             Calendar View
           </Link>
+
+          {user?.userType === 'ADMIN' && (
+            <Button
+              onClick={openCreateEvent}
+              variant="solid"
+              color="primary"
+              rounded="pill"
+              size="sm"
+              className="ml-2 font-bold shadow-lg shadow-primary-500/20"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              Create Event
+            </Button>
+          )}
         </div>
       </div>
 

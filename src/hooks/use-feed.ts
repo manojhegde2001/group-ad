@@ -25,6 +25,28 @@ export const useCreatePost = create<CreatePostStore>((set, get) => ({
     },
 }));
 
+// ---- Create Event Modal Store ----
+interface CreateEventStore {
+    isOpen: boolean;
+    open: () => void;
+    close: () => void;
+    onCreated?: (event: any) => void;
+    setOnCreated: (cb: (event: any) => void) => void;
+    notifyCreated: (event: any) => void;
+}
+
+export const useCreateEvent = create<CreateEventStore>((set, get) => ({
+    isOpen: false,
+    open: () => set({ isOpen: true }),
+    close: () => set({ isOpen: false }),
+    onCreated: undefined,
+    setOnCreated: (cb) => set({ onCreated: cb }),
+    notifyCreated: (event) => {
+        set({ isOpen: false });
+        get().onCreated?.(event);
+    },
+}));
+
 // ---- Post Detail Drawer Store ----
 interface PostDetailStore {
     isOpen: boolean;

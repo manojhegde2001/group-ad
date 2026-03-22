@@ -19,6 +19,7 @@ import {
   Menu,
   Calendar,
   ShieldCheck,
+  Library,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -195,6 +196,10 @@ export function Navbar() {
                   <div className="space-y-1">
                       <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
                           <Calendar className="w-5 h-5" /> Events
+                      </Link>
+                      
+                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                          <Library className="w-5 h-5" /> My Posts
                       </Link>
                       
                       {(user as any).userType === 'ADMIN' && (

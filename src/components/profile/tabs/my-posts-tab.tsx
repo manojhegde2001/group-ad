@@ -13,9 +13,12 @@ import toast from 'react-hot-toast';
 import { useMyPosts, useDeletePost, useUpdatePost } from '@/hooks/use-api/use-posts';
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function MyPostsTab() {
+    const { user } = useAuth();
     const { openPost } = usePostDetail();
+
     const { open: openCreatePost, setOnCreated } = useCreatePost();
     const queryClient = useQueryClient();
 
@@ -103,8 +106,10 @@ export default function MyPostsTab() {
                         ))}
                     </div>
                 </div>
+                {((user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
                 <Button
                     onClick={openCreatePost}
+
                     variant="solid"
                     color="primary"
                     size="sm"
@@ -113,6 +118,7 @@ export default function MyPostsTab() {
                 >
                     New Post
                 </Button>
+            )}
             </div>
 
             {/* Empty state */}
@@ -125,7 +131,7 @@ export default function MyPostsTab() {
                     <p className="text-secondary-400 text-sm mb-4">
                         {filter === 'ALL' ? 'Share your first idea with the world!' : `Switch to another filter to see more.`}
                     </p>
-                    {filter === 'ALL' && (
+                    {filter === 'ALL' && ((user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
                         <Button onClick={openCreatePost} variant="solid" color="primary" size="sm" rounded="pill">
                             Create your first post
                         </Button>

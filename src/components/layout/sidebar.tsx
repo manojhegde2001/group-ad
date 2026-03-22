@@ -91,7 +91,7 @@ export function Sidebar() {
 
         <div className="w-8 h-[1px] bg-secondary-100 dark:bg-secondary-800 my-1" />
         
-        {user?.userType !== 'INDIVIDUAL' && (
+        {(isAdmin || (isBusiness && (user as any)?.verificationStatus === 'VERIFIED')) && (
           <button
             onClick={() => openCreatePost()}
             title="Create Post"

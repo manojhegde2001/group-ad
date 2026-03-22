@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { usePostDetail } from '@/hooks/use-feed';
+import { useState, useEffect } from 'react';
+import { usePostDetail, useSharePost, useSaveToBoard } from '@/hooks/use-feed';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PostWithRelations } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
+import { Popover } from 'rizzui';
 
 interface Comment {
     id: string;
@@ -42,11 +43,11 @@ export function PostDetailDrawer() {
     const [loadingComments, setLoadingComments] = useState(false);
     const [submittingComment, setSubmittingComment] = useState(false);
 
-    // Share state
-    const [shareOpen, setShareOpen] = useState(false);
+    // Share & Save state
+    const { open: openSaveToBoard } = useSaveToBoard();
+    const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
+    const shareOpen = activePostId === post?.id && source === 'drawer';
     const [copied, setCopied] = useState(false);
-    const shareButtonRef = useRef<HTMLButtonElement>(null);
-    const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
     // Fetch post + comments when opened
     useEffect(() => {
@@ -54,7 +55,6 @@ export function PostDetailDrawer() {
 
         setCurrentImageIndex(0);
         setComment('');
-        setShareOpen(false);
 
         // Seed from cached post while we fetch fresh data
         if (initialPost) {
@@ -86,7 +86,7 @@ export function PostDetailDrawer() {
             .catch(() => { })
             .finally(() => setLoadingComments(false));
 
-    }, [isOpen, postId]);
+    }, [isOpen, postId, initialPost]);
 
     // Keyboard & body scroll lock
     useEffect(() => {
@@ -102,37 +102,19 @@ export function PostDetailDrawer() {
             document.removeEventListener('keydown', handleKey);
             document.body.style.overflow = '';
         };
-    }, [isOpen, currentImageIndex, post]);
-
-    // Share popover outside-click / scroll close
-    useEffect(() => {
-        if (!shareOpen) return;
-        const handler = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            if (!target.closest('[data-share-popover]') && !target.closest('[data-share-btn-drawer]')) {
-                setShareOpen(false);
-            }
-        };
-        const close = () => setShareOpen(false);
-        document.addEventListener('mousedown', handler);
-        window.addEventListener('scroll', close, { passive: true });
-        return () => {
-            document.removeEventListener('mousedown', handler);
-            window.removeEventListener('scroll', close);
-        };
-    }, [shareOpen]);
+    }, [isOpen, closePost]); // Removed currentImageIndex and post to reduce re-renders
 
     const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
 
     const handleLike = async () => {
         requireAuth(async () => {
-            if (isLiking) return;
+            if (isLiking || !post) return;
             setIsLiking(true);
             const newLiked = !liked;
             setLiked(newLiked);
             setLikeCount((c) => (newLiked ? c + 1 : Math.max(0, c - 1)));
             try {
-                await fetch(`/api/posts/${post!.id}/like`, { method: newLiked ? 'POST' : 'DELETE' });
+                await fetch(`/api/posts/${post.id}/like`, { method: newLiked ? 'POST' : 'DELETE' });
             } catch {
                 // revert
                 setLiked(!newLiked);
@@ -154,7 +136,7 @@ export function PostDetailDrawer() {
 
     const handleCommentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) { openLogin(); return; }
+        if (!user || !post) { openLogin(); return; }
         if (!comment.trim()) return;
         setSubmittingComment(true);
 
@@ -174,7 +156,7 @@ export function PostDetailDrawer() {
         setComment('');
 
         try {
-            const res = await fetch(`/api/posts/${post!.id}/comments`, {
+            const res = await fetch(`/api/posts/${post.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: optimistic.content }),
@@ -204,20 +186,20 @@ export function PostDetailDrawer() {
         }
     };
 
-    const handleShareOpen = () => {
-        if (shareOpen) { setShareOpen(false); return; }
-        if (shareButtonRef.current) {
-            const rect = shareButtonRef.current.getBoundingClientRect();
-            setPopoverPos({ top: rect.top, left: rect.left });
+    const handleShareOpen = (open: boolean | ((prev: boolean) => boolean)) => {
+        const nextOpen = typeof open === 'function' ? open(shareOpen) : open;
+        if (nextOpen && post) {
+            openShare(post.id, 'drawer');
+        } else {
+            closeShare();
         }
-        setShareOpen(true);
     };
 
     const handleCopyLink = async () => {
         try {
             await navigator.clipboard.writeText(postUrl);
             setCopied(true);
-            setTimeout(() => { setCopied(false); setShareOpen(false); }, 1500);
+            setTimeout(() => { setCopied(false); closeShare(); }, 1500);
         } catch { }
     };
 
@@ -235,324 +217,311 @@ export function PostDetailDrawer() {
     const totalComments = comments.length;
 
     return (
-        <>
-            <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-4 md:p-6" onClick={closePost}>
-                {/* Backdrop */}
-                <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" />
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-4 md:p-6" onClick={closePost}>
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" />
 
-                {/* Modal */}
+            {/* Modal */}
+            <div
+                className="relative z-10 w-full sm:max-w-6xl h-[100vh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Mobile drag handle */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-9 h-1 bg-secondary-200 dark:bg-secondary-700 rounded-full md:hidden z-20" />
+
+                {/* ── Left panel — Media ── */}
                 <div
-                    className="relative z-10 w-full sm:max-w-6xl h-[100vh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
-                    onClick={(e) => e.stopPropagation()}
+                    className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                 >
-                    {/* Mobile drag handle */}
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-9 h-1 bg-secondary-200 dark:bg-secondary-700 rounded-full md:hidden z-20" />
-
-                    {/* ── Left panel — Media ── */}
-                    <div
-                        className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
-                    >
-                        {/* Back button - Top Left for Mobile (more natural for drawers) */}
-                        <div className="absolute top-4 left-4 z-50 sm:hidden">
-                            <ActionIcon
-                                variant="flat"
-                                rounded="full"
-                                onClick={closePost}
-                                className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 shadow-xl"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </ActionIcon>
-                        </div>
-
-                        {loading ? (
-                            <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
-                                <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
-                            </div>
-                        ) : hasImages ? (
-                            <>
-                                {isVideoPost ? (
-                                    <video
-                                        src={post.images[currentImageIndex]}
-                                        className="w-full h-full object-contain"
-                                        controls playsInline autoPlay
-                                        style={{ maxHeight: '80vh' }}
-                                    />
-                                ) : (
-                                    <img
-                                        src={post.images[currentImageIndex]}
-                                        alt={post.content || 'Post image'}
-                                        className="w-full h-full object-contain"
-                                        style={{ maxHeight: '80vh' }}
-                                    />
-                                )}
-                                {post.images.length > 1 && (
-                                    <>
-                                        <button
-                                            onClick={prevImage}
-                                            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
-                                        >
-                                            <ChevronLeft className="w-5 h-5" />
-                                        </button>
-                                        <button
-                                            onClick={nextImage}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
-                                        >
-                                            <ChevronRight className="w-5 h-5" />
-                                        </button>
-                                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                                            {post.images.map((_, i) => (
-                                                <button
-                                                    key={i}
-                                                    onClick={() => setCurrentImageIndex(i)}
-                                                    className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-5' : 'bg-white/50 w-1.5'}`}
-                                                />
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                                {isVideoPost && (
-                                    <div className="absolute top-3 left-3 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
-                                        <Video className="w-3 h-3" /> Video
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="p-8 sm:p-12 text-white">
-                                <p className="text-xl sm:text-2xl font-bold leading-relaxed">{post.content}</p>
-                            </div>
-                        )}
+                    {/* Back button - Top Left for Mobile (more natural for drawers) */}
+                    <div className="absolute top-4 left-4 z-50 sm:hidden">
+                        <ActionIcon
+                            variant="flat"
+                            rounded="full"
+                            onClick={closePost}
+                            className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 shadow-xl"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </ActionIcon>
                     </div>
 
-                    {/* ── Right panel — Details ── */}
-                    <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800">
-                        {/* Desktop Close Button */}
-                        <div className="absolute top-4 right-4 z-50 hidden sm:block">
-                            <ActionIcon
-                                variant="flat"
-                                color="secondary"
-                                rounded="full"
-                                onClick={closePost}
-                                className="bg-secondary-100/80 hover:bg-secondary-200 dark:bg-secondary-800/80 dark:hover:bg-secondary-700 shadow-sm"
-                            >
-                                <X className="w-4 h-4" />
-                            </ActionIcon>
+                    {loading ? (
+                        <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
+                            <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
                         </div>
-
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 sm:pr-14 pr-4">
-                            <Link
-                                href={`/profile/${post.user.username}`}
-                                onClick={closePost}
-                                className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity"
-                            >
-                                <Avatar
-                                    src={post.user.avatar ?? undefined}
-                                    name={post.user.name}
-                                    size="sm" rounded="full" color="primary"
+                    ) : hasImages ? (
+                        <>
+                            {isVideoPost ? (
+                                <video
+                                    src={post.images[currentImageIndex]}
+                                    className="w-full h-full object-contain"
+                                    controls playsInline autoPlay
+                                    style={{ maxHeight: '80vh' }}
                                 />
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-1">
-                                        <p className="font-semibold text-sm text-secondary-900 dark:text-white truncate">{post.user.name}</p>
-                                        {post.user.verificationStatus === 'VERIFIED' && (
-                                            <BadgeCheck className="w-4 h-4 text-primary-500 shrink-0" />
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-secondary-400 truncate">@{post.user.username}</p>
-                                </div>
-                            </Link>
-                            <div className="flex items-center gap-2 shrink-0">
-                                <Button variant="outline" color="secondary" size="sm" rounded="pill" className="text-xs px-3 h-7">
-                                    Follow
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Scrollable body */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                            {/* Tags */}
-                            {post.tags && post.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
-                                    {post.tags.map((tag) => (
-                                        <span key={tag} className="text-xs text-primary-600 dark:text-primary-400 font-medium">#{tag}</span>
-                                    ))}
-                                </div>
+                            ) : (
+                                <img
+                                    src={post.images[currentImageIndex]}
+                                    alt={post.content || 'Post image'}
+                                    className="w-full h-full object-contain"
+                                    style={{ maxHeight: '80vh' }}
+                                />
                             )}
-
-                            {/* Caption */}
-                            {hasImages && post.content && (
-                                <p className="text-sm text-secondary-700 dark:text-secondary-300 leading-relaxed">{post.content}</p>
-                            )}
-
-                            {/* Meta */}
-                            <div className="flex flex-wrap items-center gap-1.5 text-xs text-secondary-400">
-                                <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
-                                <span>·</span>
-                                <span>{post.views || 0} views</span>
-                            </div>
-
-                            {/* Actions row */}
-                            <div className="flex items-center gap-4 py-1">
-                                {/* Like */}
-                                <button
-                                    onClick={handleLike}
-                                    disabled={isLiking}
-                                    className={`flex items-center gap-1.5 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-red-500'}`}
-                                >
-                                    <Heart className={`w-5 h-5 transition-transform active:scale-125 ${liked ? 'fill-red-500' : ''}`} />
-                                    <span>{likeCount}</span>
-                                </button>
-
-                                {/* Comment count */}
-                                <button className="flex items-center gap-1.5 text-sm text-secondary-500 dark:text-secondary-400 hover:text-primary-500 transition-colors">
-                                    <MessageCircle className="w-5 h-5" />
-                                    <span>{totalComments}</span>
-                                </button>
-
-                                {/* Save */}
-                                <button
-                                    onClick={() => requireAuth(() => setSaved((s) => !s))}
-                                    className={`flex items-center gap-1.5 text-sm transition-colors ${saved ? 'text-primary-600' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
-                                >
-                                    <Bookmark className={`w-5 h-5 ${saved ? 'fill-primary-600' : ''}`} />
-                                </button>
-
-                                {/* Share */}
-                                <button
-                                    ref={shareButtonRef}
-                                    data-share-btn-drawer
-                                    onClick={handleShareOpen}
-                                    className={`ml-auto text-sm transition-colors ${shareOpen ? 'text-primary-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
-                                    title="Share"
-                                >
-                                    <Share2 className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            {/* Comments */}
-                            <div className="space-y-4 pt-2">
-                                <p className="text-[11px] font-bold text-secondary-400 uppercase tracking-widest">Comments</p>
-                                {loadingComments ? (
-                                    <div className="space-y-4">
-                                        {[...Array(3)].map((_, i) => (
-                                            <div key={i} className="flex gap-3">
-                                                <Skeleton className="w-8 h-8 rounded-full shrink-0" />
-                                                <div className="flex-1 space-y-2 pt-1">
-                                                    <Skeleton className="h-3 w-24 rounded" />
-                                                    <Skeleton className="h-10 w-full rounded-2xl" />
-                                                </div>
-                                            </div>
+                            {post.images.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={prevImage}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={nextImage}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                        {post.images.map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentImageIndex(i)}
+                                                className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-5' : 'bg-white/50 w-1.5'}`}
+                                            />
                                         ))}
                                     </div>
-                                ) : comments.length === 0 ? (
-                                    <p className="text-xs text-secondary-400 text-center py-4">No comments yet. Be the first!</p>
-                                ) : (
-                                    comments.map((c) => (
-                                        <div key={c.id} className="flex gap-2.5">
-                                            <Avatar
-                                                src={c.user.avatar ?? undefined}
-                                                name={c.user.name}
-                                                size="sm" rounded="full" color="primary"
-                                                className="w-7 h-7 shrink-0"
-                                            />
-                                            <div className="flex-1">
-                                                <div className="bg-secondary-50 dark:bg-secondary-800 rounded-2xl px-3 py-2">
-                                                    <p className="text-xs font-semibold text-secondary-800 dark:text-white mb-0.5">{c.user.name}</p>
-                                                    <p className="text-xs text-secondary-600 dark:text-secondary-400">{c.content}</p>
-                                                </div>
-                                                <p className="text-[10px] text-secondary-400 mt-0.5 ml-2">
-                                                    {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                                </>
+                            )}
+                            {isVideoPost && (
+                                <div className="absolute top-3 left-3 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
+                                    <Video className="w-3 h-3" /> Video
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="p-8 sm:p-12 text-white">
+                            <p className="text-xl sm:text-2xl font-bold leading-relaxed">{post.content}</p>
                         </div>
+                    )}
+                </div>
 
-                        {/* Comment input */}
-                        <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
-                            <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
-                                <Avatar
-                                    src={(user?.avatar as string | null | undefined) ?? undefined}
-                                    name={(user?.name as string) || '?'}
-                                    size="sm" rounded="full" color="primary"
-                                    className="w-8 h-8 shrink-0"
-                                />
-                                <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-4 py-2 gap-2">
-                                    <input
-                                        type="text"
-                                        value={comment}
-                                        onChange={(e) => setComment(e.target.value)}
-                                        placeholder={user ? 'Add a comment…' : 'Login to comment'}
-                                        className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
-                                        onClick={() => !user && openLogin()}
-                                        readOnly={!user}
-                                    />
-                                    {comment.trim() && (
-                                        <button
-                                            type="submit"
-                                            disabled={submittingComment}
-                                            className="text-primary-600 hover:text-primary-700 transition-colors shrink-0"
-                                            aria-label="Send comment"
-                                        >
-                                            {submittingComment
-                                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                : <Send className="w-4 h-4" />
-                                            }
-                                        </button>
+                {/* ── Right panel — Details ── */}
+                <div className="w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800">
+                    {/* Desktop Close Button */}
+                    <div className="absolute top-4 right-4 z-50 hidden sm:block">
+                        <ActionIcon
+                            variant="flat"
+                            color="secondary"
+                            rounded="full"
+                            onClick={closePost}
+                            className="bg-secondary-100/80 hover:bg-secondary-200 dark:bg-secondary-800/80 dark:hover:bg-secondary-700 shadow-sm"
+                        >
+                            <X className="w-4 h-4" />
+                        </ActionIcon>
+                    </div>
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 sm:pr-14 pr-4">
+                        <Link
+                            href={`/profile/${post.user.username}`}
+                            onClick={closePost}
+                            className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity"
+                        >
+                            <Avatar
+                                src={post.user.avatar ?? undefined}
+                                name={post.user.name}
+                                size="sm" rounded="full" color="primary"
+                            />
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-1">
+                                    <p className="font-semibold text-sm text-secondary-900 dark:text-white truncate">{post.user.name}</p>
+                                    {post.user.verificationStatus === 'VERIFIED' && (
+                                        <BadgeCheck className="w-4 h-4 text-primary-500 shrink-0" />
                                     )}
                                 </div>
-                            </form>
+                                <p className="text-xs text-secondary-400 truncate">@{post.user.username}</p>
+                            </div>
+                        </Link>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Button variant="outline" color="secondary" size="sm" rounded="pill" className="text-xs px-3 h-7">
+                                Follow
+                            </Button>
                         </div>
+                    </div>
+
+                    {/* Scrollable body */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {/* Tags */}
+                        {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {post.tags.map((tag) => (
+                                    <span key={tag} className="text-xs text-primary-600 dark:text-primary-400 font-medium">#{tag}</span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Caption */}
+                        {hasImages && post.content && (
+                            <p className="text-sm text-secondary-700 dark:text-secondary-300 leading-relaxed">{post.content}</p>
+                        )}
+
+                        {/* Meta */}
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-secondary-400">
+                            <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
+                            <span>·</span>
+                            <span>{post.views || 0} views</span>
+                        </div>
+
+                        {/* Actions row */}
+                        <div className="flex items-center gap-4 py-1">
+                            {/* Like */}
+                            <button
+                                onClick={handleLike}
+                                disabled={isLiking}
+                                className={`flex items-center gap-1.5 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-red-500'}`}
+                            >
+                                <Heart className={`w-5 h-5 transition-transform active:scale-125 ${liked ? 'fill-red-500' : ''}`} />
+                                <span>{likeCount}</span>
+                            </button>
+
+                            {/* Comment count */}
+                            <button className="flex items-center gap-1.5 text-sm text-secondary-500 dark:text-secondary-400 hover:text-primary-500 transition-colors">
+                                <MessageCircle className="w-5 h-5" />
+                                <span>{totalComments}</span>
+                            </button>
+
+                            {/* Save */}
+                            <button
+                                onClick={() => requireAuth(() => openSaveToBoard(post.id))}
+                                className={`flex items-center gap-1.5 text-sm transition-colors ${saved ? 'text-primary-600' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
+                            >
+                                <Bookmark className={`w-5 h-5 ${saved ? 'fill-primary-600' : ''}`} />
+                            </button>
+
+                            {/* Share */}
+                            <Popover isOpen={shareOpen} setIsOpen={handleShareOpen} placement="bottom-end">
+                                <Popover.Trigger>
+                                    <button
+                                        className={`ml-auto text-sm transition-colors ${shareOpen ? 'text-primary-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
+                                        title="Share"
+                                    >
+                                        <Share2 className="w-5 h-5" />
+                                    </button>
+                                </Popover.Trigger>
+                                <Popover.Content className="z-[9999] bg-white dark:bg-secondary-800 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-2 w-48 p-0 overflow-hidden">
+                                    <button
+                                        onClick={handleCopyLink}
+                                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-none bg-transparent"
+                                    >
+                                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
+                                        {copied ? 'Copied!' : 'Copy link'}
+                                    </button>
+                                    <a
+                                        href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                    >
+                                        <Twitter className="w-4 h-4 text-sky-500" /> Share on X
+                                    </a>
+                                    <a
+                                        href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                    >
+                                        <Facebook className="w-4 h-4 text-blue-600" /> Share on Facebook
+                                    </a>
+                                    {typeof navigator !== 'undefined' && navigator.share && (
+                                        <button
+                                            onClick={() => {
+                                                navigator.share({ title: postTitle, url: postUrl });
+                                                closeShare();
+                                            }}
+                                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-none bg-transparent"
+                                        >
+                                            <Share2 className="w-4 h-4" /> More options
+                                        </button>
+                                    )}
+                                </Popover.Content>
+                            </Popover>
+                        </div>
+
+                        {/* Comments */}
+                        <div className="space-y-4 pt-2">
+                            <p className="text-[11px] font-bold text-secondary-400 uppercase tracking-widest">Comments</p>
+                            {loadingComments ? (
+                                <div className="space-y-4">
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} className="flex gap-3">
+                                            <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                                            <div className="flex-1 space-y-2 pt-1">
+                                                <Skeleton className="h-3 w-24 rounded" />
+                                                <Skeleton className="h-10 w-full rounded-2xl" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : comments.length === 0 ? (
+                                <p className="text-xs text-secondary-400 text-center py-4">No comments yet. Be the first!</p>
+                            ) : (
+                                comments.map((c) => (
+                                    <div key={c.id} className="flex gap-2.5">
+                                        <Avatar
+                                            src={c.user.avatar ?? undefined}
+                                            name={c.user.name}
+                                            size="sm" rounded="full" color="primary"
+                                            className="w-7 h-7 shrink-0"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="bg-secondary-50 dark:bg-secondary-800 rounded-2xl px-3 py-2">
+                                                <p className="text-xs font-semibold text-secondary-800 dark:text-white mb-0.5">{c.user.name}</p>
+                                                <p className="text-xs text-secondary-600 dark:text-secondary-400">{c.content}</p>
+                                            </div>
+                                            <p className="text-[10px] text-secondary-400 mt-0.5 ml-2">
+                                                {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Comment input */}
+                    <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
+                        <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
+                            <Avatar
+                                src={(user?.avatar as string | null | undefined) ?? undefined}
+                                name={(user?.name as string) || '?'}
+                                size="sm" rounded="full" color="primary"
+                                className="w-8 h-8 shrink-0"
+                            />
+                            <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-4 py-2 gap-2">
+                                <input
+                                    type="text"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder={user ? 'Add a comment…' : 'Login to comment'}
+                                    className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
+                                    onClick={() => !user && openLogin()}
+                                    readOnly={!user}
+                                />
+                                {comment.trim() && (
+                                    <button
+                                        type="submit"
+                                        disabled={submittingComment}
+                                        className="text-primary-600 hover:text-primary-700 transition-colors shrink-0"
+                                        aria-label="Send comment"
+                                    >
+                                        {submittingComment
+                                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                                            : <Send className="w-4 h-4" />
+                                        }
+                                    </button>
+                                )}
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
-
-            {/* Share popover — fixed, never clipped */}
-            {shareOpen && popoverPos && (
-                <div
-                    data-share-popover
-                    style={{
-                        position: 'fixed',
-                        top: popoverPos.top,
-                        left: popoverPos.left,
-                        transform: 'translate(-100%, -100%)',
-                        zIndex: 9999,
-                    }}
-                    className="bg-white dark:bg-secondary-800 rounded-xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-1.5 w-48 animate-scale-in"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <button
-                        onClick={handleCopyLink}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
-                    >
-                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
-                        {copied ? 'Copied!' : 'Copy link'}
-                    </button>
-                    <a
-                        href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
-                    >
-                        <Twitter className="w-4 h-4 text-sky-500" /> Share on X
-                    </a>
-                    <a
-                        href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
-                    >
-                        <Facebook className="w-4 h-4 text-blue-600" /> Share on Facebook
-                    </a>
-                    {typeof navigator !== 'undefined' && navigator.share && (
-                        <button
-                            onClick={() => { navigator.share({ title: postTitle, url: postUrl }); setShareOpen(false); }}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
-                        >
-                            <Share2 className="w-4 h-4" /> More options
-                        </button>
-                    )}
-                </div>
-            )}
-        </>
+        </div>
     );
 }

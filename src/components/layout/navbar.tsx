@@ -130,159 +130,157 @@ export function Navbar() {
     );
   }
 
-  // --- User View (Logged In) ---
   return (
-    <nav className={cn(
-        "sticky top-0 z-50 bg-white/80 dark:bg-secondary-900/80 backdrop-blur-md transition-all duration-300",
-        "h-16 md:h-20 flex items-center",
-        isAuthenticated ? "md:ml-0" : "" // Margin handled by layout flex
-    )}>
-      <div className="flex-1 flex items-center px-4 md:px-6 gap-2 md:gap-4 h-full">
-        
-        {/* Mobile Logo / Menu */}
-        <div className="flex md:hidden items-center gap-2 shrink-0">
-            <Link href="/" className="p-2">
-                <Logo className="w-8 h-8" iconOnly />
-            </Link>
-        </div>
-
-        {/* Home/Explore for logged in (Pinterest often keeps these in navbar too) */}
-        {/* But user said "dont repeat the thinhhs whch is in navbar and side bar" */}
-        {/* Since they are in sidebar, we remove them from navbar */}
-
-        {/* Fluid Search Bar */}
-        <div className="flex-1 flex items-center">
-            <SearchBar className="w-full" />
-        </div>
-
-        {/* User Actions */}
-        <div className="flex items-center gap-1 md:gap-2 shrink-0">
-          <div className="hidden sm:flex items-center gap-1">
-            <NotificationBell />
+    <>
+      <nav className={cn(
+          "sticky top-0 z-50 bg-white/80 dark:bg-secondary-900/80 backdrop-blur-md transition-all duration-300",
+          "h-16 md:h-20 flex items-center",
+          isAuthenticated ? "md:ml-0" : "" 
+      )}>
+        <div className="flex-1 flex items-center px-4 md:px-6 gap-2 md:gap-4 h-full">
+          
+          {/* Mobile Logo / Menu */}
+          <div className="flex md:hidden items-center gap-2 shrink-0">
+              <Link href="/" className="p-2">
+                  <Logo className="w-8 h-8" iconOnly />
+              </Link>
           </div>
 
-          <ThemeSwitcher />
-
-          {/* Profile Dropdown */}
-          <div className="relative ml-1 md:ml-2" ref={dropdownRef}>
-            {loading || isLoggingOut ? (
-                <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
-            ) : (
-                <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center justify-center w-10 h-10 rounded-full hover:ring-4 ring-secondary-100 dark:ring-secondary-800 transition-all"
-                >
-                    <Avatar
-                        src={(user?.avatar as string) ?? undefined}
-                        name={(user?.name as string) || 'User'}
-                        size="sm"
-                        rounded="full"
-                        className="w-10 h-10 object-cover"
-                    />
-                </button>
-            )}
-
-            {dropdownOpen && (
-                <>
-                    {/* Mobile Profile Drawer */}
-                    <div className="fixed inset-0 z-[150] md:hidden">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDropdownOpen(false)} />
-                        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-secondary-900 rounded-t-3xl shadow-2xl p-4 animate-slide-up flex flex-col max-h-[80vh]">
-                            <div className="flex items-center justify-between mb-4 px-2">
-                                <span className="font-bold text-lg text-secondary-900 dark:text-white">Profile</span>
-                                <ActionIcon
-                                    variant="flat"
-                                    color="secondary"
-                                    rounded="full"
-                                    onClick={() => setDropdownOpen(false)}
-                                >
-                                    <X className="w-5 h-5" />
-                                </ActionIcon>
-                            </div>
-                            
-                            <div className="overflow-y-auto space-y-4 pb-6">
-                                <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
-                                    <div className="flex items-center gap-4 p-4 bg-secondary-50 dark:bg-secondary-800 rounded-2xl">
-                                        <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-16 h-16" />
-                                        <div>
-                                            <p className="font-bold text-lg text-secondary-900 dark:text-white leading-tight">{user?.name}</p>
-                                            <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
-                                        </div>
-                                    </div>
-                                </Link>
-                                
-                                <div className="space-y-1">
-                                    <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                                        <Calendar className="w-5 h-5" /> Events
-                                    </Link>
-                                    
-                                    {(user as any).userType === 'ADMIN' && (
-                                        <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
-                                            <ShieldCheck className="w-5 h-5" /> Admin Panel
-                                        </Link>
-                                    )}
-                                    <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                                        <Settings className="w-5 h-5" /> Settings
-                                    </Link>
-                                    <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-red-500">
-                                        <LogOut className="w-5 h-5" /> Log out
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Desktop Dropdown */}
-                    <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200 hidden md:block">
-                        <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
-                            <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
-                                <div className="flex items-center gap-3">
-                                    <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="sm" className="w-12 h-12" />
-                                    <div>
-                                        <p className="font-bold leading-tight">{user?.name}</p>
-                                        <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal'}</p>
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                        
-                        <div className="space-y-1">
-                            <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                                <Calendar className="w-5 h-5" /> Events
-                            </Link>
-                            
-                            {(user as any).userType === 'ADMIN' && (
-                            <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
-                                <ShieldCheck className="w-5 h-5" /> Admin Panel
-                            </Link>
-                            )}
-                            <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                            <Settings className="w-5 h-5" /> Settings
-                            </Link>
-                            <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                            <LogOut className="w-5 h-5" /> Log out
-                            </button>
-                        </div>
-                    </div>
-                </>
-            )}
+          <div className="flex-1 flex items-center">
+              <SearchBar className="w-full" />
           </div>
 
-          {/* Mobile Menu Trigger */}
-          <button
-              className="md:hidden p-3 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
-              onClick={() => setMobileDrawerOpen(true)}
-          >
-              <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-300" />
-          </button>
+          {/* User Actions */}
+          <div className="flex items-center gap-1 md:gap-2 shrink-0">
+            <div className="hidden sm:flex items-center gap-1">
+              <NotificationBell />
+            </div>
+
+            <ThemeSwitcher />
+
+            {/* Profile Dropdown Toggle */}
+            <div className="relative ml-1 md:ml-2" ref={dropdownRef}>
+              {loading || isLoggingOut ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+              ) : (
+                  <button
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="flex items-center justify-center w-10 h-10 rounded-full hover:ring-4 ring-secondary-100 dark:ring-secondary-800 transition-all"
+                  >
+                      <Avatar
+                          src={(user?.avatar as string) ?? undefined}
+                          name={(user?.name as string) || 'User'}
+                          size="sm"
+                          rounded="full"
+                          className="w-10 h-10 object-cover"
+                      />
+                  </button>
+              )}
+
+              {/* Desktop Dropdown */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200 hidden md:block">
+                  <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
+                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
+                          <div className="flex items-center gap-3">
+                              <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="sm" className="w-12 h-12" />
+                              <div>
+                                  <p className="font-bold leading-tight">{user?.name}</p>
+                                  <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal'}</p>
+                              </div>
+                          </div>
+                      </Link>
+                  </div>
+                  
+                  <div className="space-y-1">
+                      <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                          <Calendar className="w-5 h-5" /> Events
+                      </Link>
+                      
+                      {(user as any).userType === 'ADMIN' && (
+                      <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                          <ShieldCheck className="w-5 h-5" /> Admin Panel
+                      </Link>
+                      )}
+                      <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                      <Settings className="w-5 h-5" /> Settings
+                      </Link>
+                      <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                      <LogOut className="w-5 h-5" /> Log out
+                      </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Trigger */}
+            <button
+                className="md:hidden p-3 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
+                onClick={() => setMobileDrawerOpen(true)}
+            >
+                <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-300" />
+            </button>
+          </div>
         </div>
-      </div>
+      </nav>
+
+      {/* PORTAL/OUTSIDE DRAWERS TO AVOID BACKDROP-FILTER CLIPPING */}
       
-      {/* Mobile Drawer (simplified) */}
+      {/* Mobile Profile Drawer */}
+      {dropdownOpen && (
+          <div className="fixed inset-0 z-[150] md:hidden">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDropdownOpen(false)} />
+              <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-secondary-900 rounded-t-3xl shadow-2xl p-4 animate-slide-up flex flex-col max-h-[80vh]">
+                  <div className="flex items-center justify-between mb-4 px-2">
+                      <span className="font-bold text-lg text-secondary-900 dark:text-white">Profile</span>
+                      <ActionIcon
+                          variant="flat"
+                          color="secondary"
+                          rounded="full"
+                          onClick={() => setDropdownOpen(false)}
+                      >
+                          <X className="w-5 h-5" />
+                      </ActionIcon>
+                  </div>
+                  
+                  <div className="overflow-y-auto space-y-4 pb-6">
+                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
+                          <div className="flex items-center gap-4 p-4 bg-secondary-50 dark:bg-secondary-800 rounded-2xl">
+                              <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-16 h-16" />
+                              <div>
+                                  <p className="font-bold text-lg text-secondary-900 dark:text-white leading-tight">{user?.name}</p>
+                                  <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
+                              </div>
+                          </div>
+                      </Link>
+                      
+                      <div className="space-y-1">
+                          <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                              <Calendar className="w-5 h-5" /> Events
+                          </Link>
+                          
+                          {(user as any).userType === 'ADMIN' && (
+                              <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                                  <ShieldCheck className="w-5 h-5" /> Admin Panel
+                              </Link>
+                          )}
+                          <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                              <Settings className="w-5 h-5" /> Settings
+                          </Link>
+                          <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-red-500">
+                              <LogOut className="w-5 h-5" /> Log out
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Mobile Menu Drawer */}
       {mobileDrawerOpen && (
           <div className="fixed inset-0 z-[100] md:hidden">
               <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileDrawerOpen(false)} />
-              <div className="absolute top-0 right-0 w-[80vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl flex flex-col p-4 animate-slide-in-right">
+              <div className="absolute top-0 right-0 w-[80vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl z-50 flex flex-col p-6 animate-slide-in-right">
                 <div className="flex items-center justify-between mb-8">
                     <span className="font-bold text-lg text-secondary-900 dark:text-white">Menu</span>
                     <ActionIcon
@@ -298,7 +296,7 @@ export function Navbar() {
                     <Link href="/" onClick={() => setMobileDrawerOpen(false)}>Home</Link>
                     <Link href="/explore" onClick={() => setMobileDrawerOpen(false)}>Explore</Link>
                     <Link href="/messages" onClick={() => setMobileDrawerOpen(false)}>Messages</Link>
-                    <Link href="/updates" onClick={() => setMobileDrawerOpen(false)}>Notifications</Link>
+                    <Link href="/notifications" onClick={() => setMobileDrawerOpen(false)}>Notifications</Link>
                     <div className="h-[1px] bg-secondary-100 dark:bg-secondary-800 my-2" />
                     <Link href="/settings" onClick={() => setMobileDrawerOpen(false)}>Settings</Link>
                     <button onClick={handleLogout} className="text-left text-red-500">Log out</button>
@@ -306,7 +304,7 @@ export function Navbar() {
               </div>
           </div>
       )}
-    </nav>
+    </>
   );
 }
 

@@ -60,3 +60,31 @@ export const useFeedFilter = create<FeedFilterStore>((set) => ({
     setSearch: (query) => set({ searchQuery: query }),
     reset: () => set({ selectedCategoryId: null, searchQuery: '' }),
 }));
+
+// ---- Save to Board Modal Store ----
+interface SaveToBoardStore {
+    isOpen: boolean;
+    postId: string | null;
+    open: (postId: string) => void;
+    close: () => void;
+}
+
+export const useSaveToBoard = create<SaveToBoardStore>((set) => ({
+    isOpen: false,
+    postId: null,
+    open: (postId) => set({ isOpen: true, postId }),
+    close: () => set({ isOpen: false, postId: null }),
+}));
+
+// ---- Share Post Store ----
+interface SharePostStore {
+    activePostId: string | null;
+    open: (postId: string) => void;
+    close: () => void;
+}
+
+export const useSharePost = create<SharePostStore>((set) => ({
+    activePostId: null,
+    open: (postId) => set({ activePostId: postId }),
+    close: () => set({ activePostId: null }),
+}));

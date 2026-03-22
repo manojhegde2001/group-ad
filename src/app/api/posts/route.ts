@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
 
     const userType = searchParams.get('userType');
     const categoryId = searchParams.get('categoryId');
+    const boardId = searchParams.get('boardId');
     const companyId = searchParams.get('companyId');
     const postType = searchParams.get('type');
     const visibility = searchParams.get('visibility') || 'PUBLIC';
@@ -37,6 +38,11 @@ export async function GET(request: NextRequest) {
 
     if (userType) where.user = { userType: userType as any };
     if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') where.categoryId = categoryId;
+    if (boardId && boardId !== 'null' && boardId !== 'undefined') {
+      where.boardPosts = {
+        some: { boardId }
+      };
+    }
     if (companyId && companyId !== 'null' && companyId !== 'undefined') where.companyId = companyId;
     if (postType) where.type = postType as any;
     if (userId && userId !== 'null' && userId !== 'undefined') where.userId = userId;
@@ -63,6 +69,8 @@ export async function GET(request: NextRequest) {
               avatar: true,
               userType: true,
               verificationStatus: true,
+              bio: true,
+              industry: true,
             },
           },
           category: {
@@ -153,13 +161,13 @@ export async function POST(request: NextRequest) {
         images: validatedData.images,
         tags: validatedData.tags,
         visibility: validatedData.visibility,
-        categoryId: validatedData.categoryId || user.categoryId,
+        categoryId: validatedData.categoryId,
         companyId: validatedData.companyId,
         userId: user.id,
       },
       include: {
         user: {
-          select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true },
+          select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, bio: true, industry: true },
         },
         category: { select: { id: true, name: true, slug: true, icon: true } },
         company: { select: { id: true, name: true, slug: true, logo: true, isVerified: true } },

@@ -27,6 +27,7 @@ export async function GET(
                 userType: true,
                 verificationStatus: true,
                 createdAt: true,
+                phone: true, // Fetch phone but conditionally return it
             },
         });
 
@@ -35,25 +36,58 @@ export async function GET(
         }
 
         // Get counts and follow status separately to avoid TS errors with new models
-        const [followerCount, followingCount, postCount, followRecord] = await Promise.all([
+        const [followerCount, followingCount, postCount, followRecord, reverseFollowRecord] = await Promise.all([
             prismaAny.follow.count({ where: { followingId: user.id } }),
             prismaAny.follow.count({ where: { followerId: user.id } }),
             prisma.post.count({ where: { userId: user.id } }),
             currentUserId
                 ? prismaAny.follow.findUnique({
                     where: {
-                        followerId_followingId: {
-                            followerId: currentUserId,
-                            followingId: user.id,
-                        },
+                        followerId_followingId: { followerId: currentUserId, followingId: user.id },
+                    },
+                })
+                : null,
+            currentUserId
+                ? prismaAny.follow.findUnique({
+                    where: {
+                        followerId_followingId: { followerId: user.id, followingId: currentUserId },
                     },
                 })
                 : null,
         ]);
 
+        let hasSharedAttendance = false;
+        if (currentUserId && currentUserId !== user.id) {
+            // Check if both users attended the same event
+            const sharedEvent = await prisma.eventEnrollment.findFirst({
+                where: {
+                    userId: currentUserId,
+                    attended: true,
+                    event: {
+                        enrollments: {
+                            some: {
+                                userId: user.id,
+                                attended: true
+                            }
+                        }
+                    }
+                }
+            });
+            hasSharedAttendance = !!sharedEvent;
+        }
+
+        const isMutualFollow = !!followRecord && !!reverseFollowRecord;
+        const canViewPhone = currentUserId === user.id || (isMutualFollow && hasSharedAttendance);
+
+        // Strip phone if not allowed
+        const userData = { ...user };
+        if (!canViewPhone) {
+            userData.phone = null;
+        }
+
         return NextResponse.json({
             user: {
-                ...user,
+                ...userData,
                 isFollowing: !!followRecord,
                 _count: {
                     posts: postCount,

@@ -23,6 +23,15 @@ export async function GET(
 
         const { id: eventId } = await params;
 
+        const event = await prisma.event.findUnique({
+            where: { id: eventId },
+            select: { id: true, title: true, endDate: true },
+        });
+
+        if (!event) {
+            return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        }
+
         const enrollments = await prisma.eventEnrollment.findMany({
             where: { eventId },
             orderBy: { createdAt: 'asc' },
@@ -36,7 +45,7 @@ export async function GET(
             },
         });
 
-        return NextResponse.json({ enrollments });
+        return NextResponse.json({ event, enrollments });
     } catch (error) {
         console.error('Error fetching enrollments:', error);
         return NextResponse.json({ error: 'Failed to fetch enrollments' }, { status: 500 });

@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/footer';
 import { AuthModal } from '@/components/layout/auth-modal';
 import { CreatePostModal } from '@/components/feed/create-post-modal';
 import { PostDetailDrawer } from '@/components/feed/post-detail-drawer';
+import { SaveToBoardModal } from '@/components/boards/save-to-board-modal';
 import { Analytics } from '@vercel/analytics/react';
 
 export function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -29,6 +30,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
       <AuthModal />
       <CreatePostModal />
       <PostDetailDrawer />
+      <SaveToBoardModal />
       <Analytics />
     </div>
   );

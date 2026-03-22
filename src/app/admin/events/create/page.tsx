@@ -1,12 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const EVENT_TYPES = ['MEETUP', 'WEBINAR', 'WORKSHOP', 'CONFERENCE', 'NETWORKING'];
+
+interface CategoryLimitEntry {
+    categoryId: string;
+    categoryName: string;
+    limit: number;
+}
 
 interface FormData {
     title: string;
@@ -24,6 +30,7 @@ interface FormData {
     maxAttendees: string;
     visibility: 'PUBLIC' | 'PRIVATE';
     targetUserTypes: string[];
+    categoryLimits: CategoryLimitEntry[];
     coverImage: string;
     status: 'DRAFT' | 'PUBLISHED';
 }
@@ -36,10 +43,61 @@ const steps = [
     { label: 'Review', icon: Send },
 ];
 
+function CategoryLimitAdder({
+    categories,
+    onAdd,
+}: {
+    categories: { id: string; name: string; icon?: string }[];
+    onAdd: (entry: CategoryLimitEntry) => void;
+}) {
+    const [selectedId, setSelectedId] = useState('');
+    const [limit, setLimit] = useState('');
+
+    const handleAdd = () => {
+        const cat = categories.find((c) => c.id === selectedId);
+        if (!cat || !limit || parseInt(limit) < 1) return;
+        onAdd({ categoryId: cat.id, categoryName: cat.name, limit: parseInt(limit) });
+        setSelectedId('');
+        setLimit('');
+    };
+
+    return (
+        <div className="flex items-center gap-2 pt-1">
+            <select
+                value={selectedId}
+                onChange={(e) => setSelectedId(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg border border-secondary-200 dark:border-secondary-600 bg-white dark:bg-secondary-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+            >
+                <option value="">Select category...</option>
+                {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                ))}
+            </select>
+            <input
+                type="number"
+                min="1"
+                value={limit}
+                onChange={(e) => setLimit(e.target.value)}
+                placeholder="Limit"
+                className="w-20 px-2 py-2 rounded-lg border border-secondary-200 dark:border-secondary-600 bg-white dark:bg-secondary-900 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary-400"
+            />
+            <button
+                type="button"
+                onClick={handleAdd}
+                disabled={!selectedId || !limit}
+                className="flex items-center gap-1 px-3 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+                <Plus className="w-3.5 h-3.5" /> Add
+            </button>
+        </div>
+    );
+}
+
 export default function CreateEventPage() {
     const router = useRouter();
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([]);
     const [form, setForm] = useState<FormData>({
         title: '',
         description: '',
@@ -56,9 +114,18 @@ export default function CreateEventPage() {
         maxAttendees: '',
         visibility: 'PUBLIC',
         targetUserTypes: [],
+        categoryLimits: [],
         coverImage: '',
         status: 'PUBLISHED',
     });
+
+    // Fetch categories for the limits UI
+    useEffect(() => {
+        fetch('/api/categories')
+            .then((r) => r.json())
+            .then((data) => setCategories(data.categories || data || []))
+            .catch(() => {});
+    }, []);
 
     const set = (key: keyof FormData, val: any) => setForm((f) => ({ ...f, [key]: val }));
     const toggleUserType = (ut: string) =>
@@ -311,6 +378,54 @@ export default function CreateEventPage() {
                                 min="1"
                                 className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             />
+                        </div>
+
+                        {/* ── Category Limits ── */}
+                        <div className="border border-secondary-200 dark:border-secondary-700 rounded-xl p-4 space-y-3">
+                            <div>
+                                <p className="text-sm font-medium text-secondary-800 dark:text-white">Category Limits <span className="text-xs font-normal text-secondary-400 ml-1">(optional)</span></p>
+                                <p className="text-xs text-secondary-400 mt-0.5">Set how many participants from each industry category can join.</p>
+                            </div>
+
+                            {/* Existing limits */}
+                            {form.categoryLimits.length > 0 && (
+                                <div className="space-y-2">
+                                    {form.categoryLimits.map((cl) => (
+                                        <div key={cl.categoryId} className="flex items-center justify-between bg-secondary-50 dark:bg-secondary-800 rounded-lg px-3 py-2">
+                                            <span className="text-sm text-secondary-700 dark:text-secondary-200">{cl.categoryName}</span>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    value={cl.limit}
+                                                    onChange={(e) => {
+                                                        const newLimit = parseInt(e.target.value) || 1;
+                                                        set('categoryLimits', form.categoryLimits.map((x) =>
+                                                            x.categoryId === cl.categoryId ? { ...x, limit: newLimit } : x
+                                                        ));
+                                                    }}
+                                                    className="w-16 px-2 py-1 rounded-lg border border-secondary-200 dark:border-secondary-600 bg-white dark:bg-secondary-900 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => set('categoryLimits', form.categoryLimits.filter((x) => x.categoryId !== cl.categoryId))}
+                                                    className="p-1 text-red-400 hover:text-red-600 transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Add new limit */}
+                            {categories.filter((c) => !form.categoryLimits.find((cl) => cl.categoryId === c.id)).length > 0 && (
+                                <CategoryLimitAdder
+                                    categories={categories.filter((c) => !form.categoryLimits.find((cl) => cl.categoryId === c.id))}
+                                    onAdd={(entry) => set('categoryLimits', [...form.categoryLimits, entry])}
+                                />
+                            )}
                         </div>
 
                         <div>

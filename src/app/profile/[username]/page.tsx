@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { FollowButton } from '@/components/profile/follow-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
-import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings } from 'lucide-react';
+import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin } from 'lucide-react';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
 import { useCreatePost } from '@/hooks/use-feed';
@@ -132,6 +132,27 @@ export default function PublicProfilePage() {
                         <p className="text-secondary-600 dark:text-secondary-400 max-w-lg text-lg leading-relaxed font-medium mb-2">
                             {profile.bio}
                         </p>
+                    )}
+
+                    {profile.userType === 'BUSINESS' && (
+                        <div className="flex flex-wrap justify-center gap-4 text-sm font-medium text-secondary-500 mb-4">
+                            {profile.phone && (
+                                <span className="flex items-center gap-1.5 bg-secondary-50 dark:bg-secondary-800/50 px-3 py-1.5 rounded-full">
+                                    <Phone className="w-4 h-4" /> {profile.phone}
+                                </span>
+                            )}
+                            {profile.externalLink && (
+                                <a href={profile.externalLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-secondary-50 dark:bg-secondary-800/50 px-3 py-1.5 rounded-full hover:text-primary-500 transition-colors">
+                                    <LinkIcon className="w-4 h-4" /> Website
+                                </a>
+                            )}
+                            {(profile.address || profile.pincode) && (
+                                <span className="flex items-center gap-1.5 bg-secondary-50 dark:bg-secondary-800/50 px-3 py-1.5 rounded-full text-center">
+                                    <MapPin className="w-4 h-4 shrink-0" /> 
+                                    {[profile.address, profile.pincode].filter(Boolean).join(', ')}
+                                </span>
+                            )}
+                        </div>
                     )}
 
                     <div className="flex items-center gap-8 text-base font-bold text-secondary-800 dark:text-secondary-200">

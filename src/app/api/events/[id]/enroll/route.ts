@@ -34,8 +34,44 @@ export async function POST(
             return NextResponse.json({ error: 'Already enrolled' }, { status: 409 });
         }
 
-        // Check capacity
+        // Check overall capacity
         const isFull = event.maxAttendees !== null && event.currentAttendees >= event.maxAttendees;
+
+        // ── Category-based quota check ───────────────────────────────────────
+        const categoryLimits = (event as any).categoryLimits as Array<{ categoryId: string; categoryName: string; limit: number }> | null;
+        if (categoryLimits && categoryLimits.length > 0) {
+            // Get the enrolling user's category
+            const enrollingUser = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { categoryId: true, category: { select: { name: true } } },
+            });
+
+            const userCategoryId = enrollingUser?.categoryId;
+
+            if (userCategoryId) {
+                const limitEntry = categoryLimits.find((cl) => cl.categoryId === userCategoryId);
+                if (limitEntry) {
+                    // Count current approved+pending enrollments from this category
+                    const categoryEnrollmentCount = await prisma.eventEnrollment.count({
+                        where: {
+                            eventId,
+                            status: { in: ['APPROVED', 'PENDING'] },
+                            user: { categoryId: userCategoryId },
+                        },
+                    });
+
+                    if (categoryEnrollmentCount >= limitEntry.limit) {
+                        return NextResponse.json(
+                            {
+                                error: `The spot limit for "${limitEntry.categoryName}" participants has been reached for this event.`,
+                                categoryFull: true,
+                            },
+                            { status: 422 }
+                        );
+                    }
+                }
+            }
+        }
 
         const enrollment = await prisma.eventEnrollment.create({
             data: {

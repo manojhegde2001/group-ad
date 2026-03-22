@@ -12,7 +12,8 @@ import {
   Settings,
   Users,
   ShieldCheck,
-  Plus
+  Plus,
+  Library
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useCreatePost } from '@/hooks/use-feed';
@@ -36,13 +37,10 @@ export function Sidebar() {
   const navLinks = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Explore', href: '/explore', icon: Compass },
+    { label: 'Boards', href: '/boards', icon: Library },
     { label: 'Events', href: '/events', icon: Calendar },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
   ];
-
-  if (isBusiness) {
-    navLinks.push({ label: 'Network', href: '/network', icon: Users });
-  }
 
   if (isAdmin) {
     navLinks.push({ label: 'Admin', href: '/admin', icon: ShieldCheck });
@@ -93,16 +91,18 @@ export function Sidebar() {
 
         <div className="w-8 h-[1px] bg-secondary-100 dark:bg-secondary-800 my-1" />
         
-        <button
-          onClick={() => openCreatePost()}
-          title="Create Post"
-          className="flex items-center justify-center w-12 h-12 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-all shadow-lg hover:shadow-primary-500/30 group relative"
-        >
-          <Plus className="w-7 h-7 stroke-[3px]" />
-          <span className="absolute left-16 px-2 py-1 bg-secondary-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-            Create
-          </span>
-        </button>
+        {user?.userType !== 'INDIVIDUAL' && (
+          <button
+            onClick={() => openCreatePost()}
+            title="Create Post"
+            className="flex items-center justify-center w-12 h-12 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-all shadow-lg hover:shadow-primary-500/30 group relative"
+          >
+            <Plus className="w-7 h-7 stroke-[3px]" />
+            <span className="absolute left-16 px-2 py-1 bg-secondary-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+              Create
+            </span>
+          </button>
+        )}
       </nav>
 
       <div className="mt-auto">

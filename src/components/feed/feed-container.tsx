@@ -97,8 +97,14 @@ const breakpointCols = {
   0: 1,
 };
 
-export function FeedContainer() {
+interface FeedContainerProps {
+  categoryId?: string | null;
+  boardId?: string | null;
+}
+
+export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedContainerProps) {
   const { selectedCategoryId, searchQuery } = useFeedFilter();
+  const effectiveCategoryId = initialCategoryId !== undefined ? initialCategoryId : selectedCategoryId;
   const { setOnCreated } = useCreatePost();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -110,7 +116,8 @@ export function FeedContainer() {
     isLoading,
     isError,
   } = useInfinitePosts({
-    categoryId: selectedCategoryId,
+    categoryId: effectiveCategoryId,
+    boardId,
     search: searchQuery,
     visibility: 'PUBLIC',
     limit: '20',

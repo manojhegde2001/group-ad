@@ -22,6 +22,13 @@ export async function GET(request: NextRequest) {
         AND: [
           { id: { not: session.user.id } },
           {
+            followers: {
+              some: {
+                followerId: session.user.id,
+              },
+            },
+          },
+          {
             OR: [
               { name: { contains: q, mode: 'insensitive' } },
               { username: { contains: q, mode: 'insensitive' } },

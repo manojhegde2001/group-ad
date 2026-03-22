@@ -113,13 +113,10 @@ export function Navbar() {
           <div className="hidden lg:flex items-center gap-6 font-bold text-secondary-900 dark:text-white">
              <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
              <Link href="/about" className="hover:text-primary-500 transition-colors">About</Link>
-             <Link href="/businesses" className="hover:text-primary-500 transition-colors">Businesses</Link>
-             <Link href="/create" className="hover:text-primary-500 transition-colors">Create</Link>
-             <Link href="/news" className="hover:text-primary-500 transition-colors">News</Link>
           </div>
 
           {/* Search Bar (Static/Small for Guests) */}
-          <div className="flex-1 max-w-[400px] hidden md:block">
+          <div className="flex-1 hidden md:block">
             <SearchBar className="w-full" />
           </div>
 

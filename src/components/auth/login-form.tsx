@@ -52,8 +52,8 @@ export function LoginForm() {
         close();
         if (onSuccessCallback) onSuccessCallback();
 
-        // Navigate to profile
-        router.push('/profile');
+        // Navigate to landing page
+        router.push('/');
         router.refresh();
       }
     } catch (error) {

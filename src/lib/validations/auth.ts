@@ -27,8 +27,11 @@ export const signupSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   userType: userTypeEnum.optional().default('INDIVIDUAL'),
-  categoryId: z.string().min(1, 'Please select a category'), // REQUIRED NOW
+  categoryId: z.string().optional(), // REQUIRED FOR BUSINESS
   companyId: z.string().optional(), // For business users selecting existing company
+}).refine((data) => data.userType !== 'BUSINESS' || !!data.categoryId, {
+  message: 'Please select a category',
+  path: ['categoryId'],
 });
 
 export type SignupFormData = z.infer<typeof signupSchema>;

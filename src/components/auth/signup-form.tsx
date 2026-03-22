@@ -4,20 +4,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import { Button, Input, Password, Select, Text } from 'rizzui';
+import { Select, Text } from 'rizzui';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Password } from '@/components/ui/password';
+import { Button } from '@/components/ui/button';
 import { signupSchema, SignupFormData } from '@/lib/validations/auth';
 import { Toast } from '../ui/toast';
 import { useAuthModal } from '@/hooks/use-modal';
 import { useSignup } from '@/hooks/use-api/use-auth';
-import { useCategories, useCompanies } from '@/hooks/use-api/use-common';
+import { useCategories } from '@/hooks/use-api/use-common';
 
 // Types
-interface Company {
-  id: string;
-  name: string;
-  slug: string;
-  isVerified: boolean;
-}
 
 interface Category {
   id: string;
@@ -32,7 +30,6 @@ export default function SignupForm() {
   const { setMode } = useAuthModal();
 
   const { data: categories = [], isLoading: loadingCategories } = useCategories();
-  const { data: companies = [], isLoading: loadingCompanies } = useCompanies();
   const signupMutation = useSignup();
 
   const {
@@ -46,7 +43,6 @@ export default function SignupForm() {
     defaultValues: {
       userType: 'INDIVIDUAL',
       categoryId: '',
-      companyId: '',
     },
   });
 
@@ -67,126 +63,112 @@ export default function SignupForm() {
     >
       {/* Full Name */}
       <div className="sm:col-span-2">
-        <Input
-          label="Full Name"
-          placeholder="Enter your full name"
-          {...register('name')}
-          error={errors.name?.message}
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <Input
+              label="Full Name"
+              placeholder="Enter your full name"
+              {...field}
+              error={errors.name?.message}
+            />
+          )}
         />
       </div>
 
       {/* Username */}
-      <Input
-        label="Username"
-        placeholder="Choose a username"
-        {...register('username')}
-        error={errors.username?.message}
+      <Controller
+        name="username"
+        control={control}
+        render={({ field }) => (
+          <Input
+            label="Username"
+            placeholder="Choose a username"
+            {...field}
+            error={errors.username?.message}
+          />
+        )}
       />
 
       {/* Email */}
-      <Input
-        label="Email"
-        type="email"
-        placeholder="Enter your email"
-        {...register('email')}
-        error={errors.email?.message}
+      <Controller
+        name="email"
+        control={control}
+        render={({ field }) => (
+          <Input
+            label="Email"
+            type="email"
+            placeholder="Enter your email"
+            {...field}
+            error={errors.email?.message}
+          />
+        )}
       />
 
       {/* Password */}
       <div className="sm:col-span-2">
-        <Password
-          label="Password"
-          placeholder="Create a strong password"
-          {...register('password')}
-          error={errors.password?.message}
+        <Controller
+          name="password"
+          control={control}
+          render={({ field }) => (
+            <Password
+              label="Password"
+              placeholder="Create a strong password"
+              {...field}
+              error={errors.password?.message}
+            />
+          )}
         />
       </div>
 
       {/* Account Type */}
-      <Controller
-        name="userType"
-        control={control}
-        render={({ field }) => {
-          const options = [
-            { label: 'Individual', value: 'INDIVIDUAL' },
-            { label: 'Business', value: 'BUSINESS' },
-          ];
-
-          return (
-            <Select
-              label="Account Type"
-              options={options}
-              value={options.find(o => o.value === field.value) ?? null}
-              onChange={(opt: any) => field.onChange(opt?.value)}
-              error={errors.userType?.message}
-              placeholder="Select account type"
-              dropdownClassName="z-[200] !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
-              selectClassName="dark:bg-secondary-800"
+      <div className="sm:col-span-2 mt-2">
+        <Controller
+          name="userType"
+          control={control}
+          render={({ field }) => (
+            <Checkbox
+              label="Sign up as a Business Account"
+              helperText="I want to create events, posts, and access business features"
+              checked={field.value === 'BUSINESS'}
+              onChange={(e) => field.onChange(e.target.checked ? 'BUSINESS' : 'INDIVIDUAL')}
+              className="p-4 rounded-2xl border border-secondary-200 dark:border-secondary-800 bg-secondary-50/50 dark:bg-secondary-800/30 hover:bg-secondary-50 dark:hover:bg-secondary-800/80 transition-all cursor-pointer"
+              labelClassName="font-bold text-secondary-900 dark:text-white cursor-pointer"
             />
-          );
-        }}
-      />
+          )}
+        />
+      </div>
 
       {/* Category */}
-      <Controller
-        name="categoryId"
-        control={control}
-        render={({ field }) => {
-          const options = categories.map(cat => ({
-            label: `${cat.icon} ${cat.name}`,
-            value: cat.id,
-          }));
-
-          return (
-            <Select
-              label="Category"
-              options={options}
-              value={options.find(o => o.value === field.value) ?? null}
-              onChange={(opt: any) => field.onChange(opt?.value)}
-              error={errors.categoryId?.message}
-              placeholder={
-                loadingCategories
-                  ? 'Loading...'
-                  : 'Select category'
-              }
-              disabled={loadingCategories}
-              dropdownClassName="z-[200] sm:!bg-white sm:dark:!bg-secondary-900 !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
-              className="w-full"
-            />
-          );
-        }}
-      />
-
-      {/* Company (Business Only) */}
       {userType === 'BUSINESS' && (
         <div className="sm:col-span-2">
           <Controller
-            name="companyId"
+            name="categoryId"
             control={control}
             render={({ field }) => {
-              const options = [
-                { label: 'None – add later', value: '' },
-                ...companies.map(c => ({
-                  label: `${c.name}${c.isVerified ? ' ✓' : ''}`,
-                  value: c.id,
-                })),
-              ];
+              const options = categories.map(cat => ({
+                label: `${cat.icon} ${cat.name}`,
+                value: cat.id,
+              }));
+
 
               return (
                 <Select
-                  label="Company (Optional)"
+                  label="Category"
                   options={options}
                   value={options.find(o => o.value === field.value) ?? null}
                   onChange={(opt: any) => field.onChange(opt?.value)}
-                  error={errors.companyId?.message}
+                  error={errors.categoryId?.message}
+                  errorClassName="text-red-500 mt-1.5"
                   placeholder={
-                    loadingCompanies
-                      ? 'Loading companies...'
-                      : 'Select your company'
+                    loadingCategories
+                      ? 'Loading...'
+                      : 'Select category'
                   }
-                  disabled={loadingCompanies}
-                  dropdownClassName="z-[200] !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
-                  selectClassName="dark:bg-secondary-800"
+                  disabled={loadingCategories}
+                  dropdownClassName="z-[200] sm:!bg-white sm:dark:!bg-secondary-900 !bg-white dark:!bg-secondary-900 shadow-2xl border-secondary-100 dark:border-secondary-800"
+                  className="w-full"
                 />
               );
             }}

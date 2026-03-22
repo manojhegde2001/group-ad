@@ -50,6 +50,10 @@ export type ProfileUser = Prisma.UserGetPayload<{
     phone: true;
     location: true;
     website: true;
+    address: true;
+    pincode: true;
+    externalLink: true;
+    messagingEnabled: true;
     userType: true;
     visibility: true;
     verificationStatus: true;
@@ -117,6 +121,8 @@ export type PostWithRelations = {
     avatar: string | null;
     userType: string;
     verificationStatus: string;
+    bio: string | null;
+    industry: string | null;
   };
   category: {
     id: string;

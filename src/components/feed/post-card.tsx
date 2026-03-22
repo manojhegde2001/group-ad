@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
     Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
@@ -8,8 +9,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { usePostDetail } from '@/hooks/use-feed';
-import { useLikePost, useBookmarkPost } from '@/hooks/use-api/use-posts';
+import { usePostDetail, useSaveToBoard, useSharePost } from '@/hooks/use-feed';
+import { useLikePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 
 interface PostCardProps {
@@ -18,88 +19,105 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, onLikeChange }: PostCardProps) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
     const { openPost } = usePostDetail();
-
+    const { open: openSaveToBoard } = useSaveToBoard();
+    const { activePostId, open: openShare, close: closeShare } = useSharePost();
     const likeMutation = useLikePost();
-    const bookmarkMutation = useBookmarkPost();
 
-    const [shareOpen, setShareOpen] = useState(false);
-    const [copied, setCopied] = useState(false);
+    // ── Local optimistic like state ──────────────────────────────────────────
+    const [liked, setLiked] = useState<boolean>((post as any).isLikedByUser ?? false);
+    const [likeCount, setLikeCount] = useState<number>(
+        post._count?.postLikes ?? (post as any).likes ?? 0
+    );
 
-    const liked = (post as any).isLikedByUser ?? false;
-    const likeCount = post._count?.postLikes ?? post.likes ?? 0;
+    // Sync if parent data changes
+    useEffect(() => {
+        setLiked((post as any).isLikedByUser ?? false);
+        setLikeCount(post._count?.postLikes ?? (post as any).likes ?? 0);
+    }, [(post as any).isLikedByUser, post._count?.postLikes]);
+
     const saved = (post as any).isBookmarked ?? false;
-
-    // Share popover anchor — we measure its position to render a FIXED popover
-    // that is never clipped by any overflow:hidden ancestor.
+    const shareOpen = activePostId === post.id;
+    const [copied, setCopied] = useState(false);
     const shareButtonRef = useRef<HTMLButtonElement>(null);
-    const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
+    const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; placement: 'above' | 'below' } | null>(null);
 
-    // Open share popover...
     const handleShareOpen = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (shareOpen) {
-            setShareOpen(false);
-            return;
-        }
+        if (shareOpen) { closeShare(); return; }
         if (shareButtonRef.current) {
             const rect = shareButtonRef.current.getBoundingClientRect();
+            const spaceAbove = rect.top;
+            const placement = spaceAbove > 160 ? 'above' : 'below';
             setPopoverPos({
-                top: rect.top + window.scrollY - 8,
-                left: rect.right + window.scrollX,
+                top: placement === 'above' ? rect.top : rect.bottom + 4,
+                left: rect.left + rect.width / 2,
+                placement,
             });
         }
-        setShareOpen(true);
+        openShare(post.id);
     };
 
-    // Close on outside click
+    // Close popover on outside click
     useEffect(() => {
         if (!shareOpen) return;
         const handler = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            if (!target.closest('[data-share-popover]') && !target.closest('[data-share-btn]')) {
-                setShareOpen(false);
+            const t = e.target as HTMLElement;
+            if (!t.closest('[data-share-popover]') && !t.closest('[data-share-btn]')) {
+                closeShare();
             }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, [shareOpen]);
 
-    // Close on scroll/resize
+    // Close on scroll / resize
     useEffect(() => {
         if (!shareOpen) return;
-        const close = () => setShareOpen(false);
+        const close = () => closeShare();
         window.addEventListener('scroll', close, { passive: true });
         window.addEventListener('resize', close, { passive: true });
         return () => {
             window.removeEventListener('scroll', close);
             window.removeEventListener('resize', close);
         };
-    }, [shareOpen]);
+    }, [shareOpen, closeShare]);
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
     const requireAuth = (cb: () => void) => {
         if (!user) { openLogin(); return; }
         cb();
     };
 
-    const handleLike = async (e: React.MouseEvent) => {
+    const handleLike = (e: React.MouseEvent) => {
         e.stopPropagation();
         requireAuth(() => {
             if (likeMutation.isPending) return;
             const newLiked = !liked;
+            // Optimistically update local state immediately
+            setLiked(newLiked);
+            setLikeCount(c => newLiked ? c + 1 : Math.max(0, c - 1));
             onLikeChange?.(post.id, newLiked);
-            likeMutation.mutate({ postId: post.id, liked: newLiked });
+            likeMutation.mutate(
+                { postId: post.id, liked: newLiked },
+                {
+                    onError: () => {
+                        // Revert on failure
+                        setLiked(!newLiked);
+                        setLikeCount(c => !newLiked ? c + 1 : Math.max(0, c - 1));
+                    },
+                }
+            );
         });
     };
 
-    const handleSave = async (e: React.MouseEvent) => {
+    const handleSave = (e: React.MouseEvent) => {
         e.stopPropagation();
-        requireAuth(() => {
-            if (bookmarkMutation.isPending) return;
-            bookmarkMutation.mutate({ postId: post.id, isBookmarked: saved });
-        });
+        requireAuth(() => openSaveToBoard(post.id));
     };
 
     const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/posts/${post.id}` : '';
@@ -118,14 +136,15 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
         try {
             await navigator.clipboard.writeText(postUrl);
             setCopied(true);
-            setTimeout(() => { setCopied(false); setShareOpen(false); }, 1500);
-        } catch { /* fallback */ }
+            setTimeout(() => { setCopied(false); closeShare(); }, 1500);
+        } catch { /* noop */ }
     };
 
     const handleCardClick = () => requireAuth(() => openPost(post.id, post));
 
     const hasImage = post.images && post.images.length > 0;
     const isVideoPost = post.type === 'VIDEO';
+    const commentCount = post._count?.postComments ?? 0;
 
     const gradients = [
         'from-violet-500 to-indigo-600', 'from-rose-400 to-pink-600',
@@ -133,15 +152,18 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
         'from-sky-400 to-blue-600', 'from-fuchsia-500 to-purple-700',
     ];
     const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
-    const commentCount = post._count?.postComments ?? 0;
 
     return (
         <>
+            {/* ── Card ─────────────────────────────────────────────────────── */}
             <div
-                className="pin-card group relative rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-[0_1px_4px_rgba(0,0,0,0.07)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.13)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.45)] transition-all duration-300 hover:-translate-y-0.5 will-change-transform"
+                className="group relative rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer
+                    shadow-[0_1px_6px_rgba(0,0,0,0.07)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.14)]
+                    dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.55)]
+                    transition-all duration-300 hover:-translate-y-[3px]"
                 onClick={handleCardClick}
             >
-                {/* Image / Video / Text Banner */}
+                {/* ── Media ───────────────────────────────────────────────── */}
                 <div className="relative overflow-hidden">
                     {hasImage ? (
                         <div className="relative">
@@ -149,12 +171,12 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                                 <>
                                     <video
                                         src={post.images[0]}
-                                        className="w-full h-auto object-cover block transition-transform duration-500 group-hover:scale-[1.03]"
+                                        className="w-full h-auto object-cover block"
                                         muted playsInline loop preload="metadata"
-                                        onMouseEnter={(e) => e.currentTarget.play()}
-                                        onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                        onMouseEnter={e => e.currentTarget.play()}
+                                        onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
                                     />
-                                    <div className="absolute bottom-2.5 left-2.5 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
+                                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 font-medium z-10">
                                         <Video className="w-3 h-3" /> Video
                                     </div>
                                 </>
@@ -167,169 +189,179 @@ export function PostCard({ post, onLikeChange }: PostCardProps) {
                                 />
                             )}
                             {!isVideoPost && post.images.length > 1 && (
-                                <div className="absolute top-2.5 left-2.5 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold">
-                                    +{post.images.length - 1} more
+                                <div className="absolute top-2 left-2 bg-black/50 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold z-10">
+                                    {post.images.length}
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className={`w-full min-h-[160px] bg-gradient-to-br ${gradient} p-5 flex items-start`}>
+                        <div className={`w-full min-h-[150px] bg-gradient-to-br ${gradient} p-4 flex items-start`}>
                             <p className="text-white text-sm font-semibold leading-snug line-clamp-6">
                                 {post.content}
                             </p>
                         </div>
                     )}
 
-                    {/* Hover overlay */}
-                    <div className="pin-card-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent pointer-events-none" />
+                    {/* Hover vignette */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                    {/* Save button */}
-                    <div className="pin-card-overlay absolute top-2.5 right-2.5">
+                    {/* ── Hover action bar (bottom) ────────────────────────── */}
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between
+                        opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0
+                        transition-all duration-200 z-20">
+
+                        {/* Like */}
                         <button
-                            onClick={handleSave}
-                            title={saved ? 'Unsave' : 'Save'}
-                            className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold transition-all duration-200 active:scale-90 shadow-sm ${saved
-                                ? 'bg-primary-600 text-white hover:bg-primary-700'
-                                : 'bg-white text-secondary-700 hover:bg-secondary-50'
-                                }`}
+                            onClick={handleLike}
+                            disabled={likeMutation.isPending}
+                            title={liked ? 'Unlike' : 'Like'}
+                            className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-semibold
+                                transition-all duration-200 active:scale-90 backdrop-blur-sm shadow-md
+                                ${liked
+                                    ? 'bg-red-500 text-white'
+                                    : 'bg-white/95 text-secondary-800 hover:bg-white'}`}
                         >
-                            <Bookmark className={`w-4 h-4 ${saved ? 'fill-white' : ''}`} />
+                            <Heart className={`w-3.5 h-3.5 transition-transform ${liked ? 'fill-white scale-110' : ''}`} />
+                            {likeCount > 0 && <span>{likeCount}</span>}
                         </button>
-                    </div>
 
-                    {/* Author + Like row */}
-                    <div className="pin-card-overlay absolute bottom-0 left-0 right-0 flex items-end justify-between p-3">
+                        {/* Save + Share */}
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={handleSave}
+                                title={saved ? 'Remove from saved' : 'Save to board'}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center
+                                    backdrop-blur-sm shadow-md transition-all duration-200 active:scale-90
+                                    ${saved ? 'bg-primary-600 text-white' : 'bg-white/95 text-secondary-800 hover:bg-white'}`}
+                            >
+                                <Bookmark className={`w-3.5 h-3.5 ${saved ? 'fill-white' : ''}`} />
+                            </button>
+
+                            <div data-share-btn>
+                                <button
+                                    ref={shareButtonRef}
+                                    onClick={handleShareOpen}
+                                    title="Share"
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center
+                                        backdrop-blur-sm shadow-md transition-all duration-200 active:scale-90
+                                        ${shareOpen ? 'bg-primary-600 text-white' : 'bg-white/95 text-secondary-800 hover:bg-white'}`}
+                                >
+                                    <Share2 className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Card Body (below media) ──────────────────────────────── */}
+                <div className="px-3 pt-2.5 pb-3 space-y-1.5">
+                    {/* Caption */}
+                    {hasImage && post.content && (
+                        <p className="text-[12.5px] font-medium text-secondary-800 dark:text-secondary-200 leading-snug line-clamp-2">
+                            {post.content}
+                        </p>
+                    )}
+
+                    {/* User row */}
+                    <div className="flex items-center gap-2">
                         <Link
                             href={`/profile/${post.user.username}`}
-                            onClick={(e) => { e.stopPropagation(); requireAuth(() => { }); }}
-                            className="flex items-center gap-1.5 min-w-0 hover:opacity-90 transition-opacity"
+                            onClick={e => { e.stopPropagation(); requireAuth(() => { }); }}
+                            className="flex items-center gap-2 min-w-0 flex-1 group/user"
                         >
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden ring-1 ring-white/50 shrink-0">
+                            <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 bg-secondary-100 dark:bg-secondary-800">
                                 {post.user.avatar ? (
                                     <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-white text-[10px] font-bold">
+                                    <span className="w-full h-full flex items-center justify-center text-[10px] font-bold text-secondary-500">
                                         {post.user.name?.charAt(0)?.toUpperCase()}
                                     </span>
                                 )}
                             </div>
-                            <p className="text-white text-xs font-medium truncate max-w-[80px] drop-shadow-sm">
-                                {post.user.name}
-                            </p>
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-1">
+                                    <p className="text-[11.5px] font-bold text-secondary-900 dark:text-white truncate group-hover/user:text-primary-600 transition-colors">
+                                        {post.user.name}
+                                    </p>
+                                    {post.user.verificationStatus === 'VERIFIED' && (
+                                        <BadgeCheck className="w-3 h-3 text-primary-500 shrink-0" />
+                                    )}
+                                </div>
+                                {(post.user.industry || post.user.bio) && (
+                                    <p className="text-[10px] text-secondary-400 dark:text-secondary-500 truncate leading-none">
+                                        {post.user.industry || post.user.bio}
+                                    </p>
+                                )}
+                            </div>
                         </Link>
 
-                        {/* Like pill */}
+                        {/* Comment count */}
                         <button
-                            onClick={handleLike}
-                            disabled={likeMutation.isPending}
-                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full font-semibold text-xs transition-all duration-200 active:scale-90 ${liked
-                                ? 'bg-red-500 text-white'
-                                : 'bg-white/90 text-secondary-700 hover:bg-white'
-                                }`}
-                        >
-                            <Heart className={`w-3.5 h-3.5 transition-all ${liked ? 'fill-white scale-110' : ''}`} />
-                            {likeCount > 0 && <span>{likeCount}</span>}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Caption below image */}
-                {hasImage && post.content && (
-                    <div className="px-3 pt-2.5 pb-1">
-                        <p className="text-[12.5px] text-secondary-700 dark:text-secondary-300 leading-snug line-clamp-2">
-                            {post.content}
-                        </p>
-                    </div>
-                )}
-
-                {/* Footer */}
-                <div className="px-3 pb-3 pt-1.5 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1 min-w-0">
-                        {post.category && (
-                            <span className="text-[11px] font-medium text-secondary-400 dark:text-secondary-500 truncate">
-                                {post.category.icon ? `${post.category.icon} ` : ''}{post.category.name}
-                            </span>
-                        )}
-                        {post.user.verificationStatus === 'VERIFIED' && (
-                            <BadgeCheck className="w-3 h-3 text-primary-500 shrink-0" />
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                        {/* Comment */}
-                        <button
-                            onClick={(e) => { e.stopPropagation(); requireAuth(() => openPost(post.id, post)); }}
-                            className="flex items-center gap-1 text-secondary-400 hover:text-primary-500 transition-colors"
+                            onClick={e => { e.stopPropagation(); requireAuth(() => openPost(post.id, post)); }}
+                            className="flex items-center gap-1 text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-300 transition-colors shrink-0"
                         >
                             <MessageCircle className="w-3.5 h-3.5" />
-                            {commentCount > 0 && <span className="text-[11px]">{commentCount}</span>}
-                        </button>
-
-                        {/* Share — button only, popover is a fixed portal */}
-                        <button
-                            ref={shareButtonRef}
-                            data-share-btn
-                            onClick={handleShareOpen}
-                            className={`text-secondary-400 hover:text-primary-500 transition-colors ${shareOpen ? 'text-primary-500' : ''}`}
-                            title="Share"
-                        >
-                            <Share2 className="w-3.5 h-3.5" />
+                            {commentCount > 0 && <span className="text-[10.5px] font-medium">{commentCount}</span>}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Share popover rendered as a fixed overlay — never clipped */}
-            {shareOpen && popoverPos && (
+            {/* ── Share Popover (portal into body, bypasses stacking context) ─ */}
+            {mounted && shareOpen && popoverPos && createPortal(
                 <div
                     data-share-popover
                     style={{
                         position: 'fixed',
-                        top: popoverPos.top,
+                        top: popoverPos.placement === 'above'
+                            ? popoverPos.top
+                            : popoverPos.top,
                         left: popoverPos.left,
-                        transform: 'translate(-100%, -100%)',
+                        transform: popoverPos.placement === 'above'
+                            ? 'translate(-50%, calc(-100% - 6px))'
+                            : 'translate(-50%, 0)',
                         zIndex: 9999,
                     }}
-                    className="bg-white dark:bg-secondary-800 rounded-xl shadow-xl border border-secondary-100 dark:border-secondary-700 py-1.5 w-44 animate-scale-in"
-                    onClick={(e) => e.stopPropagation()}
+                    className="bg-white dark:bg-secondary-800 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-2 w-44 animate-fade-in"
+                    onClick={e => e.stopPropagation()}
                 >
                     <button
                         onClick={handleCopyLink}
-                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors rounded-lg"
                     >
-                        {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Link2 className="w-3.5 h-3.5" />}
+                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
                         {copied ? 'Copied!' : 'Copy link'}
                     </button>
                     <a
                         href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`}
                         target="_blank" rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                        onClick={e => e.stopPropagation()}
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors rounded-lg"
                     >
-                        <Twitter className="w-3.5 h-3.5 text-sky-500" /> Share on X
+                        <Twitter className="w-4 h-4 text-sky-500" /> Share on X
                     </a>
                     <a
                         href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`}
                         target="_blank" rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                        onClick={e => e.stopPropagation()}
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors rounded-lg"
                     >
-                        <Facebook className="w-3.5 h-3.5 text-blue-600" /> Share on Facebook
+                        <Facebook className="w-4 h-4 text-blue-600" /> Share on Facebook
                     </a>
                     {'share' in navigator && (
                         <button
-                            onClick={(e) => {
+                            onClick={e => {
                                 e.stopPropagation();
                                 navigator.share({ title: postTitle, url: postUrl });
-                                setShareOpen(false);
+                                closeShare();
                             }}
-                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors rounded-lg"
                         >
-                            <Share2 className="w-3.5 h-3.5" /> More options
+                            <Share2 className="w-4 h-4" /> More options
                         </button>
                     )}
                 </div>
-            )}
+            , document.body)}
         </>
     );
 }

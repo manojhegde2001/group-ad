@@ -18,6 +18,11 @@ const updateEventSchema = z.object({
     visibility: z.enum(['PUBLIC', 'PRIVATE']).optional(),
     targetUserTypes: z.array(z.string()).optional(),
     targetCategoryIds: z.array(z.string()).optional(),
+    categoryLimits: z.array(z.object({
+        categoryId: z.string(),
+        categoryName: z.string(),
+        limit: z.number().int().positive(),
+    })).optional(),
     coverImage: z.string().optional().nullable(),
     images: z.array(z.string()).optional(),
     status: z.enum(['DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED']).optional(),

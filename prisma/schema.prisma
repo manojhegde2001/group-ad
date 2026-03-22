@@ -105,6 +105,7 @@ model Category {
   slug        String   @unique
   description String?
   icon        String?
+  banner      String?
 
   isActive    Boolean  @default(true)
   colorTheme  String?
@@ -167,6 +168,12 @@ model User {
   phone     String?  @unique
   location  String?
   website   String?
+  
+  // New Business Fields
+  address         String?
+  pincode         String?
+  externalLink    String?
+  messagingEnabled Boolean @default(true)
 
   userType   UserType @default(INDIVIDUAL)
   visibility AccountVisibility @default(PUBLIC)
@@ -215,12 +222,10 @@ model User {
   postLikes           PostLike[]
   postComments        PostComment[]
   bookmarks           Bookmark[]
+  boards              Board[]          @relation("UserBoards")
 
   followers           Follow[]     @relation("Followers")
   following           Follow[]     @relation("Following")
-
-  powerTeamsOwned     PowerTeam[]  @relation("PowerTeamOwner")
-  powerTeamMemberships PowerTeamMember[]
 
   @@index([userType])
   @@index([verificationStatus])
@@ -268,43 +273,6 @@ model UserTypeChangeRequest {
   @@index([createdAt])
 }
 
-// ============================================================================
-// POWER TEAM MODEL
-// ============================================================================
-
-model PowerTeam {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  description String?
-  logo        String?
-  
-  ownerId     String   @db.ObjectId
-  owner       User     @relation("PowerTeamOwner", fields: [ownerId], references: [id])
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  members     PowerTeamMember[]
-
-  @@index([ownerId])
-}
-
-model PowerTeamMember {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-
-  teamId      String   @db.ObjectId
-  team        PowerTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  userId      String   @db.ObjectId
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  role        String   @default("MEMBER") // e.g., ADMIN, MEMBER
-  joinedAt    DateTime @default(now())
-
-  @@unique([teamId, userId])
-  @@index([teamId])
-  @@index([userId])
-}
 
 // ============================================================================
 // POST MODEL
@@ -338,6 +306,7 @@ model Post {
   postLikes    PostLike[]
   postComments PostComment[]
   bookmarks    Bookmark[]
+  boardPosts   BoardPost[]
 
   @@index([userId])
   @@index([companyId])
@@ -426,6 +395,36 @@ model Bookmark {
 
   @@unique([userId, postId])
   @@index([userId])
+  @@index([postId])
+}
+
+// ============================================================================
+// BOARD MODELS
+// ============================================================================
+
+model Board {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  userId      String   @db.ObjectId
+  user        User     @relation("UserBoards", fields: [userId], references: [id], onDelete: Cascade)
+  posts       BoardPost[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model BoardPost {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  boardId   String   @db.ObjectId
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([boardId, postId])
+  @@index([boardId])
   @@index([postId])
 }
 
@@ -538,6 +537,13 @@ model Notification {
 // EVENT MODEL
 // ============================================================================
 
+// Category-specific participant limit for an event
+type CategoryLimit {
+  categoryId   String @db.ObjectId
+  categoryName String
+  limit        Int
+}
+
 model Event {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -575,6 +581,9 @@ model Event {
   targetCategoryIds   String[]
   targetTurnoverRange String?
   targetCompanySize   String?
+
+  // Per-category participant limits set by admin (e.g. Finance: 3, Tech: 2)
+  categoryLimits      CategoryLimit[]
 
   coverImage  String?
   images      String[]

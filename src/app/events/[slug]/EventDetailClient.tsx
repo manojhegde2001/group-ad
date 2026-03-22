@@ -22,6 +22,8 @@ import EnrollmentButton from '@/components/events/EnrollmentButton';
 import { useEvent } from '@/hooks/use-api/use-events';
 import { notFound } from 'next/navigation';
 
+import AttendeeConnectBanner from '@/components/events/AttendeeConnectBanner';
+
 export default function EventDetailClient({ slug }: { slug: string }) {
     const { data, isLoading, error } = useEvent(slug);
 
@@ -88,6 +90,9 @@ export default function EventDetailClient({ slug }: { slug: string }) {
 
                     {/* Main Info */}
                     <div className="lg:col-span-2 space-y-12">
+                        {isPast && isEnrolled && (
+                            <AttendeeConnectBanner eventId={event.id} />
+                        )}
                         <section>
                             <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4 flex items-center gap-2">
                                 <Info className="w-5 h-5 text-primary-500" /> About this Event

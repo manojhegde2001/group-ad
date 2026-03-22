@@ -21,6 +21,11 @@ const createEventSchema = z.object({
     visibility: z.enum(['PUBLIC', 'PRIVATE']).default('PUBLIC'),
     targetUserTypes: z.array(z.string()).default([]),
     targetCategoryIds: z.array(z.string()).default([]),
+    categoryLimits: z.array(z.object({
+        categoryId: z.string(),
+        categoryName: z.string(),
+        limit: z.number().int().positive(),
+    })).default([]),
     coverImage: z.string().optional(),
     images: z.array(z.string()).default([]),
     status: z.enum(['DRAFT', 'PUBLISHED']).default('DRAFT'),
@@ -108,8 +113,8 @@ export async function POST(request: NextRequest) {
             select: { id: true, userType: true },
         });
 
-        if (!dbUser || dbUser.userType !== 'ADMIN') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+        if (!dbUser || (dbUser.userType !== 'ADMIN' && dbUser.userType !== 'BUSINESS')) {
+            return NextResponse.json({ error: 'Admin or Business access required' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -136,6 +141,7 @@ export async function POST(request: NextRequest) {
                 visibility: data.visibility,
                 targetUserTypes: data.targetUserTypes,
                 targetCategoryIds: data.targetCategoryIds,
+                categoryLimits: data.categoryLimits,
                 coverImage: data.coverImage || null,
                 images: data.images,
                 status: data.status,

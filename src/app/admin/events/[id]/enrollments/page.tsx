@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, Users, Mail, Briefcase } from 'lucide-react';
+import { BulkEventActions } from '@/components/admin/BulkEventActions';
 
 type Enrollment = {
     id: string;
     status: string;
     createdAt: string;
+    attended: boolean;
+    attendedAt: string | null;
     user: {
         id: string; name: string; username: string; avatar?: string;
         email: string; userType: string; industry?: string; companyName?: string;
@@ -24,15 +27,29 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function AdminEnrollmentsPage() {
     const { id: eventId } = useParams<{ id: string }>();
+    const [event, setEvent] = useState<{ id: string; title: string; endDate: string } | null>(null);
     const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    
+    // Attendance state
+    const [selectedAttendees, setSelectedAttendees] = useState<Set<string>>(new Set());
+    const [savingAttendance, setSavingAttendance] = useState(false);
 
     const fetchEnrollments = async () => {
         try {
             const res = await fetch(`/api/events/${eventId}/enrollments`);
             const data = await res.json();
-            if (res.ok) setEnrollments(data.enrollments);
+            if (res.ok) {
+                setEvent(data.event);
+                setEnrollments(data.enrollments);
+                
+                // Pre-select users who already attended
+                const attendedIds = data.enrollments
+                    .filter((e: Enrollment) => e.attended && e.status === 'APPROVED')
+                    .map((e: Enrollment) => e.user.id);
+                setSelectedAttendees(new Set(attendedIds));
+            }
         } finally {
             setLoading(false);
         }
@@ -60,6 +77,39 @@ export default function AdminEnrollmentsPage() {
             setActionLoading(null);
         }
     };
+
+    const toggleAttendance = (userId: string) => {
+        setSelectedAttendees(prev => {
+            const next = new Set(prev);
+            if (next.has(userId)) next.delete(userId);
+            else next.add(userId);
+            return next;
+        });
+    };
+
+    const saveAttendance = async () => {
+        setSavingAttendance(true);
+        try {
+            const res = await fetch(`/api/events/${eventId}/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attendedUserIds: Array.from(selectedAttendees) }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            
+            toast.success('Attendance saved and notifications sent!');
+            
+            // Re-fetch to get updated attended status/timestamps
+            fetchEnrollments();
+        } catch (err: any) {
+            toast.error(err.message);
+        } finally {
+            setSavingAttendance(false);
+        }
+    };
+
+    const isEventEnded = event && new Date(event.endDate) < new Date();
 
     const stats = {
         total: enrollments.length,
@@ -90,6 +140,13 @@ export default function AdminEnrollmentsPage() {
                 ))}
             </div>
 
+            {/* Bulk Actions */}
+            <BulkEventActions 
+                eventId={eventId} 
+                onSuccess={fetchEnrollments} 
+                isEventEnded={!!isEventEnded} 
+            />
+
             {/* Enrollments list */}
             <div className="bg-white dark:bg-secondary-900 rounded-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden">
                 <div className="px-5 py-4 border-b border-secondary-100 dark:border-secondary-800">
@@ -106,7 +163,20 @@ export default function AdminEnrollmentsPage() {
                 ) : (
                     <div className="divide-y divide-secondary-100 dark:divide-secondary-800">
                         {enrollments.map((enrollment) => (
-                            <div key={enrollment.id} className="flex items-center gap-4 px-5 py-4">
+                            <div key={enrollment.id} className={`flex items-center gap-4 px-5 py-4 ${isEventEnded && enrollment.status === 'APPROVED' ? 'hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors' : ''}`}>
+                                
+                                {/* Checkbox for attendance marking */}
+                                {isEventEnded && enrollment.status === 'APPROVED' && (
+                                    <div className="flex items-center justify-center shrink-0 pr-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedAttendees.has(enrollment.user.id)}
+                                            onChange={() => toggleAttendance(enrollment.user.id)}
+                                            className="w-5 h-5 rounded border-secondary-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                                        />
+                                    </div>
+                                )}
+
                                 {/* Avatar */}
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden shrink-0">
                                     {enrollment.user.avatar
@@ -167,13 +237,38 @@ export default function AdminEnrollmentsPage() {
                                     </div>
                                 )}
                                 {enrollment.status !== 'PENDING' && (
-                                    <div className="w-[104px] shrink-0" />
+                                    <div className="w-[104px] shrink-0">
+                                        {enrollment.attended && (
+                                            <span className="flex justify-end items-center text-xs text-green-600 dark:text-green-400 font-medium">
+                                                <CheckCircle className="w-4 h-4 mr-1" /> Attended
+                                            </span>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Save Attendance Banner */}
+            {isEventEnded && status === 'authenticated' && (
+                <div className="mt-8 bg-white dark:bg-secondary-900 border border-primary-200 dark:border-primary-900/50 rounded-2xl p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="font-bold text-lg text-secondary-900 dark:text-white">Mark Attendance</h3>
+                            <p className="text-secondary-500 text-sm mt-1">This event has ended. Select the attendees who were present and save to notify them.</p>
+                        </div>
+                        <button
+                            onClick={saveAttendance}
+                            disabled={savingAttendance}
+                            className="bg-primary-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                        >
+                            {savingAttendance ? 'Saving...' : 'Save Attendance'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

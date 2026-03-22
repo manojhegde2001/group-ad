@@ -21,6 +21,11 @@ const updateProfileSchema = z.object({
   location: z.string().max(100).optional(),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
   avatar: z.string().url('Invalid avatar URL').optional().or(z.literal('')),
+  address: z.string().max(200).optional().or(z.literal('')),
+  pincode: z.string().max(20).optional().or(z.literal('')),
+  externalLink: z.string().url('Invalid external Link URL').optional().or(z.literal('')),
+  messagingEnabled: z.boolean().optional(),
+
 
   // Category
   categoryId: z.string().optional().or(z.literal('')),
@@ -86,6 +91,10 @@ export async function GET(request: NextRequest) {
         phone: true,
         location: true,
         website: true,
+        address: true,
+        pincode: true,
+        externalLink: true,
+        messagingEnabled: true,
 
         userType: true,
         visibility: true,
@@ -223,6 +232,11 @@ export async function PATCH(request: NextRequest) {
         location: validatedData.location,
         website: validatedData.website || null,
         avatar: validatedData.avatar || null,
+        address: validatedData.address || null,
+        pincode: validatedData.pincode || null,
+        externalLink: validatedData.externalLink || null,
+        ...(validatedData.messagingEnabled !== undefined && { messagingEnabled: validatedData.messagingEnabled }),
+
 
         categoryId: validatedData.categoryId || null,
         interests: validatedData.interests,
@@ -253,6 +267,10 @@ export async function PATCH(request: NextRequest) {
         phone: true,
         location: true,
         website: true,
+        address: true,
+        pincode: true,
+        externalLink: true,
+        messagingEnabled: true,
         userType: true,
         visibility: true,
         verificationStatus: true,

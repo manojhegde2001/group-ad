@@ -249,10 +249,18 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                 ) : (
                                     <div className="space-y-1">
                                         {notifications.map((notif) => (
-                                            <button
+                                            <div
                                                 key={notif.id}
+                                                role="button"
+                                                tabIndex={0}
                                                 onClick={() => !notif.isRead && markOne(notif.id)}
-                                                className={`w-full text-left flex items-start gap-4 p-4 rounded-2xl transition-colors ${!notif.isRead ? 'bg-primary-50/50 dark:bg-primary-900/10' : 'hover:bg-secondary-50 dark:hover:bg-secondary-800/50'}`}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        !notif.isRead && markOne(notif.id);
+                                                    }
+                                                }}
+                                                className={`w-full text-left flex items-start gap-4 p-4 rounded-2xl transition-colors cursor-pointer ${!notif.isRead ? 'bg-primary-50/50 dark:bg-primary-900/10' : 'hover:bg-secondary-50 dark:hover:bg-secondary-800/50'}`}
                                             >
                                                 {notif.sender ? (
                                                     <Avatar src={notif.sender.avatar ?? undefined} name={notif.sender.name} size="sm" className="w-10 h-10 mt-0.5" />
@@ -266,7 +274,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                                     <p className="text-[11px] text-secondary-400 mt-1">{formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}</p>
                                                 </div>
                                                 {!notif.isRead && <div className="w-2 h-2 rounded-full bg-primary-500 mt-2" />}
-                                            </button>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
@@ -304,10 +312,18 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                 </div>
                             ) : (
                                 notifications.map((notif) => (
-                                    <button
+                                    <div
                                         key={notif.id}
+                                        role="button"
+                                        tabIndex={0}
                                         onClick={() => !notif.isRead && markOne(notif.id)}
-                                        className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-secondary-50 dark:hover:bg-secondary-800/60 transition-colors group ${!notif.isRead ? 'bg-primary-50/40 dark:bg-primary-900/10' : ''
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                !notif.isRead && markOne(notif.id);
+                                            }
+                                        }}
+                                        className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-secondary-50 dark:hover:bg-secondary-800/60 transition-colors group cursor-pointer ${!notif.isRead ? 'bg-primary-50/40 dark:bg-primary-900/10' : ''
                                             }`}
                                     >
                                         {/* Sender avatar or icon */}
@@ -349,7 +365,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                                 <X className="w-3 h-3" />
                                             </ActionIcon>
                                         </div>
-                                    </button>
+                                    </div>
                                 ))
                             )}
                         </div>

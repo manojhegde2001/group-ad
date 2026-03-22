@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePostDetail } from '@/hooks/use-feed';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import {
@@ -207,7 +208,7 @@ export function PostDetailDrawer() {
         if (shareOpen) { setShareOpen(false); return; }
         if (shareButtonRef.current) {
             const rect = shareButtonRef.current.getBoundingClientRect();
-            setPopoverPos({ top: rect.top + window.scrollY, left: rect.left + window.scrollX });
+            setPopoverPos({ top: rect.top, left: rect.left });
         }
         setShareOpen(true);
     };
@@ -339,7 +340,11 @@ export function PostDetailDrawer() {
 
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 sm:pr-14 pr-4">
-                            <div className="flex items-center gap-2.5 min-w-0">
+                            <Link
+                                href={`/profile/${post.user.username}`}
+                                onClick={closePost}
+                                className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity"
+                            >
                                 <Avatar
                                     src={post.user.avatar ?? undefined}
                                     name={post.user.name}
@@ -354,7 +359,7 @@ export function PostDetailDrawer() {
                                     </div>
                                     <p className="text-xs text-secondary-400 truncate">@{post.user.username}</p>
                                 </div>
-                            </div>
+                            </Link>
                             <div className="flex items-center gap-2 shrink-0">
                                 <Button variant="outline" color="secondary" size="sm" rounded="pill" className="text-xs px-3 h-7">
                                     Follow
@@ -380,8 +385,6 @@ export function PostDetailDrawer() {
 
                             {/* Meta */}
                             <div className="flex flex-wrap items-center gap-1.5 text-xs text-secondary-400">
-                                {post.category && <span>{post.category.icon} {post.category.name}</span>}
-                                <span>·</span>
                                 <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
                                 <span>·</span>
                                 <span>{post.views || 0} views</span>

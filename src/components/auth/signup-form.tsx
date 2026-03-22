@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { Select, Text } from 'rizzui';
@@ -27,7 +28,7 @@ interface Category {
 
 export default function SignupForm() {
   const router = useRouter();
-  const { setMode } = useAuthModal();
+  const { setMode, isOpen } = useAuthModal();
 
   const { data: categories = [], isLoading: loadingCategories } = useCategories();
   const signupMutation = useSignup();
@@ -176,6 +177,16 @@ export default function SignupForm() {
         </div>
       )}
 
+      {/* Legal Consent */}
+      <div className="sm:col-span-2">
+        <Text className="text-xs text-secondary-500 dark:text-secondary-400 text-center leading-relaxed">
+          By creating an account, you agree to our{' '}
+          <Link href="/terms" tabIndex={-1} target="_blank" className="font-bold text-secondary-700 dark:text-secondary-200 hover:text-primary-600 transition-colors">Terms & Conditions</Link>
+          {' '}and{' '}
+          <Link href="/privacy-policy" tabIndex={-1} target="_blank" className="font-bold text-secondary-700 dark:text-secondary-200 hover:text-primary-600 transition-colors">Privacy Policy</Link>.
+        </Text>
+      </div>
+
       {/* Submit */}
       <div className="sm:col-span-2">
         <Button
@@ -194,7 +205,13 @@ export default function SignupForm() {
           Already have an account?{' '}
           <button
             type="button"
-            onClick={() => setMode('login')}
+            onClick={() => {
+              if (isOpen) {
+                setMode('login');
+              } else {
+                router.push('/login');
+              }
+            }}
             className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 hover:underline transition-colors"
           >
             Login here

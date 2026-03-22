@@ -14,7 +14,7 @@ import { Button } from '../ui/button';
 
 export function LoginForm() {
   const router = useRouter();
-  const { close, setMode, onSuccessCallback } = useAuthModal();
+  const { close, setMode, isOpen, onSuccessCallback } = useAuthModal();
   const { refreshAuth } = useAuth();
 
   const {
@@ -106,7 +106,13 @@ export function LoginForm() {
           Don't have an account?{' '}
           <button
             type="button"
-            onClick={() => setMode('signup')}
+            onClick={() => {
+              if (isOpen) {
+                setMode('signup');
+              } else {
+                router.push('/signup');
+              }
+            }}
             className="text-primary-600 dark:text-primary-400 hover:underline font-medium transition-colors"
           >
             Sign up

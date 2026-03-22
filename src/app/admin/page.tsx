@@ -8,7 +8,7 @@ import { Avatar } from '@/components/ui/avatar';
 import {
   ShieldCheck, Users, CalendarDays, Building, FileText,
   TrendingUp, Clock, CheckCircle, AlertCircle, Loader2,
-  ArrowUpRight, BarChart3, Eye
+  ArrowUpRight, BarChart3, Eye, Tags
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -54,6 +54,7 @@ export default function AdminDashboardPage() {
 
   const adminLinks = [
     { href: '/admin/users', label: 'Manage Users', icon: Users, desc: 'View all users, change roles, suspend accounts' },
+    { href: '/admin/categories', label: 'Manage Categories', icon: Tags, desc: 'Add, edit, and organize interest categories' },
     { href: '/admin/events', label: 'Manage Events', icon: CalendarDays, desc: 'Create, edit, publish, cancel events' },
     { href: '/admin/businesses', label: 'Businesses', icon: Building, desc: 'Review and verify business accounts' },
     { href: '/admin/settings', label: 'Platform Settings', icon: ShieldCheck, desc: 'Configure platform-wide settings' },

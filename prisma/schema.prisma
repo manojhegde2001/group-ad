@@ -123,6 +123,24 @@ model Category {
 }
 
 // ============================================================================
+// VENUE MODEL
+// ============================================================================
+
+model Venue {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  city      String
+  state     String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([state])
+}
+
+
+// ============================================================================
 // COMPANY MODEL
 // ============================================================================
 

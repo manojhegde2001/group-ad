@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { LayoutDashboard, CalendarDays, Users, Plus } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Users, Plus, Tags, Building2 } from 'lucide-react';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await auth();
@@ -26,6 +26,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <nav className="flex-1 p-3 space-y-1">
                     <Link href="/admin/events" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
                         <LayoutDashboard className="w-4 h-4" /> Events Dashboard
+                    </Link>
+                    <Link href="/admin/categories" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
+                        <Tags className="w-4 h-4" /> Manage Categories
+                    </Link>
+                    <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
+                        <Users className="w-4 h-4" /> Manage Users
+                    </Link>
+                    <Link href="/admin/businesses" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
+                        <Building2 className="w-4 h-4" /> Manage Businesses
                     </Link>
                     <Link href="/admin/events/create" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
                         <Plus className="w-4 h-4" /> Create Event

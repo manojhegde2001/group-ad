@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
         slug: true,
         description: true,
         icon: true,
+        banner: true,
         isActive: true,
         _count: {
           select: {

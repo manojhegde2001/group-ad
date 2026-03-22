@@ -47,6 +47,8 @@ export function PostDetailDrawer() {
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const shareOpen = activePostId === post?.id && source === 'drawer';
     const [copied, setCopied] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [isFollowLoading, setIsFollowLoading] = useState(false);
 
     // Fetch post + comments when opened
     useEffect(() => {
@@ -86,6 +88,18 @@ export function PostDetailDrawer() {
             .finally(() => setLoadingComments(false));
 
     }, [isOpen, postId, initialPost]);
+
+    // Fetch follow status
+    useEffect(() => {
+        if (!isOpen || !post || !user || post.user.id === user.id) return;
+        
+        fetch(`/api/users/${post.user.id}/follow`)
+            .then((r) => r.json())
+            .then((d) => {
+                if (typeof d.isFollowing === 'boolean') setIsFollowing(d.isFollowing);
+            })
+            .catch(() => { });
+    }, [isOpen, post?.user?.id, user?.id]);
 
     // Keyboard & body scroll lock
     useEffect(() => {
@@ -131,6 +145,31 @@ export function PostDetailDrawer() {
     const prevImage = () => {
         if (!post?.images?.length) return;
         setCurrentImageIndex((i) => (i - 1 + post.images.length) % post.images.length);
+    };
+
+    const handleFollow = async () => {
+        requireAuth(async () => {
+            if (isFollowLoading || !post) return;
+            setIsFollowLoading(true);
+            const nextFollowState = !isFollowing;
+            
+            // Optimistic UI
+            setIsFollowing(nextFollowState);
+            
+            try {
+                const res = await fetch(`/api/users/${post.user.id}/follow`, {
+                    method: nextFollowState ? 'POST' : 'DELETE',
+                });
+                if (!res.ok) throw new Error();
+                toast.success(nextFollowState ? `Following ${post.user.name}` : `Unfollowed ${post.user.name}`);
+            } catch {
+                // Revert
+                setIsFollowing(!nextFollowState);
+                toast.error('Failed to update follow status');
+            } finally {
+                setIsFollowLoading(false);
+            }
+        });
     };
 
     const handleCommentSubmit = async (e: React.FormEvent) => {
@@ -225,21 +264,19 @@ export function PostDetailDrawer() {
                 className="relative z-10 w-full sm:max-w-6xl h-[100dvh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Mobile Header */}
-                <div className="md:hidden flex items-center px-4 py-3 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 shrink-0 z-[100] sticky top-0">
-                    <button 
-                        onClick={closePost} 
-                        className="p-2 -ml-2 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors"
-                        aria-label="Back to feed"
-                    >
-                        <ChevronLeft className="w-6 h-6" />
-                    </button>
-                </div>
 
-                {/* ── Left panel — Media ── */}
+
                 <div
                     className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                 >
+                    {/* Pinterest-style Floating Back Button (Mobile) */}
+                    <button 
+                        onClick={closePost}
+                        className="md:hidden absolute top-4 left-4 z-[110] p-2.5 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md text-white transition-all active:scale-95 shadow-lg border border-white/10"
+                        aria-label="Go back"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
 
                     {loading ? (
                         <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
@@ -338,9 +375,25 @@ export function PostDetailDrawer() {
                             </div>
                         </Link>
                         <div className="flex items-center gap-2 shrink-0">
-                            <Button variant="outline" color="secondary" size="sm" rounded="pill" className="text-xs px-3 h-7">
-                                Follow
-                            </Button>
+                            {user?.id !== post.user.id && (
+                                <Button 
+                                    variant={isFollowing ? "flat" : "solid"}
+                                    color={isFollowing ? "secondary" : "primary"}
+                                    size="sm" 
+                                    rounded="pill" 
+                                    className={`text-xs px-4 h-8 font-bold transition-all ${isFollowing ? 'bg-secondary-100 dark:bg-secondary-800' : ''}`}
+                                    onClick={handleFollow}
+                                    disabled={isFollowLoading}
+                                >
+                                    {isFollowLoading ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : isFollowing ? (
+                                        'Following'
+                                    ) : (
+                                        'Follow'
+                                    )}
+                                </Button>
+                            )}
                         </div>
                     </div>
 

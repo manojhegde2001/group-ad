@@ -12,17 +12,7 @@ interface Category {
   banner?: string | null;
 }
 
-const CATEGORY_IMAGES: Record<string, string> = {
-  design:       'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80',
-  technology:   'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500&q=80',
-  business:     'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=500&q=80',
-  lifestyle:    'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=500&q=80',
-  ai:           'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=500&q=80',
-  photography:  'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=500&q=80',
-  architecture: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=500&q=80',
-  all:          'https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&q=80',
-  default:      'https://images.unsplash.com/photo-1616469829581-73993eb86b02?w=500&q=80',
-};
+const DEFAULT_CATEGORY_IMAGE = 'https://images.unsplash.com/photo-1616469829581-73993eb86b02?w=500&q=80';
 
 function CategorySkeleton() {
   return (
@@ -56,8 +46,7 @@ export function CategoryCards() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
           {categories.map((cat) => {
-            const bgImage =
-              cat.banner || CATEGORY_IMAGES[cat.slug.toLowerCase()] || CATEGORY_IMAGES.default;
+            const bgImage = cat.banner || DEFAULT_CATEGORY_IMAGE;
 
             return (
               <Link

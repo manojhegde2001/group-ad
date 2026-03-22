@@ -32,8 +32,8 @@ export default function CategoryExplorePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-y-auto pt-4 md:pt-4">
+      <div className="flex flex-col min-h-screen bg-white dark:bg-[#0a0a0f] pt-4 md:pt-4">
+        <div className="flex-1 flex flex-col">
           {/* Skeleton breadcrumb */}
           <div className="h-12 md:h-14 bg-white/90 dark:bg-[#0a0a0f]/90 border-b border-secondary-100 dark:border-secondary-900/50 animate-pulse shrink-0" />
           {/* Skeleton feed */}
@@ -57,8 +57,8 @@ export default function CategoryExplorePage() {
 
   if (!category) {
     return (
-      <div className="flex h-screen overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-y-auto pt-4 md:pt-4">
+      <div className="flex flex-col min-h-screen bg-white dark:bg-[#0a0a0f] pt-4 md:pt-4">
+        <div className="flex-1 flex flex-col">
           <div className="flex-1 flex flex-col items-center justify-center px-4">
             <h2 className="text-2xl font-bold text-secondary-900 dark:text-white mb-4">
               Category not found

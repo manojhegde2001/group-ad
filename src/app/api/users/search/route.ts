@@ -22,6 +22,16 @@ export async function GET(request: NextRequest) {
         AND: [
           { id: { not: session.user.id } },
           {
+            blocksReceived: {
+              none: { blockerId: session.user.id }
+            }
+          },
+          {
+            blocksSent: {
+              none: { blockedId: session.user.id }
+            }
+          },
+          {
             followers: {
               some: {
                 followerId: session.user.id,

@@ -95,6 +95,20 @@ enum NotificationType {
   SYSTEM_ANNOUNCEMENT
 }
 
+enum ReportType {
+  USER
+  POST
+  EVENT
+  MESSAGE
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
 // ============================================================================
 // CATEGORY MODEL
 // ============================================================================
@@ -244,6 +258,10 @@ model User {
 
   followers           Follow[]     @relation("Followers")
   following           Follow[]     @relation("Following")
+
+  reportsSent         Report[]     @relation("ReportsSent")
+  blocksSent          Block[]      @relation("BlocksSent")
+  blocksReceived      Block[]      @relation("BlocksReceived")
 
   @@index([userType])
   @@index([verificationStatus])
@@ -650,4 +668,48 @@ model EventEnrollment {
   @@index([eventId])
   @@index([userId])
   @@index([status])
+}
+
+// ============================================================================
+// MODERATION MODELS
+// ============================================================================
+
+model Report {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  reporterId  String   @db.ObjectId
+  reporter    User     @relation("ReportsSent", fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  targetType  ReportType
+  targetId    String    @db.ObjectId
+  
+  reason      String
+  description String?
+  
+  status      ReportStatus @default(PENDING)
+  
+  adminNote   String?
+  reviewedBy  String?   @db.ObjectId
+  reviewedAt  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([targetType, targetId])
+  @@index([status])
+}
+
+model Block {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  blockerId   String   @db.ObjectId
+  blocker     User     @relation("BlocksSent", fields: [blockerId], references: [id], onDelete: Cascade)
+  
+  blockedId   String   @db.ObjectId
+  blocked     User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
 }

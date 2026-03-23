@@ -36,6 +36,26 @@ export async function GET(request: NextRequest) {
       visibility: visibility as any,
     };
 
+    if (currentUserId) {
+      const blocks = await prisma.block.findMany({
+        where: {
+          OR: [
+            { blockerId: currentUserId },
+            { blockedId: currentUserId },
+          ],
+        },
+        select: { blockerId: true, blockedId: true },
+      });
+
+      const blockedIds = blocks.map(b => 
+        b.blockerId === currentUserId ? b.blockedId : b.blockerId
+      );
+
+      if (blockedIds.length > 0) {
+        where.userId = { notIn: blockedIds };
+      }
+    }
+
     if (userType) where.user = { userType: userType as any };
     if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') where.categoryId = categoryId;
     if (boardId && boardId !== 'null' && boardId !== 'undefined') {
@@ -45,7 +65,17 @@ export async function GET(request: NextRequest) {
     }
     if (companyId && companyId !== 'null' && companyId !== 'undefined') where.companyId = companyId;
     if (postType) where.type = postType as any;
-    if (userId && userId !== 'null' && userId !== 'undefined') where.userId = userId;
+    
+    // If a specific userId is requested, ensure they are not blocked
+    if (userId && userId !== 'null' && userId !== 'undefined') {
+        if (where.userId?.notIn?.includes(userId)) {
+            return NextResponse.json({
+                posts: [],
+                pagination: { total: 0, page, limit, totalPages: 0 },
+            });
+        }
+        where.userId = userId;
+    }
 
     if (search) {
       where.OR = [

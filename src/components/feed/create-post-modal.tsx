@@ -6,10 +6,12 @@ import { useAuth } from '@/hooks/use-auth';
 import {
     X, Image as ImageIcon, Type, Tag, Globe, Lock,
     Upload, Loader2, CheckCircle, Plus, Video, Film,
+    Tags,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
+import { Select } from 'rizzui';
 
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
@@ -27,6 +29,8 @@ export function CreatePostModal() {
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [categoryId, setCategoryId] = useState<string>('');
     
     // Check verification status
     const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
@@ -45,11 +49,21 @@ export function CreatePostModal() {
             setTags(editingPost.tags.join(', '));
             setVisibility(editingPost.visibility as 'PUBLIC' | 'PRIVATE');
             setMediaPreviews(editingPost.images);
+            setCategoryId(editingPost.categoryId || '');
             // We set mediaFiles to empty because we are using existing URLs
-            // If the user adds NEW files, they will be appended
             setMediaFiles([]);
+        } else if (user) {
+            setCategoryId((user as any).categoryId || '');
         }
-    }, [editingPost]);
+    }, [editingPost, user]);
+
+    // Fetch categories
+    useEffect(() => {
+        fetch('/api/categories')
+            .then(res => res.json())
+            .then(data => setCategories(data.categories || []))
+            .catch(() => {});
+    }, []);
 
     // Lock body scroll
     useEffect(() => {
@@ -72,6 +86,7 @@ export function CreatePostModal() {
         setPostType('IMAGE');
         setSuccess(false);
         setUploadProgress(0);
+        setCategoryId((user as any)?.categoryId || '');
     };
 
     const handleClose = () => {
@@ -190,6 +205,7 @@ export function CreatePostModal() {
                     images: finalMediaUrls,
                     tags: parsedTags,
                     visibility,
+                    categoryId: categoryId || undefined,
                 }),
             });
 
@@ -413,8 +429,24 @@ export function CreatePostModal() {
                                     className="flex-1 bg-transparent outline-none text-sm text-secondary-700 dark:text-secondary-300 placeholder:text-secondary-400 min-w-0"
                                 />
                             </div>
-
-
+                            
+                            {/* Category Selector */}
+                            <div className="space-y-1.5 pt-1">
+                                <label className="text-[11px] font-bold text-secondary-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                    <Tags className="w-3.5 h-3.5" /> Category
+                                </label>
+                                <Select
+                                    value={categoryId}
+                                    onChange={(val: any) => setCategoryId(val)}
+                                    options={categories.map(c => ({
+                                        label: `${c.icon || '📍'} ${c.name}`,
+                                        value: c.id
+                                    }))}
+                                    placeholder="Select a category..."
+                                    className="w-full"
+                                    selectClassName="rounded-xl border-secondary-100 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800/60 font-medium text-sm"
+                                />
+                            </div>
                         </div>
 
                         {/* Upload progress bar */}

@@ -7,11 +7,13 @@ import { Avatar } from '@/components/ui/avatar';
 import { FollowButton } from '@/components/profile/follow-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
-import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin } from 'lucide-react';
+import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban } from 'lucide-react';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
 import { useCreatePost } from '@/hooks/use-feed';
+import { useReport, useBlock, useUnblock } from '@/hooks/use-api/use-moderation';
 import { Button } from '@/components/ui/button';
+import { Dropdown } from 'rizzui';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import type { PostWithRelations } from '@/types';
@@ -31,6 +33,10 @@ export default function PublicProfilePage() {
         isLoading: loadingProfile,
         refetch: refetchProfile
     } = useUserByUsername(username);
+
+    const reportMutation = useReport();
+    const blockMutation = useBlock();
+    const unblockMutation = useUnblock();
 
     const profile = profileData?.user;
 
@@ -64,6 +70,33 @@ export default function PublicProfilePage() {
         }).catch(() => {
             toast.error('Failed to copy link');
         });
+    };
+
+    const handleReportUser = () => {
+        const reason = window.prompt('Please enter a reason for reporting this user:');
+        if (reason && profile) {
+            reportMutation.mutate({
+                targetType: 'USER',
+                targetId: profile.id,
+                reason,
+            });
+        }
+    };
+
+    const handleBlockUser = () => {
+        if (profile && window.confirm(`Are you sure you want to block ${profile.name}? You will no longer see their posts or be able to message them.`)) {
+            blockMutation.mutate(profile.id, {
+                onSuccess: () => refetchProfile()
+            });
+        }
+    };
+
+    const handleUnblockUser = () => {
+        if (profile) {
+            unblockMutation.mutate(profile.id, {
+                onSuccess: () => refetchProfile()
+            });
+        }
     };
 
     if (loadingProfile) {
@@ -152,20 +185,34 @@ export default function PublicProfilePage() {
                                     </>
                                 ) : (
                                     <>
-                                        <FollowButton 
-                                            userId={profile.id} 
-                                            initialFollowing={profile.isFollowing ?? false}
-                                            initialFollowerCount={profile._count?.followers ?? 0}
-                                            size="sm"
-                                        />
-                                        <Button 
-                                            variant="outline" 
-                                            rounded="pill" 
-                                            className="font-bold px-5 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
-                                            onClick={() => router.push(`/messages?userId=${profile.id}`)}
-                                        >
-                                            Message
-                                        </Button>
+                                        {profile.isBlocked ? (
+                                            <Button 
+                                                variant="solid" 
+                                                rounded="pill" 
+                                                className="font-bold px-5 h-9 text-xs bg-red-600 hover:bg-red-700 text-white"
+                                                onClick={handleUnblockUser}
+                                                isLoading={unblockMutation.isPending}
+                                            >
+                                                Unblock
+                                            </Button>
+                                        ) : (
+                                            <>
+                                                <FollowButton 
+                                                    userId={profile.id} 
+                                                    initialFollowing={profile.isFollowing ?? false}
+                                                    initialFollowerCount={profile._count?.followers ?? 0}
+                                                    size="sm"
+                                                />
+                                                <Button 
+                                                    variant="outline" 
+                                                    rounded="pill" 
+                                                    className="font-bold px-5 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                                    onClick={() => router.push(`/messages?userId=${profile.id}`)}
+                                                >
+                                                    Message
+                                                </Button>
+                                            </>
+                                        )}
                                         <Button 
                                             variant="outline" 
                                             rounded="pill" 
@@ -174,6 +221,35 @@ export default function PublicProfilePage() {
                                         >
                                             <Share2 className="w-3.5 h-3.5" />
                                         </Button>
+
+                                        {/* Moderation Meatball Menu */}
+                                        <Dropdown placement="bottom-end">
+                                            <Dropdown.Trigger>
+                                                <Button 
+                                                    variant="outline" 
+                                                    rounded="pill" 
+                                                    className="font-bold px-3 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                                >
+                                                    <MoreHorizontal className="w-4 h-4" />
+                                                </Button>
+                                            </Dropdown.Trigger>
+                                            <Dropdown.Menu className="w-44 p-1">
+                                                <Dropdown.Item 
+                                                    onClick={handleReportUser}
+                                                    className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
+                                                >
+                                                    <Flag className="w-4 h-4" /> Report Profile
+                                                </Dropdown.Item>
+                                                {!profile.isBlocked && (
+                                                    <Dropdown.Item 
+                                                        onClick={handleBlockUser}
+                                                        className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                                    >
+                                                        <Ban className="w-4 h-4" /> Block User
+                                                    </Dropdown.Item>
+                                                )}
+                                            </Dropdown.Menu>
+                                        </Dropdown>
                                     </>
                                 )}
                             </div>

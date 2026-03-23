@@ -132,12 +132,23 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
   const [localPosts, setLocalPosts] = useState<PostWithRelations[]>([]);
 
   useEffect(() => {
-    setOnCreated((newPost: PostWithRelations) => {
-      setLocalPosts(prev => [newPost, ...prev]);
+    setOnCreated((post: PostWithRelations) => {
+      setLocalPosts(prev => {
+        const index = prev.findIndex(p => p.id === post.id);
+        if (index !== -1) {
+          const updated = [...prev];
+          updated[index] = post;
+          return updated;
+        }
+        return [post, ...prev];
+      });
     });
   }, [setOnCreated]);
 
-  const allPosts = [...localPosts, ...displayPosts];
+  const allPosts = [
+    ...localPosts,
+    ...displayPosts.filter((p: any) => !localPosts.find(lp => lp.id === p.id))
+  ];
 
   // Infinite scroll
   useEffect(() => {

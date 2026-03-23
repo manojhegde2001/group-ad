@@ -105,7 +105,7 @@ export async function PATCH(
       where: { id: postId },
       data: validatedData,
       include: {
-        user: { select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true } },
+        user: { select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, bio: true, industry: true } },
         category: { select: { id: true, name: true, slug: true, icon: true } },
         company: { select: { id: true, name: true, slug: true, logo: true, isVerified: true } },
         _count: { select: { postLikes: true, postComments: true } },
@@ -147,8 +147,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    if (existingPost.userId !== session.user.id) {
-      return NextResponse.json({ error: 'You can only delete your own posts' }, { status: 403 });
+    const isAdmin = (session.user as any).userType === 'ADMIN';
+
+    if (existingPost.userId !== session.user.id && !isAdmin) {
+      return NextResponse.json({ error: 'You do not have permission to delete this post' }, { status: 403 });
     }
 
     await prisma.post.delete({ where: { id: postId } });

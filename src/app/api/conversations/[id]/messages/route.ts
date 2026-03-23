@@ -79,6 +79,20 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Check for blocks
+    const block = await prisma.block.findFirst({
+        where: {
+            OR: [
+                { blockerId: session.user.id, blockedId: { in: conversation.participantIds.filter(id => id !== session.user.id) } },
+                { blockedId: session.user.id, blockerId: { in: conversation.participantIds.filter(id => id !== session.user.id) } },
+            ],
+        },
+    });
+
+    if (block) {
+        return NextResponse.json({ error: 'Messaging is disabled due to a block' }, { status: 403 });
+    }
+
     const { content, messageType = 'TEXT' } = await request.json();
 
     if (!content?.trim()) {

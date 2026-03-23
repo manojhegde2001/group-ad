@@ -44,8 +44,8 @@ export function CategoryCards() {
   return (
     <div className="w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-          {categories.map((cat) => {
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-8">
+          {categories.map((cat, idx) => {
             const bgImage = cat.banner || DEFAULT_CATEGORY_IMAGE;
 
             return (
@@ -54,37 +54,45 @@ export function CategoryCards() {
                 href={`/explore/${cat.slug}`}
                 className="
                   group/card relative
-                  w-full aspect-[4/5]
-                  overflow-hidden rounded-2xl md:rounded-[2rem]
-                  shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)]
-                  hover:-translate-y-2
-                  transition-all duration-500 ease-[0.33,1,0.68,1]
-                  outline-none focus-visible:ring-2 focus-visible:ring-primary-500
-                  border border-secondary-100/50 dark:border-secondary-800/50
+                  w-full aspect-[3/4]
+                  overflow-hidden rounded-[2.5rem]
+                  shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.25)]
+                  hover:-translate-y-3
+                  transition-all duration-700 cubic-bezier(0.2, 0, 0, 1)
+                  border border-secondary-100/50 dark:border-secondary-800/30
                 "
               >
-                {/* Background Image */}
+                {/* Image Layer */}
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover/card:scale-110"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover/card:scale-110"
                   style={{ backgroundImage: `url('${bgImage}')` }}
                 />
 
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-500 group-hover/card:via-black/40" />
+                {/* Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-secondary-950/90 via-secondary-900/20 to-transparent transition-opacity duration-700 group-hover/card:opacity-90" />
+                <div className="absolute inset-0 bg-primary-500/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700" />
 
                 {/* Content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5 md:p-6">
-                  <div className="flex flex-col gap-2 translate-y-4 group-hover/card:translate-y-0 transition-transform duration-500 ease-out">
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="space-y-4 group-hover/card:scale-105 transition-transform duration-500">
                     {cat.icon && (
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center shrink-0 border border-white/20 shadow-xl mb-1 group-hover/card:scale-110 transition-transform duration-500">
-                        <span className="text-xl sm:text-2xl md:text-3xl filter drop-shadow-lg">{cat.icon}</span>
+                      <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-[2rem] bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/20 shadow-2xl transition-all duration-700 group-hover/card:rotate-[10deg] group-hover/card:bg-white/20">
+                        <span className="text-3xl sm:text-4xl filter drop-shadow-xl">{cat.icon}</span>
                       </div>
                     )}
-                    <h3 className="font-black text-white tracking-tight leading-tight text-base sm:text-lg md:text-xl lg:text-2xl drop-shadow-2xl text-left uppercase">
-                      {cat.name}
-                    </h3>
+                    <div className="space-y-1">
+                      <h3 className="font-black text-white tracking-tight leading-none text-xl sm:text-2xl uppercase drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                        {cat.name}
+                      </h3>
+                      <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] opacity-0 group-hover/card:opacity-100 transition-opacity duration-500">
+                        Explore Hub
+                      </p>
+                    </div>
                   </div>
                 </div>
+
+                {/* Intersection Line */}
+                <div className="absolute bottom-0 left-0 w-full h-1.5 bg-primary-500 translate-y-full group-hover/card:translate-y-0 transition-transform duration-500" />
               </Link>
             );
           })}

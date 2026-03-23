@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
-    Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2,
+    Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -12,6 +12,7 @@ import { usePostDetail, useSaveToBoard, useSharePost, useCreatePost } from '@/ho
 import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
+import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
 import { Popover, Dropdown } from 'rizzui';
 import { ActionIcon } from '../ui/action-icon';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,6 +34,8 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const likeMutation = useLikePost();
     const deletePostMutation = useDeletePost();
+    const reportMutation = useReport();
+    const blockMutation = useBlock();
 
     // ── Local optimistic like state ──────────────────────────────────────────
     const [liked, setLiked] = useState<boolean>((post as any).isLikedByUser ?? false);
@@ -123,6 +126,29 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
 
     const handleCardClick = () => requireAuth(() => openPost(post.id, post));
 
+    const handleReport = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        requireAuth(() => {
+            const reason = window.prompt('Please enter a reason for reporting this post:');
+            if (reason) {
+                reportMutation.mutate({
+                    targetType: 'POST',
+                    targetId: post.id,
+                    reason,
+                });
+            }
+        });
+    };
+
+    const handleBlock = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        requireAuth(() => {
+            if (window.confirm(`Are you sure you want to block ${post.user.name}? You will no longer see their posts or be able to message them.`)) {
+                blockMutation.mutate(post.userId);
+            }
+        });
+    };
+
     const hasImage = post.images && post.images.length > 0;
     const isVideoPost = post.type === 'VIDEO';
     const commentCount = post._count?.postComments ?? 0;
@@ -198,8 +224,8 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                     </div>
                 )}
 
-                {/* --- Ownership Actions (Meatball Menu) --- */}
-                {showActions && user?.id === post.userId && (
+                {/* --- Ownership & Moderation Actions (Meatball Menu) --- */}
+                {user && (
                     <div className="absolute top-3 right-3 z-30" onClick={e => e.stopPropagation()}>
                         <Dropdown placement="bottom-end">
                             <Dropdown.Trigger>
@@ -208,22 +234,44 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                                 </span>
                             </Dropdown.Trigger>
                             <Dropdown.Menu className="w-40 p-1">
-                                <Dropdown.Item 
-                                    onClick={() => openCreatePost(post)}
-                                    className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
-                                >
-                                    <Edit2 className="w-4 h-4" /> Edit Post
-                                </Dropdown.Item>
-                                <Dropdown.Item 
-                                    onClick={() => {
-                                        if (window.confirm('Are you sure you want to delete this post?')) {
-                                            deletePostMutation.mutate(post.id);
-                                        }
-                                    }}
-                                    className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
-                                >
-                                    <Trash2 className="w-4 h-4" /> Delete
-                                </Dropdown.Item>
+                                {(user.id === post.userId || (user as any).userType === 'ADMIN') && (
+                                    <>
+                                        <Dropdown.Item 
+                                            onClick={() => openCreatePost(post)}
+                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
+                                        >
+                                            <Edit2 className="w-4 h-4" /> Edit Post
+                                        </Dropdown.Item>
+                                        <Dropdown.Item 
+                                            onClick={() => {
+                                                if (window.confirm('Are you sure you want to delete this post?')) {
+                                                    deletePostMutation.mutate(post.id);
+                                                }
+                                            }}
+                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                        >
+                                            <Trash2 className="w-4 h-4" /> Delete
+                                        </Dropdown.Item>
+                                        {user.id !== post.userId && <div className="my-1 border-t border-secondary-100 dark:border-secondary-800" />}
+                                    </>
+                                )}
+                                
+                                {user.id !== post.userId && (
+                                    <>
+                                        <Dropdown.Item 
+                                            onClick={handleReport}
+                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
+                                        >
+                                            <Flag className="w-4 h-4" /> Report Post
+                                        </Dropdown.Item>
+                                        <Dropdown.Item 
+                                            onClick={handleBlock}
+                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                        >
+                                            <Ban className="w-4 h-4" /> Block User
+                                        </Dropdown.Item>
+                                    </>
+                                )}
                             </Dropdown.Menu>
                         </Dropdown>
                     </div>

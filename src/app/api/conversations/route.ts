@@ -30,10 +30,31 @@ export async function GET() {
       },
     });
 
-    // Enrich with participant user info
-    const enriched = await Promise.all(
+    // Get all blocks involving the current user
+    const blocks = await prisma.block.findMany({
+        where: {
+            OR: [
+                { blockerId: userId },
+                { blockedId: userId },
+            ],
+        },
+        select: { blockerId: true, blockedId: true },
+    });
+
+    const blockedIds = new Set(blocks.map(b => 
+        b.blockerId === userId ? b.blockedId : b.blockerId
+    ));
+
+    // Filter and enrich
+    const enriched = (await Promise.all(
       conversations.map(async (conv) => {
         const otherIds = conv.participantIds.filter((id) => id !== userId);
+        
+        // Skip if any other participant is blocked
+        if (otherIds.some(id => blockedIds.has(id))) {
+            return null;
+        }
+
         const participants = await prisma.user.findMany({
           where: { id: { in: otherIds } },
           select: { id: true, name: true, username: true, avatar: true },
@@ -43,7 +64,7 @@ export async function GET() {
           where: {
             conversationId: conv.id,
             senderId: { not: userId },
-            NOT: { readBy: { has: userId } },  // messages where current user hasn't read
+            NOT: { readBy: { has: userId } },
           },
         });
         return {
@@ -54,7 +75,7 @@ export async function GET() {
           unreadCount,
         };
       })
-    );
+    )).filter(c => c !== null);
 
     return NextResponse.json({ conversations: enriched });
   } catch (error) {
@@ -79,6 +100,20 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id;
     if (userId === participantId) {
       return NextResponse.json({ error: 'Cannot message yourself' }, { status: 400 });
+    }
+
+    // Check for blocks
+    const block = await prisma.block.findFirst({
+        where: {
+            OR: [
+                { blockerId: userId, blockedId: participantId },
+                { blockerId: participantId, blockedId: userId },
+            ],
+        },
+    });
+
+    if (block) {
+        return NextResponse.json({ error: 'Messaging is disabled due to a block' }, { status: 403 });
     }
 
     // Check if conversation already exists

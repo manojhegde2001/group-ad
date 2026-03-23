@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { LayoutDashboard, CalendarDays, Users, Plus, Tags, Building2 } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Users, Plus, Tags, Building2, BarChart3, ShieldAlert } from 'lucide-react';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await auth();
@@ -24,6 +24,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     <p className="text-sm font-semibold text-secondary-800 dark:text-white mt-0.5 truncate">{dbUser.name}</p>
                 </div>
                 <nav className="flex-1 p-3 space-y-1">
+                    <Link href="/admin/analytics" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
+                        <BarChart3 className="w-4 h-4" /> Platform Analytics
+                    </Link>
                     <Link href="/admin/events" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
                         <LayoutDashboard className="w-4 h-4" /> Events Dashboard
                     </Link>
@@ -38,6 +41,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     </Link>
                     <Link href="/admin/events/create" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
                         <Plus className="w-4 h-4" /> Create Event
+                    </Link>
+                    <Link href="/admin/reports" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-700 dark:hover:text-red-400 transition-colors">
+                        <ShieldAlert className="w-4 h-4" /> Moderation Reports
                     </Link>
                     <Link href="/events" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors">
                         <CalendarDays className="w-4 h-4" /> View Public Events

@@ -3,7 +3,6 @@
 import { CategoryCards } from '@/components/feed/category-cards';
 import { Compass, Layout } from 'lucide-react';
 import { TrendingCategories } from '@/components/explore/trending-categories';
-import { FeaturedVenues } from '@/components/explore/featured-venues';
 
 export default function ExplorePage() {
   return (
@@ -36,13 +35,7 @@ export default function ExplorePage() {
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <TrendingCategories />
         </div>
-
-        {/* Section 2: Featured Venues */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:200ms]">
-            <FeaturedVenues />
-        </div>
-
-        {/* Section 3: All Categories */}
+        {/* Section 2: All Topics */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:400ms]">
             <div className="flex items-center gap-2 px-4 sm:px-6 mb-2">
                 <div className="p-2 rounded-xl bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400">

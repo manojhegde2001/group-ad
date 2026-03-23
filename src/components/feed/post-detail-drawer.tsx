@@ -8,7 +8,7 @@ import { useAuthModal } from '@/hooks/use-modal';
 import {
     X, Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
     ChevronLeft, ChevronRight, Loader2, Send, Link2,
-    Twitter, Facebook, Check, Video,
+    Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PostWithRelations } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
-import { Popover } from 'rizzui';
+import { Popover, Dropdown } from 'rizzui';
+import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
+import { useDeletePost } from '@/hooks/use-api/use-posts';
+import { useCreatePost } from '@/hooks/use-feed';
 
 interface Comment {
     id: string;
@@ -49,6 +52,11 @@ export function PostDetailDrawer() {
     const [copied, setCopied] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
+    
+    const { open: openCreatePost } = useCreatePost();
+    const deleteMutation = useDeletePost();
+    const reportMutation = useReport();
+    const blockMutation = useBlock();
 
     // Fetch post + comments when opened
     useEffect(() => {
@@ -241,6 +249,23 @@ export function PostDetailDrawer() {
         } catch { }
     };
 
+    const handleReport = () => {
+        requireAuth(() => {
+            const reason = window.prompt('Please enter a reason for reporting this post:');
+            if (reason && post) {
+                reportMutation.mutate({ targetType: 'POST', targetId: post.id, reason });
+            }
+        });
+    };
+
+    const handleBlock = () => {
+        requireAuth(() => {
+            if (post && window.confirm(`Are you sure you want to block ${post.user.name}?`)) {
+                blockMutation.mutate(post.user.id);
+            }
+        });
+    };
+
     if (!isOpen || !post || !user) return null;
 
     const hasImages = post.images && post.images.length > 0;
@@ -394,6 +419,57 @@ export function PostDetailDrawer() {
                                     )}
                                 </Button>
                             )}
+
+                            {/* Moderation Actions */}
+                            <Dropdown placement="bottom-end">
+                                <Dropdown.Trigger>
+                                    <ActionIcon variant="flat" color="secondary" rounded="full" className="w-8 h-8">
+                                        <MoreHorizontal className="w-4 h-4" />
+                                    </ActionIcon>
+                                </Dropdown.Trigger>
+                                <Dropdown.Menu className="w-44 p-1">
+                                    {(user.id === post.user.id || (user as any).userType === 'ADMIN') && (
+                                        <>
+                                            <Dropdown.Item 
+                                                onClick={() => { closePost(); openCreatePost(post); }}
+                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
+                                            >
+                                                <Edit2 className="w-4 h-4" /> Edit Post
+                                            </Dropdown.Item>
+                                            <Dropdown.Item 
+                                                onClick={() => {
+                                                    if (window.confirm('Are you sure you want to delete this post?')) {
+                                                        deleteMutation.mutate(post.id, {
+                                                            onSuccess: () => closePost()
+                                                        });
+                                                    }
+                                                }}
+                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                            >
+                                                <Trash2 className="w-4 h-4" /> Delete Post
+                                            </Dropdown.Item>
+                                            {user.id !== post.user.id && <div className="my-1 border-t border-secondary-100 dark:border-secondary-800" />}
+                                        </>
+                                    )}
+                                    
+                                    {user.id !== post.user.id && (
+                                        <>
+                                            <Dropdown.Item 
+                                                onClick={handleReport}
+                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
+                                            >
+                                                <Flag className="w-4 h-4" /> Report Post
+                                            </Dropdown.Item>
+                                            <Dropdown.Item 
+                                                onClick={handleBlock}
+                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                            >
+                                                <Ban className="w-4 h-4" /> Block User
+                                            </Dropdown.Item>
+                                        </>
+                                    )}
+                                </Dropdown.Menu>
+                            </Dropdown>
                         </div>
                     </div>
 

@@ -18,6 +18,7 @@ export async function GET() {
       publishedEvents,
       pendingUpgradeRequests,
       pendingVerifications,
+      pendingReports,
       recentUsers,
       recentPosts,
     ] = await Promise.all([
@@ -29,6 +30,7 @@ export async function GET() {
       prisma.event.count({ where: { status: 'PUBLISHED' } }),
       prisma.userTypeChangeRequest.count({ where: { status: 'PENDING' } }),
       prisma.user.count({ where: { verificationStatus: 'PENDING' } }),
+      prisma.report.count({ where: { status: 'PENDING' } }),
       prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
@@ -54,6 +56,7 @@ export async function GET() {
         publishedEvents,
         pendingUpgradeRequests,
         pendingVerifications,
+        pendingReports,
       },
       recentUsers,
       recentPosts,

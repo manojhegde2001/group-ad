@@ -8,7 +8,7 @@ import { Avatar } from '@/components/ui/avatar';
 import {
   ShieldCheck, Users, CalendarDays, Building, FileText,
   TrendingUp, Clock, CheckCircle, AlertCircle, Loader2,
-  ArrowUpRight, BarChart3, Eye, Tags
+  ArrowUpRight, BarChart3, Eye, Tags, ShieldAlert
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
         { label: 'Total Users', value: stats.stats.totalUsers, icon: Users, color: 'blue', sub: `${stats.stats.businessUsers} business · ${stats.stats.individualUsers} individual` },
         { label: 'Total Posts', value: stats.stats.totalPosts, icon: FileText, color: 'green', sub: 'published posts' },
         { label: 'Events', value: stats.stats.totalEvents, icon: CalendarDays, color: 'orange', sub: `${stats.stats.publishedEvents} published` },
-        { label: 'Pending Actions', value: stats.stats.pendingUpgradeRequests + stats.stats.pendingVerifications, icon: AlertCircle, color: 'red', sub: `${stats.stats.pendingUpgradeRequests} upgrades · ${stats.stats.pendingVerifications} verifications` },
+        { label: 'Pending Reports', value: stats.stats.pendingReports, icon: ShieldAlert, color: 'red', sub: 'requires review' },
       ]
     : [];
 
@@ -53,11 +53,12 @@ export default function AdminDashboardPage() {
   };
 
   const adminLinks = [
+    { href: '/admin/analytics', label: 'Platform Analytics', icon: BarChart3, desc: 'View growth trends, engagement, and top performing content' },
+    { href: '/admin/reports', label: 'Moderation Reports', icon: ShieldAlert, desc: 'Review user-submitted reports and take action' },
     { href: '/admin/users', label: 'Manage Users', icon: Users, desc: 'View all users, change roles, suspend accounts' },
     { href: '/admin/categories', label: 'Manage Categories', icon: Tags, desc: 'Add, edit, and organize interest categories' },
     { href: '/admin/events', label: 'Manage Events', icon: CalendarDays, desc: 'Create, edit, publish, cancel events' },
     { href: '/admin/businesses', label: 'Businesses', icon: Building, desc: 'Review and verify business accounts' },
-    { href: '/admin/settings', label: 'Platform Settings', icon: ShieldCheck, desc: 'Configure platform-wide settings' },
   ];
 
   return (
@@ -190,17 +191,30 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Pending Alerts */}
-      {!statsLoading && stats?.stats?.pendingUpgradeRequests > 0 && (
-        <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-            {stats.stats.pendingUpgradeRequests} business upgrade request{stats.stats.pendingUpgradeRequests > 1 ? 's' : ''} waiting for review
-          </p>
-          <Link href="/admin/businesses" className="ml-auto text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline whitespace-nowrap">
-            Review →
-          </Link>
-        </div>
-      )}
+      <div className="space-y-3">
+        {!statsLoading && stats?.stats?.pendingUpgradeRequests > 0 && (
+          <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              {stats.stats.pendingUpgradeRequests} business upgrade request{stats.stats.pendingUpgradeRequests > 1 ? 's' : ''} waiting for review
+            </p>
+            <Link href="/admin/businesses" className="ml-auto text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline whitespace-nowrap">
+              Review →
+            </Link>
+          </div>
+        )}
+        {!statsLoading && stats?.stats?.pendingReports > 0 && (
+          <div className="flex items-center gap-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl">
+            <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
+            <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+              {stats.stats.pendingReports} moderation report{stats.stats.pendingReports > 1 ? 's' : ''} requiring attention
+            </p>
+            <Link href="/admin/reports" className="ml-auto text-xs font-bold text-red-700 dark:text-red-300 hover:underline whitespace-nowrap">
+              Take Action →
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

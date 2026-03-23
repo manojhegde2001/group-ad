@@ -35,8 +35,8 @@ export async function GET(
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Get counts and follow status separately to avoid TS errors with new models
-        const [followerCount, followingCount, postCount, followRecord, reverseFollowRecord] = await Promise.all([
+        // Get counts, follow status, and block status separately
+        const [followerCount, followingCount, postCount, followRecord, reverseFollowRecord, blockRecord] = await Promise.all([
             prismaAny.follow.count({ where: { followingId: user.id } }),
             prismaAny.follow.count({ where: { followerId: user.id } }),
             prisma.post.count({ where: { userId: user.id } }),
@@ -51,6 +51,13 @@ export async function GET(
                 ? prismaAny.follow.findUnique({
                     where: {
                         followerId_followingId: { followerId: user.id, followingId: currentUserId },
+                    },
+                })
+                : null,
+            currentUserId
+                ? prisma.block.findUnique({
+                    where: {
+                        blockerId_blockedId: { blockerId: currentUserId, blockedId: user.id },
                     },
                 })
                 : null,
@@ -89,6 +96,7 @@ export async function GET(
             user: {
                 ...userData,
                 isFollowing: !!followRecord,
+                isBlocked: !!blockRecord,
                 _count: {
                     posts: postCount,
                     followers: followerCount,

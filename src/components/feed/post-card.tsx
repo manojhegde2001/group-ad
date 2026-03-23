@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
     Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
@@ -13,7 +14,7 @@ import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
-import { Popover, Dropdown } from 'rizzui';
+import { Badge, Popover } from 'rizzui'; // Added Badge
 import { ActionIcon } from '../ui/action-icon';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +26,8 @@ interface PostCardProps {
 
 export function PostCard({ post, onLikeChange, showActions = false }: PostCardProps) {
     const [mounted, setMounted] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false); // Added state
+    const [isSubmitting, setIsSubmitting] = useState(false); // Added state
     useEffect(() => setMounted(true), []);
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
@@ -36,6 +39,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
     const deletePostMutation = useDeletePost();
     const reportMutation = useReport();
     const blockMutation = useBlock();
+    const router = useRouter(); // Added useRouter
 
     // ── Local optimistic like state ──────────────────────────────────────────
     const [liked, setLiked] = useState<boolean>((post as any).isLikedByUser ?? false);
@@ -126,8 +130,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
 
     const handleCardClick = () => requireAuth(() => openPost(post.id, post));
 
-    const handleReport = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleReport = () => { // Modified to be called without event
         requireAuth(() => {
             const reason = window.prompt('Please enter a reason for reporting this post:');
             if (reason) {
@@ -136,6 +139,14 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                     targetId: post.id,
                     reason,
                 });
+            }
+        });
+    };
+
+    const handleDeletePost = () => { // New function for delete
+        requireAuth(() => {
+            if (window.confirm('Are you sure you want to delete this post?')) {
+                deletePostMutation.mutate(post.id);
             }
         });
     };
@@ -227,53 +238,53 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                 {/* --- Ownership & Moderation Actions (Meatball Menu) --- */}
                 {user && (
                     <div className="absolute top-3 right-3 z-30" onClick={e => e.stopPropagation()}>
-                        <Dropdown placement="bottom-end">
-                            <Dropdown.Trigger>
+                        <Popover 
+                            isOpen={isMenuOpen} 
+                            setIsOpen={setIsMenuOpen}
+                            placement="bottom-end"
+                        >
+                            <Popover.Trigger>
                                 <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 shrink-0 transition-all cursor-pointer shadow-lg">
                                     <MoreHorizontal className="w-4 h-4" />
                                 </span>
-                            </Dropdown.Trigger>
-                            <Dropdown.Menu className="w-40 p-1">
-                                {(user.id === post.userId || (user as any).userType === 'ADMIN') && (
-                                    <>
-                                        <Dropdown.Item 
-                                            onClick={() => openCreatePost(post)}
-                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
-                                        >
-                                            <Edit2 className="w-4 h-4" /> Edit Post
-                                        </Dropdown.Item>
-                                        <Dropdown.Item 
-                                            onClick={() => {
-                                                if (window.confirm('Are you sure you want to delete this post?')) {
-                                                    deletePostMutation.mutate(post.id);
-                                                }
-                                            }}
-                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
-                                        >
-                                            <Trash2 className="w-4 h-4" /> Delete
-                                        </Dropdown.Item>
-                                        {user.id !== post.userId && <div className="my-1 border-t border-secondary-100 dark:border-secondary-800" />}
-                                    </>
-                                )}
-                                
-                                {user.id !== post.userId && (
-                                    <>
-                                        <Dropdown.Item 
-                                            onClick={handleReport}
-                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
-                                        >
-                                            <Flag className="w-4 h-4" /> Report Post
-                                        </Dropdown.Item>
-                                        <Dropdown.Item 
-                                            onClick={handleBlock}
-                                            className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
-                                        >
-                                            <Ban className="w-4 h-4" /> Block User
-                                        </Dropdown.Item>
-                                    </>
-                                )}
-                            </Dropdown.Menu>
-                        </Dropdown>
+                            </Popover.Trigger>
+                            <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
+                                <div className="flex flex-col gap-1">
+                                    {(user.id === post.userId || (user as any).userType === 'ADMIN') && (
+                                        <>
+                                            <button 
+                                                onClick={() => {
+                                                    openCreatePost(post);
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
+                                            >
+                                                <Edit2 className="w-4 h-4" /> Edit Post
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    handleDeletePost();
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer"
+                                            >
+                                                <Trash2 className="w-4 h-4" /> Delete Post
+                                            </button>
+                                            <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+                                        </>
+                                    )}
+                                    <button 
+                                        onClick={() => {
+                                            handleReport();
+                                            setIsMenuOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
+                                    >
+                                        <Flag className="w-4 h-4" /> Report
+                                    </button>
+                                </div>
+                            </Popover.Content>
+                        </Popover>
                     </div>
                 )}
 

@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PostWithRelations } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
-import { Popover, Dropdown } from 'rizzui';
+import { Popover } from 'rizzui';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
 import { useDeletePost } from '@/hooks/use-api/use-posts';
 import { useCreatePost } from '@/hooks/use-feed';
@@ -57,6 +57,7 @@ export function PostDetailDrawer() {
     const deleteMutation = useDeletePost();
     const reportMutation = useReport();
     const blockMutation = useBlock();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Fetch post + comments when opened
     useEffect(() => {
@@ -421,55 +422,57 @@ export function PostDetailDrawer() {
                             )}
 
                             {/* Moderation Actions */}
-                            <Dropdown placement="bottom-end">
-                                <Dropdown.Trigger>
+                            <Popover 
+                                isOpen={isMenuOpen} 
+                                setIsOpen={setIsMenuOpen}
+                                placement="bottom-end"
+                            >
+                                <Popover.Trigger>
                                     <ActionIcon variant="flat" color="secondary" rounded="full" className="w-8 h-8">
                                         <MoreHorizontal className="w-4 h-4" />
                                     </ActionIcon>
-                                </Dropdown.Trigger>
-                                <Dropdown.Menu className="w-44 p-1">
-                                    {(user.id === post.user.id || (user as any).userType === 'ADMIN') && (
-                                        <>
-                                            <Dropdown.Item 
-                                                onClick={() => { closePost(); openCreatePost(post); }}
-                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
-                                            >
-                                                <Edit2 className="w-4 h-4" /> Edit Post
-                                            </Dropdown.Item>
-                                            <Dropdown.Item 
-                                                onClick={() => {
-                                                    if (window.confirm('Are you sure you want to delete this post?')) {
-                                                        deleteMutation.mutate(post.id, {
-                                                            onSuccess: () => closePost()
-                                                        });
-                                                    }
-                                                }}
-                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
-                                            >
-                                                <Trash2 className="w-4 h-4" /> Delete Post
-                                            </Dropdown.Item>
-                                            {user.id !== post.user.id && <div className="my-1 border-t border-secondary-100 dark:border-secondary-800" />}
-                                        </>
-                                    )}
-                                    
-                                    {user.id !== post.user.id && (
-                                        <>
-                                            <Dropdown.Item 
-                                                onClick={handleReport}
-                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
-                                            >
-                                                <Flag className="w-4 h-4" /> Report Post
-                                            </Dropdown.Item>
-                                            <Dropdown.Item 
-                                                onClick={handleBlock}
-                                                className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
-                                            >
-                                                <Ban className="w-4 h-4" /> Block User
-                                            </Dropdown.Item>
-                                        </>
-                                    )}
-                                </Dropdown.Menu>
-                            </Dropdown>
+                                </Popover.Trigger>
+                                <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
+                                    <div className="flex flex-col gap-1">
+                                        {(user.id === post.user.id || (user as any).userType === 'ADMIN') && (
+                                            <>
+                                                <button 
+                                                    onClick={() => { closePost(); openCreatePost(post); setIsMenuOpen(false); }}
+                                                    className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
+                                                >
+                                                    <Edit2 className="w-4 h-4" /> Edit Post
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        if (window.confirm('Are you sure you want to delete this post?')) {
+                                                            deleteMutation.mutate(post.id, {
+                                                                onSuccess: () => { closePost(); setIsMenuOpen(false); }
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer"
+                                                >
+                                                    <Trash2 className="w-4 h-4" /> Delete Post
+                                                </button>
+                                                <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+                                            </>
+                                        )}
+                                        
+                                        <button 
+                                            onClick={() => { handleReport(); setIsMenuOpen(false); }}
+                                            className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
+                                        >
+                                            <Flag className="w-4 h-4" /> Report Post
+                                        </button>
+                                        <button 
+                                            onClick={() => { handleBlock(); setIsMenuOpen(false); }}
+                                            className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer"
+                                        >
+                                            <Ban className="w-4 h-4" /> Block User
+                                        </button>
+                                    </div>
+                                </Popover.Content>
+                            </Popover>
                         </div>
                     </div>
 

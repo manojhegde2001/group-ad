@@ -13,7 +13,7 @@ import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
 import { useCreatePost } from '@/hooks/use-feed';
 import { useReport, useBlock, useUnblock } from '@/hooks/use-api/use-moderation';
 import { Button } from '@/components/ui/button';
-import { Dropdown } from 'rizzui';
+import { Popover } from 'rizzui';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import type { PostWithRelations } from '@/types';
@@ -39,6 +39,7 @@ export default function PublicProfilePage() {
     const unblockMutation = useUnblock();
 
     const profile = profileData?.user;
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Refresh logic when a post is created
     const { setOnCreated } = useCreatePost();
@@ -223,8 +224,12 @@ export default function PublicProfilePage() {
                                         </Button>
 
                                         {/* Moderation Meatball Menu */}
-                                        <Dropdown placement="bottom-end">
-                                            <Dropdown.Trigger>
+                                        <Popover 
+                                            isOpen={isMenuOpen} 
+                                            setIsOpen={setIsMenuOpen}
+                                            placement="bottom-end"
+                                        >
+                                            <Popover.Trigger>
                                                 <Button 
                                                     variant="outline" 
                                                     rounded="pill" 
@@ -232,24 +237,26 @@ export default function PublicProfilePage() {
                                                 >
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </Button>
-                                            </Dropdown.Trigger>
-                                            <Dropdown.Menu className="w-44 p-1">
-                                                <Dropdown.Item 
-                                                    onClick={handleReportUser}
-                                                    className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
-                                                >
-                                                    <Flag className="w-4 h-4" /> Report Profile
-                                                </Dropdown.Item>
-                                                {!profile.isBlocked && (
-                                                    <Dropdown.Item 
-                                                        onClick={handleBlockUser}
-                                                        className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-50 text-red-600 cursor-pointer"
+                                            </Popover.Trigger>
+                                            <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
+                                                <div className="flex flex-col gap-1">
+                                                    <button 
+                                                        onClick={() => { handleReportUser(); setIsMenuOpen(false); }}
+                                                        className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
                                                     >
-                                                        <Ban className="w-4 h-4" /> Block User
-                                                    </Dropdown.Item>
-                                                )}
-                                            </Dropdown.Menu>
-                                        </Dropdown>
+                                                        <Flag className="w-4 h-4" /> Report Profile
+                                                    </button>
+                                                    {!profile.isBlocked && (
+                                                        <button 
+                                                            onClick={() => { handleBlockUser(); setIsMenuOpen(false); }}
+                                                            className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer"
+                                                        >
+                                                            <Ban className="w-4 h-4" /> Block User
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </Popover.Content>
+                                        </Popover>
                                     </>
                                 )}
                             </div>

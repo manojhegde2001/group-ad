@@ -35,7 +35,6 @@ import { SearchBar } from './search-bar';
 import { ActionIcon } from '../ui/action-icon';
 import { cn } from '@/lib/utils';
 
-
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
   loading: () => <div className="w-8 h-8 md:w-28 md:h-7 bg-secondary-200 dark:bg-secondary-700 rounded-full md:rounded animate-pulse" />,

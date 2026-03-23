@@ -39,7 +39,7 @@ export default function AdminReportsPage() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const data = await moderationService.getAdminReports();
+      const data: any = await moderationService.getAdminReports();
       setReports(data.reports);
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch reports');

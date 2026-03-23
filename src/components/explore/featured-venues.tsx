@@ -24,6 +24,7 @@ export function FeaturedVenues() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
 
+  
   useEffect(() => {
     fetch('/api/venues')
       .then((r) => r.json())

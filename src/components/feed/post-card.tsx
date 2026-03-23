@@ -229,7 +229,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                     <div className="absolute top-3 right-3 z-30" onClick={e => e.stopPropagation()}>
                         <Dropdown placement="bottom-end">
                             <Dropdown.Trigger>
-                                <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-black/20 hover:bg-black/40 text-white backdrop-blur-md border border-white/10 shrink-0 transition-all cursor-pointer">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 shrink-0 transition-all cursor-pointer shadow-lg">
                                     <MoreHorizontal className="w-4 h-4" />
                                 </span>
                             </Dropdown.Trigger>
@@ -290,11 +290,11 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                         onClick={handleLike}
                         disabled={likeMutation.isPending}
                         title={liked ? 'Unlike' : 'Like'}
-                        className={`flex items-center gap-2 h-9 px-4 rounded-xl text-[12px] font-black uppercase tracking-wider
-                            transition-all duration-300 active:scale-90 backdrop-blur-xl shadow-lg border border-white/20
+                        className={`flex items-center gap-2 h-10 px-4 rounded-xl text-[12px] font-black uppercase tracking-wider
+                            transition-all duration-300 active:scale-90 backdrop-blur-xl shadow-lg border
                             ${liked
-                                ? 'bg-red-500/80 text-white border-red-400/30'
-                                : 'bg-white/40 text-white hover:bg-white/60'}`}
+                                ? 'bg-red-500/90 text-white border-red-400/30'
+                                : 'bg-black/60 text-white border-white/10 hover:bg-black/80'}`}
                     >
                         <Heart className={`w-4 h-4 transition-transform duration-300 ${liked ? 'fill-white scale-125' : ''}`} />
                         {likeCount > 0 && <span>{likeCount}</span>}
@@ -305,9 +305,9 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                         <button
                             onClick={handleSave}
                             title={saved ? 'Remove from saved' : 'Save to board'}
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center
-                                backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border border-white/20
-                                ${saved ? 'bg-primary-500/80 text-white border-primary-400/30' : 'bg-white/40 text-white hover:bg-white/60'}`}
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center
+                                backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border
+                                ${saved ? 'bg-primary-500/90 text-white border-primary-400/30' : 'bg-black/60 text-white border-white/10 hover:bg-black/80'}`}
                         >
                             <Bookmark className={`w-4 h-4 ${saved ? 'fill-white' : ''}`} />
                         </button>
@@ -321,9 +321,9 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                                 <Popover.Trigger>
                                     <button
                                         title="Share"
-                                        className={`w-9 h-9 rounded-xl flex items-center justify-center
-                                            backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border border-white/20
-                                            ${shareOpen ? 'bg-primary-600/80 text-white' : 'bg-white/40 text-white hover:bg-white/60'}`}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center
+                                            backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border
+                                            ${shareOpen ? 'bg-primary-600/90 text-white border-primary-400/30' : 'bg-black/60 text-white border-white/10 hover:bg-black/80'}`}
                                     >
                                         <Share2 className="w-4 h-4" />
                                     </button>

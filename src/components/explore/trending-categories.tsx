@@ -44,88 +44,92 @@ export function TrendingCategories() {
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-            <Sparkles className="w-4 h-4" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+              Trending Hubs
+            </h2>
           </div>
-          <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">
-            Trending Hubs
-          </h2>
+          <Link 
+              href="/explore" 
+              className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest hover:underline"
+          >
+              View All
+          </Link>
         </div>
-        <Link 
-            href="/explore" 
-            className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest hover:underline"
-        >
-            View All
-        </Link>
       </div>
 
       <div className="relative">
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 px-4 sm:px-6 no-scrollbar snap-x snap-mandatory scroll-smooth">
-          {categories.map((cat, idx) => (
-            <Link
-              key={cat.id}
-              href={`/explore/${cat.slug}`}
-              className="
-                relative min-w-[280px] sm:min-w-[320px] h-48
-                rounded-[2.5rem] overflow-hidden 
-                group transition-all duration-700 hover:-translate-y-2 snap-start
-                shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]
-                dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]
-              "
-            >
-              {/* Background with parallax effect */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-125"
-                style={{ backgroundImage: `url('${cat.banner || DEFAULT_BANNER}')` }}
-              />
-              
-              {/* Layered Overlays */}
-              <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/30 to-transparent transition-opacity duration-700 group-hover:opacity-60" />
-              <div className="absolute inset-0 bg-primary-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              
-              {/* Glass Rim */}
-              <div className="absolute inset-0 border border-white/10 rounded-[2.5rem] pointer-events-none" />
+        <div className="max-w-7xl mx-auto">
+          <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 px-4 sm:px-6 no-scrollbar snap-x snap-mandatory scroll-smooth">
+            {categories.map((cat, idx) => (
+              <Link
+                key={cat.id}
+                href={`/explore/${cat.slug}`}
+                className="
+                  relative min-w-[280px] sm:min-w-[320px] h-48
+                  rounded-[2.5rem] overflow-hidden 
+                  group transition-all duration-700 hover:-translate-y-2 snap-start
+                  shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]
+                  dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]
+                "
+              >
+                {/* Background with parallax effect */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-125"
+                  style={{ backgroundImage: `url('${cat.banner || DEFAULT_BANNER}')` }}
+                />
+                
+                {/* Layered Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/30 to-transparent transition-opacity duration-700 group-hover:opacity-60" />
+                <div className="absolute inset-0 bg-primary-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                
+                {/* Glass Rim */}
+                <div className="absolute inset-0 border border-white/10 rounded-[2.5rem] pointer-events-none" />
 
-              {/* Top Badge */}
-              <div className="absolute top-5 left-5 right-5 flex justify-between items-start z-10">
-                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-2xl shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
-                  {cat.icon || '✨'}
-                </div>
-                <div className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-black text-white uppercase tracking-widest shadow-xl flex items-center gap-1.5 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500">
-                  Join <span className="text-primary-400">Hub</span>
-                </div>
-              </div>
-              
-              {/* Bottom Content */}
-              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7 space-y-2 z-10 transition-transform duration-500 group-hover:translate-y-[-5px]">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
-                    <p className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em]">
-                      Trending Now
-                    </p>
+                {/* Top Badge */}
+                <div className="absolute top-5 left-5 right-5 flex justify-between items-start z-10">
+                  <div className="w-12 h-12 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center text-2xl shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
+                    {cat.icon || '✨'}
                   </div>
-                  <h3 className="font-black text-white text-xl sm:text-2xl uppercase leading-none tracking-tight drop-shadow-2xl">
-                    {cat.name}
-                  </h3>
+                  <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-black text-white uppercase tracking-widest shadow-xl flex items-center gap-1.5 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500">
+                    Join <span className="text-primary-400">Hub</span>
+                  </div>
                 </div>
                 
-                <div className="flex items-center gap-3 pt-1">
-                   <div className="h-0.5 flex-1 bg-white/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary-500 w-2/3 group-hover:w-full transition-all duration-1000" />
-                   </div>
-                   <p className="text-[11px] text-white font-black uppercase tracking-widest shrink-0">
-                    {cat._count.posts} Active
-                  </p>
+                {/* Bottom Content */}
+                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7 space-y-2 z-10 transition-transform duration-500 group-hover:translate-y-[-5px]">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                      <p className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em]">
+                        Trending Now
+                      </p>
+                    </div>
+                    <h3 className="font-black text-white text-xl sm:text-2xl uppercase leading-none tracking-tight drop-shadow-2xl">
+                      {cat.name}
+                    </h3>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 pt-1">
+                     <div className="h-0.5 flex-1 bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary-500 w-2/3 group-hover:w-full transition-all duration-1000" />
+                     </div>
+                     <p className="text-[11px] text-white font-black uppercase tracking-widest shrink-0">
+                      {cat._count.posts} Active
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Hover Glow */}
-              <div className="absolute -inset-2 bg-primary-500/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-            </Link>
-          ))}
+                {/* Hover Glow */}
+                <div className="absolute -inset-2 bg-primary-500/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>

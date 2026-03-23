@@ -173,12 +173,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user.userType === 'BUSINESS' && user.verificationStatus !== 'VERIFIED') {
-      return NextResponse.json(
-        { error: 'Your business account must be verified to create posts' },
-        { status: 403 }
-      );
-    }
 
 
     const body = await request.json();

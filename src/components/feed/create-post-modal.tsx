@@ -36,7 +36,7 @@ export function CreatePostModal() {
     const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
     const isAdmin = (user as any)?.userType === 'ADMIN';
     const isBusiness = (user as any)?.userType === 'BUSINESS';
-    const isAllowed = isAdmin || (isBusiness && isVerified);
+    const isAllowed = isAdmin || isBusiness;
 
     const imageInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +70,7 @@ export function CreatePostModal() {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
             if (!isAllowed) {
-                toast.error('Only verified business accounts can create/edit posts');
+                toast.error('Only business accounts can create/edit posts');
                 close();
             }
         }

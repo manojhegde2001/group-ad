@@ -161,7 +161,7 @@ export default function PublicProfilePage() {
                                         <Button 
                                             variant="outline" 
                                             rounded="pill" 
-                                            className="font-bold px-5 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                            className="font-bold px-5 h-9 text-xs border-secondary-300 dark:border-secondary-700 text-secondary-900 dark:text-secondary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800/50 transition-colors"
                                             onClick={() => router.push('/settings')}
                                         >
                                             Edit profile
@@ -169,7 +169,7 @@ export default function PublicProfilePage() {
                                         <Button 
                                             variant="outline" 
                                             rounded="pill" 
-                                            className="font-bold px-4 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                            className="font-bold px-4 h-9 text-xs border-secondary-300 dark:border-secondary-700 text-secondary-900 dark:text-secondary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800/50 transition-colors"
                                             onClick={() => router.push('/boards/saved')}
                                         >
                                             Saved posts
@@ -177,7 +177,7 @@ export default function PublicProfilePage() {
                                         <Button 
                                             variant="outline" 
                                             rounded="pill" 
-                                            className="font-bold px-4 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                            className="font-bold px-4 h-9 text-xs border-secondary-300 dark:border-secondary-700 text-secondary-900 dark:text-secondary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800/50 transition-colors"
                                             onClick={handleShare}
                                         >
                                             Share profile
@@ -206,7 +206,7 @@ export default function PublicProfilePage() {
                                                 <Button 
                                                     variant="outline" 
                                                     rounded="pill" 
-                                                    className="font-bold px-5 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                                    className="font-bold px-5 h-9 text-xs border-secondary-300 dark:border-secondary-700 text-secondary-900 dark:text-secondary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800/50 transition-colors"
                                                     onClick={() => router.push(`/messages?userId=${profile.id}`)}
                                                 >
                                                     Message
@@ -216,7 +216,7 @@ export default function PublicProfilePage() {
                                         <Button 
                                             variant="outline" 
                                             rounded="pill" 
-                                            className="font-bold px-4 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                            className="font-bold px-4 h-9 text-xs border-secondary-300 dark:border-secondary-700 text-secondary-900 dark:text-secondary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800/50 transition-colors"
                                             onClick={handleShare}
                                         >
                                             <Share2 className="w-3.5 h-3.5" />
@@ -228,7 +228,7 @@ export default function PublicProfilePage() {
                                                 <Button 
                                                     variant="outline" 
                                                     rounded="pill" 
-                                                    className="font-bold px-3 h-9 text-xs border-secondary-200 dark:border-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50"
+                                                    className="font-bold px-3 h-9 text-xs border-secondary-300 dark:border-secondary-700 text-secondary-900 dark:text-secondary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800/50 transition-colors"
                                                 >
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </Button>
@@ -259,15 +259,15 @@ export default function PublicProfilePage() {
                         <div className="flex items-center gap-8 md:gap-12">
                             <div className="flex items-center md:flex-col items-start gap-1.5 md:gap-0">
                                 <span className="text-secondary-900 dark:text-white font-black text-base md:text-lg">{profile._count?.posts ?? 0}</span>
-                                <span className="text-sm text-secondary-400 font-bold uppercase tracking-widest text-[10px] md:text-xs">posts</span>
+                                <span className="text-secondary-400 dark:text-secondary-300 font-bold uppercase tracking-widest text-[10px] md:text-xs">posts</span>
                             </div>
                             <div className="flex items-center md:flex-col items-start gap-1.5 md:gap-0">
                                 <span className="text-secondary-900 dark:text-white font-black text-base md:text-lg">{profile._count?.followers ?? 0}</span>
-                                <span className="text-sm text-secondary-400 font-bold uppercase tracking-widest text-[10px] md:text-xs">followers</span>
+                                <span className="text-secondary-400 dark:text-secondary-300 font-bold uppercase tracking-widest text-[10px] md:text-xs">followers</span>
                             </div>
                             <div className="flex items-center md:flex-col items-start gap-1.5 md:gap-0">
                                 <span className="text-secondary-900 dark:text-white font-black text-base md:text-lg">{profile._count?.following ?? 0}</span>
-                                <span className="text-sm text-secondary-400 font-bold uppercase tracking-widest text-[10px] md:text-xs">following</span>
+                                <span className="text-secondary-400 dark:text-secondary-300 font-bold uppercase tracking-widest text-[10px] md:text-xs">following</span>
                             </div>
                         </div>
 
@@ -275,7 +275,7 @@ export default function PublicProfilePage() {
                         <div className="space-y-1.5 text-center md:text-left">
                             <p className="font-black text-secondary-900 dark:text-white text-base tracking-tight">{profile.name}</p>
                             {profile.bio && (
-                                <p className="text-secondary-600 dark:text-secondary-400 text-sm font-medium leading-relaxed max-w-md">
+                                <p className="text-secondary-600 dark:text-secondary-300 text-sm font-medium leading-relaxed max-w-md">
                                     {profile.bio}
                                 </p>
                             )}

@@ -427,7 +427,7 @@ export function PostDetailDrawer() {
                                         <MoreHorizontal className="w-4 h-4" />
                                     </ActionIcon>
                                 </Dropdown.Trigger>
-                                <Dropdown.Menu className="w-44 p-1 bg-white dark:bg-secondary-900 rounded-xl shadow-2xl border border-secondary-200 dark:border-secondary-800 animate-in fade-in zoom-in duration-200">
+                                <Dropdown.Menu className="w-44 p-1">
                                     {(user.id === post.user.id || (user as any).userType === 'ADMIN') && (
                                         <>
                                             <Dropdown.Item 

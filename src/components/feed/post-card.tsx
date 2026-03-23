@@ -233,7 +233,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                                     <MoreHorizontal className="w-4 h-4" />
                                 </span>
                             </Dropdown.Trigger>
-                            <Dropdown.Menu className="w-40 p-1 bg-white dark:bg-secondary-900 rounded-xl shadow-2xl border border-secondary-200 dark:border-secondary-800 animate-in fade-in zoom-in duration-200">
+                            <Dropdown.Menu className="w-40 p-1">
                                 {(user.id === post.userId || (user as any).userType === 'ADMIN') && (
                                     <>
                                         <Dropdown.Item 

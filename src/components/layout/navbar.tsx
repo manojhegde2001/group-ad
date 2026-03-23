@@ -226,7 +226,7 @@ export function Navbar() {
 
               {/* Desktop Dropdown */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white sm:dark:bg-secondary-900 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200 hidden md:block">
+                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white sm:dark:bg-secondary-900 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700 overflow-hidden z-[200] p-2 hidden md:block">
                   <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
                       <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
                           <div className="flex items-center gap-3">

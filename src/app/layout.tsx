@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme/theme-provider';
 import ToastProvider from '@/components/providers/toast-provider';
 import QueryProvider from '@/components/providers/query-provider';
 import { LayoutContent } from '@/components/layout/layout-content';
+import { SocketProvider } from '@/components/providers/socket-provider';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -28,15 +29,17 @@ export default function RootLayout({
       <body className={plusJakarta.className}>
         <NextAuthProvider>
           <QueryProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem={false}
-              storageKey="theme"
-            >
-              <LayoutContent>{children}</LayoutContent>
-              <ToastProvider />
-            </ThemeProvider>
+            <SocketProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem={false}
+                storageKey="theme"
+              >
+                <LayoutContent>{children}</LayoutContent>
+                <ToastProvider />
+              </ThemeProvider>
+            </SocketProvider>
           </QueryProvider>
         </NextAuthProvider>
       </body>

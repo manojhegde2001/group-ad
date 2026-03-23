@@ -14,7 +14,7 @@ import { Avatar } from '@/components/ui/avatar';
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
 export function CreatePostModal() {
-    const { isOpen, close, notifyCreated } = useCreatePost();
+    const { isOpen, close, notifyCreated, editingPost } = useCreatePost();
     const { user } = useAuth();
 
     const [postType, setPostType] = useState<PostType>('IMAGE');
@@ -27,14 +27,41 @@ export function CreatePostModal() {
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    
+    // Check verification status
+    const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
+    const isAdmin = (user as any)?.userType === 'ADMIN';
+    const isBusiness = (user as any)?.userType === 'BUSINESS';
+    const isAllowed = isAdmin || (isBusiness && isVerified);
+
     const imageInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
 
+    // Populate editing data
+    useEffect(() => {
+        if (editingPost) {
+            setPostType(editingPost.type as PostType);
+            setContent(editingPost.content);
+            setTags(editingPost.tags.join(', '));
+            setVisibility(editingPost.visibility as 'PUBLIC' | 'PRIVATE');
+            setMediaPreviews(editingPost.images);
+            // We set mediaFiles to empty because we are using existing URLs
+            // If the user adds NEW files, they will be appended
+            setMediaFiles([]);
+        }
+    }, [editingPost]);
+
     // Lock body scroll
     useEffect(() => {
-        if (isOpen) document.body.style.overflow = 'hidden';
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            if (!isAllowed) {
+                toast.error('Only verified business accounts can create/edit posts');
+                close();
+            }
+        }
         return () => { document.body.style.overflow = ''; };
-    }, [isOpen]);
+    }, [isOpen, isAllowed, close]);
 
     const reset = () => {
         setContent('');
@@ -131,29 +158,36 @@ export function CreatePostModal() {
             toast.error('Please add some content');
             return;
         }
-        if ((postType === 'IMAGE' || postType === 'VIDEO') && mediaFiles.length === 0) {
+        if ((postType === 'IMAGE' || postType === 'VIDEO') && mediaPreviews.length === 0) {
             toast.error(`Please add at least one ${postType === 'VIDEO' ? 'video' : 'image'}`);
             return;
         }
 
         setSubmitting(true);
         try {
-            const mediaUrls = await uploadToCloudinary();
+            // Upload only NEW files
+            const newMediaUrls = await uploadToCloudinary();
+            
+            // Get EXISTING URLs from previews (those that aren't blob URLs)
+            const existingUrls = mediaPreviews.filter(p => !p.startsWith('blob:'));
+            
+            const finalMediaUrls = [...existingUrls, ...newMediaUrls];
 
             const parsedTags = tags
                 .split(',')
                 .map((t) => t.trim().toLowerCase().replace(/^#/, ''))
                 .filter(Boolean);
 
-            const res = await fetch('/api/posts', {
-                method: 'POST',
+            const url = editingPost ? `/api/posts/${editingPost.id}` : '/api/posts';
+            const method = editingPost ? 'PATCH' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: postType,
                     content: content.trim(),
-                    images: postType !== 'VIDEO' ? mediaUrls : [],
-                    // Store video URL in images array for simplicity (or you can extend schema)
-                    ...(postType === 'VIDEO' && { images: mediaUrls }),
+                    images: finalMediaUrls,
                     tags: parsedTags,
                     visibility,
                 }),
@@ -161,19 +195,19 @@ export function CreatePostModal() {
 
             if (!res.ok) {
                 const err = await res.json();
-                throw new Error(err.error || 'Failed to create post');
+                throw new Error(err.error || `Failed to ${editingPost ? 'update' : 'publish'} post`);
             }
 
             const data = await res.json();
             setSuccess(true);
-            toast.success('Post published! 🎉');
-            // Prepend to feed without page reload
+            toast.success(`Post ${editingPost ? 'updated' : 'published'}! 🎉`);
+            
             setTimeout(() => {
                 reset();
                 notifyCreated(data.post);
             }, 1200);
         } catch (err: any) {
-            toast.error(err.message || 'Failed to publish post');
+            toast.error(err.message || `Failed to ${editingPost ? 'update' : 'publish'} post`);
         } finally {
             setSubmitting(false);
         }
@@ -421,7 +455,7 @@ export function CreatePostModal() {
                                 disabled={submitting || uploading}
                                 className="px-6 font-semibold"
                             >
-                                {uploading ? 'Uploading...' : submitting ? 'Publishing...' : 'Publish'}
+                                {uploading ? 'Uploading...' : submitting ? (editingPost ? 'Updating...' : 'Publishing...') : (editingPost ? 'Update Post' : 'Publish')}
                             </Button>
                         </div>
                     </form>

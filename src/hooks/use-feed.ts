@@ -6,7 +6,8 @@ import type { PostWithRelations } from '@/types';
 // ---- Create Post Modal Store ----
 interface CreatePostStore {
     isOpen: boolean;
-    open: () => void;
+    editingPost: PostWithRelations | null;
+    open: (post?: PostWithRelations) => void;
     close: () => void;
     onCreated?: (post: PostWithRelations) => void;
     setOnCreated: (cb: (post: PostWithRelations) => void) => void;
@@ -15,12 +16,13 @@ interface CreatePostStore {
 
 export const useCreatePost = create<CreatePostStore>((set, get) => ({
     isOpen: false,
-    open: () => set({ isOpen: true }),
-    close: () => set({ isOpen: false }),
+    editingPost: null,
+    open: (post) => set({ isOpen: true, editingPost: post || null }),
+    close: () => set({ isOpen: false, editingPost: null }),
     onCreated: undefined,
     setOnCreated: (cb) => set({ onCreated: cb }),
     notifyCreated: (post) => {
-        set({ isOpen: false });
+        set({ isOpen: false, editingPost: null });
         get().onCreated?.(post);
     },
 }));

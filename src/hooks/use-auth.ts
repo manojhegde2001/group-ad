@@ -14,17 +14,11 @@ export function useAuth() {
     try {
       // Sign out and update session immediately
       await signOut({ 
-        redirect: false,
+        redirect: true,
         callbackUrl: '/'
       });
       
-      // Update session to trigger re-render
-      await update();
-      
       toast.success('Logged out successfully! 👋');
-      
-      // Navigate without reload
-      router.push('/');
       
     } catch (error) {
       console.error('Logout error:', error);

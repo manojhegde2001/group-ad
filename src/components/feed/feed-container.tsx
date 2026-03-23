@@ -9,6 +9,7 @@ import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 // Demo posts used as fallback when DB is empty  
 const DEMO_POSTS: any[] = [
@@ -85,16 +86,13 @@ const DEMO_POSTS: any[] = [
 ];
 
 const breakpointCols = {
-  default: 6,
-  2560: 6,
-  1800: 5,
+  default: 5,
+  1920: 5,
   1536: 4,
-  1280: 4,
-  1024: 3,
+  1280: 3,
+  1024: 2,
   768: 2,
-  640: 2,
-  480: 1,
-  0: 1,
+  640: 1,
 };
 
 interface FeedContainerProps {
@@ -160,14 +158,21 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
 
   if (isLoading) {
     return (
-      <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-6">
-        <div className="columns-1 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-3">
-          {[...Array(12)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className={`mb-3 break-inside-avoid rounded-2xl ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-40' : 'h-52'
-                }`}
-            />
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton
+                className={`w-full rounded-2xl ${i % 3 === 0 ? 'h-80' : i % 3 === 1 ? 'h-48' : 'h-64'}`}
+              />
+              <div className="flex items-center gap-2 px-1">
+                <Skeleton className="w-6 h-6 rounded-lg" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-3 w-2/3 rounded-full" />
+                  <Skeleton className="h-2 w-1/2 rounded-full" />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -198,17 +203,23 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
 
       <Masonry
         breakpointCols={breakpointCols}
-        className="flex -ml-3 w-auto"
-        columnClassName="pl-3 bg-clip-padding"
+        className="flex -ml-4 w-auto"
+        columnClassName="pl-4 bg-clip-padding"
       >
         {allPosts.map((post, i) => (
-          <div
+          <motion.div
             key={post.id}
-            className="mb-3 animate-slide-up opacity-0"
-            style={{ animationDelay: `${Math.min(i * 40, 400)}ms`, animationFillMode: 'forwards' }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.5,
+              delay: Math.min(i * 0.05, 0.5),
+              ease: [0.21, 1.11, 0.81, 0.99] // subtle spring effect
+            }}
+            className="mb-4"
           >
             <PostCard post={post} />
-          </div>
+          </motion.div>
         ))}
       </Masonry>
 

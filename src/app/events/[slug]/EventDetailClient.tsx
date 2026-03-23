@@ -21,11 +21,14 @@ import { Avatar } from '@/components/ui/avatar';
 import EnrollmentButton from '@/components/events/EnrollmentButton';
 import { useEvent } from '@/hooks/use-api/use-events';
 import { notFound } from 'next/navigation';
-
 import AttendeeConnectBanner from '@/components/events/AttendeeConnectBanner';
+import { useAuth } from '@/hooks/use-auth';
+import { AttendanceTicket } from '@/components/events/attendance-ticket';
+import { QRScannerModal } from '@/components/events/qr-scanner-modal';
 
 export default function EventDetailClient({ slug }: { slug: string }) {
-    const { data, isLoading, error } = useEvent(slug);
+    const { user: currentUser } = useAuth();
+    const { data, isLoading, error, refetch } = useEvent(slug);
 
     if (isLoading) {
         return (
@@ -200,6 +203,23 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                                         isEnrolledInitial={!!isEnrolled}
                                         isPast={isPast}
                                     />
+
+                                    <div className="pt-4 flex flex-col gap-3">
+                                        {userEnrollment?.status === 'APPROVED' && (
+                                            <AttendanceTicket 
+                                                eventId={event.id} 
+                                                eventName={event.title} 
+                                            />
+                                        )}
+                                        
+                                        {(currentUser?.id === event.organizerId || (currentUser as any)?.userType === 'ADMIN') && (
+                                            <QRScannerModal 
+                                                eventId={event.id} 
+                                                eventName={event.title}
+                                                onSuccess={() => refetch()}
+                                            />
+                                        )}
+                                    </div>
 
                                     <div className="mt-6 flex items-center justify-center gap-8 border-t border-secondary-50 dark:border-secondary-800 pt-6">
                                         <button className="flex flex-col items-center gap-1 group">

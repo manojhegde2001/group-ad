@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { socketService } from '@/lib/socket-service';
 
 // GET /api/connections?status=PENDING|ACCEPTED
 export async function GET(request: NextRequest) {
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create notification for receiver
-    await prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         userId: receiverId,
         type: 'CONNECTION_REQUEST',
@@ -99,7 +100,15 @@ export async function POST(request: NextRequest) {
         entityType: 'Connection',
         entityId: connection.id,
       },
-    }).catch(() => {});
+    }).catch(() => null);
+
+    if (notification) {
+      socketService.notifyUser(receiverId, {
+        type: 'CONNECTION_REQUEST',
+        message: notification.message,
+        data: { notificationId: notification.id, senderId: userId }
+      });
+    }
 
     return NextResponse.json({ connection }, { status: 201 });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { socketService } from '@/lib/socket-service';
 
 export async function PATCH(
   request: NextRequest,
@@ -51,14 +52,22 @@ export async function PATCH(
       });
 
       // Create a notification for the user
-      await prisma.notification.create({
+      const notification = await prisma.notification.create({
         data: {
           userId: typeChangeRequest.userId,
           type: 'VERIFICATION_APPROVED',
           title: 'Business Verified!',
           message: 'Your business account has been verified by the admin.',
         }
-      }).catch(() => {});
+      }).catch(() => null);
+
+      if (notification) {
+        socketService.notifyUser(typeChangeRequest.userId, {
+            type: 'VERIFICATION_APPROVED',
+            message: notification.message,
+            data: { notificationId: notification.id }
+        });
+      }
     } else {
       // If REJECTED, update user verification status
       await prisma.user.update({
@@ -70,14 +79,22 @@ export async function PATCH(
       });
 
       // Create a notification for the user
-      await prisma.notification.create({
+      const notification = await prisma.notification.create({
         data: {
           userId: typeChangeRequest.userId,
           type: 'VERIFICATION_REJECTED',
           title: 'Verification Rejected',
           message: `Your business verification was rejected. Reason: ${reviewNote || 'No reason provided.'}`,
         }
-      }).catch(() => {});
+      }).catch(() => null);
+
+      if (notification) {
+        socketService.notifyUser(typeChangeRequest.userId, {
+            type: 'VERIFICATION_REJECTED',
+            message: notification.message,
+            data: { notificationId: notification.id }
+        });
+      }
     }
 
     return NextResponse.json({ 

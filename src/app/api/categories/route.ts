@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('active') !== 'false';
+    const trending = searchParams.get('trending') === 'true';
 
     const where = activeOnly ? { isActive: true } : {};
 
@@ -27,9 +28,9 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: {
-        name: 'asc',
-      },
+      orderBy: trending 
+        ? { posts: { _count: 'desc' as const } } 
+        : { name: 'asc' as const },
     });
 
     return NextResponse.json({

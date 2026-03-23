@@ -48,6 +48,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           username: user.username,
           avatar: user.avatar,
+          location: user.location,
           userType: user.userType,
           colorTheme: user.category?.colorTheme || null,
           fontFamily: user.category?.fontFamily || null,
@@ -70,6 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.username = (user as any).username;
         token.avatar = (user as any).avatar;
+        token.location = (user as any).location;
         token.userType = (user as any).userType;
         token.colorTheme = (user as any).colorTheme;
         token.fontFamily = (user as any).fontFamily;
@@ -107,6 +109,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.username = token.username as string;
         session.user.avatar = token.avatar as string;
+        (session.user as any).location = token.location as string;
         (session.user as any).userType = token.userType as string;
         (session.user as any).colorTheme = token.colorTheme as string;
         (session.user as any).fontFamily = token.fontFamily as string;

@@ -55,11 +55,12 @@ export function CategoryCards() {
                 className="
                   group/card relative
                   w-full aspect-[4/5]
-                  overflow-hidden rounded-2xl md:rounded-3xl
-                  shadow-md hover:shadow-xl
-                  hover:-translate-y-1
-                  transition-all duration-300
+                  overflow-hidden rounded-2xl md:rounded-[2rem]
+                  shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)]
+                  hover:-translate-y-2
+                  transition-all duration-500 ease-[0.33,1,0.68,1]
                   outline-none focus-visible:ring-2 focus-visible:ring-primary-500
+                  border border-secondary-100/50 dark:border-secondary-800/50
                 "
               >
                 {/* Background Image */}
@@ -69,17 +70,17 @@ export function CategoryCards() {
                 />
 
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 transition-opacity duration-300 group-hover/card:from-black/90" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-500 group-hover/card:via-black/40" />
 
                 {/* Content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-4 md:p-5">
-                  <div className="flex flex-col gap-1.5 translate-y-2 group-hover/card:translate-y-0 transition-transform duration-300">
+                <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5 md:p-6">
+                  <div className="flex flex-col gap-2 translate-y-4 group-hover/card:translate-y-0 transition-transform duration-500 ease-out">
                     {cat.icon && (
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-                        <span className="text-lg sm:text-xl md:text-2xl">{cat.icon}</span>
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center shrink-0 border border-white/20 shadow-xl mb-1 group-hover/card:scale-110 transition-transform duration-500">
+                        <span className="text-xl sm:text-2xl md:text-3xl filter drop-shadow-lg">{cat.icon}</span>
                       </div>
                     )}
-                    <h3 className="font-bold text-white tracking-tight leading-tight text-sm sm:text-base md:text-lg lg:text-xl drop-shadow-md text-left">
+                    <h3 className="font-black text-white tracking-tight leading-tight text-base sm:text-lg md:text-xl lg:text-2xl drop-shadow-2xl text-left uppercase">
                       {cat.name}
                     </h3>
                   </div>

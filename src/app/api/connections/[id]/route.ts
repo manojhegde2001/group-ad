@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { socketService } from '@/lib/socket-service';
 
 // PATCH /api/connections/[id] - accept or reject
 export async function PATCH(
@@ -36,7 +37,7 @@ export async function PATCH(
     });
 
     if (action === 'ACCEPT') {
-      await prisma.notification.create({
+      const notification = await prisma.notification.create({
         data: {
           userId: connection.requesterId,
           type: 'CONNECTION_ACCEPTED',
@@ -46,7 +47,15 @@ export async function PATCH(
           entityType: 'Connection',
           entityId: connection.id,
         },
-      }).catch(() => {});
+      }).catch(() => null);
+
+      if (notification) {
+        socketService.notifyUser(connection.requesterId, {
+          type: 'CONNECTION_ACCEPTED',
+          message: notification.message,
+          data: { notificationId: notification.id, senderId: session.user.id }
+        });
+      }
     }
 
     return NextResponse.json({ connection: updated });

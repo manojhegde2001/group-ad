@@ -6,6 +6,8 @@ import { ActionIcon } from '@/components/ui/action-icon';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
+import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
+import { useSocket } from '@/components/providers/socket-provider';
 
 interface Notification {
     id: string;
@@ -55,14 +57,14 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
     }, [open, onOpenChange]);
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+    const { unreadCount, refresh: refreshUnreadCount } = useUnreadNotifications();
     const [loading, setLoading] = useState(false);
     const [markingAll, setMarkingAll] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    // Track previously seen notification IDs to detect new ones between polls
+    // Track previously seen notification IDs to detect new ones
     const seenIdsRef = useRef<Set<string>>(new Set());
     const isFirstFetchRef = useRef(true);
+    const { socket } = useSocket();
 
     // Request browser notification permission once on mount
     useEffect(() => {
@@ -73,7 +75,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
         }
     }, []);
 
-    const fireBrowserNotification = useCallback((notif: Notification) => {
+    const fireBrowserNotification = useCallback((notif: any) => {
         if (
             typeof window === 'undefined' ||
             !('Notification' in window) ||
@@ -82,18 +84,17 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
 
         const title = notif.sender
             ? `New message from ${notif.sender.name}`
-            : notif.title || 'New notification';
+            : notif.type === 'MESSAGE_RECEIVED' ? 'New Message' : notif.title || 'New notification';
         const body = notif.message;
 
         try {
             const n = new Notification(title, {
                 body,
                 icon: '/auth/logo-small.png',
-                tag: notif.id, // prevents duplicate toasts for same notification
+                tag: notif.id, // prevents duplicate toasts
             });
-            // Auto-close after 5 seconds
             setTimeout(() => n.close(), 5000);
-        } catch { /* silent — some browsers block programmatic Notifications */ }
+        } catch { /* silent */ }
     }, []);
 
     const fetchNotifications = useCallback(async () => {
@@ -104,34 +105,43 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
             const data = await res.json();
             const fetched: Notification[] = data.notifications ?? [];
 
-            // Detect brand-new unread MESSAGE_RECEIVED notifications
-            if (!isFirstFetchRef.current) {
-                fetched.forEach((notif) => {
-                    if (
-                        !notif.isRead &&
-                        notif.type === 'MESSAGE_RECEIVED' &&
-                        !seenIdsRef.current.has(notif.id)
-                    ) {
-                        fireBrowserNotification(notif);
-                    }
-                });
-            }
-
             // Update seen IDs
             fetched.forEach((n) => seenIdsRef.current.add(n.id));
             isFirstFetchRef.current = false;
 
             setNotifications(fetched);
-            setUnreadCount(data.unreadCount ?? 0);
+            refreshUnreadCount();
         } catch { /* silent */ }
-    }, [isAuthenticated, fireBrowserNotification]);
+    }, [isAuthenticated, refreshUnreadCount]);
 
-    // Initial fetch + polling every 30s
+    // Socket.io Listener
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('notification', (payload) => {
+            console.log('Real-time notification socket event:', payload);
+            fetchNotifications(); // Refresh the list
+            
+            // Fire a browser notification for messages if not on the messages page
+            if (payload.type === 'MESSAGE_RECEIVED' && window.location.pathname !== '/messages') {
+                fireBrowserNotification(payload);
+            }
+        });
+
+        socket.on('refresh_unread', () => {
+            fetchNotifications();
+        });
+
+        return () => {
+            socket.off('notification');
+            socket.off('refresh_unread');
+        };
+    }, [socket, fetchNotifications, fireBrowserNotification]);
+
+    // Initial fetch
     useEffect(() => {
         if (!isAuthenticated) return;
         fetchNotifications();
-        intervalRef.current = setInterval(fetchNotifications, 30_000);
-        return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
     }, [isAuthenticated, fetchNotifications]);
 
     // Close on outside click
@@ -143,7 +153,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, []);
+    }, [setOpen]);
 
     const handleOpen = async () => {
         setOpen((v) => !v);
@@ -158,8 +168,8 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
         setNotifications((prev) =>
             prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
         );
-        setUnreadCount((c) => Math.max(0, c - 1));
-        await fetch(`/api/notifications/${id}`, { method: 'PATCH' }).catch(() => { });
+        await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
+        refreshUnreadCount();
     };
 
     const markAll = async () => {
@@ -167,7 +177,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
         try {
             await fetch('/api/notifications/read-all', { method: 'PATCH' });
             setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-            setUnreadCount(0);
+            refreshUnreadCount();
         } finally {
             setMarkingAll(false);
         }
@@ -176,9 +186,8 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
     const deleteOne = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         setNotifications((prev) => prev.filter((n) => n.id !== id));
-        const deleted = notifications.find((n) => n.id === id);
-        if (deleted && !deleted.isRead) setUnreadCount((c) => Math.max(0, c - 1));
-        await fetch(`/api/notifications/${id}`, { method: 'DELETE' }).catch(() => { });
+        await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+        refreshUnreadCount();
     };
 
     if (!isAuthenticated) return null;

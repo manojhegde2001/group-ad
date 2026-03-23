@@ -221,42 +221,34 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Update user
+    // Update user - only include fields present in body
+    const updateData: any = {};
+    const stringFields = [
+      'name', 'username', 'bio', 'phone', 'location', 'website', 'avatar',
+      'address', 'pincode', 'externalLink', 'categoryId', 'turnover',
+      'companySize', 'industry', 'gstNumber', 'establishedYear', 'companyWebsite',
+      'linkedin', 'twitter', 'facebook', 'instagram'
+    ];
+
+    stringFields.forEach(field => {
+      if ((validatedData as any)[field] !== undefined) {
+        updateData[field] = ((validatedData as any)[field] === '') ? null : (validatedData as any)[field];
+      }
+    });
+
+    if (validatedData.messagingEnabled !== undefined) {
+      updateData.messagingEnabled = validatedData.messagingEnabled;
+    }
+    if (validatedData.visibility !== undefined) {
+      updateData.visibility = validatedData.visibility;
+    }
+    if (validatedData.interests !== undefined) {
+      updateData.interests = validatedData.interests;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
-      data: {
-        name: validatedData.name,
-        username: validatedData.username,
-        bio: validatedData.bio,
-        phone: validatedData.phone || null,
-        location: validatedData.location,
-        website: validatedData.website || null,
-        avatar: validatedData.avatar || null,
-        address: validatedData.address || null,
-        pincode: validatedData.pincode || null,
-        externalLink: validatedData.externalLink || null,
-        ...(validatedData.messagingEnabled !== undefined && { messagingEnabled: validatedData.messagingEnabled }),
-
-
-        categoryId: validatedData.categoryId || null,
-        interests: validatedData.interests,
-
-        // Business fields
-        turnover: validatedData.turnover || null,
-        companySize: validatedData.companySize || null,
-        industry: validatedData.industry || null,
-        gstNumber: validatedData.gstNumber || null,
-        establishedYear: validatedData.establishedYear || null,
-        companyWebsite: validatedData.companyWebsite || null,
-
-        // Social links
-        linkedin: validatedData.linkedin || null,
-        twitter: validatedData.twitter || null,
-        facebook: validatedData.facebook || null,
-        instagram: validatedData.instagram || null,
-
-        visibility: validatedData.visibility,
-      },
+      data: updateData,
       select: {
         id: true,
         email: true,

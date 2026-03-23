@@ -4,19 +4,22 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/components/providers/socket-provider';
 
-export function useUnreadMessages(pollInterval = 30_000) {
+export function useUnreadNotifications(pollInterval = 30_000) {
   const { isAuthenticated } = useAuth();
-  const [totalUnread, setTotalUnread] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const { socket } = useSocket();
 
   const fetchUnread = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const res = await fetch('/api/conversations/unread-count');
+      // We fetch with limit=1 because we only care about the unreadCount field 
+      // returned by the standard /api/notifications endpoint.
+      const res = await fetch('/api/notifications?limit=1');
       if (!res.ok) return;
       const data = await res.json();
-      setTotalUnread(data.totalUnread ?? 0);
+      setUnreadCount(data.unreadCount ?? 0);
     } catch {
       /* silent */
     }
@@ -25,11 +28,8 @@ export function useUnreadMessages(pollInterval = 30_000) {
   useEffect(() => {
     if (!socket) return;
 
-    // Listen for messages to update the badge
-    socket.on('notification', (payload) => {
-      if (payload.type === 'MESSAGE_RECEIVED') {
-        fetchUnread();
-      }
+    socket.on('notification', () => {
+      fetchUnread();
     });
 
     socket.on('refresh_unread', () => {
@@ -44,16 +44,17 @@ export function useUnreadMessages(pollInterval = 30_000) {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setTotalUnread(0);
+      setUnreadCount(0);
       return;
     }
+    
     fetchUnread();
     intervalRef.current = setInterval(fetchUnread, pollInterval);
+    
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isAuthenticated, fetchUnread, pollInterval]);
 
-  // Allows components to manually trigger a refresh (e.g. after reading messages)
-  return { totalUnread, refresh: fetchUnread };
+  return { unreadCount, refresh: fetchUnread };
 }

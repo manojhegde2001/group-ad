@@ -13,11 +13,13 @@ import {
   Users,
   ShieldCheck,
   Plus,
-  Library
+  Library,
+  Bell
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useCreatePost } from '@/hooks/use-feed';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
+import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -27,7 +29,8 @@ export function Sidebar() {
   const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
   const { open: openCreatePost } = useCreatePost();
-  const { totalUnread } = useUnreadMessages();
+  const { totalUnread: unreadMessages } = useUnreadMessages();
+  const { unreadCount: unreadNotifications } = useUnreadNotifications();
 
   if (!isAuthenticated) return null;
 
@@ -37,6 +40,7 @@ export function Sidebar() {
   const navLinks = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Explore', href: '/explore', icon: Compass },
+    { label: 'Notifications', href: '/notifications', icon: Bell },
     { label: 'Boards', href: '/boards', icon: Library },
     { label: 'Events', href: '/events', icon: Calendar },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
@@ -48,7 +52,11 @@ export function Sidebar() {
 
   const SidebarLink = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
     const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-    const showBadge = href === '/messages' && totalUnread > 0;
+    
+    let badgeCount = 0;
+    if (href === '/messages') badgeCount = unreadMessages;
+    if (href === '/notifications') badgeCount = unreadNotifications;
+
     return (
       <Link
         href={href}
@@ -62,9 +70,9 @@ export function Sidebar() {
       >
         <Icon className={cn("w-6 h-6", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
         {/* Unread badge */}
-        {showBadge && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-0.5 ring-2 ring-white dark:ring-secondary-900 leading-none pointer-events-none">
-            {totalUnread > 99 ? '99+' : totalUnread}
+        {badgeCount > 0 && (
+          <span className="absolute top-1 right-1 min-w-[17px] h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1 ring-2 ring-white dark:ring-secondary-900 leading-none pointer-events-none shadow-sm">
+            {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         )}
         {/* Tooltip */}

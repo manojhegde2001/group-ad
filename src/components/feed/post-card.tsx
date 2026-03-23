@@ -8,12 +8,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { usePostDetail, useSaveToBoard, useSharePost } from '@/hooks/use-feed';
+import { usePostDetail, useSaveToBoard, useSharePost, useCreatePost } from '@/hooks/use-feed';
 import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
 import { Popover, Dropdown } from 'rizzui';
 import { ActionIcon } from '../ui/action-icon';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PostCardProps {
     post: PostWithRelations;
@@ -28,6 +29,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
     const { openLogin } = useAuthModal();
     const { openPost } = usePostDetail();
     const { open: openSaveToBoard } = useSaveToBoard();
+    const { open: openCreatePost } = useCreatePost();
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const likeMutation = useLikePost();
     const deletePostMutation = useDeletePost();
@@ -37,6 +39,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
     const [likeCount, setLikeCount] = useState<number>(
         post._count?.postLikes ?? (post as any).likes ?? 0
     );
+    const [showHeartPop, setShowHeartPop] = useState(false);
 
     // Sync if parent data changes
     useEffect(() => {
@@ -109,6 +112,15 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
         } catch { /* noop */ }
     };
 
+    const handleDoubleTap = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!liked) {
+            handleLike(e);
+        }
+        setShowHeartPop(true);
+        setTimeout(() => setShowHeartPop(false), 800);
+    };
+
     const handleCardClick = () => requireAuth(() => openPost(post.id, post));
 
     const hasImage = post.images && post.images.length > 0;
@@ -144,8 +156,9 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                                     muted playsInline loop preload="metadata"
                                     onMouseEnter={e => e.currentTarget.play()}
                                     onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                    onDoubleClick={handleDoubleTap}
                                 />
-                                <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 font-medium z-10">
+                                <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-lg flex items-center gap-1.5 font-bold z-10 border border-white/10">
                                     <Video className="w-3 h-3" /> Video
                                 </div>
                             </>
@@ -153,15 +166,29 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                             <img
                                 src={post.images[0]}
                                 alt={post.content?.slice(0, 80) || 'Post image'}
-                                className="w-full h-auto object-cover block transition-transform duration-500 group-hover:scale-[1.03]"
+                                className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.05]"
                                 loading="lazy"
+                                onDoubleClick={handleDoubleTap}
                             />
                         )}
                         {!isVideoPost && post.images.length > 1 && (
-                            <div className="absolute top-2 left-2 bg-black/50 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold z-10">
-                                {post.images.length}
+                            <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-lg font-black z-10 border border-white/10 uppercase tracking-widest leading-none">
+                                {post.images.length} Photos
                             </div>
                         )}
+
+                        <AnimatePresence>
+                            {showHeartPop && (
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1.5, opacity: 1 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    className="absolute inset-0 flex items-center justify-center pointer-events-none z-50"
+                                >
+                                    <Heart className="w-24 h-24 text-white fill-white drop-shadow-2xl" />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 ) : (
                     <div className={`w-full min-h-[150px] bg-gradient-to-br ${gradient} p-4 flex items-start`}>
@@ -173,15 +200,18 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
 
                 {/* --- Ownership Actions (Meatball Menu) --- */}
                 {showActions && user?.id === post.userId && (
-                    <div className="absolute top-2.5 right-2.5 z-30" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-3 right-3 z-30" onClick={e => e.stopPropagation()}>
                         <Dropdown placement="bottom-end">
                             <Dropdown.Trigger>
-                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md border border-white/10 shrink-0 transition-all cursor-pointer">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-black/20 hover:bg-black/40 text-white backdrop-blur-md border border-white/10 shrink-0 transition-all cursor-pointer">
                                     <MoreHorizontal className="w-4 h-4" />
                                 </span>
                             </Dropdown.Trigger>
                             <Dropdown.Menu className="w-40 p-1">
-                                <Dropdown.Item className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer">
+                                <Dropdown.Item 
+                                    onClick={() => openCreatePost(post)}
+                                    className="flex items-center gap-2 text-sm font-medium py-2 px-3 rounded-lg hover:bg-secondary-100 cursor-pointer text-secondary-900 dark:text-white"
+                                >
                                     <Edit2 className="w-4 h-4" /> Edit Post
                                 </Dropdown.Item>
                                 <Dropdown.Item 
@@ -212,28 +242,28 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                         onClick={handleLike}
                         disabled={likeMutation.isPending}
                         title={liked ? 'Unlike' : 'Like'}
-                        className={`flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-semibold
-                            transition-all duration-200 active:scale-90 backdrop-blur-sm shadow-md
+                        className={`flex items-center gap-2 h-9 px-4 rounded-xl text-[12px] font-black uppercase tracking-wider
+                            transition-all duration-300 active:scale-90 backdrop-blur-xl shadow-lg border border-white/20
                             ${liked
-                                ? 'bg-red-500 text-white'
-                                : 'bg-white/95 text-secondary-800 hover:bg-white'}`}
+                                ? 'bg-red-500/80 text-white border-red-400/30'
+                                : 'bg-white/40 text-white hover:bg-white/60'}`}
                     >
-                        <Heart className={`w-3.5 h-3.5 transition-transform ${liked ? 'fill-white scale-110' : ''}`} />
+                        <Heart className={`w-4 h-4 transition-transform duration-300 ${liked ? 'fill-white scale-125' : ''}`} />
                         {likeCount > 0 && <span>{likeCount}</span>}
                     </button>
-
+ 
                     {/* Save + Share */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={handleSave}
                             title={saved ? 'Remove from saved' : 'Save to board'}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center
-                                backdrop-blur-sm shadow-md transition-all duration-200 active:scale-90
-                                ${saved ? 'bg-primary-600 text-white' : 'bg-white/95 text-secondary-800 hover:bg-white'}`}
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center
+                                backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border border-white/20
+                                ${saved ? 'bg-primary-500/80 text-white border-primary-400/30' : 'bg-white/40 text-white hover:bg-white/60'}`}
                         >
-                            <Bookmark className={`w-3.5 h-3.5 ${saved ? 'fill-white' : ''}`} />
+                            <Bookmark className={`w-4 h-4 ${saved ? 'fill-white' : ''}`} />
                         </button>
-
+ 
                         <div onClick={e => e.stopPropagation()}>
                             <Popover 
                                 isOpen={shareOpen} 
@@ -243,11 +273,11 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                                 <Popover.Trigger>
                                     <button
                                         title="Share"
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center
-                                            backdrop-blur-sm shadow-md transition-all duration-200 active:scale-90
-                                            ${shareOpen ? 'bg-primary-600 text-white' : 'bg-white/95 text-secondary-800 hover:bg-white'}`}
+                                        className={`w-9 h-9 rounded-xl flex items-center justify-center
+                                            backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border border-white/20
+                                            ${shareOpen ? 'bg-primary-600/80 text-white' : 'bg-white/40 text-white hover:bg-white/60'}`}
                                     >
-                                        <Share2 className="w-3.5 h-3.5" />
+                                        <Share2 className="w-4 h-4" />
                                     </button>
                                 </Popover.Trigger>
                                 <Popover.Content className="z-[9999] bg-white dark:bg-secondary-800 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-2 w-48 p-0 overflow-hidden">
@@ -291,10 +321,10 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
             </div>
 
             {/* ── Card Body (below media) ──────────────────────────────── */ }
-            <div className="px-3 pt-2.5 pb-3 space-y-1.5">
+            <div className="px-3.5 pt-3 pb-3.5 space-y-2">
                 {/* Caption */}
                 {hasImage && post.content && (
-                    <p className="text-[12.5px] font-medium text-secondary-800 dark:text-secondary-200 leading-snug line-clamp-2">
+                    <p className="text-[13px] font-semibold text-secondary-800 dark:text-secondary-200 leading-snug line-clamp-2 tracking-tight">
                         {post.content}
                     </p>
                 )}
@@ -304,31 +334,29 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                     <Link
                         href={`/profile/${post.user.username}`}
                         onClick={e => { e.stopPropagation(); requireAuth(() => { }); }}
-                        className="flex items-center gap-2 min-w-0 flex-1 group/user"
+                        className="flex items-center gap-2.5 min-w-0 flex-1 group/user"
                     >
-                        <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 bg-secondary-100 dark:bg-secondary-800">
+                        <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 bg-secondary-100 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700">
                             {post.user.avatar ? (
-                                <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover" />
+                                <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover transition-transform group-hover/user:scale-110" />
                             ) : (
-                                <span className="w-full h-full flex items-center justify-center text-[10px] font-bold text-secondary-500">
-                                    {post.user.name?.charAt(0)?.toUpperCase()}
+                                <span className="w-full h-full flex items-center justify-center text-[11px] font-black text-secondary-400 uppercase">
+                                    {post.user.name?.charAt(0)}
                                 </span>
                             )}
                         </div>
                         <div className="min-w-0">
                             <div className="flex items-center gap-1">
-                                <p className="text-[11.5px] font-bold text-secondary-900 dark:text-white truncate group-hover/user:text-primary-600 transition-colors">
+                                <p className="text-[12px] font-black text-secondary-900 dark:text-white truncate group-hover/user:text-primary-600 transition-colors uppercase tracking-tight">
                                     {post.user.name}
                                 </p>
                                 {post.user.verificationStatus === 'VERIFIED' && (
-                                    <BadgeCheck className="w-3 h-3 text-primary-500 shrink-0" />
+                                    <BadgeCheck className="w-3.5 h-3.5 text-primary-500 shrink-0" />
                                 )}
                             </div>
-                            {(post.user.industry || post.user.bio) && (
-                                <p className="text-[10px] text-secondary-400 dark:text-secondary-500 truncate leading-none">
-                                    {post.user.industry || post.user.bio}
-                                </p>
-                            )}
+                            <p className="text-[10px] text-secondary-400 dark:text-secondary-500 truncate leading-none font-bold uppercase tracking-wider">
+                                {post.user.industry || 'Creator'}
+                            </p>
                         </div>
                     </Link>
 

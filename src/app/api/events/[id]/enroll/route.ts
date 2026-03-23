@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
 import { sendMail, enrollmentConfirmationEmail } from '@/lib/mailer';
+import { socketService } from '@/lib/socket-service';
 
 export async function POST(
     request: NextRequest,
@@ -105,10 +106,19 @@ export async function POST(
                     senderId: session.user!.id,
                 })),
             });
+
+            // Emit real-time notification to admins
+            admins.forEach((admin) => {
+                socketService.notifyUser(admin.id, {
+                    type: 'EVENT_ENROLLMENT',
+                    message: `${user?.name || 'A user'} enrolled in "${event.title}"`,
+                    data: { eventId, senderId: session.user!.id }
+                });
+            });
         }
 
         // Notify user
-        await prisma.notification.create({
+        const userNotification = await prisma.notification.create({
             data: {
                 userId: session.user.id,
                 type: 'EVENT_ENROLLMENT' as any,
@@ -117,6 +127,13 @@ export async function POST(
                 entityType: 'event',
                 entityId: eventId,
             }
+        });
+
+        // Emit real-time notification to user
+        socketService.notifyUser(session.user.id, {
+            type: 'EVENT_ENROLLMENT',
+            message: userNotification.message,
+            data: { notificationId: userNotification.id, eventId }
         });
 
         // Email confirmation to user (fire-and-forget)
@@ -209,6 +226,15 @@ export async function DELETE(
                     entityId: eventId,
                     senderId: session.user!.id,
                 })),
+            });
+
+            // Emit real-time notification to admins
+            admins.forEach((admin) => {
+                socketService.notifyUser(admin.id, {
+                    type: 'EVENT_ENROLLMENT',
+                    message: `${user?.name || 'A user'} has withdrawn from "${enrollment.event.title}"`,
+                    data: { eventId, senderId: session.user!.id }
+                });
             });
         }
 

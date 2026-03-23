@@ -31,6 +31,7 @@ import {
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
+import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { SearchBar } from './search-bar';
 import { ActionIcon } from '../ui/action-icon';
 import { cn } from '@/lib/utils';
@@ -83,7 +84,8 @@ export function Navbar() {
   const { openLogin, openSignup } = useAuthModal();
   const { searchQuery, setSearch } = useFeedFilter();
   const { open: openCreatePost } = useCreatePost();
-  const { totalUnread } = useUnreadMessages();
+  const { totalUnread: unreadMessages } = useUnreadMessages();
+  const { unreadCount: unreadNotifications } = useUnreadNotifications();
   const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
@@ -368,9 +370,9 @@ export function Navbar() {
                         <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
                         <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
                         <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
-                        <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} />
+                        <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
                         <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
-                        <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={totalUnread} />
+                        <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
                     </nav>
 
                     {/* Create Post Section - Only for authorized users */}

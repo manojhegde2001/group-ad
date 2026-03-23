@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
+import { useSocket } from '@/components/providers/socket-provider';
 
 interface Conversation {
   id: string;
@@ -23,6 +24,7 @@ interface Message {
   content: string;
   createdAt: string;
   senderId: string;
+  conversationId: string;
   sender: { id: string; name: string; username: string; avatar: string | null };
 }
 
@@ -60,9 +62,10 @@ export default function MessagesPage() {
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  const { socket } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollConvsRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollMsgsRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // We keep a slow poll as a fallback, but primary updates are live via socket
 
   // Filtered lists
   const filteredConversations = useMemo(() => {
@@ -103,10 +106,10 @@ export default function MessagesPage() {
     finally { setLoadingFollowing(false); }
   }, []);
 
-  // Load conversations on mount + poll
+  // Load conversations on mount + slow fallback poll
   useEffect(() => {
     fetchConversations().finally(() => setLoadingConvs(false));
-    pollConvsRef.current = setInterval(fetchConversations, 15_000);
+    pollConvsRef.current = setInterval(fetchConversations, 60_000); // Slowed down from 15s to 60s
     return () => { if (pollConvsRef.current) clearInterval(pollConvsRef.current); };
   }, [fetchConversations]);
 
@@ -150,15 +153,83 @@ export default function MessagesPage() {
     } catch { /* silent */ }
   }, []);
 
+  // Handle Room Joining and Live Messages
+  useEffect(() => {
+    if (!socket || !selectedConvId) return;
+
+    // Join the conversation room
+    socket.emit('join-conversation', selectedConvId);
+
+    const onNewMessage = (msg: Message) => {
+      if (msg.conversationId === selectedConvId) {
+        setMessages((prev) => {
+          // Prevent duplicates (optimistic UI vs real message)
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+        
+        // Mark as read instantly on the backend if we are in the chat
+        markConversationRead(selectedConvId);
+      }
+      
+      // Update conversations list regardless of which one was selected
+      setConversations((prev) => {
+        const existing = prev.find(c => c.id === msg.conversationId);
+        if (!existing) {
+          // If a new conversation starts, we might need to refresh the whole list
+          fetchConversations();
+          return prev;
+        }
+
+        return prev.map(c => c.id === msg.conversationId 
+          ? { ...c, lastMessage: { content: msg.content, sender: msg.sender }, lastMessageAt: msg.createdAt, unreadCount: msg.conversationId === selectedConvId ? 0 : c.unreadCount + 1 } 
+          : c
+        ).sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+      });
+    };
+
+    socket.on('new_message', onNewMessage);
+
+    return () => {
+      socket.emit('leave-conversation', selectedConvId);
+      socket.off('new_message', onNewMessage);
+    };
+  }, [socket, selectedConvId, markConversationRead, fetchConversations]);
+
+  // Handle Global Notifications for other updates
+  useEffect(() => {
+    if (!socket) return;
+    
+    const onNotification = (payload: any) => {
+      if (payload.type === 'MESSAGE_RECEIVED') {
+        // Handled by new_message listener if it's a message
+        // But we might want to refresh unread badges
+        refreshUnreadBadge();
+      } else {
+          // For other notifications, refresh the conversations list just in case
+          fetchConversations();
+      }
+    };
+    
+    socket.on('notification', onNotification);
+    socket.on('refresh_unread', () => {
+        fetchConversations();
+        refreshUnreadBadge();
+    });
+    
+    return () => {
+      socket.off('notification', onNotification);
+      socket.off('refresh_unread');
+    };
+  }, [socket, fetchConversations, refreshUnreadBadge]);
+
+  // Initial load for selected conversation
   useEffect(() => {
     if (!selectedConvId) return;
     setLoadingMsgs(true);
     setMessages([]);
     fetchMessages(selectedConvId).finally(() => setLoadingMsgs(false));
     markConversationRead(selectedConvId);
-
-    pollMsgsRef.current = setInterval(() => fetchMessages(selectedConvId), 10_000);
-    return () => { if (pollMsgsRef.current) clearInterval(pollMsgsRef.current); };
   }, [selectedConvId, fetchMessages, markConversationRead]);
 
   const lastConvIdRef = useRef<string | null>(null);
@@ -201,6 +272,7 @@ export default function MessagesPage() {
     const optimistic: Message = {
       id: `opt-${Date.now()}`,
       content,
+      conversationId: selectedConvId,
       createdAt: new Date().toISOString(),
       senderId: user?.id as string,
       sender: { id: user?.id as string, name: user?.name as string, username: (user as any)?.username, avatar: (user as any)?.avatar },

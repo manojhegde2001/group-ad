@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getIO } from '@/lib/socket-io';
+import { socketService } from '@/lib/socket-service';
 
 // GET /api/conversations/[id]/messages
 export async function GET(
@@ -103,6 +105,22 @@ export async function POST(
         data: { lastMessageAt: new Date() },
       }),
     ]);
+
+    // Emit Socket.io events
+    // 1. Emit to the conversation channel for real-time chat update
+    socketService.emitMessage(id, message);
+
+    // 2. Emit to other participants for unread message badges
+    const otherParticipants = conversation.participantIds.filter(
+      (pid) => pid !== session.user.id
+    );
+    otherParticipants.forEach((pid) => {
+      socketService.notifyUser(pid, {
+        type: 'MESSAGE_RECEIVED',
+        message: `New message from ${session.user.name}`,
+        data: { conversationId: id, message }
+      });
+    });
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {

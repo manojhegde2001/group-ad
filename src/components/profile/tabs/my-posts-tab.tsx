@@ -108,7 +108,7 @@ export default function MyPostsTab() {
                 </div>
                 {((user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
                 <Button
-                    onClick={openCreatePost}
+                    onClick={() => openCreatePost()}
 
                     variant="solid"
                     color="primary"
@@ -132,7 +132,7 @@ export default function MyPostsTab() {
                         {filter === 'ALL' ? 'Share your first idea with the world!' : `Switch to another filter to see more.`}
                     </p>
                     {filter === 'ALL' && ((user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
-                        <Button onClick={openCreatePost} variant="solid" color="primary" size="sm" rounded="pill">
+                        <Button onClick={() => openCreatePost()} variant="solid" color="primary" size="sm" rounded="pill">
                             Create your first post
                         </Button>
                     )}
@@ -195,6 +195,15 @@ export default function MyPostsTab() {
                                                         ? <><Lock className="w-4 h-4" /><span>Make Private</span></>
                                                         : <><Globe className="w-4 h-4" /><span>Make Public</span></>
                                                     }
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setMenuOpenId(null);
+                                                        openCreatePost(post);
+                                                    }}
+                                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-sm text-secondary-700 dark:text-secondary-300 transition-colors"
+                                                >
+                                                    <Edit3 className="w-4 h-4" /><span>Edit Post</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(post.id)}

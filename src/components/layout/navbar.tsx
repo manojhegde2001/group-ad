@@ -226,8 +226,8 @@ export function Navbar() {
 
               {/* Desktop Dropdown */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white/95 sm:dark:bg-secondary-900/95 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200 hidden md:block">
-                  <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
+                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white sm:dark:bg-secondary-900 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700 overflow-hidden z-[200] p-2 animate-in fade-in zoom-in duration-200 hidden md:block">
+                  <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
                       <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
                           <div className="flex items-center gap-3">
                               <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="sm" className="w-12 h-12" />
@@ -240,23 +240,23 @@ export function Navbar() {
                   </div>
                   
                   <div className="space-y-1">
-                      <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                      <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
                           <Calendar className="w-5 h-5" /> Events
                       </Link>
                       
-                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
                           <Library className="w-5 h-5" /> My Posts
                       </Link>
                       
                       {(user as any).userType === 'ADMIN' && (
-                      <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                      <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
                           <ShieldCheck className="w-5 h-5" /> Admin Panel
                       </Link>
                       )}
-                      <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                      <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
                       <Settings className="w-5 h-5" /> Settings
                       </Link>
-                      <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                      <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
                       <LogOut className="w-5 h-5" /> Log out
                       </button>
                   </div>

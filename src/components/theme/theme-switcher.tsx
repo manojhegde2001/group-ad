@@ -33,8 +33,8 @@ export function ThemeSwitcher() {
               <Palette className="w-4 h-4" />
             </Button>
           </Popover.Trigger>
-          <Popover.Content className="p-3 w-44 bg-white dark:bg-secondary-800 rounded-lg shadow-lg border border-secondary-200 dark:border-secondary-700">
-            <Text className="text-xs font-medium mb-2 text-secondary-600 dark:text-secondary-400">
+          <Popover.Content className="p-4 w-48 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700 animate-in fade-in zoom-in duration-200">
+            <Text className="text-[11px] font-black uppercase tracking-wider mb-3 text-secondary-500 dark:text-secondary-400">
               Color Theme
             </Text>
             <div className="grid grid-cols-2 gap-1.5">
@@ -69,8 +69,8 @@ export function ThemeSwitcher() {
               <Type className="w-4 h-4" />
             </Button>
           </Popover.Trigger>
-          <Popover.Content className="p-3 w-40 bg-white dark:bg-secondary-800 rounded-lg shadow-lg border border-secondary-200 dark:border-secondary-700">
-            <Text className="text-xs font-medium mb-2 text-secondary-600 dark:text-secondary-400">
+          <Popover.Content className="p-4 w-44 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700 animate-in fade-in zoom-in duration-200">
+            <Text className="text-[11px] font-black uppercase tracking-wider mb-3 text-secondary-500 dark:text-secondary-400">
               Font Family
             </Text>
             <div className="grid gap-1.5">

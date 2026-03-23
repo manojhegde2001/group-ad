@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { Search, Send, Plus, MessageSquare, X, Loader2, ArrowLeft, MoreVertical, Info, Users } from 'lucide-react';
@@ -36,6 +37,8 @@ interface FollowedUser {
 export default function MessagesPage() {
   const { user } = useAuth();
   const { refresh: refreshUnreadBadge } = useUnreadMessages();
+  const searchParams = useSearchParams();
+  const initialUserId = searchParams.get('userId');
   
   // Tabs & Lists
   const [activeTab, setActiveTab] = useState<'messages' | 'contacts'>('messages');
@@ -113,6 +116,21 @@ export default function MessagesPage() {
       fetchFollowing();
     }
   }, [activeTab, followingUsers.length, fetchFollowing]);
+
+  // Handle initial user from redirect
+  useEffect(() => {
+    if (initialUserId && !loadingConvs && conversations.length > 0) {
+      // Check if we already have a conversation with this user
+      const existing = conversations.find(c => c.participants.some(p => p.id === initialUserId));
+      if (existing) {
+        setSelectedConvId(existing.id);
+        setShowMobileChat(true);
+      } else {
+        // Start a new conversation
+        startConversation(initialUserId);
+      }
+    }
+  }, [initialUserId, loadingConvs, conversations]);
 
   const markConversationRead = useCallback(async (convId: string) => {
     try {

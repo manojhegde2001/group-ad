@@ -20,9 +20,17 @@ import {
   Calendar,
   ShieldCheck,
   Library,
+  Home,
+  Compass,
+  MessageSquare,
+  PlusCircle,
+  User,
+  Layout,
+  Bell,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
+import { useUnreadMessages } from '@/hooks/use-unread-messages';
 import { SearchBar } from './search-bar';
 import { ActionIcon } from '../ui/action-icon';
 import { cn } from '@/lib/utils';
@@ -32,6 +40,40 @@ const Logo = dynamic(() => import('../ui/logo'), {
   loading: () => <div className="w-8 h-8 md:w-28 md:h-7 bg-secondary-200 dark:bg-secondary-700 rounded-full md:rounded animate-pulse" />,
 });
 
+function DrawerLink({ href, icon: Icon, label, onClick, active, className, badge }: { 
+    href: string; 
+    icon: any; 
+    label: string; 
+    onClick: () => void;
+    active?: boolean;
+    className?: string;
+    badge?: number;
+}) {
+    return (
+        <Link
+            href={href}
+            onClick={onClick}
+            className={cn(
+                "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 group relative",
+                active 
+                    ? "bg-secondary-900 text-white dark:bg-white dark:text-secondary-900 shadow-md font-bold" 
+                    : "text-secondary-600 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-secondary-800 hover:text-secondary-900 dark:hover:text-white font-semibold",
+                className
+            )}
+        >
+            <div className="relative">
+                <Icon className={cn("w-5 h-5", active ? "stroke-[2.5px]" : "stroke-[2px]")} />
+                {badge && badge > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 ring-2 ring-white dark:ring-secondary-900 leading-none">
+                        {badge > 99 ? '99+' : badge}
+                    </span>
+                )}
+            </div>
+            <span className="text-base">{label}</span>
+        </Link>
+    );
+}
+
 export function Navbar() {
   const { user: authUser, isAuthenticated, loading: authLoading, logout } = useAuth();
   const { data: meUser, isLoading: meLoading } = useMe();
@@ -40,6 +82,8 @@ export function Navbar() {
 
   const { openLogin, openSignup } = useAuthModal();
   const { searchQuery, setSearch } = useFeedFilter();
+  const { open: openCreatePost } = useCreatePost();
+  const { totalUnread } = useUnreadMessages();
   const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
@@ -283,29 +327,88 @@ export function Navbar() {
 
       {/* Mobile Menu Drawer */}
       {mobileDrawerOpen && (
-          <div className="fixed inset-0 z-[100] md:hidden">
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileDrawerOpen(false)} />
-              <div className="absolute top-0 right-0 w-[80vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl z-50 flex flex-col p-6 animate-slide-in-right">
-                <div className="flex items-center justify-between mb-8">
-                    <span className="font-bold text-lg text-secondary-900 dark:text-white">Menu</span>
+          <div className="fixed inset-0 z-[200] md:hidden">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setMobileDrawerOpen(false)} />
+              <div className="absolute top-0 right-0 w-[85vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl z-50 flex flex-col animate-slide-in-right overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-secondary-100 dark:border-secondary-800">
+                    <div className="flex items-center gap-2">
+                        <Logo className="w-8 h-8" iconOnly />
+                        <span className="font-bold text-xl text-secondary-900 dark:text-white">Menu</span>
+                    </div>
                     <ActionIcon
                         variant="flat"
                         color="secondary"
                         rounded="full"
                         onClick={() => setMobileDrawerOpen(false)}
+                        className="hover:rotate-90 transition-transform duration-300"
                     >
                         <X className="w-5 h-5" />
                     </ActionIcon>
                 </div>
-                <nav className="flex flex-col gap-4 font-bold text-secondary-900 dark:text-white">
-                    <Link href="/" onClick={() => setMobileDrawerOpen(false)}>Home</Link>
-                    <Link href="/explore" onClick={() => setMobileDrawerOpen(false)}>Explore</Link>
-                    <Link href="/messages" onClick={() => setMobileDrawerOpen(false)}>Messages</Link>
-                    <Link href="/notifications" onClick={() => setMobileDrawerOpen(false)}>Notifications</Link>
-                    <div className="h-[1px] bg-secondary-100 dark:bg-secondary-800 my-2" />
-                    <Link href="/settings" onClick={() => setMobileDrawerOpen(false)}>Settings</Link>
-                    <button onClick={handleLogout} className="text-left text-red-500">Log out</button>
-                </nav>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-none">
+                    {/* User Profile Section */}
+                    {isAuthenticated && user && (
+                        <div className="p-4 bg-secondary-50 dark:bg-secondary-800/50 rounded-2xl border border-secondary-100 dark:border-secondary-800">
+                           <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setMobileDrawerOpen(false)} className="flex items-center gap-4">
+                                <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-14 h-14 ring-2 ring-white dark:ring-secondary-700 shadow-sm" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-secondary-900 dark:text-white truncate">{user?.name}</p>
+                                    <p className="text-sm text-secondary-500 truncate">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
+                                </div>
+                           </Link>
+                        </div>
+                    )}
+
+                    {/* Main Navigation */}
+                    <nav className="space-y-1">
+                        <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Navigation</p>
+                        <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
+                        <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
+                        <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
+                        <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} />
+                        <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
+                        <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={totalUnread} />
+                    </nav>
+
+                    {/* Create Post Section - Only for authorized users */}
+                    {( (user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED') ) && (
+                        <div className="space-y-1">
+                             <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Actions</p>
+                             <button
+                                onClick={() => {
+                                    setMobileDrawerOpen(false);
+                                    openCreatePost();
+                                }}
+                                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary-500 text-white font-bold shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
+                             >
+                                <PlusCircle className="w-6 h-6" /> Create Post
+                             </button>
+                        </div>
+                    )}
+
+                    {/* Account Section */}
+                    <div className="space-y-1">
+                        <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Account</p>
+                        <DrawerLink href={`/profile/${(user as any).username || ''}`} icon={User} label="My Profile" onClick={() => setMobileDrawerOpen(false)} active={pathname === `/profile/${(user as any).username}`} />
+                        {(user as any)?.userType === 'ADMIN' && (
+                             <DrawerLink href="/admin" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
+                        )}
+                        <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-secondary-100 dark:border-secondary-800">
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                    >
+                        <LogOut className="w-5 h-5" /> Log out
+                    </button>
+                </div>
               </div>
           </div>
       )}

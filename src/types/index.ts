@@ -123,6 +123,8 @@ export type PostWithRelations = {
     verificationStatus: string;
     bio: string | null;
     industry: string | null;
+    website: string | null;
+    companyWebsite: string | null;
   };
   category: {
     id: string;

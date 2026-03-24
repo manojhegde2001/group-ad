@@ -119,8 +119,9 @@ export async function GET(request: NextRequest) {
               avatar: true,
               userType: true,
               verificationStatus: true,
-              bio: true,
               industry: true,
+              website: true,
+              companyWebsite: true,
             },
           },
           category: {
@@ -226,7 +227,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         user: {
-          select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, bio: true, industry: true },
+          select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, bio: true, industry: true, website: true, companyWebsite: true },
         },
         category: { select: { id: true, name: true, slug: true, icon: true } },
         company: { select: { id: true, name: true, slug: true, logo: true, isVerified: true } },

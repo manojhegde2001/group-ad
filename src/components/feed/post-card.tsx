@@ -395,27 +395,20 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                         onClick={e => { e.stopPropagation(); requireAuth(() => { }); }}
                         className="flex items-center gap-2.5 min-w-0 flex-1 group/user"
                     >
-                        <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 bg-secondary-100 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700">
+                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-secondary-100 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700 shadow-sm">
                             {post.user.avatar ? (
                                 <img src={post.user.avatar} alt={post.user.name} className="w-full h-full object-cover transition-transform group-hover/user:scale-110" />
                             ) : (
-                                <span className="w-full h-full flex items-center justify-center text-[11px] font-black text-secondary-400 uppercase">
+                                <span className="w-full h-full flex items-center justify-center text-[12px] font-black text-secondary-400 uppercase">
                                     {post.user.name?.charAt(0)}
                                 </span>
                             )}
                         </div>
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-1">
-                                <p className="text-[12px] font-black text-secondary-900 dark:text-white truncate group-hover/user:text-primary-600 transition-colors uppercase tracking-tight">
-                                    {post.user.name}
-                                </p>
-                                {post.user.verificationStatus === 'VERIFIED' && (
-                                    <BadgeCheck className="w-3.5 h-3.5 text-primary-500 shrink-0" />
-                                )}
-                            </div>
-                            <p className="text-[10px] text-secondary-400 dark:text-secondary-500 truncate leading-none font-bold uppercase tracking-wider">
-                                {post.user.industry || 'Creator'}
-                            </p>
+                        <div className="flex items-center gap-1 min-w-0">
+                            <p className="font-bold text-[13px] text-secondary-900 dark:text-white truncate tracking-tight">{post.user.name}</p>
+                            {post.user.verificationStatus === 'VERIFIED' && (
+                                <BadgeCheck className="w-3.5 h-3.5 text-primary-500 shrink-0" />
+                            )}
                         </div>
                     </Link>
 

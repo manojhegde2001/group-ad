@@ -30,7 +30,8 @@ export async function GET(
         user: {
           select: {
             id: true, name: true, username: true, avatar: true,
-            userType: true, verificationStatus: true, bio: true, location: true,
+            userType: true, verificationStatus: true, bio: true, location: true, industry: true,
+            website: true, companyWebsite: true,
           },
         },
         category: { select: { id: true, name: true, slug: true, icon: true, description: true } },
@@ -105,7 +106,7 @@ export async function PATCH(
       where: { id: postId },
       data: validatedData,
       include: {
-        user: { select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, bio: true, industry: true } },
+        user: { select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, bio: true, industry: true, website: true, companyWebsite: true } },
         category: { select: { id: true, name: true, slug: true, icon: true } },
         company: { select: { id: true, name: true, slug: true, logo: true, isVerified: true } },
         _count: { select: { postLikes: true, postComments: true } },

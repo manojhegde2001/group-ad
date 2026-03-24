@@ -497,6 +497,22 @@ export function PostDetailDrawer() {
                             <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
                             <span>·</span>
                             <span>{post.views || 0} views</span>
+                            
+                            {(post.user.website || post.user.companyWebsite) && (
+                                <>
+                                    <span>·</span>
+                                    <a 
+                                        href={(post.user.website || post.user.companyWebsite!).startsWith('http') ? (post.user.website || post.user.companyWebsite!) : `https://${post.user.website || post.user.companyWebsite!}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:underline font-bold"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Link2 className="w-3 h-3" />
+                                        Website
+                                    </a>
+                                </>
+                            )}
                         </div>
 
                         {/* Actions row */}

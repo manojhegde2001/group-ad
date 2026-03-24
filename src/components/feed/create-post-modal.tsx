@@ -29,6 +29,7 @@ export function CreatePostModal() {
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     
     // Check verification status
     const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
@@ -47,7 +48,6 @@ export function CreatePostModal() {
             setTags(editingPost.tags.join(', '));
             setVisibility(editingPost.visibility as 'PUBLIC' | 'PRIVATE');
             setMediaPreviews(editingPost.images);
-            // We set mediaFiles to empty because we are using existing URLs
             setMediaFiles([]);
         }
     }, [editingPost, user]);
@@ -75,6 +75,7 @@ export function CreatePostModal() {
         setPostType('IMAGE');
         setSuccess(false);
         setUploadProgress(0);
+        setIsDragging(false);
     };
 
     const handleClose = () => {
@@ -82,41 +83,66 @@ export function CreatePostModal() {
         close();
     };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
-        const files = Array.from(e.target.files || []);
+    const processFiles = (files: File[], type: 'image' | 'video' | 'mixed') => {
         if (files.length === 0) return;
 
-        if (type === 'video') {
-            // Only 1 video allowed
-            const videoFile = files[0];
-            if (!videoFile.type.startsWith('video/')) {
+        // If mixed or first file is video, handle as video
+        const firstFile = files[0];
+        const isVideo = firstFile.type.startsWith('video/');
+
+        if (isVideo || type === 'video') {
+            if (!firstFile.type.startsWith('video/')) {
                 toast.error('Please select a valid video file');
                 return;
             }
-            if (videoFile.size > 100 * 1024 * 1024) {
+            if (firstFile.size > 100 * 1024 * 1024) {
                 toast.error('Video must be under 100MB');
                 return;
             }
-            setMediaFiles([videoFile]);
-            setMediaPreviews([URL.createObjectURL(videoFile)]);
+            setPostType('VIDEO');
+            setMediaFiles([firstFile]);
+            setMediaPreviews([URL.createObjectURL(firstFile)]);
         } else {
-            const total = mediaFiles.length + files.length;
+            const validImages = files.filter(f => f.type.startsWith('image/'));
+            if (validImages.length === 0) {
+                toast.error('Please select valid image files');
+                return;
+            }
+            
+            const total = mediaFiles.length + validImages.length;
             if (total > 4) {
                 toast.error('Maximum 4 images allowed');
                 return;
             }
-            const newFiles = files.filter((f) => f.type.startsWith('image/'));
-            if (newFiles.length === 0) {
-                toast.error('Please select valid image files');
-                return;
-            }
-            const previews = newFiles.map((f) => URL.createObjectURL(f));
-            setMediaFiles((prev) => [...prev, ...newFiles]);
-            setMediaPreviews((prev) => [...prev, ...previews]);
-        }
 
-        // Reset input value so same file can be re-selected
+            setPostType('IMAGE');
+            const previews = validImages.map(f => URL.createObjectURL(f));
+            setMediaFiles(prev => [...prev, ...validImages]);
+            setMediaPreviews(prev => [...prev, ...previews]);
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+        const files = Array.from(e.target.files || []);
+        processFiles(files, type);
         e.target.value = '';
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const files = Array.from(e.dataTransfer.files);
+        processFiles(files, 'mixed');
+    };
+
+    const onDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const onDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
     };
 
     const removeMedia = (index: number) => {
@@ -143,7 +169,7 @@ export function CreatePostModal() {
                 const res = await fetch('/api/upload', { method: 'POST', body: formData });
                 if (!res.ok) {
                     if (res.status === 413) {
-                        throw new Error('File is too large for the server. Please try a smaller file (Max: 25MB for images, 100MB for videos).');
+                        throw new Error('File too large (Max: 25MB image, 100MB video)');
                     }
                     
                     let errMsg = 'Upload failed';
@@ -231,7 +257,7 @@ export function CreatePostModal() {
                 notifyCreated(data.post);
             }, 1200);
         } catch (err: any) {
-            toast.error(err.message || `Failed to ${editingPost ? 'update' : 'publish'} post`);
+            toast.error(err.message || 'Error occurred');
         } finally {
             setSubmitting(false);
         }
@@ -242,15 +268,32 @@ export function CreatePostModal() {
     const isMediaPost = postType === 'IMAGE' || postType === 'VIDEO';
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={handleClose}>
+        <div 
+            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" 
+            onClick={handleClose}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={handleDrop}
+        >
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
 
             {/* Modal */}
             <div
-                className="relative z-10 w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-2xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-2xl"
+                className={`relative z-10 w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-3xl border border-transparent transition-all duration-300 ${isDragging ? 'border-primary-500 scale-[1.02] ring-4 ring-primary-500/20' : ''}`}
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* Drag Overlay */}
+                {isDragging && (
+                    <div className="absolute inset-0 z-50 bg-primary-500/10 backdrop-blur-[2px] flex flex-col items-center justify-center border-4 border-dashed border-primary-500 rounded-3xl animate-in fade-in duration-200 pointer-events-none">
+                        <div className="bg-white dark:bg-secondary-900 p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
+                            <Upload className="w-10 h-10 text-primary-500 animate-bounce" />
+                            <p className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Drop to Upload</p>
+                            <p className="text-sm text-secondary-500">Release to add files to your post</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 bg-white/80 dark:bg-secondary-900/80 backdrop-blur-md sticky top-0 z-20">
                     <div className="flex items-center gap-3">
@@ -294,65 +337,63 @@ export function CreatePostModal() {
                         </div>
                         <div>
                             <p className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">Post Published!</p>
-                            <p className="text-secondary-400 text-sm font-medium mt-1">Your content is now visible to the community.</p>
+                            <p className="text-sm text-secondary-500">Your content is now visible to the community.</p>
                         </div>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar">
-                        <div className="px-5 sm:px-6 py-6 space-y-6 flex-1">
+                        <div className="px-5 sm:px-6 py-6 space-y-4 flex-1">
                             {/* Content / Caption */}
                             <textarea
                                 autoFocus
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 placeholder="What's happening? Share your thoughts..."
-                                className="w-full resize-none bg-transparent border-none outline-none text-secondary-900 dark:text-secondary-100 placeholder:text-secondary-400 text-lg font-medium leading-relaxed min-h-[120px] focus:ring-0"
+                                className="w-full resize-none bg-transparent border-none outline-none text-secondary-900 dark:text-secondary-100 placeholder:text-secondary-400 text-lg font-medium leading-relaxed min-h-[100px] max-h-[300px] focus:ring-0"
                                 maxLength={5000}
                             />
 
-                            {/* Media Previews */}
+                            {/* Media Previews - HORIZONTAL ROW (Compact) */}
                             {mediaPreviews.length > 0 && (
-                                <div className={`grid gap-3 ${mediaPreviews.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                                <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none animate-in fade-in slide-in-from-bottom-2 duration-300">
                                     {mediaPreviews.map((src, i) => (
-                                        <div key={i} className="relative rounded-2xl overflow-hidden group aspect-[4/3] bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 shadow-sm transition-transform hover:scale-[1.01]">
+                                        <div key={i} className="relative shrink-0 w-24 h-24 rounded-2xl overflow-hidden group bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 shadow-sm transition-transform hover:scale-[1.05]">
                                             {postType === 'VIDEO' ? (
                                                 <video
                                                     src={src}
                                                     className="w-full h-full object-cover"
                                                     muted
                                                     playsInline
-                                                    onMouseEnter={(e) => e.currentTarget.play()}
-                                                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
                                                 />
                                             ) : (
                                                 <img src={src} alt="" className="w-full h-full object-cover" />
                                             )}
                                             
                                             {postType === 'VIDEO' && (
-                                                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-lg font-black flex items-center gap-1.5 uppercase tracking-widest border border-white/10">
-                                                    <Video className="w-3 h-3" /> Video
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                     <Film className="w-6 h-6 text-white drop-shadow-lg" />
                                                 </div>
                                             )}
                                             
                                             <button
                                                 type="button"
                                                 onClick={() => removeMedia(i)}
-                                                className="absolute top-3 right-3 w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0"
+                                                className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
                                             >
-                                                <X className="w-4 h-4" />
+                                                <X className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
                                     ))}
+                                    
+                                    {/* Small + Button for more images */}
                                     {postType === 'IMAGE' && mediaPreviews.length < 4 && (
                                         <button
                                             type="button"
                                             onClick={() => imageInputRef.current?.click()}
-                                            className="aspect-[4/3] border-2 border-dashed border-secondary-200 dark:border-secondary-700/50 rounded-2xl flex flex-col items-center justify-center gap-2 text-secondary-400 hover:border-primary-400 hover:text-primary-500 hover:bg-primary-50/30 dark:hover:bg-primary-900/10 transition-all group active:scale-95"
+                                            className="shrink-0 w-24 h-24 border-2 border-dashed border-secondary-200 dark:border-secondary-700/50 rounded-2xl flex flex-col items-center justify-center gap-1 text-secondary-400 hover:border-primary-400 hover:text-primary-500 hover:bg-primary-50/30 dark:hover:bg-primary-900/10 transition-all group active:scale-95"
                                         >
-                                            <div className="p-3 rounded-full bg-secondary-50 dark:bg-secondary-800 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/20 transition-colors">
-                                                <Plus className="w-5 h-5" />
-                                            </div>
-                                            <span className="text-[11px] font-black uppercase tracking-widest">Add More</span>
+                                            <Plus className="w-5 h-5" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest">Add</span>
                                         </button>
                                     )}
                                 </div>
@@ -365,7 +406,7 @@ export function CreatePostModal() {
                                     type="text"
                                     value={tags}
                                     onChange={(e) => setTags(e.target.value)}
-                                    placeholder="Add tags separated by comma (e.g. design, tech)"
+                                    placeholder="Add tags separated by comma"
                                     className="flex-1 bg-transparent outline-none text-sm font-bold text-secondary-800 dark:text-secondary-200 placeholder:text-secondary-400/80 min-w-0"
                                 />
                             </div>
@@ -428,7 +469,7 @@ export function CreatePostModal() {
                                         disabled={submitting || uploading || !content.trim()}
                                         className="h-11 px-8 font-black text-xs uppercase tracking-[0.1em] shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 active:scale-[0.98] transition-all"
                                     >
-                                        {editingPost ? 'Update Post' : 'Publish Post'}
+                                        {editingPost ? 'Update' : 'Publish'}
                                     </Button>
                                 </div>
                             </div>

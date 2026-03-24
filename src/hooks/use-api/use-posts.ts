@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { postService } from '@/services/api/posts';
 import toast from 'react-hot-toast';
+import { useCreatePost as usePostStore } from '@/hooks/use-feed';
 
 export const usePosts = (params: Record<string, any> = {}) => {
     return useQuery({
@@ -74,11 +75,13 @@ export const useMyPosts = () => {
 
 export const useDeletePost = () => {
     const queryClient = useQueryClient();
+    const { notifyDeleted } = usePostStore();
 
     return useMutation({
         mutationFn: (postId: string) => postService.deletePost(postId),
-        onSuccess: () => {
+        onSuccess: (_, postId) => {
             queryClient.invalidateQueries({ queryKey: ['posts'] });
+            notifyDeleted(postId);
             toast.success('Post deleted successfully');
         },
         onError: (error: any) => {

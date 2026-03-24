@@ -29,8 +29,6 @@ export function CreatePostModal() {
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [categories, setCategories] = useState<any[]>([]);
-    const [categoryId, setCategoryId] = useState<string>('');
     
     // Check verification status
     const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
@@ -49,21 +47,12 @@ export function CreatePostModal() {
             setTags(editingPost.tags.join(', '));
             setVisibility(editingPost.visibility as 'PUBLIC' | 'PRIVATE');
             setMediaPreviews(editingPost.images);
-            setCategoryId(editingPost.categoryId || '');
             // We set mediaFiles to empty because we are using existing URLs
             setMediaFiles([]);
-        } else if (user) {
-            setCategoryId((user as any).categoryId || '');
         }
     }, [editingPost, user]);
 
-    // Fetch categories
-    useEffect(() => {
-        fetch('/api/categories')
-            .then(res => res.json())
-            .then(data => setCategories(data.categories || []))
-            .catch(() => {});
-    }, []);
+
 
     // Lock body scroll
     useEffect(() => {
@@ -86,7 +75,6 @@ export function CreatePostModal() {
         setPostType('IMAGE');
         setSuccess(false);
         setUploadProgress(0);
-        setCategoryId((user as any)?.categoryId || '');
     };
 
     const handleClose = () => {
@@ -154,8 +142,19 @@ export function CreatePostModal() {
 
                 const res = await fetch('/api/upload', { method: 'POST', body: formData });
                 if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.error || 'Upload failed');
+                    if (res.status === 413) {
+                        throw new Error('File is too large for the server. Please try a smaller file (Max: 25MB for images, 100MB for videos).');
+                    }
+                    
+                    let errMsg = 'Upload failed';
+                    try {
+                        const err = await res.json();
+                        errMsg = err.error || errMsg;
+                    } catch (e) {
+                        // Not JSON, use default or status text
+                        errMsg = res.statusText || errMsg;
+                    }
+                    throw new Error(errMsg);
                 }
                 const data = await res.json();
                 uploaded.push(data.url);
@@ -205,13 +204,22 @@ export function CreatePostModal() {
                     images: finalMediaUrls,
                     tags: parsedTags,
                     visibility,
-                    categoryId: categoryId || undefined,
                 }),
             });
 
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || `Failed to ${editingPost ? 'update' : 'publish'} post`);
+                if (res.status === 413) {
+                    throw new Error('Post data is too large. Try reducing the number of images or text length.');
+                }
+                
+                let errMsg = `Failed to ${editingPost ? 'update' : 'publish'} post`;
+                try {
+                    const err = await res.json();
+                    errMsg = err.error || errMsg;
+                } catch (e) {
+                    errMsg = res.statusText || errMsg;
+                }
+                throw new Error(errMsg);
             }
 
             const data = await res.json();
@@ -430,23 +438,7 @@ export function CreatePostModal() {
                                 />
                             </div>
                             
-                            {/* Category Selector */}
-                            <div className="space-y-1.5 pt-1">
-                                <label className="text-[11px] font-bold text-secondary-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
-                                    <Tags className="w-3.5 h-3.5" /> Category
-                                </label>
-                                <Select
-                                    value={categoryId}
-                                    onChange={(val: any) => setCategoryId(val)}
-                                    options={categories.map(c => ({
-                                        label: `${c.icon || '📍'} ${c.name}`,
-                                        value: c.id
-                                    }))}
-                                    placeholder="Select a category..."
-                                    className="w-full"
-                                    selectClassName="rounded-xl border-secondary-100 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800/60 font-medium text-sm"
-                                />
-                            </div>
+
                         </div>
 
                         {/* Upload progress bar */}

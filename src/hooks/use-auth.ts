@@ -15,7 +15,7 @@ export function useAuth() {
       // Sign out and update session immediately
       await signOut({ 
         redirect: true,
-        callbackUrl: '/'
+        callbackUrl: window.location.origin
       });
       
       toast.success('Logged out successfully! 👋');

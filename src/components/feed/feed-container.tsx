@@ -103,7 +103,7 @@ interface FeedContainerProps {
 export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedContainerProps) {
   const { selectedCategoryId, searchQuery } = useFeedFilter();
   const effectiveCategoryId = initialCategoryId !== undefined ? initialCategoryId : selectedCategoryId;
-  const { setOnCreated } = useCreatePost();
+  const { setOnCreated, setOnDeleted } = useCreatePost();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -127,7 +127,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
 
   const displayPosts = useDemoData ? DEMO_POSTS : posts;
 
-  // Prepend new posts...
+  // Prepend new posts and handle deletions
   // In a real app we'd mutate the cache, but following the existing pattern:
   const [localPosts, setLocalPosts] = useState<PostWithRelations[]>([]);
 
@@ -143,7 +143,12 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
         return [post, ...prev];
       });
     });
-  }, [setOnCreated]);
+
+    // Handle deletion
+    setOnDeleted((postId: string) => {
+      setLocalPosts(prev => prev.filter(p => p.id !== postId));
+    });
+  }, [setOnCreated, setOnDeleted]);
 
   const allPosts = [
     ...localPosts,

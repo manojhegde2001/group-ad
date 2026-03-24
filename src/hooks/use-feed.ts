@@ -12,6 +12,9 @@ interface CreatePostStore {
     onCreated?: (post: PostWithRelations) => void;
     setOnCreated: (cb: (post: PostWithRelations) => void) => void;
     notifyCreated: (post: PostWithRelations) => void;
+    onDeleted?: (postId: string) => void;
+    setOnDeleted: (cb: (postId: string) => void) => void;
+    notifyDeleted: (postId: string) => void;
 }
 
 export const useCreatePost = create<CreatePostStore>((set, get) => ({
@@ -24,6 +27,11 @@ export const useCreatePost = create<CreatePostStore>((set, get) => ({
     notifyCreated: (post) => {
         set({ isOpen: false, editingPost: null });
         get().onCreated?.(post);
+    },
+    onDeleted: undefined,
+    setOnDeleted: (cb) => set({ onDeleted: cb }),
+    notifyDeleted: (postId) => {
+        get().onDeleted?.(postId);
     },
 }));
 

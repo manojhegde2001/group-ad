@@ -424,7 +424,7 @@ export default function SettingsPage() {
 
                 <div className="pt-3 mt-1 border-t border-secondary-200 dark:border-secondary-800">
                   <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
+                    onClick={() => signOut({ callbackUrl: window.location.origin })}
                     className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-bold text-red-500
                                hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-colors group"
                   >

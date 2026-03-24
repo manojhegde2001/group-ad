@@ -57,7 +57,27 @@ export async function GET(request: NextRequest) {
     }
 
     if (userType) where.user = { userType: userType as any };
-    if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') where.categoryId = categoryId;
+    
+    if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') {
+      const category = await prisma.category.findUnique({
+        where: { id: categoryId },
+        select: { name: true, slug: true }
+      });
+
+      if (category) {
+        where.OR = [
+          { user: { categoryId: categoryId } },
+          { tags: { has: category.slug } },
+          { tags: { has: category.name.toLowerCase() } }
+        ];
+      } else {
+        where.user = { 
+          ...(where.user || {}),
+          categoryId: categoryId 
+        };
+      }
+    }
+    
     if (boardId && boardId !== 'null' && boardId !== 'undefined') {
       where.boardPosts = {
         some: { boardId }
@@ -200,7 +220,7 @@ export async function POST(request: NextRequest) {
         images: validatedData.images,
         tags: validatedData.tags,
         visibility: validatedData.visibility,
-        categoryId: validatedData.categoryId,
+        categoryId: user.categoryId, // Auto-assign from user profile
         companyId: validatedData.companyId,
         userId: user.id,
       },

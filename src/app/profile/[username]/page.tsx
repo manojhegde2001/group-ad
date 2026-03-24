@@ -171,7 +171,7 @@ export default function PublicProfilePage() {
                                             variant="outline" 
                                             rounded="pill" 
                                             className="font-bold px-4 h-9 text-xs border-secondary-300 dark:border-secondary-700 text-secondary-900 dark:text-secondary-100 hover:bg-secondary-100 dark:hover:bg-secondary-800/50 transition-colors"
-                                            onClick={() => router.push('/boards/saved')}
+                                            onClick={() => router.push('/boards')}
                                         >
                                             Saved posts
                                         </Button>

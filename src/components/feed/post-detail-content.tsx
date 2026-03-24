@@ -5,7 +5,7 @@ import { usePostDetail, useSharePost, useSaveToBoard, useCreatePost } from '@/ho
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { 
+import {
     X, Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
     ChevronLeft, ChevronRight, Loader2, Send, Link2,
     Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban, ArrowLeft
@@ -57,7 +57,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const [copied, setCopied] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
-    
+
     const { open: openCreatePost } = useCreatePost();
     const deleteMutation = useDeletePost();
     const reportMutation = useReport();
@@ -65,7 +65,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Embla Carousel
-    const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    const [emblaRef, emblaApi] = useEmblaCarousel({
         loop: true,
         duration: 25,
         dragFree: false,
@@ -139,7 +139,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     // Fetch follow status
     useEffect(() => {
         if (!post || !user || post.user.id === user.id) return;
-        
+
         fetch(`/api/users/${post.user.id}/follow`)
             .then((r) => r.json())
             .then((d) => {
@@ -187,10 +187,10 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             if (isFollowLoading || !post) return;
             setIsFollowLoading(true);
             const nextFollowState = !isFollowing;
-            
+
             // Optimistic UI
             setIsFollowing(nextFollowState);
-            
+
             try {
                 const res = await fetch(`/api/users/${post.user.id}/follow`, {
                     method: nextFollowState ? 'POST' : 'DELETE',
@@ -282,7 +282,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             >
                 {/* Close Button (Mobile Only) */}
                 {onClose && (
-                    <button 
+                    <button
                         onClick={onClose}
                         className="md:hidden absolute top-4 left-4 z-[110] p-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/10 shadow-xl transition-all active:scale-90"
                         aria-label="Go back"
@@ -403,8 +403,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     )}
 
                     <div className="flex items-center gap-6 py-2 border-y border-secondary-50 dark:border-secondary-800">
-                        <button 
-                            onClick={handleLike} 
+                        <button
+                            onClick={handleLike}
                             disabled={isLiking}
                             className={`flex items-center gap-1.5 transition-all active:scale-95 ${liked ? 'text-rose-500' : 'text-secondary-500 hover:text-rose-500'}`}
                         >
@@ -415,8 +415,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             <MessageCircle className="w-5 h-5" />
                             <span className="text-xs font-bold">{comments.length}</span>
                         </div>
-                        <button 
-                            onClick={handleFollow} 
+                        <button
+                            onClick={handleFollow}
                             disabled={isFollowLoading}
                             className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border transition-all ${isFollowing ? 'border-secondary-200 text-secondary-400' : 'border-primary-500 text-primary-500 hover:bg-primary-50'}`}
                         >

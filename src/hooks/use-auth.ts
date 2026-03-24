@@ -14,10 +14,11 @@ export function useAuth() {
     try {
       // Sign out and update session immediately
       await signOut({ 
-        redirect: true,
-        callbackUrl: window.location.origin
+        redirect: false
       });
       
+      // Manual redirect to home to avoid server-side localhost override
+      window.location.href = window.location.origin;
       toast.success('Logged out successfully! 👋');
       
     } catch (error) {

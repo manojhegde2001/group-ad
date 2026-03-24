@@ -11,7 +11,6 @@ import {
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
-import { Select } from 'rizzui';
 
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
@@ -32,7 +31,6 @@ export function CreatePostModal() {
     const [isDragging, setIsDragging] = useState(false);
     
     // Check verification status
-    const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
     const isAdmin = (user as any)?.userType === 'ADMIN';
     const isBusiness = (user as any)?.userType === 'BUSINESS';
     const isAllowed = isAdmin || isBusiness;
@@ -51,8 +49,6 @@ export function CreatePostModal() {
             setMediaFiles([]);
         }
     }, [editingPost, user]);
-
-
 
     // Lock body scroll
     useEffect(() => {
@@ -86,7 +82,6 @@ export function CreatePostModal() {
     const processFiles = (files: File[], type: 'image' | 'video' | 'mixed') => {
         if (files.length === 0) return;
 
-        // If mixed or first file is video, handle as video
         const firstFile = files[0];
         const isVideo = firstFile.type.startsWith('video/');
 
@@ -109,7 +104,7 @@ export function CreatePostModal() {
                 return;
             }
             
-            const total = mediaFiles.length + validImages.length;
+            const total = (postType === 'IMAGE' ? mediaFiles.length : 0) + validImages.length;
             if (total > 4) {
                 toast.error('Maximum 4 images allowed');
                 return;
@@ -117,8 +112,13 @@ export function CreatePostModal() {
 
             setPostType('IMAGE');
             const previews = validImages.map(f => URL.createObjectURL(f));
-            setMediaFiles(prev => [...prev, ...validImages]);
-            setMediaPreviews(prev => [...prev, ...previews]);
+            if (postType === 'VIDEO') {
+                setMediaFiles(validImages);
+                setMediaPreviews(previews);
+            } else {
+                setMediaFiles(prev => [...prev, ...validImages]);
+                setMediaPreviews(prev => [...prev, ...previews]);
+            }
         }
     };
 
@@ -147,8 +147,14 @@ export function CreatePostModal() {
 
     const removeMedia = (index: number) => {
         URL.revokeObjectURL(mediaPreviews[index]);
-        setMediaFiles((prev) => prev.filter((_, i) => i !== index));
-        setMediaPreviews((prev) => prev.filter((_, i) => i !== index));
+        const newFiles = mediaFiles.filter((_, i) => i !== index);
+        const newPreviews = mediaPreviews.filter((_, i) => i !== index);
+        setMediaFiles(newFiles);
+        setMediaPreviews(newPreviews);
+        
+        if (newPreviews.length === 0) {
+            setPostType('IMAGE'); // Reset to default
+        }
     };
 
     const uploadToCloudinary = async (): Promise<string[]> => {
@@ -171,13 +177,11 @@ export function CreatePostModal() {
                     if (res.status === 413) {
                         throw new Error('File too large (Max: 25MB image, 100MB video)');
                     }
-                    
                     let errMsg = 'Upload failed';
                     try {
                         const err = await res.json();
                         errMsg = err.error || errMsg;
                     } catch (e) {
-                        // Not JSON, use default or status text
                         errMsg = res.statusText || errMsg;
                     }
                     throw new Error(errMsg);
@@ -205,12 +209,8 @@ export function CreatePostModal() {
 
         setSubmitting(true);
         try {
-            // Upload only NEW files
             const newMediaUrls = await uploadToCloudinary();
-            
-            // Get EXISTING URLs from previews (those that aren't blob URLs)
             const existingUrls = mediaPreviews.filter(p => !p.startsWith('blob:'));
-            
             const finalMediaUrls = [...existingUrls, ...newMediaUrls];
 
             const parsedTags = tags
@@ -234,10 +234,6 @@ export function CreatePostModal() {
             });
 
             if (!res.ok) {
-                if (res.status === 413) {
-                    throw new Error('Post data is too large. Try reducing the number of images or text length.');
-                }
-                
                 let errMsg = `Failed to ${editingPost ? 'update' : 'publish'} post`;
                 try {
                     const err = await res.json();
@@ -265,8 +261,6 @@ export function CreatePostModal() {
 
     if (!isOpen) return null;
 
-    const isMediaPost = postType === 'IMAGE' || postType === 'VIDEO';
-
     return (
         <div 
             className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" 
@@ -275,10 +269,8 @@ export function CreatePostModal() {
             onDragLeave={onDragLeave}
             onDrop={handleDrop}
         >
-            {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
 
-            {/* Modal */}
             <div
                 className={`relative z-10 w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-3xl border border-transparent transition-all duration-300 ${isDragging ? 'border-primary-500 scale-[1.02] ring-4 ring-primary-500/20' : ''}`}
                 onClick={(e) => e.stopPropagation()}
@@ -309,15 +301,24 @@ export function CreatePostModal() {
                             <p className="text-[13px] font-black text-secondary-900 dark:text-white leading-tight uppercase tracking-tight">
                                 {user?.name as string}
                             </p>
-                            <button
-                                onClick={() => setVisibility(visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')}
-                                className="flex items-center gap-1 text-[10px] font-bold text-secondary-400 hover:text-primary-500 transition-colors uppercase tracking-widest mt-0.5"
-                            >
-                                {visibility === 'PUBLIC'
-                                    ? <><Globe className="w-3 h-3" /> Public</>
-                                    : <><Lock className="w-3 h-3" /> Private</>
-                                }
-                            </button>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibility('PUBLIC')}
+                                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${visibility === 'PUBLIC' ? 'bg-green-500/10 text-green-600 ring-1 ring-green-500/20' : 'text-secondary-400 hover:text-secondary-600'}`}
+                                >
+                                    <Globe className="w-2.5 h-2.5" />
+                                    Public
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibility('PRIVATE')}
+                                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${visibility === 'PRIVATE' ? 'bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20' : 'text-secondary-400 hover:text-secondary-600'}`}
+                                >
+                                    <Lock className="w-2.5 h-2.5" />
+                                    Private
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -343,7 +344,6 @@ export function CreatePostModal() {
                 ) : (
                     <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar">
                         <div className="px-5 sm:px-6 py-6 space-y-4 flex-1">
-                            {/* Content / Caption */}
                             <textarea
                                 autoFocus
                                 value={content}
@@ -353,28 +353,20 @@ export function CreatePostModal() {
                                 maxLength={5000}
                             />
 
-                            {/* Media Previews - HORIZONTAL ROW (Compact) */}
                             {mediaPreviews.length > 0 && (
                                 <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none animate-in fade-in slide-in-from-bottom-2 duration-300">
                                     {mediaPreviews.map((src, i) => (
                                         <div key={i} className="relative shrink-0 w-24 h-24 rounded-2xl overflow-hidden group bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 shadow-sm transition-transform hover:scale-[1.05]">
                                             {postType === 'VIDEO' ? (
-                                                <video
-                                                    src={src}
-                                                    className="w-full h-full object-cover"
-                                                    muted
-                                                    playsInline
-                                                />
+                                                <video src={src} className="w-full h-full object-cover" muted playsInline />
                                             ) : (
                                                 <img src={src} alt="" className="w-full h-full object-cover" />
                                             )}
-                                            
                                             {postType === 'VIDEO' && (
                                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                                      <Film className="w-6 h-6 text-white drop-shadow-lg" />
                                                 </div>
                                             )}
-                                            
                                             <button
                                                 type="button"
                                                 onClick={() => removeMedia(i)}
@@ -384,8 +376,6 @@ export function CreatePostModal() {
                                             </button>
                                         </div>
                                     ))}
-                                    
-                                    {/* Small + Button for more images */}
                                     {postType === 'IMAGE' && mediaPreviews.length < 4 && (
                                         <button
                                             type="button"
@@ -399,7 +389,6 @@ export function CreatePostModal() {
                                 </div>
                             )}
 
-                            {/* Tags Input (Secondary) */}
                             <div className="flex items-center gap-3 bg-secondary-50 dark:bg-secondary-800/40 rounded-2xl px-4 py-3 border border-secondary-100 dark:border-secondary-800/50 focus-within:ring-2 ring-primary-500/20 transition-all">
                                 <Tags className="w-4 h-4 text-secondary-400 shrink-0" />
                                 <input
@@ -412,7 +401,6 @@ export function CreatePostModal() {
                             </div>
                         </div>
 
-                        {/* Sticky Action Footer */}
                         <div className="sticky bottom-0 bg-white dark:bg-secondary-900 border-t border-secondary-100 dark:border-secondary-800 px-4 sm:px-6 py-4 flex flex-col gap-4">
                             {uploading && (
                                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -433,13 +421,12 @@ export function CreatePostModal() {
                             )}
 
                             <div className="flex items-center justify-between">
-                                {/* Action Buttons */}
                                 <div className="flex items-center gap-1">
                                     <button
                                         type="button"
                                         title="Photo"
                                         disabled={postType === 'VIDEO'}
-                                        onClick={() => { setPostType('IMAGE'); imageInputRef.current?.click(); }}
+                                        onClick={() => imageInputRef.current?.click()}
                                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 hover:text-primary-500 transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
                                     >
                                         <ImageIcon className="w-5 h-5" />
@@ -448,7 +435,7 @@ export function CreatePostModal() {
                                         type="button"
                                         title="Video"
                                         disabled={postType === 'IMAGE' && mediaPreviews.length > 0}
-                                        onClick={() => { setPostType('VIDEO'); videoInputRef.current?.click(); }}
+                                        onClick={() => videoInputRef.current?.click()}
                                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 hover:text-primary-500 transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
                                     >
                                         <Film className="w-5 h-5" />
@@ -459,23 +446,20 @@ export function CreatePostModal() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <Button
-                                        type="submit"
-                                        variant="solid"
-                                        color="primary"
-                                        rounded="pill"
-                                        isLoading={submitting || uploading}
-                                        disabled={submitting || uploading || !content.trim()}
-                                        className="h-11 px-8 font-black text-xs uppercase tracking-[0.1em] shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 active:scale-[0.98] transition-all"
-                                    >
-                                        {editingPost ? 'Update' : 'Publish'}
-                                    </Button>
-                                </div>
+                                <Button
+                                    type="submit"
+                                    variant="solid"
+                                    color="primary"
+                                    rounded="pill"
+                                    isLoading={submitting || uploading}
+                                    disabled={submitting || uploading || !content.trim()}
+                                    className="h-11 px-8 font-black text-xs uppercase tracking-[0.1em] shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 active:scale-[0.98] transition-all"
+                                >
+                                    {editingPost ? 'Update' : 'Publish'}
+                                </Button>
                             </div>
                         </div>
 
-                        {/* Hidden Inputs */}
                         <input ref={imageInputRef} type="file" accept="image/*" multiple onChange={(e) => handleFileSelect(e, 'image')} className="hidden" />
                         <input ref={videoInputRef} type="file" accept="video/*" onChange={(e) => handleFileSelect(e, 'video')} className="hidden" />
                     </form>

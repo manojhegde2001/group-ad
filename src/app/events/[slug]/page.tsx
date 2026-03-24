@@ -27,7 +27,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         openGraph: {
             title: event.title,
             description: event.description.slice(0, 160),
-            images: event.coverImage ? [event.coverImage] : [],
+            images: [
+                {
+                    url: event.coverImage || '/auth/thumbnail.png',
+                    width: 1200,
+                    height: 630,
+                    alt: event.title,
+                }
+            ],
+            type: 'article',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: event.title,
+            description: event.description.slice(0, 160),
+            images: [event.coverImage || '/auth/thumbnail.png'],
         }
     };
 }

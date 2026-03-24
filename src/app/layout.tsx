@@ -29,7 +29,10 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://group-ad.vercel.app'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://group-ad.vercel.app')
+  ),
   alternates: {
     canonical: '/',
   },

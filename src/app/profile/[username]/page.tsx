@@ -23,13 +23,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${user.name} on Group Ad`,
       description: user.bio || `Connect with ${user.name} on Group Ad.`,
-      images: user.avatar ? [user.avatar] : ['/auth/thumbnail.png'],
+      images: [
+        {
+          url: user.avatar || '/auth/thumbnail.png',
+          width: 1200,
+          height: 630,
+          alt: user.name,
+        }
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `${user.name} (@${username})`,
       description: user.bio || `Connect with ${user.name} on Group Ad.`,
-      images: user.avatar ? [user.avatar] : ['/auth/thumbnail.png'],
+      images: [user.avatar || '/auth/thumbnail.png'],
     },
   };
 }

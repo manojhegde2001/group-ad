@@ -23,10 +23,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${category.name} on Group Ad`,
       description: category.description || `Explore the latest from ${category.name} professionals.`,
-      images: ['/auth/thumbnail.png'],
+      images: [
+        {
+          url: '/auth/thumbnail.png',
+          width: 1200,
+          height: 630,
+          alt: category.name,
+        }
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `${category.name} | Group Ad`,
       description: category.description || `Explore professional updates from ${category.name}.`,
       images: ['/auth/thumbnail.png'],

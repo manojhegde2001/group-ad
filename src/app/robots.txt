@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /settings/
+
+Sitemap: https://group-ad.vercel.app/sitemap.xml

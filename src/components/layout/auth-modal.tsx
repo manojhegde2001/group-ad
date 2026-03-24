@@ -8,7 +8,16 @@ import SignupForm from '../auth/signup-form';
 import { useEffect } from 'react';
 
 export function AuthModal() {
-  const { isOpen, mode, close, setMode } = useAuthModal();
+  const { isOpen, mode, close, setMode, isDirty } = useAuthModal();
+
+  const handleClose = () => {
+    if (isDirty) {
+      if (!window.confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+        return;
+      }
+    }
+    close();
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -21,16 +30,16 @@ export function AuthModal() {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') handleClose();
     };
     if (isOpen) document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen, close]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-4" onClick={close}>
+    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-4" onClick={handleClose}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
 
@@ -53,7 +62,7 @@ export function AuthModal() {
               variant="flat"
               color="secondary"
               rounded="full"
-              onClick={close}
+              onClick={handleClose}
             >
               <X className="w-4 h-4" />
             </ActionIcon>

@@ -1,5 +1,4 @@
-'use client';
-
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
@@ -14,13 +13,13 @@ import { Button } from '../ui/button';
 
 export function LoginForm() {
   const router = useRouter();
-  const { close, setMode, isOpen, onSuccessCallback } = useAuthModal();
+  const { close, setMode, isOpen, onSuccessCallback, setIsDirty } = useAuthModal();
   const { refreshAuth } = useAuth();
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -28,6 +27,11 @@ export function LoginForm() {
       password: '',
     },
   });
+
+  useEffect(() => {
+    setIsDirty(isDirty);
+    return () => setIsDirty(false);
+  }, [isDirty, setIsDirty]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {

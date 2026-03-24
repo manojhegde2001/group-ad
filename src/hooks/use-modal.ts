@@ -13,6 +13,8 @@ interface AuthModalStore {
   openSignup: (callback?: () => void) => void;
   close: () => void;
   setMode: (mode: AuthMode) => void;
+  isDirty: boolean;
+  setIsDirty: (isDirty: boolean) => void;
 }
 
 export const useAuthModal = create<AuthModalStore>((set) => ({
@@ -48,4 +50,6 @@ export const useAuthModal = create<AuthModalStore>((set) => ({
     }),
   
   setMode: (mode) => set({ mode }),
+  isDirty: false,
+  setIsDirty: (isDirty) => set({ isDirty }),
 }));

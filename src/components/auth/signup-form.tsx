@@ -38,7 +38,7 @@ export default function SignupForm() {
     handleSubmit,
     watch,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -46,6 +46,12 @@ export default function SignupForm() {
       categoryId: '',
     },
   });
+
+  const { setIsDirty } = useAuthModal();
+  useEffect(() => {
+    setIsDirty(isDirty);
+    return () => setIsDirty(false);
+  }, [isDirty, setIsDirty]);
 
   const userType = watch('userType');
 

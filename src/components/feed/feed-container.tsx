@@ -211,6 +211,9 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
 
   return (
     <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 2xl:px-12 py-5">
+      {/* Visually hidden H1 for SEO stability across auth states */}
+      <h1 className="sr-only">Group Ad — Discover Professional Ideas & Business Networking Feed</h1>
+
       {useDemoData && (
         <p className="text-center text-xs text-secondary-400 mb-4">
           Showing sample posts — create posts to see real content
@@ -234,7 +237,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
             }}
             className="mb-4"
           >
-            <PostCard post={post} />
+            <PostCard post={post} priority={i < 4} />
           </motion.div>
         ))}
       </Masonry>

@@ -5,11 +5,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import { AuthModal } from '@/components/layout/auth-modal';
-import { CreatePostModal } from '@/components/feed/create-post-modal';
-import { CreateEventModal } from '@/components/events/create-event-modal';
-import { PostDetailDrawer } from '@/components/feed/post-detail-drawer';
-import { SaveToBoardModal } from '@/components/boards/save-to-board-modal';
+import dynamic from 'next/dynamic';
+
+const AuthModal = dynamic(() => import('@/components/layout/auth-modal').then(mod => mod.AuthModal), { ssr: false });
+const CreatePostModal = dynamic(() => import('@/components/feed/create-post-modal').then(mod => mod.CreatePostModal), { ssr: false });
+const CreateEventModal = dynamic(() => import('@/components/events/create-event-modal').then(mod => mod.CreateEventModal), { ssr: false });
+const PostDetailDrawer = dynamic(() => import('@/components/feed/post-detail-drawer').then(mod => mod.PostDetailDrawer), { ssr: false });
+const SaveToBoardModal = dynamic(() => import('@/components/boards/save-to-board-modal').then(mod => mod.SaveToBoardModal), { ssr: false });
+
 import { Analytics } from '@vercel/analytics/react';
 
 export function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -19,8 +22,8 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar />
       <div className={cn(
-        "flex-1 flex flex-col min-w-0 transition-[margin] duration-300",
-        isAuthenticated ? "md:ml-20" : ""
+        "flex-1 flex flex-col min-w-0",
+        isAuthenticated ? "md:pl-20" : ""
       )}>
         <Navbar />
         <main className="flex-1 overflow-x-hidden pt-16 md:pt-0">

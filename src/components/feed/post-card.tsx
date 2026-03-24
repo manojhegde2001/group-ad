@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
     Heart, Share2, Bookmark, BadgeCheck,
@@ -21,9 +22,10 @@ interface PostCardProps {
     post: PostWithRelations;
     onLikeChange?: (postId: string, liked: boolean) => void;
     showActions?: boolean;
+    priority?: boolean;
 }
 
-export function PostCard({ post, onLikeChange, showActions = false }: PostCardProps) {
+export function PostCard({ post, onLikeChange, showActions = false, priority = false }: PostCardProps) {
     const [mounted, setMounted] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false); // Added state
     useEffect(() => setMounted(true), []);
@@ -179,7 +181,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                             return (
                                 <div className="relative overflow-hidden">
                                     {isVideoItem ? (
-                                        <div className="relative aspect-square sm:aspect-auto">
+                                        <div className="relative aspect-square sm:aspect-auto min-h-[200px]">
                                             <video
                                                 src={src}
                                                 className="w-full h-full object-cover block"
@@ -198,13 +200,18 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                                             </div>
                                         </div>
                                     ) : (
-                                        <img
-                                            src={src}
-                                            alt=""
-                                            className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.05]"
-                                            loading="lazy"
-                                            onDoubleClick={handleDoubleTap}
-                                        />
+                                        <div className="relative overflow-hidden w-full" style={{ aspectRatio: 'auto' }}>
+                                            <Image
+                                                src={src}
+                                                alt={post.content || 'Group Ad Post'}
+                                                width={500}
+                                                height={500}
+                                                className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.05]"
+                                                onDoubleClick={handleDoubleTap}
+                                                priority={priority}
+                                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                            />
+                                        </div>
                                     )}
                                     
                                     {/* Multi-image indicator in top-left corner */}
@@ -312,9 +319,14 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                         onClick={e => { e.stopPropagation(); requireAuth(() => { }); }}
                         className="flex items-center gap-2 min-w-0 pointer-events-auto group/user bg-black/30 hover:bg-black/50 backdrop-blur-md p-1.5 pr-3 rounded-xl border border-white/10 transition-all shadow-lg"
                     >
-                        <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-white/20 shadow-sm bg-secondary-800">
+                        <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-white/20 shadow-sm bg-secondary-800 relative">
                             {post.user.avatar ? (
-                                <img src={post.user.avatar} alt={post.user.name ?? ''} className="w-full h-full object-cover" />
+                                <Image 
+                                    src={post.user.avatar} 
+                                    alt={post.user.name ?? ''} 
+                                    fill 
+                                    className="object-cover" 
+                                />
                             ) : (
                                 <span className="w-full h-full flex items-center justify-center text-[10px] font-black text-white uppercase">
                                     {post.user.name?.charAt(0)}

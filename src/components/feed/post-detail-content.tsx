@@ -272,18 +272,22 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     };
 
     if (loading && !post) {
-        return (
-            <div className="flex h-full items-center justify-center p-8">
-                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-            </div>
-        );
+        return <PostDetailSkeleton isModal={isModal} onClose={onClose} />;
     }
 
     if (!post) {
         return (
-            <div className="flex flex-col h-full items-center justify-center p-8 text-center bg-white dark:bg-secondary-900 rounded-2xl">
-                <p className="text-secondary-500 font-bold mb-4">Post not found</p>
-                {onClose && <Button onClick={onClose} variant="flat">Close</Button>}
+            <div className="flex flex-col h-full items-center justify-center p-8 text-center bg-white dark:bg-secondary-900 rounded-2xl min-h-[400px]">
+                <div className="w-16 h-16 bg-secondary-100 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-4">
+                    <X className="w-8 h-8 text-secondary-400" />
+                </div>
+                <h3 className="text-xl font-bold text-secondary-900 dark:text-white mb-2">Post not found</h3>
+                <p className="text-secondary-500 dark:text-secondary-400 max-w-xs mb-6">This post may have been deleted or the link is incorrect.</p>
+                {onClose && (
+                    <Button onClick={onClose} variant="flat" rounded="pill">
+                        Go Back
+                    </Button>
+                )}
             </div>
         );
     }
@@ -686,6 +690,73 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             )}
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PostDetailSkeleton({ isModal, onClose }: { isModal: boolean; onClose?: () => void }) {
+    return (
+        <div className="flex flex-col md:flex-row h-full w-full animate-pulse">
+            {/* Left Panel - Media Skeleton */}
+            <div className="relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center p-8">
+                <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
+                {onClose && (
+                    <button className="md:hidden absolute top-4 left-4 z-[110] p-2.5 rounded-full bg-secondary-200/50 dark:bg-secondary-700/50 backdrop-blur-md text-transparent">
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
+                )}
+            </div>
+
+            {/* Right panel — Details Skeleton */}
+            <div className={`w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800 ${!isModal ? 'min-h-[600px] md:min-h-0' : ''}`}>
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                        <Skeleton className="w-10 h-10 rounded-full" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-24 rounded" />
+                            <Skeleton className="h-2 w-16 rounded" />
+                        </div>
+                    </div>
+                    <Skeleton className="h-8 w-20 rounded-full" />
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-full rounded" />
+                        <Skeleton className="h-4 w-[90%] rounded" />
+                        <Skeleton className="h-4 w-[40%] rounded" />
+                    </div>
+
+                    <div className="flex gap-4">
+                        <Skeleton className="h-5 w-12 rounded" />
+                        <Skeleton className="h-5 w-12 rounded" />
+                        <Skeleton className="h-5 w-12 rounded" />
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-secondary-50 dark:border-secondary-800">
+                        <Skeleton className="h-3 w-20 rounded" />
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="flex gap-3">
+                                <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                                <div className="flex-1 space-y-2 pt-1">
+                                    <Skeleton className="h-3 w-24 rounded" />
+                                    <Skeleton className="h-10 w-full rounded-2xl" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Footer Input */}
+                <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                        <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                        <Skeleton className="h-9 w-full rounded-full" />
+                    </div>
                 </div>
             </div>
         </div>

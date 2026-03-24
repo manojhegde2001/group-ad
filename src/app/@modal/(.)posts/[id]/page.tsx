@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { PostDetailContent } from '@/components/feed/post-detail-content';
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 
-export default function PostModalPage({ params }: { params: { id: string } }) {
+export default function PostModalPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { id } = use(params);
 
   // Body scroll lock
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function PostModalPage({ params }: { params: { id: string } }) {
         onClick={(e) => e.stopPropagation()}
       >
         <PostDetailContent 
-          postId={params.id} 
+          postId={id} 
           isModal={true} 
           onClose={() => router.back()} 
         />

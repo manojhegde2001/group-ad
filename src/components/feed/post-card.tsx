@@ -53,17 +53,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
     }, [(post as any).isLikedByUser, post._count?.postLikes]);
 
     const saved = (post as any).isBookmarked ?? false;
-    const shareOpen = activePostId === post.id && source === 'feed';
     const [copied, setCopied] = useState(false);
-
-    const handleShareOpen = (open: boolean | ((prev: boolean) => boolean)) => {
-        const nextOpen = typeof open === 'function' ? open(shareOpen) : open;
-        if (nextOpen) {
-            openShare(post.id, 'feed');
-        } else {
-            closeShare();
-        }
-    };
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     const requireAuth = (cb: () => void) => {
@@ -258,7 +248,6 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
             <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-3 pointer-events-none">
                 {/* Top Section */}
                 <div className="flex items-start justify-end gap-2 w-full">
-                    {/* Top Right: Actions (Save, Share, More) */}
                     <div className="flex items-center gap-2 pointer-events-auto" onClick={e => e.stopPropagation()}>
                         <button
                             onClick={handleSave}
@@ -270,61 +259,54 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                             <Bookmark className={`w-4 h-4 ${saved ? 'fill-white' : ''}`} />
                         </button>
 
-                        <div onClick={e => e.stopPropagation()}>
-                            <Popover isOpen={shareOpen} setIsOpen={handleShareOpen} placement="bottom-end">
-                                <Popover.Trigger>
-                                    <button title="Share" className={`w-9 h-9 rounded-xl flex items-center justify-center backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border ${shareOpen ? 'bg-primary-600/90 text-white border-primary-400/30' : 'bg-black/50 text-white border-white/10 hover:bg-black/70'}`}>
-                                        <Share2 className="w-4 h-4" />
-                                    </button>
-                                </Popover.Trigger>
-                                <Popover.Content className="z-[9999] bg-white dark:bg-secondary-800 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-2 w-48 p-0 overflow-hidden">
-                                    <button onClick={handleCopyLink} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium border-none bg-transparent">
+                        <Popover isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} placement="bottom-end">
+                            <Popover.Trigger>
+                                <button title="More actions" className="w-9 h-9 rounded-xl flex items-center justify-center bg-black/50 hover:bg-black/70 text-white backdrop-blur-xl border border-white/10 shadow-lg transition-all active:scale-90">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                            </Popover.Trigger>
+                            <Popover.Content className="w-52 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700 overflow-hidden">
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="px-2 py-1.5 text-[11px] font-black uppercase tracking-wider text-secondary-400 dark:text-secondary-500 text-left">
+                                        Share
+                                    </div>
+                                    <button onClick={handleCopyLink} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-secondary-700 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-xl transition-colors text-left border-none bg-transparent">
                                         {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
                                         {copied ? 'Copied!' : 'Copy link'}
                                     </button>
-                                    <a href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium">
+                                    <a href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-secondary-700 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-xl transition-colors">
                                         <Twitter className="w-4 h-4 text-sky-500" /> Share on X
                                     </a>
-                                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium">
+                                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-secondary-700 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-xl transition-colors">
                                         <Facebook className="w-4 h-4 text-blue-600" /> Share on Facebook
                                     </a>
-                                </Popover.Content>
-                            </Popover>
-                        </div>
 
-                        {user && (
-                            <Popover isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} placement="bottom-end">
-                                <Popover.Trigger>
-                                    <button title="More" className="w-9 h-9 rounded-xl flex items-center justify-center bg-black/50 hover:bg-black/70 text-white backdrop-blur-xl border border-white/10 shadow-lg transition-all">
-                                        <MoreHorizontal className="w-4 h-4" />
-                                    </button>
-                                </Popover.Trigger>
-                                <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
-                                    <div className="flex flex-col gap-1">
-                                        {(user.id === post.userId || (user as any).userType === 'ADMIN') && (
-                                            <>
-                                                <button onClick={() => { openCreatePost(post); setIsMenuOpen(false); }} className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
-                                                    <Edit2 className="w-4 h-4" /> Edit Post
-                                                </button>
-                                                <button onClick={() => { handleDeletePost(); setIsMenuOpen(false); }} className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer">
-                                                    <Trash2 className="w-4 h-4" /> Delete Post
-                                                </button>
-                                                <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
-                                            </>
-                                        )}
-                                        <button onClick={() => { handleReport(); setIsMenuOpen(false); }} className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
-                                            <Flag className="w-4 h-4" /> Report
-                                        </button>
+                                    <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1.5 mx-2" />
+
+                                    <div className="px-2 py-1.5 text-[11px] font-black uppercase tracking-wider text-secondary-400 dark:text-secondary-500 text-left">
+                                        Post
                                     </div>
-                                </Popover.Content>
-                            </Popover>
-                        )}
+                                    {(user && (user.id === post.userId || (user as any).userType === 'ADMIN')) && (
+                                        <>
+                                            <button onClick={() => { openCreatePost(post); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-secondary-700 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-xl transition-colors text-left border-none bg-transparent">
+                                                <Edit2 className="w-4 h-4" /> Edit Post
+                                            </button>
+                                            <button onClick={() => { handleDeletePost(); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors text-left border-none bg-transparent">
+                                                <Trash2 className="w-4 h-4" /> Delete Post
+                                            </button>
+                                        </>
+                                    )}
+                                    <button onClick={() => { handleReport(); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-secondary-700 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-xl transition-colors text-left border-none bg-transparent">
+                                        <Flag className="w-4 h-4" /> Report
+                                    </button>
+                                </div>
+                            </Popover.Content>
+                        </Popover>
                     </div>
                 </div>
 
                 {/* Bottom Section */}
                 <div className="flex items-end justify-between w-full">
-                    {/* Bottom Left: User Info */}
                     <Link
                         href={`/profile/${post.user.username}`}
                         onClick={e => { e.stopPropagation(); requireAuth(() => { }); }}
@@ -345,7 +327,6 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                         </div>
                     </Link>
 
-                    {/* Bottom Right: Like Button */}
                     <button
                         onClick={handleLike}
                         disabled={likeMutation.isPending}
@@ -365,7 +346,6 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                     <p className="text-[14px] font-bold text-secondary-900 dark:text-secondary-100 leading-[1.3] line-clamp-2 tracking-tight">
                         {post.content}
                     </p>
-                    {/* Comment icon removed as per user request */}
                 </div>
             )}
         </div>

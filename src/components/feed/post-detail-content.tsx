@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { usePostDetail, useSharePost, useSaveToBoard, useCreatePost } from '@/hooks/use-feed';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -8,9 +8,8 @@ import { useAuthModal } from '@/hooks/use-modal';
 import {
     X, Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
     ChevronLeft, ChevronRight, Loader2, Send, Link2,
-    Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban, ArrowLeft
+    Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
 } from 'lucide-react';
-import useEmblaCarousel from 'embla-carousel-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ActionIcon } from '@/components/ui/action-icon';
@@ -46,6 +45,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const [isLiking, setIsLiking] = useState(false);
     const [saved, setSaved] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState<Comment[]>([]);
     const [loadingComments, setLoadingComments] = useState(false);
@@ -57,43 +57,12 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const [copied, setCopied] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
     const [isFollowLoading, setIsFollowLoading] = useState(false);
-
+    
     const { open: openCreatePost } = useCreatePost();
     const deleteMutation = useDeletePost();
     const reportMutation = useReport();
     const blockMutation = useBlock();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    // Embla Carousel
-    const [emblaRef, emblaApi] = useEmblaCarousel({
-        loop: true,
-        duration: 25,
-        dragFree: false,
-        containScroll: 'trimSnaps'
-    });
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-    const onSelect = useCallback(() => {
-        if (!emblaApi) return;
-        setCurrentImageIndex(emblaApi.selectedScrollSnap());
-    }, [emblaApi]);
-
-    useEffect(() => {
-        if (!emblaApi) return;
-        onSelect();
-        emblaApi.on('select', onSelect);
-        return () => {
-            emblaApi.off('select', onSelect);
-        };
-    }, [emblaApi, onSelect]);
-
-    const nextImage = useCallback(() => {
-        if (emblaApi) emblaApi.scrollNext();
-    }, [emblaApi]);
-
-    const prevImage = useCallback(() => {
-        if (emblaApi) emblaApi.scrollPrev();
-    }, [emblaApi]);
 
     // Fetch post + comments when opened
     useEffect(() => {
@@ -139,7 +108,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     // Fetch follow status
     useEffect(() => {
         if (!post || !user || post.user.id === user.id) return;
-
+        
         fetch(`/api/users/${post.user.id}/follow`)
             .then((r) => r.json())
             .then((d) => {
@@ -159,7 +128,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
         return () => {
             document.removeEventListener('keydown', handleKey);
         };
-    }, [onClose, prevImage, nextImage]);
+    }, [onClose]);
 
     const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
 
@@ -171,9 +140,9 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             setLiked(newLiked);
             setLikeCount((c) => (newLiked ? c + 1 : Math.max(0, c - 1)));
             try {
-                const res = await fetch(`/api/posts/${post.id}/like`, { method: newLiked ? 'POST' : 'DELETE' });
-                if (!res.ok) throw new Error();
+                await fetch(`/api/posts/${post.id}/like`, { method: newLiked ? 'POST' : 'DELETE' });
             } catch {
+                // revert
                 setLiked(!newLiked);
                 setLikeCount((c) => (!newLiked ? c + 1 : Math.max(0, c - 1)));
             } finally {
@@ -182,15 +151,24 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
         });
     };
 
+    const nextImage = () => {
+        if (!post?.images?.length) return;
+        setCurrentImageIndex((i) => (i + 1) % post.images.length);
+    };
+    const prevImage = () => {
+        if (!post?.images?.length) return;
+        setCurrentImageIndex((i) => (i - 1 + post.images.length) % post.images.length);
+    };
+
     const handleFollow = async () => {
         requireAuth(async () => {
             if (isFollowLoading || !post) return;
             setIsFollowLoading(true);
             const nextFollowState = !isFollowing;
-
+            
             // Optimistic UI
             setIsFollowing(nextFollowState);
-
+            
             try {
                 const res = await fetch(`/api/users/${post.user.id}/follow`, {
                     method: nextFollowState ? 'POST' : 'DELETE',
@@ -213,6 +191,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
         if (!comment.trim()) return;
         setSubmittingComment(true);
 
+        // Optimistic UI
         const optimistic: Comment = {
             id: `opt-${Date.now()}`,
             content: comment.trim(),
@@ -235,13 +214,61 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed');
+            // Replace optimistic entry with real one
             setComments((prev) => prev.map((c) => c.id === optimistic.id ? data.comment : c));
         } catch {
+            // Remove optimistic on failure
             setComments((prev) => prev.filter((c) => c.id !== optimistic.id));
             toast.error('Failed to post comment');
         } finally {
             setSubmittingComment(false);
         }
+    };
+
+    const postUrl = typeof window !== 'undefined' && post
+        ? `${window.location.origin}/posts/${post.id}` : '';
+    const postTitle = post?.content ? post.content.slice(0, 60) : 'Check out this post';
+
+    const safeEncode = (str: string) => {
+        try {
+            return encodeURIComponent(str.toWellFormed ? str.toWellFormed() : str.replace(/[\uD800-\uDFFF]/g, ''));
+        } catch {
+            return encodeURIComponent(str.replace(/[^\x00-\x7F]/g, ''));
+        }
+    };
+
+    const handleShareOpen = (open: boolean | ((prev: boolean) => boolean)) => {
+        const nextOpen = typeof open === 'function' ? open(shareOpen) : open;
+        if (nextOpen && post) {
+            openShare(post.id, isModal ? 'drawer' : 'page');
+        } else {
+            closeShare();
+        }
+    };
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(postUrl);
+            setCopied(true);
+            setTimeout(() => { setCopied(false); closeShare(); }, 1500);
+        } catch { }
+    };
+
+    const handleReport = () => {
+        requireAuth(() => {
+            const reason = window.prompt('Please enter a reason for reporting this post:');
+            if (reason && post) {
+                reportMutation.mutate({ targetType: 'POST', targetId: post.id, reason });
+            }
+        });
+    };
+
+    const handleBlock = () => {
+        requireAuth(() => {
+            if (post && window.confirm(`Are you sure you want to block ${post.user.name}?`)) {
+                blockMutation.mutate(post.user.id);
+            }
+        });
     };
 
     if (loading && !post) {
@@ -266,6 +293,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     }
 
     const hasImages = post.images && post.images.length > 0;
+    const isVideoPost = post.type === 'VIDEO';
     const isTextPost = !hasImages;
     const gradients = [
         'from-violet-500 to-indigo-600', 'from-rose-400 to-pink-600',
@@ -273,80 +301,87 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
         'from-sky-400 to-blue-600', 'from-fuchsia-500 to-purple-700',
     ];
     const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
+    const totalComments = comments.length;
 
     return (
         <div className="flex flex-col md:flex-row h-full w-full">
-            {/* Left Panel - Media Carousel */}
+            {/* Left Panel - Media */}
             <div
-                className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-950 flex items-center justify-center overflow-hidden group/panel ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
+                className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
             >
-                {/* Close Button (Mobile Only) */}
+                {/* Close Button (Mobile Only, or on direct pages) */}
                 {onClose && (
-                    <button
+                    <button 
                         onClick={onClose}
-                        className="md:hidden absolute top-4 left-4 z-[110] p-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/10 shadow-xl transition-all active:scale-90"
+                        className="md:hidden absolute top-4 left-4 z-[110] p-2.5 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md text-white transition-all active:scale-95 shadow-lg border border-white/10"
                         aria-label="Go back"
                     >
-                        <ArrowLeft className="w-6 h-6" />
+                        <ChevronLeft className="w-6 h-6" />
                     </button>
                 )}
 
-                {hasImages ? (
-                    <div className="w-full h-full relative">
-                        <div className="w-full h-full overflow-hidden" ref={emblaRef}>
-                            <div className="flex w-full h-full">
-                                {post.images.map((src, idx) => {
-                                    const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
-                                    return (
-                                        <div key={idx} className="flex-[0_0_100%] min-w-0 h-full relative flex items-center justify-center bg-black">
-                                            {isVideoItem ? (
-                                                <video
-                                                    src={src}
-                                                    className="w-full h-full object-contain"
-                                                    controls playsInline autoPlay
-                                                    style={{ maxHeight: '80vh' }}
-                                                />
-                                            ) : (
-                                                <img
-                                                    src={src}
-                                                    alt={`Image ${idx + 1}`}
-                                                    className="w-full h-full object-contain"
-                                                    style={{ maxHeight: '80vh' }}
-                                                />
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
+                {loading ? (
+                    <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
+                        <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
+                    </div>
+                ) : hasImages ? (
+                    <>
+                        {(() => {
+                            const src = post.images[currentImageIndex];
+                            const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
+                            
+                            if (isVideoItem) {
+                                return (
+                                    <video
+                                        key={src}
+                                        src={src}
+                                        className="w-full h-full object-contain"
+                                        controls playsInline autoPlay
+                                        style={{ maxHeight: '80vh' }}
+                                    />
+                                );
+                            }
+                            return (
+                                <img
+                                    key={src}
+                                    src={src}
+                                    alt={post.content || 'Post image'}
+                                    className="w-full h-full object-contain animate-in fade-in duration-500"
+                                    style={{ maxHeight: '80vh' }}
+                                />
+                            );
+                        })()}
                         {post.images.length > 1 && (
                             <>
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 text-white opacity-0 group-panel:opacity-100 transition-opacity active:scale-90 hidden md:flex items-center justify-center shadow-2xl"
+                                    onClick={prevImage}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
                                 >
-                                    <ChevronLeft className="w-6 h-6" />
+                                    <ChevronLeft className="w-5 h-5" />
                                 </button>
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 text-white opacity-0 group-panel:opacity-100 transition-opacity active:scale-90 hidden md:flex items-center justify-center shadow-2xl"
+                                    onClick={nextImage}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
                                 >
-                                    <ChevronRight className="w-6 h-6" />
+                                    <ChevronRight className="w-5 h-5" />
                                 </button>
-
-                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10">
+                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                                     {post.images.map((_, i) => (
                                         <button
                                             key={i}
-                                            onClick={(e) => { e.stopPropagation(); emblaApi?.scrollTo(i); }}
-                                            className={`w-2 h-2 rounded-full transition-all duration-300 ${i === currentImageIndex ? 'bg-white scale-125 shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'bg-white/40 hover:bg-white/60'}`}
+                                            onClick={() => setCurrentImageIndex(i)}
+                                            className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-5' : 'bg-white/50 w-1.5'}`}
                                         />
                                     ))}
                                 </div>
                             </>
                         )}
-                    </div>
+                        {isVideoPost && (
+                            <div className="absolute top-3 left-3 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
+                                <Video className="w-3 h-3" /> Video
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className="p-8 sm:p-12 text-white">
                         <p className="text-xl sm:text-2xl font-bold leading-relaxed">{post.content}</p>
@@ -354,8 +389,9 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                 )}
             </div>
 
-            {/* Right panel — Details */}
+            {/* Right panel ΓÇö Details */}
             <div className={`w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800 ${!isModal ? 'min-h-[600px] md:min-h-0' : ''}`}>
+                {/* Desktop Close Button (Only in Modal) */}
                 {isModal && onClose && (
                     <div className="absolute top-4 right-4 z-50 hidden sm:block">
                         <ActionIcon
@@ -370,6 +406,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
                 )}
 
+                {/* Header */}
                 <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0 sm:pr-14 pr-4">
                     <Link
                         href={`/profile/${post.user.username}`}
@@ -390,41 +427,197 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             <p className="text-xs text-secondary-400 truncate">@{post.user.username}</p>
                         </div>
                     </Link>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {user?.id !== post.user.id && (
+                            <Button 
+                                variant={isFollowing ? "flat" : "solid"}
+                                color={isFollowing ? "secondary" : "primary"}
+                                size="sm" 
+                                rounded="pill" 
+                                className={`text-xs px-4 h-8 font-bold transition-all ${isFollowing ? 'bg-secondary-100 dark:bg-secondary-800' : ''}`}
+                                onClick={handleFollow}
+                                disabled={isFollowLoading}
+                            >
+                                {isFollowLoading ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : isFollowing ? (
+                                    'Following'
+                                ) : (
+                                    'Follow'
+                                )}
+                            </Button>
+                        )}
+
+                        {/* Moderation Actions */}
+                        <Popover 
+                            isOpen={isMenuOpen} 
+                            setIsOpen={setIsMenuOpen}
+                            placement="bottom-end"
+                        >
+                            <Popover.Trigger>
+                                <ActionIcon variant="flat" color="secondary" rounded="full" className="w-8 h-8">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </ActionIcon>
+                            </Popover.Trigger>
+                            <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
+                                <div className="flex flex-col gap-1">
+                                    {user && (user.id === post.user.id || (user as any).userType === 'ADMIN') && (
+                                        <>
+                                            <button 
+                                                onClick={() => { openCreatePost(post); setIsMenuOpen(false); }}
+                                                className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
+                                            >
+                                                <Edit2 className="w-4 h-4" /> Edit Post
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    if (window.confirm('Are you sure you want to delete this post?')) {
+                                                        deleteMutation.mutate(post.id, {
+                                                            onSuccess: () => { if (onClose) onClose(); setIsMenuOpen(false); }
+                                                        });
+                                                    }
+                                                }}
+                                                className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer"
+                                            >
+                                                <Trash2 className="w-4 h-4" /> Delete Post
+                                            </button>
+                                            <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+                                        </>
+                                    )}
+                                    
+                                    <button 
+                                        onClick={() => { handleReport(); setIsMenuOpen(false); }}
+                                        className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
+                                    >
+                                        <Flag className="w-4 h-4" /> Report Post
+                                    </button>
+                                    <button 
+                                        onClick={() => { handleBlock(); setIsMenuOpen(false); }}
+                                        className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer"
+                                    >
+                                        <Ban className="w-4 h-4" /> Block User
+                                    </button>
+                                </div>
+                            </Popover.Content>
+                        </Popover>
+                    </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {post.content && (
-                        <div className="mb-6">
-                            <p className="text-sm text-secondary-800 dark:text-secondary-100 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-                            <p className="text-[10px] text-secondary-400 mt-2 uppercase tracking-widest font-bold">
-                                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                            </p>
+                {/* Scrollable body */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {/* Tags */}
+                    {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                            {post.tags.map((tag) => (
+                                <span key={tag} className="text-xs text-primary-600 dark:text-primary-400 font-medium">#{tag}</span>
+                            ))}
                         </div>
                     )}
 
-                    <div className="flex items-center gap-6 py-2 border-y border-secondary-50 dark:border-secondary-800">
+                    {/* Caption */}
+                    {hasImages && post.content && (
+                        <p className="text-sm text-secondary-700 dark:text-secondary-300 leading-relaxed">{post.content}</p>
+                    )}
+
+                    {/* Meta */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-secondary-400">
+                        <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
+                        <span>┬╖</span>
+                        <span>{post.views || 0} views</span>
+                        
+                        {(post.user.website || post.user.companyWebsite) && (
+                            <>
+                                <span>┬╖</span>
+                                <a 
+                                    href={(post.user.website || post.user.companyWebsite!).startsWith('http') ? (post.user.website || post.user.companyWebsite!) : `https://${post.user.website || post.user.companyWebsite!}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:underline font-bold"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Link2 className="w-3 h-3" />
+                                    Website
+                                </a>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Actions row */}
+                    <div className="flex items-center gap-4 py-1">
+                        {/* Like */}
                         <button
                             onClick={handleLike}
                             disabled={isLiking}
-                            className={`flex items-center gap-1.5 transition-all active:scale-95 ${liked ? 'text-rose-500' : 'text-secondary-500 hover:text-rose-500'}`}
+                            className={`flex items-center gap-1.5 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-red-500'}`}
                         >
-                            <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
-                            <span className="text-xs font-bold">{likeCount}</span>
+                            <Heart className={`w-5 h-5 transition-transform active:scale-125 ${liked ? 'fill-red-500' : ''}`} />
+                            <span>{likeCount}</span>
                         </button>
-                        <div className="flex items-center gap-1.5 text-secondary-500">
+
+                        {/* Comment count */}
+                        <button className="flex items-center gap-1.5 text-sm text-secondary-500 dark:text-secondary-400 hover:text-primary-500 transition-colors">
                             <MessageCircle className="w-5 h-5" />
-                            <span className="text-xs font-bold">{comments.length}</span>
-                        </div>
-                        <button
-                            onClick={handleFollow}
-                            disabled={isFollowLoading}
-                            className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border transition-all ${isFollowing ? 'border-secondary-200 text-secondary-400' : 'border-primary-500 text-primary-500 hover:bg-primary-50'}`}
-                        >
-                            {isFollowing ? 'Following' : 'Follow'}
+                            <span>{totalComments}</span>
                         </button>
+
+                        {/* Save */}
+                        <button
+                            onClick={() => requireAuth(() => openSaveToBoard(post.id))}
+                            className={`flex items-center gap-1.5 text-sm transition-colors ${saved ? 'text-primary-600' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
+                        >
+                            <Bookmark className={`w-5 h-5 ${saved ? 'fill-primary-600' : ''}`} />
+                        </button>
+
+                        {/* Share */}
+                        <Popover isOpen={shareOpen} setIsOpen={handleShareOpen} placement="bottom-end">
+                            <Popover.Trigger>
+                                <button
+                                    className={`ml-auto text-sm transition-colors ${shareOpen ? 'text-primary-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-primary-500'}`}
+                                    title="Share"
+                                >
+                                    <Share2 className="w-5 h-5" />
+                                </button>
+                            </Popover.Trigger>
+                            <Popover.Content className="z-[9999] bg-white dark:bg-secondary-800 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-2 w-48 p-0 overflow-hidden">
+                                <button
+                                    onClick={handleCopyLink}
+                                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-none bg-transparent"
+                                >
+                                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
+                                    {copied ? 'Copied!' : 'Copy link'}
+                                </button>
+                                <a
+                                    href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                >
+                                    <Twitter className="w-4 h-4 text-sky-500" /> Share on X
+                                </a>
+                                <a
+                                    href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                                >
+                                    <Facebook className="w-4 h-4 text-blue-600" /> Share on Facebook
+                                </a>
+                                {typeof navigator !== 'undefined' && navigator.share && (
+                                    <button
+                                        onClick={() => {
+                                            navigator.share({ title: postTitle, url: postUrl });
+                                            closeShare();
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors border-none bg-transparent"
+                                    >
+                                        <Share2 className="w-4 h-4" /> More options
+                                    </button>
+                                )}
+                            </Popover.Content>
+                        </Popover>
                     </div>
 
+                    {/* Comments */}
                     <div className="space-y-4 pt-2">
+                        <p className="text-[11px] font-bold text-secondary-400 uppercase tracking-widest">Comments</p>
                         {loadingComments ? (
                             <div className="space-y-4">
                                 {[...Array(3)].map((_, i) => (
@@ -463,6 +656,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
                 </div>
 
+                {/* Comment input */}
                 <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
                     <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
                         <Avatar
@@ -476,7 +670,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 type="text"
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
-                                placeholder={user ? 'Add a comment…' : 'Login to comment'}
+                                placeholder={user ? 'Add a commentΓÇª' : 'Login to comment'}
                                 className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
                                 onClick={() => !user && openLogin()}
                                 readOnly={!user}
@@ -505,6 +699,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
 function PostDetailSkeleton({ isModal, onClose }: { isModal: boolean; onClose?: () => void }) {
     return (
         <div className="flex flex-col md:flex-row h-full w-full animate-pulse">
+            {/* Left Panel - Media Skeleton */}
             <div className="relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center p-8">
                 <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
                 {onClose && (
@@ -514,7 +709,9 @@ function PostDetailSkeleton({ isModal, onClose }: { isModal: boolean; onClose?: 
                 )}
             </div>
 
+            {/* Right panel ΓÇö Details Skeleton */}
             <div className={`w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800 ${!isModal ? 'min-h-[600px] md:min-h-0' : ''}`}>
+                {/* Header */}
                 <div className="flex items-center justify-between px-4 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
                     <div className="flex items-center gap-2.5">
                         <Skeleton className="w-10 h-10 rounded-full" />
@@ -526,17 +723,20 @@ function PostDetailSkeleton({ isModal, onClose }: { isModal: boolean; onClose?: 
                     <Skeleton className="h-8 w-20 rounded-full" />
                 </div>
 
+                {/* Body */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                     <div className="space-y-2">
                         <Skeleton className="h-4 w-full rounded" />
                         <Skeleton className="h-4 w-[90%] rounded" />
                         <Skeleton className="h-4 w-[40%] rounded" />
                     </div>
+
                     <div className="flex gap-4">
                         <Skeleton className="h-5 w-12 rounded" />
                         <Skeleton className="h-5 w-12 rounded" />
                         <Skeleton className="h-5 w-12 rounded" />
                     </div>
+
                     <div className="space-y-4 pt-4 border-t border-secondary-50 dark:border-secondary-800">
                         <Skeleton className="h-3 w-20 rounded" />
                         {[...Array(3)].map((_, i) => (
@@ -551,6 +751,7 @@ function PostDetailSkeleton({ isModal, onClose }: { isModal: boolean; onClose?: 
                     </div>
                 </div>
 
+                {/* Footer Input */}
                 <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
                     <div className="flex items-center gap-2.5">
                         <Skeleton className="w-8 h-8 rounded-full shrink-0" />

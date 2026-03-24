@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/boards/[id] — Get board details and associated posts
+// GET /api/boards/[id]
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,11 +17,7 @@ export async function GET(
 
     const board = await prisma.board.findFirst({
       where: { id, userId: session.user.id },
-      include: {
-        _count: {
-          select: { posts: true }
-        }
-      }
+      include: { _count: { select: { posts: true } } }
     });
 
     if (!board) {
@@ -35,7 +31,45 @@ export async function GET(
   }
 }
 
-// DELETE /api/boards/[id] — Delete a board
+// PATCH /api/boards/[id] — Rename a board
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const { name } = await request.json();
+
+    if (!name?.trim()) {
+      return NextResponse.json({ error: 'Board name is required' }, { status: 400 });
+    }
+
+    const board = await prisma.board.findFirst({
+      where: { id, userId: session.user.id },
+    });
+
+    if (!board) {
+      return NextResponse.json({ error: 'Board not found or access denied' }, { status: 404 });
+    }
+
+    const updated = await prisma.board.update({
+      where: { id },
+      data: { name: name.trim() },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error('Error renaming board:', error);
+    return NextResponse.json({ error: 'Failed to rename board' }, { status: 500 });
+  }
+}
+
+// DELETE /api/boards/[id]
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -48,7 +82,6 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verify ownership before deleting
     const board = await prisma.board.findFirst({
       where: { id, userId: session.user.id },
     });
@@ -57,9 +90,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Board not found or access denied' }, { status: 404 });
     }
 
-    await prisma.board.delete({
-      where: { id },
-    });
+    await prisma.board.delete({ where: { id } });
 
     return NextResponse.json({ message: 'Board deleted successfully' });
   } catch (error) {

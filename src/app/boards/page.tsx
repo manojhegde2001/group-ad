@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Loader2, Plus, LayoutGrid, MoreVertical, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Loader2, Plus, LayoutGrid, MoreVertical, Trash2, Pencil, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
@@ -46,6 +47,31 @@ export default function BoardsPage() {
       }
     } catch (e) {
       toast.error('Failed to create board');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this board? Posts inside will be unlinked.')) return;
+    const res = await fetch(`/api/boards/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setBoards(prev => prev.filter(b => b.id !== id));
+      toast.success('Board deleted');
+    } else {
+      toast.error('Failed to delete board');
+    }
+  };
+
+  const handleRename = async (id: string, name: string) => {
+    const res = await fetch(`/api/boards/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (res.ok) {
+      setBoards(prev => prev.map(b => b.id === id ? { ...b, name } : b));
+      toast.success('Board renamed');
+    } else {
+      toast.error('Failed to rename board');
     }
   };
 
@@ -119,7 +145,12 @@ export default function BoardsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
             {boards.map((board) => (
-              <BoardCard key={board.id} board={board} />
+              <BoardCard
+                key={board.id}
+                board={board}
+                onDelete={handleDelete}
+                onRename={handleRename}
+              />
             ))}
           </div>
         )}
@@ -128,55 +159,140 @@ export default function BoardsPage() {
   );
 }
 
-function BoardCard({ board }: { board: Board }) {
+function BoardCard({
+  board,
+  onDelete,
+  onRename,
+}: {
+  board: Board;
+  onDelete: (id: string) => void;
+  onRename: (id: string, name: string) => void;
+}) {
   const postsArray = board.posts || [];
   const images = postsArray.map(p => p.post?.images?.[0]).filter(Boolean);
   const postCount = board._count?.posts || 0;
-  
-  return (
-    <Link 
-      href={`/boards/${board.id}`}
-      className="group flex flex-col gap-3 focus:outline-none"
-    >
-      {/* Visual Preview */}
-      <div className="aspect-[4/3] rounded-[2rem] overflow-hidden bg-secondary-100 dark:bg-secondary-900/50 relative shadow-sm group-hover:shadow-xl transition-all duration-500">
-        <div className="grid grid-cols-2 grid-rows-2 h-full gap-0.5">
-          <div className="row-span-2 relative">
-            {images[0] ? (
-              <img src={images[0]} className="w-full h-full object-cover" alt="" />
-            ) : (
-              <div className="w-full h-full bg-secondary-200 dark:bg-secondary-800" />
-            )}
-          </div>
-          <div className="relative">
-            {images[1] ? (
-              <img src={images[1]} className="w-full h-full object-cover" alt="" />
-            ) : (
-              <div className="w-full h-full bg-secondary-200/60 dark:bg-secondary-800/60" />
-            )}
-          </div>
-          <div className="relative">
-            {images[2] ? (
-              <img src={images[2]} className="w-full h-full object-cover" alt="" />
-            ) : (
-              <div className="w-full h-full bg-secondary-200/40 dark:bg-secondary-800/40" />
-            )}
-          </div>
-        </div>
-        
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
 
-      {/* Info */}
-      <div className="px-2">
-        <h3 className="text-lg font-bold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-          {board.name}
-        </h3>
-        <p className="text-sm font-medium text-secondary-500">
-          {postCount} posts
-        </p>
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [newName, setNewName] = useState(board.name);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Focus rename input when it appears
+  useEffect(() => {
+    if (renaming) inputRef.current?.focus();
+  }, [renaming]);
+
+  const submitRename = () => {
+    const trimmed = newName.trim();
+    if (trimmed && trimmed !== board.name) {
+      onRename(board.id, trimmed);
+    }
+    setRenaming(false);
+    setMenuOpen(false);
+  };
+
+  return (
+    <div className="group flex flex-col gap-3 focus:outline-none relative">
+      {/* Visual Preview */}
+      <Link href={`/boards/${board.id}`} className="block">
+        <div className="aspect-[4/3] rounded-[2rem] overflow-hidden bg-secondary-100 dark:bg-secondary-900/50 relative shadow-sm group-hover:shadow-xl transition-all duration-500">
+          <div className="grid grid-cols-2 grid-rows-2 h-full gap-0.5">
+            <div className="row-span-2 relative">
+              {images[0] ? (
+                <img src={images[0]} className="w-full h-full object-cover" alt="" />
+              ) : (
+                <div className="w-full h-full bg-secondary-200 dark:bg-secondary-800" />
+              )}
+            </div>
+            <div className="relative">
+              {images[1] ? (
+                <img src={images[1]} className="w-full h-full object-cover" alt="" />
+              ) : (
+                <div className="w-full h-full bg-secondary-200/60 dark:bg-secondary-800/60" />
+              )}
+            </div>
+            <div className="relative">
+              {images[2] ? (
+                <img src={images[2]} className="w-full h-full object-cover" alt="" />
+              ) : (
+                <div className="w-full h-full bg-secondary-200/40 dark:bg-secondary-800/40" />
+              )}
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+      </Link>
+
+      {/* Info + Meatball */}
+      <div className="px-2 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          {renaming ? (
+            <div className="flex items-center gap-1">
+              <input
+                ref={inputRef}
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') submitRename();
+                  if (e.key === 'Escape') { setRenaming(false); setNewName(board.name); }
+                }}
+                className="text-base font-bold text-secondary-900 dark:text-white bg-transparent border-b-2 border-primary-500 outline-none w-full"
+              />
+              <button onClick={submitRename} className="text-primary-500 hover:text-primary-600 shrink-0">
+                <Check className="w-4 h-4" />
+              </button>
+              <button onClick={() => { setRenaming(false); setNewName(board.name); }} className="text-secondary-400 hover:text-secondary-600 shrink-0">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <h3 className="text-lg font-bold text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+              {board.name}
+            </h3>
+          )}
+          <p className="text-sm font-medium text-secondary-500">{postCount} posts</p>
+        </div>
+
+        {/* Meatball menu */}
+        <div ref={menuRef} className="relative shrink-0">
+          <button
+            onClick={(e) => { e.preventDefault(); setMenuOpen(v => !v); }}
+            className="p-1.5 rounded-full text-secondary-400 hover:text-secondary-700 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+            aria-label="Board options"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 bottom-full mb-1 w-40 bg-white dark:bg-secondary-900 border border-secondary-100 dark:border-secondary-800 rounded-2xl shadow-xl z-50 py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+              <button
+                onClick={() => { setRenaming(true); setMenuOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors"
+              >
+                <Pencil className="w-4 h-4" /> Rename
+              </button>
+              <button
+                onClick={() => { setMenuOpen(false); onDelete(board.id); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </Link>
+    </div>
   );
 }

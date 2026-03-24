@@ -27,6 +27,12 @@ export default function ProfileView({ username }: { username: string }) {
     const { data: me } = useMe();
     const isOwnProfile = me?.username === username;
 
+    // Safety net: always restore scroll when this page mounts.
+    // Guards against scroll lock left behind by post detail modals on hard navigation.
+    useEffect(() => {
+        document.body.style.overflow = '';
+    }, []);
+
     const {
         data: profileData,
         isLoading: loadingProfile,
@@ -68,7 +74,7 @@ export default function ProfileView({ username }: { username: string }) {
         isFetchingNextPage: isFetchingMoreSaved,
         isLoading: loadingSaved
     } = useSavedPosts({ 
-        enabled: isOwnProfile 
+        enabled: false // Saved posts moved to /boards 
     });
 
     const [activeTab, setActiveTab] = useState<'created' | 'saved'>('created');
@@ -159,9 +165,16 @@ export default function ProfileView({ username }: { username: string }) {
                             </h1>
                             <div className="flex items-center justify-center md:justify-start gap-3">
                                 {isOwnProfile ? (
-                                    <Link href="/settings">
-                                        <Button variant="outline" rounded="pill" className="h-10 px-6 font-black uppercase tracking-widest text-[10px] border-2">Edit Profile</Button>
-                                    </Link>
+                                    <div className="flex items-center gap-2">
+                                        <Link href="/settings">
+                                            <Button variant="outline" rounded="pill" className="h-10 px-6 font-black uppercase tracking-widest text-[10px] border-2">Edit Profile</Button>
+                                        </Link>
+                                        <Link href="/boards">
+                                            <Button variant="flat" color="primary" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px]">
+                                                <Settings className="w-3.5 h-3.5 mr-1.5" />My Boards
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 ) : (
                                     <FollowButton 
                                         userId={profile.id} 
@@ -245,93 +258,43 @@ export default function ProfileView({ username }: { username: string }) {
             {/* --- Tabs --- */}
             <div className="border-t border-secondary-100 dark:border-secondary-800">
                 <div className="flex justify-center -mt-px gap-12 sm:gap-16">
-                    <button
-                        onClick={() => setActiveTab('created')}
-                        className={cn(
-                            "py-4 flex items-center gap-2 border-t-2 transition-all group",
-                            activeTab === 'created'
-                                ? "border-secondary-900 dark:border-white text-secondary-900 dark:text-white"
-                                : "border-transparent text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-300"
-                        )}
-                    >
-                        <Plus className={cn("w-4 h-4 transition-transform group-hover:scale-110", activeTab === 'created' ? "fill-current" : "")} />
-                        <span className="text-[11px] font-black uppercase tracking-[0.2em]">Created</span>
-                    </button>
-                    {isOwnProfile && (
-                        <button
-                            onClick={() => setActiveTab('saved')}
-                            className={cn(
-                                "py-4 flex items-center gap-2 border-t-2 transition-all group",
-                                activeTab === 'saved'
-                                    ? "border-secondary-900 dark:border-white text-secondary-900 dark:text-white"
-                                    : "border-transparent text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-300"
-                            )}
-                        >
-                            <Settings className={cn("w-4 h-4 transition-transform group-hover:scale-110", activeTab === 'saved' ? "fill-current" : "")} />
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em]">Saved</span>
-                        </button>
-                    )}
+                    <div className="py-4 flex items-center gap-2 border-t-2 border-secondary-900 dark:border-white text-secondary-900 dark:text-white">
+                        <Plus className="w-4 h-4 fill-current" />
+                        <span className="text-[11px] font-black uppercase tracking-[0.2em]">Posts</span>
+                    </div>
                 </div>
             </div>
 
             {/* --- Grid Content --- */}
             <div className="mt-8">
-                {activeTab === 'created' ? (
-                    loadingCreated ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {[...Array(8)].map((_, i) => <div key={i} className="aspect-[4/5] bg-secondary-100 dark:bg-secondary-800 rounded-2xl animate-pulse" />)}
+                {loadingCreated ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {[...Array(8)].map((_, i) => <div key={i} className="aspect-[4/5] bg-secondary-100 dark:bg-secondary-800 rounded-2xl animate-pulse" />)}
+                    </div>
+                ) : createdPosts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                        <div className="w-16 h-16 bg-secondary-50 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-6">
+                            <ImageOff className="w-8 h-8 text-secondary-300" />
                         </div>
-                    ) : createdPosts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-center">
-                            <div className="w-16 h-16 bg-secondary-50 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-6">
-                                <ImageOff className="w-8 h-8 text-secondary-300" />
-                            </div>
-                            <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">No Posts Yet</h3>
-                            <p className="text-sm text-secondary-500 max-w-[240px]">Share your first enterprise professional update today.</p>
-                        </div>
-                    ) : (
-                        <Masonry
-                            breakpointCols={breakpointCols}
-                            className="flex -ml-4 w-auto"
-                            columnClassName="pl-4 bg-clip-padding"
-                        >
-                            {createdPosts.map((post: PostWithRelations) => (
-                                <div key={post.id} className="mb-4">
-                                    <PostCard post={post} />
-                                </div>
-                            ))}
-                        </Masonry>
-                    )
+                        <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">No Posts Yet</h3>
+                        <p className="text-sm text-secondary-500 max-w-[240px]">Share your first enterprise professional update today.</p>
+                    </div>
                 ) : (
-                    loadingSaved ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {[...Array(8)].map((_, i) => <div key={i} className="aspect-[4/5] bg-secondary-100 dark:bg-secondary-800 rounded-2xl animate-pulse" />)}
-                        </div>
-                    ) : savedPosts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-center">
-                            <div className="w-16 h-16 bg-secondary-50 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-6">
-                                <Settings className="w-8 h-8 text-secondary-300" />
+                    <Masonry
+                        breakpointCols={breakpointCols}
+                        className="flex -ml-4 w-auto"
+                        columnClassName="pl-4 bg-clip-padding"
+                    >
+                        {createdPosts.map((post: PostWithRelations) => (
+                            <div key={post.id} className="mb-4">
+                                <PostCard post={post} />
                             </div>
-                            <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">No Saved Posts</h3>
-                            <p className="text-sm text-secondary-500 max-w-[240px]">Posts you save will appear here for quick access.</p>
-                        </div>
-                    ) : (
-                        <Masonry
-                            breakpointCols={breakpointCols}
-                            className="flex -ml-4 w-auto"
-                            columnClassName="pl-4 bg-clip-padding"
-                        >
-                            {savedPosts.map((post: PostWithRelations) => (
-                                <div key={post.id} className="mb-4">
-                                    <PostCard post={post} />
-                                </div>
-                            ))}
-                        </Masonry>
-                    )
+                        ))}
+                    </Masonry>
                 )}
 
-                {/* Load More Trigger */}
-                {activeTab === 'created' && hasNextCreated && (
+                {/* Load More */}
+                {hasNextCreated && (
                     <div className="flex justify-center mt-12 mb-8">
                         <Button
                             variant="outline"
@@ -340,7 +303,7 @@ export default function ProfileView({ username }: { username: string }) {
                             onClick={() => fetchNextCreated()}
                             className="px-8 font-black uppercase tracking-widest text-[10px] h-11"
                         >
-                            Load More Updates
+                            Load More
                         </Button>
                     </div>
                 )}

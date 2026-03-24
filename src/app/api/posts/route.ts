@@ -30,11 +30,19 @@ export async function GET(request: NextRequest) {
     const postType = searchParams.get('type');
     const visibility = searchParams.get('visibility') || 'PUBLIC';
     const userId = searchParams.get('userId');
+    const username = searchParams.get('username');
     const search = searchParams.get('search');
 
-    const where: any = {
-      visibility: visibility as any,
-    };
+    const where: any = {};
+
+    // Apply visibility filter only for general feed queries (not profile-specific)
+    // When fetching a specific user's posts, we show all their PUBLIC posts
+    const isUserSpecificQuery = !!(userId || username);
+    if (!isUserSpecificQuery) {
+      where.visibility = (visibility as any) || 'PUBLIC';
+    } else {
+      where.visibility = 'PUBLIC'; // Show only public posts on profile
+    }
 
     if (currentUserId) {
       const blocks = await prisma.block.findMany({
@@ -84,17 +92,32 @@ export async function GET(request: NextRequest) {
       };
     }
     if (companyId && companyId !== 'null' && companyId !== 'undefined') where.companyId = companyId;
-    if (postType) where.type = postType as any;
+    // 'CREATED' is a UI-only filter meaning 'posts by this user' — skip setting where.type for it
+    // Valid PostType values are: IMAGE, TEXT, VIDEO, DOCUMENT
+    if (postType && postType !== 'CREATED') where.type = postType as any;
     
+    // Resolve username -> userId if username param is passed (e.g. from profile page)
+    let resolvedUserId = userId;
+    if (username && username !== 'null' && username !== 'undefined') {
+      const userByUsername = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true },
+      });
+      if (!userByUsername) {
+        return NextResponse.json({ posts: [], pagination: { total: 0, page, limit, totalPages: 0 } });
+      }
+      resolvedUserId = userByUsername.id;
+    }
+
     // If a specific userId is requested, ensure they are not blocked
-    if (userId && userId !== 'null' && userId !== 'undefined') {
-        if (where.userId?.notIn?.includes(userId)) {
+    if (resolvedUserId && resolvedUserId !== 'null' && resolvedUserId !== 'undefined') {
+        if (where.userId?.notIn?.includes(resolvedUserId)) {
             return NextResponse.json({
                 posts: [],
                 pagination: { total: 0, page, limit, totalPages: 0 },
             });
         }
-        where.userId = userId;
+        where.userId = resolvedUserId;
     }
 
     if (search) {

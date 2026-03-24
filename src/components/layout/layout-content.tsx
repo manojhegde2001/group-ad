@@ -10,12 +10,17 @@ import dynamic from 'next/dynamic';
 const AuthModal = dynamic(() => import('@/components/layout/auth-modal').then(mod => mod.AuthModal), { ssr: false });
 const CreatePostModal = dynamic(() => import('@/components/feed/create-post-modal').then(mod => mod.CreatePostModal), { ssr: false });
 const CreateEventModal = dynamic(() => import('@/components/events/create-event-modal').then(mod => mod.CreateEventModal), { ssr: false });
-const PostDetailDrawer = dynamic(() => import('@/components/feed/post-detail-drawer').then(mod => mod.PostDetailDrawer), { ssr: false });
 const SaveToBoardModal = dynamic(() => import('@/components/boards/save-to-board-modal').then(mod => mod.SaveToBoardModal), { ssr: false });
 
 import { Analytics } from '@vercel/analytics/react';
 
-export function LayoutContent({ children }: { children: React.ReactNode }) {
+export function LayoutContent({ 
+  children,
+  modal 
+}: { 
+  children: React.ReactNode;
+  modal?: React.ReactNode;
+}) {
   const { isAuthenticated } = useAuth();
   
   return (
@@ -34,8 +39,8 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
       <AuthModal />
       <CreatePostModal />
       <CreateEventModal />
-      <PostDetailDrawer />
       <SaveToBoardModal />
+      {modal}
       <Analytics />
     </div>
   );

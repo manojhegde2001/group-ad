@@ -240,9 +240,11 @@ export function Navbar() {
                   </div>
                   
                   <div className="space-y-1">
-                      <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                          <Calendar className="w-5 h-5" /> Events
-                      </Link>
+                      {(user as any).userType === 'ADMIN' || (user as any).userType === 'BUSINESS' ? (
+                        <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                            <Calendar className="w-5 h-5" /> Events
+                        </Link>
+                      ) : null}
                       
                       <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
                           <Library className="w-5 h-5" /> My Posts
@@ -306,9 +308,11 @@ export function Navbar() {
                       </Link>
                       
                       <div className="space-y-1">
-                          <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                              <Calendar className="w-5 h-5" /> Events
-                          </Link>
+                          {(user as any).userType === 'ADMIN' || (user as any).userType === 'BUSINESS' ? (
+                            <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
+                                <Calendar className="w-5 h-5" /> Events
+                            </Link>
+                          ) : null}
                           
                           {(user as any).userType === 'ADMIN' && (
                               <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
@@ -371,7 +375,9 @@ export function Navbar() {
                         <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
                         <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
                         <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
-                        <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
+                        {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
+                          <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
+                        )}
                         <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
                     </nav>
 

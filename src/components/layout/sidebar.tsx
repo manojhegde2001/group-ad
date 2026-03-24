@@ -44,7 +44,10 @@ export function Sidebar() {
     { label: 'Boards', href: '/boards', icon: Library },
     { label: 'Events', href: '/events', icon: Calendar },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
-  ];
+  ].filter(link => {
+    if (link.label === 'Events') return isAdmin || isBusiness;
+    return true;
+  });
 
   if (isAdmin) {
     navLinks.push({ label: 'Admin', href: '/admin', icon: ShieldCheck });

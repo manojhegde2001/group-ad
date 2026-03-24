@@ -38,6 +38,26 @@ export default function EventsPage() {
 
   const events: any[] = data?.events || [];
 
+  if (user && user.userType !== 'ADMIN' && user.userType !== 'BUSINESS') {
+    return (
+      <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center p-4 text-center">
+        <div className="w-20 h-20 bg-secondary-100 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-6">
+          <Calendar className="w-10 h-10 text-secondary-400" />
+        </div>
+        <h2 className="text-2xl font-black text-secondary-900 dark:text-white mb-2">Events Restricted</h2>
+        <p className="text-secondary-500 dark:text-secondary-400 max-w-sm mx-auto font-medium">
+          The events feature is currently only available for Business and Admin accounts.
+        </p>
+        <Link 
+          href="/" 
+          className="mt-8 px-8 py-3 bg-primary-500 text-white font-bold rounded-2xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20"
+        >
+          Return to Feed
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
       {/* Hero */}
@@ -115,7 +135,7 @@ export default function EventsPage() {
             Calendar View
           </Link>
 
-          {user?.userType === 'ADMIN' && (
+          {(user?.userType === 'ADMIN' || (user?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
             <Button
               onClick={openCreateEvent}
               variant="solid"

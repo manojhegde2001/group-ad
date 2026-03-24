@@ -1,11 +1,11 @@
 'use client';
 
-import { usePostDetail } from '@/hooks/use-feed';
+import { useRouter } from 'next/navigation';
 import { Bookmark, X } from 'lucide-react';
 import { useSavedPosts, useBookmarkPost } from '@/hooks/use-api/use-posts';
 
 export default function SavedPostsTab() {
-    const { openPost } = usePostDetail();
+    const router = useRouter();
     const { data, isLoading: loading } = useSavedPosts();
     const bookmarkMutation = useBookmarkPost();
     
@@ -61,7 +61,7 @@ export default function SavedPostsTab() {
                         <div
                             key={post.id}
                             className="mb-3 break-inside-avoid relative group rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
-                            onClick={() => openPost(post.id, post)}
+                            onClick={() => router.push(`/posts/${post.id}`, { scroll: false })}
                         >
                             {hasImage ? (
                                 <img

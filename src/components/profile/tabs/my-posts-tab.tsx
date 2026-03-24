@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePostDetail } from '@/hooks/use-feed';
+import { useRouter } from 'next/navigation';
 import { useCreatePost } from '@/hooks/use-feed';
 import type { PostWithRelations } from '@/types';
 import {
@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 export default function MyPostsTab() {
     const { user } = useAuth();
-    const { openPost } = usePostDetail();
+    const router = useRouter();
 
     const { open: openCreatePost, setOnCreated } = useCreatePost();
     const queryClient = useQueryClient();
@@ -150,7 +150,7 @@ export default function MyPostsTab() {
                             <div
                                 key={post.id}
                                 className="mb-3 break-inside-avoid relative group rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
-                                onClick={() => openPost(post.id, post)}
+                                onClick={() => router.push(`/posts/${post.id}`, { scroll: false })}
                             >
                                 {/* Image / Text banner */}
                                 {hasImage ? (

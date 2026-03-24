@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { usePostDetail, useSaveToBoard, useSharePost, useCreatePost } from '@/hooks/use-feed';
+import { useSaveToBoard, useSharePost, useCreatePost } from '@/hooks/use-feed';
 import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
@@ -31,7 +31,6 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     useEffect(() => setMounted(true), []);
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
-    const { openPost } = usePostDetail();
     const { open: openSaveToBoard } = useSaveToBoard();
     const { open: openCreatePost } = useCreatePost();
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
@@ -118,7 +117,11 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
         setTimeout(() => setShowHeartPop(false), 800);
     };
 
-    const handleCardClick = () => requireAuth(() => openPost(post.id, post));
+    const handleCardClick = () => {
+        requireAuth(() => {
+            router.push(`/posts/${post.id}`, { scroll: false });
+        });
+    };
 
     const handleReport = () => { // Modified to be called without event
         requireAuth(() => {

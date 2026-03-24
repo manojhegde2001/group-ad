@@ -111,8 +111,8 @@ export const useSaveToBoard = create<SaveToBoardStore>((set) => ({
 // ---- Share Post Store ----
 interface SharePostStore {
     activePostId: string | null;
-    source: 'feed' | 'drawer' | null;
-    open: (postId: string, source: 'feed' | 'drawer') => void;
+    source: 'feed' | 'drawer' | 'page' | null;
+    open: (postId: string, source: 'feed' | 'drawer' | 'page') => void;
     close: () => void;
 }
 

@@ -79,52 +79,54 @@ export function CreatePostModal() {
         close();
     };
 
-    const processFiles = (files: File[], type: 'image' | 'video' | 'mixed') => {
+    const processFiles = (files: File[]) => {
         if (files.length === 0) return;
 
-        const firstFile = files[0];
-        const isVideo = firstFile.type.startsWith('video/');
+        const validFiles = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+        if (validFiles.length === 0) {
+            toast.error('Please select valid image or video files');
+            return;
+        }
 
-        if (isVideo || type === 'video') {
-            if (!firstFile.type.startsWith('video/')) {
-                toast.error('Please select a valid video file');
-                return;
-            }
-            if (firstFile.size > 100 * 1024 * 1024) {
-                toast.error('Video must be under 100MB');
-                return;
-            }
-            setPostType('VIDEO');
-            setMediaFiles([firstFile]);
-            setMediaPreviews([URL.createObjectURL(firstFile)]);
-        } else {
-            const validImages = files.filter(f => f.type.startsWith('image/'));
-            if (validImages.length === 0) {
-                toast.error('Please select valid image files');
-                return;
-            }
-            
-            const total = (postType === 'IMAGE' ? mediaFiles.length : 0) + validImages.length;
-            if (total > 4) {
-                toast.error('Maximum 4 images allowed');
-                return;
-            }
+        const currentTotal = mediaFiles.length;
+        if (currentTotal + validFiles.length > 5) {
+            toast.error('Maximum 5 files allowed');
+            return;
+        }
 
-            setPostType('IMAGE');
-            const previews = validImages.map(f => URL.createObjectURL(f));
-            if (postType === 'VIDEO') {
-                setMediaFiles(validImages);
-                setMediaPreviews(previews);
+        const newFiles: File[] = [];
+        const newPreviews: string[] = [];
+
+        validFiles.forEach(file => {
+            if (file.type.startsWith('video/')) {
+                if (file.size > 100 * 1024 * 1024) {
+                    toast.error(`${file.name} is too large (Max: 100MB video)`);
+                    return;
+                }
+                // Check if we already have a video? 
+                // User said "mix", so multiple videos should be fine if Cloudinary supports it.
             } else {
-                setMediaFiles(prev => [...prev, ...validImages]);
-                setMediaPreviews(prev => [...prev, ...previews]);
+                if (file.size > 25 * 1024 * 1024) {
+                    toast.error(`${file.name} is too large (Max: 25MB image)`);
+                    return;
+                }
             }
+            newFiles.push(file);
+            newPreviews.push(URL.createObjectURL(file));
+        });
+
+        if (newFiles.length > 0) {
+            setMediaFiles(prev => [...prev, ...newFiles]);
+            setMediaPreviews(prev => [...prev, ...newPreviews]);
+            // Infer post type: if any video, set to VIDEO (for backend compatibility primarily)
+            const hasVideo = [...mediaFiles, ...newFiles].some(f => f.type.startsWith('video/'));
+            setPostType(hasVideo ? 'VIDEO' : 'IMAGE');
         }
     };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        processFiles(files, type);
+        processFiles(files);
         e.target.value = '';
     };
 
@@ -132,7 +134,7 @@ export function CreatePostModal() {
         e.preventDefault();
         setIsDragging(false);
         const files = Array.from(e.dataTransfer.files);
-        processFiles(files, 'mixed');
+        processFiles(files);
     };
 
     const onDragOver = (e: React.DragEvent) => {
@@ -162,12 +164,12 @@ export function CreatePostModal() {
         setUploading(true);
         setUploadProgress(0);
 
-        const resourceType = postType === 'VIDEO' ? 'video' : 'image';
         const uploaded: string[] = [];
 
         try {
             for (let i = 0; i < mediaFiles.length; i++) {
                 const file = mediaFiles[i];
+                const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('resource_type', resourceType);
@@ -175,7 +177,7 @@ export function CreatePostModal() {
                 const res = await fetch('/api/upload', { method: 'POST', body: formData });
                 if (!res.ok) {
                     if (res.status === 413) {
-                        throw new Error('File too large (Max: 25MB image, 100MB video)');
+                        throw new Error(`File too large: ${file.name}`);
                     }
                     let errMsg = 'Upload failed';
                     try {
@@ -355,28 +357,31 @@ export function CreatePostModal() {
 
                             {mediaPreviews.length > 0 && (
                                 <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    {mediaPreviews.map((src, i) => (
-                                        <div key={i} className="relative shrink-0 w-24 h-24 rounded-2xl overflow-hidden group bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 shadow-sm transition-transform hover:scale-[1.05]">
-                                            {postType === 'VIDEO' ? (
-                                                <video src={src} className="w-full h-full object-cover" muted playsInline />
-                                            ) : (
-                                                <img src={src} alt="" className="w-full h-full object-cover" />
-                                            )}
-                                            {postType === 'VIDEO' && (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                                     <Film className="w-6 h-6 text-white drop-shadow-lg" />
-                                                </div>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={() => removeMedia(i)}
-                                                className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                                            >
-                                                <X className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {postType === 'IMAGE' && mediaPreviews.length < 4 && (
+                                    {mediaPreviews.map((src, i) => {
+                                        const isVideoItem = (mediaFiles[i]?.type.startsWith('video/')) || (src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i));
+                                        return (
+                                            <div key={i} className="relative shrink-0 w-24 h-24 rounded-2xl overflow-hidden group bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 shadow-sm transition-transform hover:scale-[1.05]">
+                                                {isVideoItem ? (
+                                                    <video src={src} className="w-full h-full object-cover" muted playsInline />
+                                                ) : (
+                                                    <img src={src} alt="" className="w-full h-full object-cover" />
+                                                )}
+                                                {isVideoItem && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                        <Film className="w-6 h-6 text-white drop-shadow-lg" />
+                                                    </div>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeMedia(i)}
+                                                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                    {mediaPreviews.length < 5 && (
                                         <button
                                             type="button"
                                             onClick={() => imageInputRef.current?.click()}
@@ -425,7 +430,6 @@ export function CreatePostModal() {
                                     <button
                                         type="button"
                                         title="Photo"
-                                        disabled={postType === 'VIDEO'}
                                         onClick={() => imageInputRef.current?.click()}
                                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 hover:text-primary-500 transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
                                     >
@@ -434,7 +438,6 @@ export function CreatePostModal() {
                                     <button
                                         type="button"
                                         title="Video"
-                                        disabled={postType === 'IMAGE' && mediaPreviews.length > 0}
                                         onClick={() => videoInputRef.current?.click()}
                                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 hover:text-primary-500 transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
                                     >
@@ -460,8 +463,8 @@ export function CreatePostModal() {
                             </div>
                         </div>
 
-                        <input ref={imageInputRef} type="file" accept="image/*" multiple onChange={(e) => handleFileSelect(e, 'image')} className="hidden" />
-                        <input ref={videoInputRef} type="file" accept="video/*" onChange={(e) => handleFileSelect(e, 'video')} className="hidden" />
+                        <input ref={imageInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} className="hidden" />
+                        <input ref={videoInputRef} type="file" accept="video/*,image/*" multiple onChange={handleFileSelect} className="hidden" />
                     </form>
                 )}
             </div>

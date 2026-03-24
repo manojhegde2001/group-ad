@@ -310,21 +310,31 @@ export function PostDetailDrawer() {
                         </div>
                     ) : hasImages ? (
                         <>
-                            {isVideoPost ? (
-                                <video
-                                    src={post.images[currentImageIndex]}
-                                    className="w-full h-full object-contain"
-                                    controls playsInline autoPlay
-                                    style={{ maxHeight: '80vh' }}
-                                />
-                            ) : (
-                                <img
-                                    src={post.images[currentImageIndex]}
-                                    alt={post.content || 'Post image'}
-                                    className="w-full h-full object-contain"
-                                    style={{ maxHeight: '80vh' }}
-                                />
-                            )}
+                            {(() => {
+                                const src = post.images[currentImageIndex];
+                                const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
+                                
+                                if (isVideoItem) {
+                                    return (
+                                        <video
+                                            key={src}
+                                            src={src}
+                                            className="w-full h-full object-contain"
+                                            controls playsInline autoPlay
+                                            style={{ maxHeight: '80vh' }}
+                                        />
+                                    );
+                                }
+                                return (
+                                    <img
+                                        key={src}
+                                        src={src}
+                                        alt={post.content || 'Post image'}
+                                        className="w-full h-full object-contain animate-in fade-in duration-500"
+                                        style={{ maxHeight: '80vh' }}
+                                    />
+                                );
+                            })()}
                             {post.images.length > 1 && (
                                 <>
                                     <button

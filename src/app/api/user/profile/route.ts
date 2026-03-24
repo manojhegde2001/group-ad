@@ -17,7 +17,7 @@ const updateProfileSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
     .optional(),
   bio: z.string().max(500, 'Bio must be at most 500 characters').optional(),
-  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number').optional().or(z.literal('')),
+  phone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number').optional().or(z.literal('')),
   location: z.string().max(100).optional(),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
   avatar: z.string().url('Invalid avatar URL').optional().or(z.literal('')),
@@ -303,8 +303,14 @@ export async function PATCH(request: NextRequest) {
     console.error('Error updating profile:', error);
 
     if (error.name === 'ZodError') {
+      const fieldErrors: Record<string, string> = {};
+      (error as z.ZodError).errors.forEach((err) => {
+        if (err.path && err.path.length > 0) {
+          fieldErrors[err.path[0]] = err.message;
+        }
+      });
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data', details: fieldErrors },
         { status: 400 }
       );
     }

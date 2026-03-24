@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-    Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
+    Heart, Share2, Bookmark, BadgeCheck,
     Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -162,7 +162,6 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
 
     const hasImage = post.images && post.images.length > 0;
     const isVideoPost = post.type === 'VIDEO';
-    const commentCount = post._count?.postComments ?? 0;
 
     const gradients = [
         'from-violet-500 to-indigo-600', 'from-rose-400 to-pink-600',
@@ -182,55 +181,58 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
             onClick={handleCardClick}
         >
             {/* ── Media ───────────────────────────────────────────────── */}
-            <div className={cn(
-                "relative overflow-hidden",
-                post.images && post.images.length > 1 ? "grid grid-cols-2 gap-0.5 bg-secondary-100 dark:bg-secondary-800" : ""
-            )}>
-                {(post.images || []).map((src, i) => {
-                    const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
-                    const isLone = post.images.length === 1;
-                    
-                    return (
-                        <div key={i} className={cn(
-                            "relative overflow-hidden",
-                            !isLone && i === 0 && post.images.length === 3 ? "row-span-2" : ""
-                        )}>
-                            {isVideoItem ? (
-                                <div className="relative aspect-square sm:aspect-auto">
-                                    <video
-                                        src={src}
-                                        className="w-full h-full object-cover block"
-                                        muted playsInline loop preload="metadata"
-                                        onMouseEnter={e => e.currentTarget.play()}
-                                        onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                        onDoubleClick={handleDoubleTap}
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/20">
-                                            <Video className="w-5 h-5 text-white" />
+            <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
+                {post.images && post.images.length > 0 ? (
+                    <div className="relative group/media overflow-hidden">
+                        {(() => {
+                            const src = post.images[0];
+                            const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
+                            
+                            return (
+                                <div className="relative overflow-hidden">
+                                    {isVideoItem ? (
+                                        <div className="relative aspect-square sm:aspect-auto">
+                                            <video
+                                                src={src}
+                                                className="w-full h-full object-cover block"
+                                                muted playsInline loop preload="metadata"
+                                                onMouseEnter={e => e.currentTarget.play()}
+                                                onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                                onDoubleClick={handleDoubleTap}
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <div className="bg-black/20 backdrop-blur-[2px] p-2.5 rounded-full border border-white/20 opacity-0 group-hover/media:opacity-100 transition-opacity duration-300">
+                                                    <Video className="w-5 h-5 text-white" />
+                                                </div>
+                                            </div>
+                                            <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white text-[9px] px-2 py-0.5 rounded-lg font-bold border border-white/10 uppercase tracking-widest z-10 shadow-sm">
+                                                Video
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md text-white text-[9px] px-2 py-0.5 rounded-lg font-bold border border-white/10 uppercase tracking-widest z-10">
-                                        Video
-                                    </div>
+                                    ) : (
+                                        <img
+                                            src={src}
+                                            alt=""
+                                            className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.05]"
+                                            loading="lazy"
+                                            onDoubleClick={handleDoubleTap}
+                                        />
+                                    )}
+                                    
+                                    {/* Multi-image indicator in top-left corner */}
+                                    {post.images.length > 1 && (
+                                        <div className="absolute top-3 left-3 bg-white/95 dark:bg-secondary-900/95 backdrop-blur-md text-secondary-900 dark:text-white text-[10.5px] px-2.5 py-1 rounded-xl font-black border border-secondary-200/50 dark:border-white/10 shadow-lg z-20 flex items-center gap-1.5 scale-90 group-hover:scale-100 transition-transform duration-300">
+                                            <span className="opacity-70">+{post.images.length - 1}</span>
+                                        </div>
+                                    )}
                                 </div>
-                            ) : (
-                                <img
-                                    src={src}
-                                    alt=""
-                                    className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.05]"
-                                    loading="lazy"
-                                    onDoubleClick={handleDoubleTap}
-                                />
-                            )}
-                        </div>
-                    );
-                })}
-
-                {/* Empty State / Text Only */}
-                {(!post.images || post.images.length === 0) && (
-                    <div className={`w-full min-h-[150px] bg-gradient-to-br ${gradient} p-4 flex items-start`}>
-                        <p className="text-white text-sm font-semibold leading-snug line-clamp-6">
+                            );
+                        })()}
+                    </div>
+                ) : (
+                    /* Empty State / Text Only */
+                    <div className={`w-full min-h-[170px] bg-gradient-to-br ${gradient} p-6 flex items-start transition-all duration-500 group-hover:brightness-105`}>
+                        <p className="text-white text-[16px] font-bold leading-relaxed line-clamp-6 tracking-tight drop-shadow-md">
                             {post.content}
                         </p>
                     </div>
@@ -394,10 +396,10 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
             </div>
 
             {/* ── Card Body (below media) ──────────────────────────────── */ }
-            <div className="px-3.5 pt-3 pb-3.5 space-y-2">
+            <div className="px-4 pt-3 pb-4 space-y-2.5">
                 {/* Caption */}
                 {post.content && (
-                    <p className="text-[13px] font-semibold text-secondary-800 dark:text-secondary-200 leading-snug line-clamp-2 tracking-tight">
+                    <p className="text-[14px] font-bold text-secondary-900 dark:text-secondary-100 leading-[1.3] line-clamp-2 tracking-tight">
                         {post.content}
                     </p>
                 )}
@@ -411,7 +413,7 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                     >
                         <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-secondary-100 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700 shadow-sm">
                             {post.user.avatar ? (
-                                <img src={post.user.avatar} alt={post.user.name ?? ''} className="w-full h-full object-cover transition-transform group-hover/user:scale-110" />
+                                <img src={post.user.avatar} alt={post.user.name ?? ''} className="w-full h-full object-cover transition-transform duration-500 group-hover/user:scale-110" />
                             ) : (
                                 <span className="w-full h-full flex items-center justify-center text-[12px] font-black text-secondary-400 uppercase">
                                     {post.user.name?.charAt(0)}
@@ -419,21 +421,14 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                             )}
                         </div>
                         <div className="flex items-center gap-1 min-w-0">
-                            <p className="font-bold text-[13px] text-secondary-900 dark:text-white truncate tracking-tight">{post.user.name}</p>
+                            <p className="font-bold text-[13px] text-secondary-900 dark:text-white truncate tracking-tight group-hover/user:text-primary-600 transition-colors">{post.user.name}</p>
                             {post.user.verificationStatus === 'VERIFIED' && (
                                 <BadgeCheck className="w-3.5 h-3.5 text-primary-500 shrink-0" />
                             )}
                         </div>
                     </Link>
 
-                    {/* Comment count */}
-                    <button
-                        onClick={e => { e.stopPropagation(); requireAuth(() => openPost(post.id, post)); }}
-                        className="flex items-center gap-1 text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-300 transition-colors shrink-0"
-                    >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        {commentCount > 0 && <span className="text-[10.5px] font-medium">{commentCount}</span>}
-                    </button>
+                    {/* Comment icon removed as per user request */}
                 </div>
             </div>
         </div>

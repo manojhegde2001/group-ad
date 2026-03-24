@@ -8,8 +8,9 @@ export default function SavedPostsTab() {
     const { openPost } = usePostDetail();
     const { data, isLoading: loading } = useSavedPosts();
     const bookmarkMutation = useBookmarkPost();
-
-    const posts = data?.posts || [];
+    
+    // Flatten the posts from all pages
+    const posts = data?.pages.flatMap((page: any) => page.posts) || [];
 
     const handleUnsave = async (postId: string, e: React.MouseEvent) => {
         e.stopPropagation();

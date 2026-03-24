@@ -74,11 +74,11 @@ export default function ProfileView({ username }: { username: string }) {
     const [activeTab, setActiveTab] = useState<'created' | 'saved'>('created');
 
     const createdPosts = useMemo(() => 
-        createdPostsData?.pages.flatMap(page => page.posts) || [], 
+        createdPostsData?.pages.flatMap((page: any) => page.posts) || [], 
     [createdPostsData]);
 
     const savedPosts = useMemo(() => 
-        savedPostsData?.pages.flatMap(page => page.posts) || [], 
+        savedPostsData?.pages.flatMap((page: any) => page.posts) || [], 
     [savedPostsData]);
 
     const handleShareProfile = () => {
@@ -163,7 +163,11 @@ export default function ProfileView({ username }: { username: string }) {
                                         <Button variant="outline" rounded="pill" className="h-10 px-6 font-black uppercase tracking-widest text-[10px] border-2">Edit Profile</Button>
                                     </Link>
                                 ) : (
-                                    <FollowButton followingId={profile.id} initialStatus={profileData.isFollowing} />
+                                    <FollowButton 
+                                        userId={profile.id} 
+                                        initialFollowing={profile.isFollowing} 
+                                        initialFollowerCount={profile._count?.followers || 0} 
+                                    />
                                 )}
                                 <div className="flex items-center gap-2">
                                     <ActionIcon variant="outline" rounded="full" onClick={handleShareProfile} className="h-10 w-10 border-2">
@@ -205,15 +209,15 @@ export default function ProfileView({ username }: { username: string }) {
                         {/* Stats */}
                         <div className="flex items-center justify-center md:justify-start gap-8 mb-8">
                             <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profileData.postsCount}</p>
+                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.posts || 0}</p>
                                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Posts</p>
                             </div>
                             <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profileData.followersCount}</p>
+                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.followers || 0}</p>
                                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Followers</p>
                             </div>
                             <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profileData.followingCount}</p>
+                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.following || 0}</p>
                                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Following</p>
                             </div>
                         </div>

@@ -106,9 +106,17 @@ export const useUpdatePost = () => {
     });
 };
 
-export const useSavedPosts = (params: any = {}) => {
-    return useQuery({
+export const useSavedPosts = (params: any = {}, options: any = {}) => {
+    return useInfiniteQuery({
         queryKey: ['posts', 'saved', params],
-        queryFn: () => postService.getSavedPosts(params),
+        queryFn: ({ pageParam = 1 }) => postService.getSavedPosts({ ...params, page: pageParam }),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage: any) => {
+            if (lastPage.pagination && lastPage.pagination.page < lastPage.pagination.totalPages) {
+                return lastPage.pagination.page + 1;
+            }
+            return undefined;
+        },
+        ...options,
     });
 };

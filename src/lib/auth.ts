@@ -121,9 +121,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (url.startsWith("/")) {
         return `${baseUrl}${url}`.replace(/([^:])\/\//g, '$1/');
       }
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) {
-        return url;
+      // Allows callback URLs on the same origin or any absolute URL provided (more permissive for hosted envs)
+      try {
+        const urlObj = new URL(url);
+        if (urlObj.origin === baseUrl || url.startsWith('http')) {
+          return url;
+        }
+      } catch {
+        // Fallback to baseUrl if URL parsing fails
       }
       return baseUrl;
     },

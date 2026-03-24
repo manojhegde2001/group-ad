@@ -64,7 +64,7 @@ export const useUpgradeToBusiness = () => {
 };
 
 export const useUserByUsername = (username: string) => {
-    return useQuery<{ user: any }>({
+    return useQuery<any>({
         queryKey: ['user', username],
         queryFn: () => userService.getByUsername(username),
         enabled: !!username,

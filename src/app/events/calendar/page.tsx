@@ -9,7 +9,7 @@ export const metadata: Metadata = {
         description: 'Browse all upcoming events, meetings, and workshops in one place.',
         images: [
             {
-                url: '/auth/thumbnail.png',
+                url: 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
                 width: 1200,
                 height: 630,
                 alt: 'Event Calendar',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'Event Calendar | Group Ad',
         description: 'Browse all upcoming events, meetings, and workshops in one place.',
-        images: ['/auth/thumbnail.png'],
+        images: ['https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
     },
 };
 

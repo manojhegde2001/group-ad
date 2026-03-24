@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description: event.description.slice(0, 160),
             images: [
                 {
-                    url: event.coverImage || '/auth/thumbnail.png',
+                    url: event.coverImage || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
                     width: 1200,
                     height: 630,
                     alt: event.title,
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             card: 'summary_large_image',
             title: event.title,
             description: event.description.slice(0, 160),
-            images: [event.coverImage || '/auth/thumbnail.png'],
+            images: [event.coverImage || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
         }
     };
 }

@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: user.bio || `Connect with ${user.name} on Group Ad.`,
       images: [
         {
-          url: user.avatar || '/auth/thumbnail.png',
+          url: user.avatar || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
           width: 1200,
           height: 630,
           alt: user.name,
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${user.name} (@${username})`,
       description: user.bio || `Connect with ${user.name} on Group Ad.`,
-      images: [user.avatar || '/auth/thumbnail.png'],
+      images: [user.avatar || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
     },
   };
 }

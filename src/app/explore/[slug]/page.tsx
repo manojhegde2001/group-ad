@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: category.description || `Explore the latest from ${category.name} professionals.`,
       images: [
         {
-          url: '/auth/thumbnail.png',
+          url: 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
           width: 1200,
           height: 630,
           alt: category.name,
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${category.name} | Group Ad`,
       description: category.description || `Explore professional updates from ${category.name}.`,
-      images: ['/auth/thumbnail.png'],
+      images: ['https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
     },
   };
 }

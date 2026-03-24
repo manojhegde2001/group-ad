@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     siteName: 'Group Ad',
     images: [
       {
-        url: '/auth/thumbnail.png',
+        url: 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
         width: 1200,
         height: 630,
         alt: 'Group Ad — Business Social Networking Platform',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     title: 'Group Ad — Enterprise Social Networking',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
     creator: '@groupad',
-    images: ['/auth/thumbnail.png'],
+    images: ['https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
   },
   robots: {
     index: true,
@@ -71,9 +71,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/auth/thumbnail.png',
-    shortcut: '/auth/thumbnail.png',
-    apple: '/auth/thumbnail.png',
+    icon: 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
+    shortcut: 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
+    apple: 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
   },
 };
 

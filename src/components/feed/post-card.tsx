@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
     Heart, Share2, Bookmark, BadgeCheck,
-    Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
+    Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -14,8 +14,7 @@ import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
-import { Badge, Popover } from 'rizzui'; // Added Badge
-import { ActionIcon } from '../ui/action-icon';
+import { Popover } from 'rizzui';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PostCardProps {
@@ -27,7 +26,6 @@ interface PostCardProps {
 export function PostCard({ post, onLikeChange, showActions = false }: PostCardProps) {
     const [mounted, setMounted] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false); // Added state
-    const [isSubmitting, setIsSubmitting] = useState(false); // Added state
     useEffect(() => setMounted(true), []);
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
@@ -252,185 +250,124 @@ export function PostCard({ post, onLikeChange, showActions = false }: PostCardPr
                 </AnimatePresence>
             </div>
 
-            {/* --- Ownership & Moderation Actions (Meatball Menu) --- */}
-            {user && (
-                <div className="absolute top-3 right-3 z-30" onClick={e => e.stopPropagation()}>
-                    <Popover 
-                        isOpen={isMenuOpen} 
-                        setIsOpen={setIsMenuOpen}
-                        placement="bottom-end"
-                    >
-                        <Popover.Trigger>
-                            <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 shrink-0 transition-all cursor-pointer shadow-lg">
-                                <MoreHorizontal className="w-4 h-4" />
-                            </span>
-                        </Popover.Trigger>
-                        <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
-                            <div className="flex flex-col gap-1">
-                                {(user.id === post.userId || (user as any).userType === 'ADMIN') && (
-                                    <>
-                                        <button 
-                                            onClick={() => {
-                                                openCreatePost(post);
-                                                setIsMenuOpen(false);
-                                            }}
-                                            className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
-                                        >
-                                            <Edit2 className="w-4 h-4" /> Edit Post
-                                        </button>
-                                        <button 
-                                            onClick={() => {
-                                                handleDeletePost();
-                                                setIsMenuOpen(false);
-                                            }}
-                                            className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer"
-                                        >
-                                            <Trash2 className="w-4 h-4" /> Delete Post
-                                        </button>
-                                        <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
-                                    </>
-                                )}
-                                <button 
-                                    onClick={() => {
-                                        handleReport();
-                                        setIsMenuOpen(false);
-                                    }}
-                                    className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
-                                >
-                                    <Flag className="w-4 h-4" /> Report
-                                </button>
-                            </div>
-                        </Popover.Content>
-                    </Popover>
-                </div>
-            )}
 
             {/* Hover vignette */ }
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-            {/* ── Hover action bar (bottom) ────────────────────────── */ }
-            <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between
-                opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0
-                transition-all duration-200 z-20">
-
-                {/* Like */}
-                <button
-                    onClick={handleLike}
-                    disabled={likeMutation.isPending}
-                    title={liked ? 'Unlike' : 'Like'}
-                    className={`flex items-center gap-2 h-10 px-4 rounded-xl text-[12px] font-black uppercase tracking-wider
-                        transition-all duration-300 active:scale-90 backdrop-blur-xl shadow-lg border
-                        ${liked
-                            ? 'bg-red-500/90 text-white border-red-400/30'
-                            : 'bg-black/60 text-white border-white/10 hover:bg-black/80'}`}
-                >
-                    <Heart className={`w-4 h-4 transition-transform duration-300 ${liked ? 'fill-white scale-125' : ''}`} />
-                    {likeCount > 0 && <span>{likeCount}</span>}
-                </button>
- 
-                {/* Save + Share */}
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={handleSave}
-                        title={saved ? 'Remove from saved' : 'Save to board'}
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center
-                            backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border
-                            ${saved ? 'bg-primary-500/90 text-white border-primary-400/30' : 'bg-black/60 text-white border-white/10 hover:bg-black/80'}`}
-                    >
-                        <Bookmark className={`w-4 h-4 ${saved ? 'fill-white' : ''}`} />
-                    </button>
- 
-                    <div onClick={e => e.stopPropagation()}>
-                        <Popover 
-                            isOpen={shareOpen} 
-                            setIsOpen={handleShareOpen}
-                            placement="bottom-end"
+            {/* ── Hover Overlays ────────────────────────────────────── */}
+            <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-3 pointer-events-none">
+                {/* Top Section */}
+                <div className="flex items-start justify-end gap-2 w-full">
+                    {/* Top Right: Actions (Save, Share, More) */}
+                    <div className="flex items-center gap-2 pointer-events-auto" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={handleSave}
+                            title={saved ? 'Remove from saved' : 'Save to board'}
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center
+                                backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border
+                                ${saved ? 'bg-primary-500/90 text-white border-primary-400/30' : 'bg-black/50 text-white border-white/10 hover:bg-black/70'}`}
                         >
-                            <Popover.Trigger>
-                                <button
-                                    title="Share"
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center
-                                        backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border
-                                        ${shareOpen ? 'bg-primary-600/90 text-white border-primary-400/30' : 'bg-black/60 text-white border-white/10 hover:bg-black/80'}`}
-                                >
-                                    <Share2 className="w-4 h-4" />
-                                </button>
-                            </Popover.Trigger>
-                            <Popover.Content className="z-[9999] bg-white dark:bg-secondary-800 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-2 w-48 p-0 overflow-hidden">
-                                <button
-                                    onClick={handleCopyLink}
-                                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium border-none bg-transparent"
-                                >
-                                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
-                                    {copied ? 'Copied!' : 'Copy link'}
-                                </button>
-                                <a
-                                    href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium"
-                                >
-                                    <Twitter className="w-4 h-4 text-sky-500" /> Share on X
-                                </a>
-                                <a
-                                    href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium"
-                                >
-                                    <Facebook className="w-4 h-4 text-blue-600" /> Share on Facebook
-                                </a>
-                                {typeof navigator !== 'undefined' && navigator.share && (
-                                    <button
-                                        onClick={() => {
-                                            navigator.share({ title: postTitle, url: postUrl });
-                                            closeShare();
-                                        }}
-                                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium border-none bg-transparent"
-                                    >
-                                        <Share2 className="w-4 h-4" /> More options
+                            <Bookmark className={`w-4 h-4 ${saved ? 'fill-white' : ''}`} />
+                        </button>
+
+                        <div onClick={e => e.stopPropagation()}>
+                            <Popover isOpen={shareOpen} setIsOpen={handleShareOpen} placement="bottom-end">
+                                <Popover.Trigger>
+                                    <button title="Share" className={`w-9 h-9 rounded-xl flex items-center justify-center backdrop-blur-xl shadow-lg transition-all duration-300 active:scale-90 border ${shareOpen ? 'bg-primary-600/90 text-white border-primary-400/30' : 'bg-black/50 text-white border-white/10 hover:bg-black/70'}`}>
+                                        <Share2 className="w-4 h-4" />
                                     </button>
-                                )}
-                            </Popover.Content>
-                        </Popover>
+                                </Popover.Trigger>
+                                <Popover.Content className="z-[9999] bg-white dark:bg-secondary-800 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-700 py-2 w-48 p-0 overflow-hidden">
+                                    <button onClick={handleCopyLink} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium border-none bg-transparent">
+                                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Link2 className="w-4 h-4" />}
+                                        {copied ? 'Copied!' : 'Copy link'}
+                                    </button>
+                                    <a href={`https://twitter.com/intent/tweet?text=${safeEncode(postTitle)}&url=${safeEncode(postUrl)}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium">
+                                        <Twitter className="w-4 h-4 text-sky-500" /> Share on X
+                                    </a>
+                                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${safeEncode(postUrl)}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary-700 dark:text-secondary-200 hover:bg-secondary-50 dark:hover:bg-secondary-700/60 transition-colors font-medium">
+                                        <Facebook className="w-4 h-4 text-blue-600" /> Share on Facebook
+                                    </a>
+                                </Popover.Content>
+                            </Popover>
+                        </div>
+
+                        {user && (
+                            <Popover isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} placement="bottom-end">
+                                <Popover.Trigger>
+                                    <button title="More" className="w-9 h-9 rounded-xl flex items-center justify-center bg-black/50 hover:bg-black/70 text-white backdrop-blur-xl border border-white/10 shadow-lg transition-all">
+                                        <MoreHorizontal className="w-4 h-4" />
+                                    </button>
+                                </Popover.Trigger>
+                                <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
+                                    <div className="flex flex-col gap-1">
+                                        {(user.id === post.userId || (user as any).userType === 'ADMIN') && (
+                                            <>
+                                                <button onClick={() => { openCreatePost(post); setIsMenuOpen(false); }} className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
+                                                    <Edit2 className="w-4 h-4" /> Edit Post
+                                                </button>
+                                                <button onClick={() => { handleDeletePost(); setIsMenuOpen(false); }} className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors cursor-pointer">
+                                                    <Trash2 className="w-4 h-4" /> Delete Post
+                                                </button>
+                                                <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+                                            </>
+                                        )}
+                                        <button onClick={() => { handleReport(); setIsMenuOpen(false); }} className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
+                                            <Flag className="w-4 h-4" /> Report
+                                        </button>
+                                    </div>
+                                </Popover.Content>
+                            </Popover>
+                        )}
                     </div>
                 </div>
-            </div>
 
-            {/* ── Card Body (below media) ──────────────────────────────── */ }
-            <div className="px-4 pt-3 pb-4 space-y-2.5">
-                {/* Caption */}
-                {post.content && (
-                    <p className="text-[14px] font-bold text-secondary-900 dark:text-secondary-100 leading-[1.3] line-clamp-2 tracking-tight">
-                        {post.content}
-                    </p>
-                )}
-
-                {/* User row */}
-                <div className="flex items-center gap-2">
+                {/* Bottom Section */}
+                <div className="flex items-end justify-between w-full">
+                    {/* Bottom Left: User Info */}
                     <Link
                         href={`/profile/${post.user.username}`}
                         onClick={e => { e.stopPropagation(); requireAuth(() => { }); }}
-                        className="flex items-center gap-2.5 min-w-0 flex-1 group/user"
+                        className="flex items-center gap-2 min-w-0 pointer-events-auto group/user bg-black/30 hover:bg-black/50 backdrop-blur-md p-1.5 pr-3 rounded-xl border border-white/10 transition-all shadow-lg"
                     >
-                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-secondary-100 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700 shadow-sm">
+                        <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-white/20 shadow-sm bg-secondary-800">
                             {post.user.avatar ? (
-                                <img src={post.user.avatar} alt={post.user.name ?? ''} className="w-full h-full object-cover transition-transform duration-500 group-hover/user:scale-110" />
+                                <img src={post.user.avatar} alt={post.user.name ?? ''} className="w-full h-full object-cover" />
                             ) : (
-                                <span className="w-full h-full flex items-center justify-center text-[12px] font-black text-secondary-400 uppercase">
+                                <span className="w-full h-full flex items-center justify-center text-[10px] font-black text-white uppercase">
                                     {post.user.name?.charAt(0)}
                                 </span>
                             )}
                         </div>
                         <div className="flex items-center gap-1 min-w-0">
-                            <p className="font-bold text-[13px] text-secondary-900 dark:text-white truncate tracking-tight group-hover/user:text-primary-600 transition-colors">{post.user.name}</p>
-                            {post.user.verificationStatus === 'VERIFIED' && (
-                                <BadgeCheck className="w-3.5 h-3.5 text-primary-500 shrink-0" />
-                            )}
+                            <p className="font-bold text-[12px] text-white truncate tracking-tight">{post.user.name}</p>
+                            {post.user.verificationStatus === 'VERIFIED' && <BadgeCheck className="w-3 h-3 text-primary-400" />}
                         </div>
                     </Link>
 
-                    {/* Comment icon removed as per user request */}
+                    {/* Bottom Right: Like Button */}
+                    <button
+                        onClick={handleLike}
+                        disabled={likeMutation.isPending}
+                        className={`flex items-center gap-2 h-9 px-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider
+                            transition-all duration-300 active:scale-90 backdrop-blur-xl shadow-lg border pointer-events-auto
+                            ${liked ? 'bg-red-500/90 text-white border-red-400/30' : 'bg-black/50 text-white border-white/10 hover:bg-black/70'}`}
+                    >
+                        <Heart className={`w-3.5 h-3.5 transition-transform duration-300 ${liked ? 'fill-white scale-110' : ''}`} />
+                        {likeCount > 0 && <span>{likeCount}</span>}
+                    </button>
                 </div>
             </div>
+
+            {/* ── Card Body (Caption only) ───────────────────────── */}
+            {post.content && (
+                <div className="px-4 pt-3 pb-4">
+                    <p className="text-[14px] font-bold text-secondary-900 dark:text-secondary-100 leading-[1.3] line-clamp-2 tracking-tight">
+                        {post.content}
+                    </p>
+                    {/* Comment icon removed as per user request */}
+                </div>
+            )}
         </div>
     );
 }

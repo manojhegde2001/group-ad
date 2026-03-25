@@ -145,7 +145,7 @@ export default function AdminBusinessesPage() {
   }
 
   if (!isAuthenticated || (currentUser as any)?.userType !== 'ADMIN') {
-    redirect('https://www.groupad.net/');
+    redirect('/admin/login');
     return null;
   }
 

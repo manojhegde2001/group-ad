@@ -10,7 +10,7 @@ export default function AdminSettingsPage() {
   const { user, isAuthenticated, loading } = useAuth();
   
   if (!loading && (!isAuthenticated || (user as any)?.userType !== 'ADMIN')) {
-    redirect('https://www.groupad.net/');
+    redirect('/admin/login');
   }
 
   return (

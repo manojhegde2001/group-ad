@@ -7,6 +7,7 @@ import ToastProvider from '@/components/providers/toast-provider';
 import QueryProvider from '@/components/providers/query-provider';
 import { LayoutContent } from '@/components/layout/layout-content';
 import { SocketProvider } from '@/components/providers/socket-provider';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -102,6 +103,7 @@ export default function RootLayout({
             </SocketProvider>
           </QueryProvider>
         </NextAuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

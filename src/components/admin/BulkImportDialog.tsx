@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   X, Upload, Download, FileSpreadsheet, Loader2, 
-  CheckCircle2, AlertCircle, ShieldAlert, ChevronRight, UserPlus
+  CheckCircle2, AlertCircle, ShieldAlert, ChevronRight, UserPlus,
+  HelpCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -16,27 +18,47 @@ interface BulkUserResult {
   username: string;
   email: string;
   password?: string;
-  userType?: string;
+  userType: string;
+  categoryId?: string;
   isValid: boolean;
   errors: string[];
 }
 
 export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose: () => void, onRefresh: () => void }) {
-  const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Upload, 2: Preview/Fix, 3: Success
+  const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Upload, 2: Preview, 3: Success
   const [data, setData] = useState<BulkUserResult[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/categories')
+        .then(r => r.json())
+        .then(d => setCategories(d.categories || []))
+        .catch(() => {});
+    }
+  }, [isOpen]);
+
   const downloadTemplate = () => {
-    const headers = ['Name', 'Username', 'Email', 'Password', 'UserType (INDIVIDUAL/BUSINESS)'];
-    const csvContent = headers.join(',') + '\nJohn Doe,johndoe,john@example.com,Password123,INDIVIDUAL';
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'bulk_users_template.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    // Standardized Template: Fixed headers and sample data
+    const wsData = [
+      ['Name', 'Username', 'Email', 'Password', 'UserType', 'CategoryName'],
+      ['John Doe', 'johndoe', 'john@example.com', 'Password123', 'INDIVIDUAL', 'Tech'],
+      ['Jane Business', 'janebiz', 'jane@business.com', 'Secure@2024', 'BUSINESS', 'Fashion'],
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 15 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+    XLSX.writeFile(wb, 'GroupAd_Bulk_Template.xlsx');
+    toast.success('Professional template downloaded');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,16 +75,30 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
         const ws = wb.Sheets[wsname];
         const rawData = XLSX.utils.sheet_to_json(ws);
 
-        // Map to expected format
-        const mappedData = rawData.map((row: any) => ({
-          name: row.Name || row.name,
-          username: row.Username || row.username,
-          email: row.Email || row.email,
-          password: row.Password || row.password || 'Temporary@123',
-          userType: (row.UserType || row.userType || 'INDIVIDUAL').toUpperCase(),
-        }));
+        if (rawData.length === 0) {
+          toast.error('The uploaded file is empty');
+          setLoading(false);
+          return;
+        }
 
-        // Send for validation
+        // Map to internal format with strict field mapping
+        const mappedData = rawData.map((row: any) => {
+          const catName = row.CategoryName || row.categoryName || row.Category || '';
+          const category = categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+          
+          return {
+            name: String(row.Name || row.name || '').trim(),
+            username: String(row.Username || row.username || '').trim().toLowerCase(),
+            email: String(row.Email || row.email || '').trim().toLowerCase(),
+            password: String(row.Password || row.password || 'Temp@123').trim(),
+            userType: (String(row.UserType || row.userType || 'INDIVIDUAL')).toUpperCase(),
+            categoryId: category?.id || 'NONE',
+            isValid: false,
+            errors: [],
+          };
+        });
+
+        // Validate via API
         const res = await fetch('/api/admin/users/bulk/validate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -74,21 +110,28 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
           setData(result.results);
           setStep(2);
         } else {
-          toast.error(result.error || 'Failed to validate file');
+          toast.error(result.error || 'Validation server error');
         }
       };
       reader.readAsBinaryString(file);
     } catch (err) {
-      toast.error('Failed to parse file');
+      toast.error('Critical: Failed to parse spreadsheet');
     } finally {
       setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const updateRowField = (index: number, field: keyof BulkUserResult, value: any) => {
+    const newData = [...data];
+    newData[index] = { ...newData[index], [field]: value };
+    setData(newData);
   };
 
   const executeImport = async () => {
     const validUsers = data.filter(u => u.isValid);
     if (validUsers.length === 0) {
-      toast.error('No valid users to import');
+      toast.error('No valid accounts found in selection');
       return;
     }
 
@@ -100,16 +143,15 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
         body: JSON.stringify({ users: validUsers })
       });
 
-      const result = await res.json();
       if (res.ok) {
-        toast.success(result.message);
         setStep(3);
         onRefresh();
       } else {
-        toast.error(result.error || 'Bulk creation failed');
+        const err = await res.json();
+        toast.error(err.error || 'Deployment failed');
       }
     } catch {
-      toast.error('Internal server error');
+      toast.error('Network error during deployment');
     } finally {
       setLoading(false);
     }
@@ -118,48 +160,51 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-secondary-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className="w-full max-w-4xl bg-white dark:bg-secondary-950 rounded-[3rem] shadow-2xl border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-secondary-900/60 backdrop-blur-md animate-in fade-in duration-300">
+      <Card className="w-full max-w-5xl bg-white dark:bg-secondary-950 rounded-[3.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 md:p-8 flex items-center justify-between border-b border-secondary-100 dark:border-secondary-900 bg-secondary-50/30 dark:bg-secondary-900/20">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 ring-2 ring-primary-100 dark:ring-primary-900/30">
-                 {step === 3 ? <CheckCircle2 className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}
+        <div className="p-8 md:p-10 flex items-center justify-between border-b border-secondary-100 dark:border-secondary-900 bg-secondary-50/40 dark:bg-secondary-900/40">
+           <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-primary-500 rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-primary-500/20 ring-4 ring-primary-50 dark:ring-primary-900/20">
+                 {step === 3 ? <CheckCircle2 className="w-7 h-7" /> : <Upload className="w-7 h-7" />}
               </div>
               <div>
-                 <h2 className="text-xl md:text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">
-                    {step === 1 && "Bulk Onboarding"}
-                    {step === 2 && "Data Review"}
-                    {step === 3 && "Import Successful"}
+                 <h2 className="text-2xl md:text-3xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">
+                    {step === 1 && "Bulk Deployment"}
+                    {step === 2 && "Identity Review"}
+                    {step === 3 && "Workspace Updated"}
                  </h2>
-                 <p className="text-xs font-bold text-secondary-400 tracking-widest uppercase mt-0.5">
-                    {step === 1 && "Onboard hundreds of users instantly"}
-                    {step === 2 && `Reviewing ${data.length} potential accounts`}
-                    {step === 3 && "Account creation complete"}
+                 <p className="text-[10px] font-black text-secondary-400 tracking-[0.3em] uppercase mt-1">
+                    {step === 1 && "Standardized Onboarding Protocol"}
+                    {step === 2 && `Validating ${data.length} Security Identities`}
+                    {step === 3 && "Accounts Synchronized Successfully"}
                  </p>
               </div>
            </div>
-           <button onClick={onClose} className="p-2.5 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-2xl transition-all">
-              <X className="w-6 h-6 text-secondary-400" />
+           <button onClick={onClose} className="p-3 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-3xl transition-all active:scale-90">
+              <X className="w-7 h-7 text-secondary-400" />
            </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6 md:p-10">
+        <div className="flex-1 overflow-auto p-8 md:p-12 relative">
           {step === 1 && (
-            <div className="flex flex-col items-center justify-center py-10 space-y-8">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+            <div className="flex flex-col items-center justify-center h-full space-y-10 py-10">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl">
                   {/* Download Template */}
                   <button 
                     onClick={downloadTemplate}
-                    className="group p-8 bg-secondary-50 dark:bg-secondary-900 border-2 border-dashed border-secondary-100 dark:border-secondary-800 rounded-[2.5rem] hover:border-primary-500 transition-all text-center space-y-4"
+                    className="group relative p-10 bg-secondary-50 dark:bg-secondary-900 border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-[3rem] hover:border-primary-500 hover:bg-white dark:hover:bg-secondary-800 transition-all duration-300 text-center space-y-5"
                   >
-                     <div className="w-16 h-16 bg-white dark:bg-secondary-800 rounded-3xl mx-auto flex items-center justify-center text-secondary-400 group-hover:text-primary-500 shadow-sm transition-colors ring-4 ring-secondary-50/50 dark:ring-secondary-900/50">
-                        <Download className="w-8 h-8" />
+                     <div className="w-20 h-20 bg-white dark:bg-secondary-800 rounded-[2rem] mx-auto flex items-center justify-center text-secondary-300 group-hover:text-primary-500 shadow-lg group-hover:shadow-primary-500/10 transition-all ring-8 ring-secondary-50/50 dark:ring-secondary-900/50 group-hover:ring-primary-50 group-hover:dark:ring-primary-900/20">
+                        <Download className="w-9 h-9" />
                      </div>
                      <div>
-                        <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight">Get Template</p>
-                        <p className="text-xs text-secondary-500 mt-1">Download CSV structure with proper headers</p>
+                        <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight text-lg">Download Template</p>
+                        <p className="text-[10px] font-bold text-secondary-400 mt-2 uppercase tracking-widest">Restricted Excel Format (.xlsx)</p>
+                     </div>
+                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <HelpCircle className="w-5 h-5 text-primary-400" />
                      </div>
                   </button>
 
@@ -167,64 +212,99 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
                   <button 
                     disabled={loading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="group p-8 bg-primary-500 rounded-[2.5rem] hover:bg-primary-600 transition-all text-center space-y-4 text-white shadow-xl shadow-primary-500/20"
+                    className="group p-10 bg-primary-500 rounded-[3rem] hover:bg-primary-600 transition-all duration-300 text-center space-y-5 text-white shadow-2xl shadow-primary-500/30 active:scale-95"
                   >
-                     <div className="w-16 h-16 bg-white/20 rounded-3xl mx-auto flex items-center justify-center text-white shadow-inner">
-                        {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Upload className="w-8 h-8" />}
+                     <div className="w-20 h-20 bg-white/10 rounded-[2rem] mx-auto flex items-center justify-center text-white shadow-inner backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        {loading ? <Loader2 className="w-10 h-10 animate-spin" /> : <FileSpreadsheet className="w-10 h-10" />}
                      </div>
                      <div>
-                        <p className="font-black uppercase tracking-tight">Upload Sheet</p>
-                        <p className="text-xs text-white/70 mt-1">Select Excel or CSV file to parse</p>
+                        <p className="font-black uppercase tracking-tight text-lg">Initialize Upload</p>
+                        <p className="text-[10px] font-black text-white/50 mt-2 uppercase tracking-widest">Supports .XLSX, .XLS, .CSV</p>
                      </div>
                      <input type="file" hidden ref={fileInputRef} accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
                   </button>
+               </div>
+               
+               <div className="p-6 bg-secondary-50 dark:bg-secondary-900/50 rounded-3xl border border-secondary-100 dark:border-secondary-800 max-w-xl">
+                  <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] leading-relaxed text-center">
+                    Security Protocol: All passwords are encrypted on creation. Emails must be unique. Workspace categories are auto-mapped based on template names.
+                  </p>
                </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-6">
-               <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl">
-                  <ShieldAlert className="w-6 h-6 text-amber-500 shrink-0" />
-                  <p className="text-xs font-bold text-amber-700 dark:text-amber-400 leading-relaxed uppercase tracking-tight">
-                    Review flagged rows before proceeding. Duplicate emails or invalid formats will be skipped automatically.
-                  </p>
+            <div className="space-y-8 h-full flex flex-col">
+               <div className="flex items-center gap-5 p-5 bg-amber-50 dark:bg-amber-900/10 border-2 border-amber-100 dark:border-amber-900/20 rounded-[2rem]">
+                  <ShieldAlert className="w-8 h-8 text-amber-500 shrink-0" />
+                  <div>
+                    <p className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-tight">Manual Verification Required</p>
+                    <p className="text-[10px] font-bold text-amber-700/70 dark:text-amber-400/70 uppercase tracking-widest mt-0.5">
+                      Review types and categories below. Red rows contain critical validation errors.
+                    </p>
+                  </div>
                </div>
 
-               <div className="border border-secondary-100 dark:border-secondary-800 rounded-[2rem] overflow-hidden bg-white dark:bg-secondary-900 shadow-sm">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm border-collapse">
-                       <thead>
-                          <tr className="bg-secondary-50 dark:bg-secondary-800/50 border-b border-secondary-100 dark:border-secondary-800">
-                             <th className="px-6 py-4 font-black uppercase text-[10px] tracking-widest text-secondary-400">User Data</th>
-                             <th className="px-6 py-4 font-black uppercase text-[10px] tracking-widest text-secondary-400 text-center">Type</th>
-                             <th className="px-6 py-4 font-black uppercase text-[10px] tracking-widest text-secondary-400">Status</th>
+               <div className="flex-1 overflow-hidden border-2 border-secondary-50 dark:border-secondary-900 rounded-[2.5rem] bg-white dark:bg-secondary-950 shadow-inner">
+                  <div className="overflow-auto h-full scrollbar-hide">
+                    <table className="w-full text-left border-collapse">
+                       <thead className="sticky top-0 z-10">
+                          <tr className="bg-secondary-50 dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800">
+                             <th className="px-8 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Identity Details</th>
+                             <th className="px-6 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Account Type</th>
+                             <th className="px-6 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Category</th>
+                             <th className="px-8 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Status</th>
                           </tr>
                        </thead>
-                       <tbody className="divide-y divide-secondary-50 dark:divide-secondary-800">
+                       <tbody className="divide-y divide-secondary-50 dark:divide-secondary-900">
                           {data.map((row, i) => (
-                             <tr key={i} className={cn("transition-colors", !row.isValid ? "bg-red-50/30 dark:bg-red-900/10" : "hover:bg-secondary-50/50 dark:hover:bg-secondary-800/20")}>
-                                <td className="px-6 py-4 py-5">
-                                   <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 bg-secondary-100 dark:bg-secondary-800 rounded-lg flex items-center justify-center text-[10px] font-black">{i + 1}</div>
-                                      <div>
-                                         <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight">{row.name}</p>
-                                         <p className="text-[10px] font-bold text-secondary-400 tracking-tight">@{row.username} • {row.email}</p>
+                             <tr key={i} className={cn("transition-colors group", !row.isValid ? "bg-red-50/30 dark:bg-red-900/10" : "hover:bg-secondary-50/50 dark:hover:bg-secondary-900/30")}>
+                                <td className="px-8 py-6">
+                                   <div className="flex items-center gap-4">
+                                      <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-800 rounded-xl flex items-center justify-center text-xs font-black text-secondary-400 group-hover:text-primary-500 transition-colors shadow-sm">{i + 1}</div>
+                                      <div className="min-w-0">
+                                         <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate">{row.name}</p>
+                                         <p className="text-[10px] font-bold text-secondary-400 tracking-tight truncate">@{row.username} • {row.email}</p>
                                       </div>
                                    </div>
                                 </td>
-                                <td className="px-6 py-4 text-center">
-                                   <span className="text-[9px] font-black uppercase tracking-widest text-secondary-500 bg-secondary-100 dark:bg-secondary-800 px-2 py-1 rounded-md">{row.userType}</span>
+                                <td className="px-6 py-4">
+                                   <div className="w-36">
+                                      <Select 
+                                        size="sm"
+                                        rounded="lg"
+                                        value={row.userType} 
+                                        onChange={(val) => updateRowField(i, 'userType', val)}
+                                        options={[
+                                          { label: 'INDIVIDUAL', value: 'INDIVIDUAL' },
+                                          { label: 'BUSINESS', value: 'BUSINESS' },
+                                        ]}
+                                      />
+                                   </div>
                                 </td>
                                 <td className="px-6 py-4">
+                                   <div className="w-48">
+                                      <Select 
+                                        size="sm"
+                                        rounded="lg"
+                                        value={row.categoryId} 
+                                        onChange={(val) => updateRowField(i, 'categoryId', val)}
+                                        options={[
+                                          { label: 'None', value: 'NONE' },
+                                          ...categories.map(c => ({ label: c.name.toUpperCase(), value: c.id }))
+                                        ]}
+                                      />
+                                   </div>
+                                </td>
+                                <td className="px-8 py-4">
                                    {row.isValid ? (
-                                      <div className="flex items-center gap-1.5 text-emerald-500 font-bold text-[10px] uppercase tracking-widest">
-                                         <CheckCircle2 className="w-3 h-3" /> Ready
+                                      <div className="inline-flex items-center gap-2 text-emerald-500 dark:text-emerald-400 font-black text-[10px] uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                                         <CheckCircle2 className="w-3.5 h-3.5" /> SECURE
                                       </div>
                                    ) : (
-                                      <div className="space-y-1">
+                                      <div className="space-y-1.5 min-w-[150px]">
                                          {row.errors.map((err, ei) => (
-                                            <div key={ei} className="flex items-center gap-1.5 text-red-500 font-bold text-[10px] uppercase tracking-widest bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-lg border border-red-100 dark:border-red-800/50">
+                                            <div key={ei} className="inline-flex items-center gap-2 text-red-500 font-black text-[9px] uppercase tracking-widest bg-red-50 dark:bg-red-900/20 px-2.5 py-1 rounded-lg border border-red-100 dark:border-red-800/40">
                                                <AlertCircle className="w-3 h-3" /> {err}
                                             </div>
                                          ))}
@@ -241,19 +321,21 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
           )}
 
           {step === 3 && (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-in zoom-in duration-500">
-               <div className="w-32 h-32 bg-emerald-500 rounded-[3rem] shadow-2xl shadow-emerald-500/30 flex items-center justify-center text-white relative">
-                  <CheckCircle2 className="w-16 h-16" />
-                  <div className="absolute -top-2 -right-2 w-10 h-10 bg-white dark:bg-secondary-950 rounded-2xl flex items-center justify-center text-emerald-500 shadow-lg border-2 border-emerald-500">
-                     <p className="font-black text-sm">+{data.filter(u => u.isValid).length}</p>
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-8 animate-in zoom-in duration-500 py-20">
+               <div className="relative">
+                  <div className="w-40 h-40 bg-emerald-500 rounded-[3.5rem] shadow-[0_20px_50px_rgba(16,185,129,0.4)] flex items-center justify-center text-white scale-110 active:scale-100 transition-transform">
+                     <CheckCircle2 className="w-20 h-20" />
+                  </div>
+                  <div className="absolute -top-4 -right-4 w-14 h-14 bg-white dark:bg-secondary-900 rounded-[1.5rem] flex items-center justify-center text-emerald-500 shadow-2xl border-4 border-emerald-500 ring-8 ring-white/10">
+                     <p className="font-black text-lg">+{data.filter(u => u.isValid).length}</p>
                   </div>
                </div>
-               <div className="max-w-xs">
-                  <h3 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tighter uppercase">Mission Complete!</h3>
-                  <p className="text-secondary-500 font-medium mt-2">All valid users have been successfully established in the database workspace.</p>
+               <div className="max-w-md space-y-4">
+                  <h3 className="text-4xl font-black text-secondary-900 dark:text-white tracking-tighter uppercase leading-none">Onboarding Complete</h3>
+                  <p className="text-secondary-500 font-bold uppercase text-[10px] tracking-[0.2em] opacity-70">New professional identities have been successfully synchronized with the primary workspace architecture.</p>
                </div>
-               <Button onClick={onClose} className="rounded-2xl h-12 px-10 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black uppercase tracking-widest shadow-xl">
-                  Close Dashboard
+               <Button onClick={onClose} className="rounded-[1.5rem] h-14 px-12 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-transform">
+                  Dismiss Workspace
                </Button>
             </div>
           )}
@@ -261,21 +343,22 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
 
         {/* Footer */}
         {step === 2 && (
-          <div className="p-6 md:p-8 bg-secondary-50 dark:bg-secondary-900/50 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-4">
-             <button onClick={() => setStep(1)} className="text-xs font-black uppercase tracking-widest text-secondary-400 hover:text-secondary-900 dark:hover:text-white transition-colors">
-                ← Start Over
+          <div className="p-8 md:p-10 bg-secondary-50 dark:bg-secondary-900 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-6">
+             <button onClick={() => setStep(1)} className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-400 hover:text-primary-500 transition-colors flex items-center gap-2">
+                ← Reset Protocol
              </button>
-             <div className="flex gap-4 items-center">
-                <p className="text-xs font-bold text-secondary-400 uppercase tracking-widest hidden md:block">
-                   Valid: {data.filter(u => u.isValid).length} / {data.length} Total
-                </p>
+             <div className="flex gap-6 items-center">
+                <div className="hidden md:flex flex-col items-end">
+                   <p className="text-[10px] font-black text-secondary-900 dark:text-white uppercase tracking-widest">Selected Capacity</p>
+                   <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest">{data.filter(u => u.isValid).length} / {data.length} Deployable</p>
+                </div>
                 <Button 
                   onClick={executeImport}
                   disabled={loading || data.filter(u => u.isValid).length === 0}
-                  className="rounded-2xl h-12 px-8 bg-primary-500 hover:bg-primary-600 font-black uppercase tracking-widest text-white shadow-xl shadow-primary-500/20"
+                  className="rounded-[1.5rem] h-14 px-10 bg-primary-500 hover:bg-primary-600 font-black uppercase tracking-widest text-white shadow-2xl shadow-primary-500/30 group"
                 >
-                   {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <ChevronRight className="w-5 h-5 mr-2" />}
-                   Confirm & Establish Users
+                   {loading ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : <ChevronRight className="w-6 h-6 mr-3 group-hover:translate-x-1 transition-transform" />}
+                   Finalize Deployment
                 </Button>
              </div>
           </div>

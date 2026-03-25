@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, Filter, User, ShieldCheck, ShieldAlert, 
+import {
+  Search, Filter, User, ShieldCheck, ShieldAlert,
   MoreVertical, Check, X, Loader2, Mail, Globe,
   ShieldQuestion, UserCog, AlertCircle, UserPlus
 } from 'lucide-react';
@@ -113,34 +113,35 @@ export default function AdminUsersPage() {
             Manage profiles, handle verifications, and monitor platform activity
           </p>
         </div>
-        <button 
+        <button
           onClick={() => setIsImportOpen(true)}
           className="flex items-center gap-2 px-6 py-3 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all"
         >
-           <UserPlus className="w-4 h-4" />
-           Bulk Onboarding
+          <UserPlus className="w-4 h-4" />
+          Bulk Onboarding
         </button>
       </div>
 
-      <BulkImportDialog 
-        isOpen={isImportOpen} 
-        onClose={() => setIsImportOpen(false)} 
-        onRefresh={fetchUsers} 
+      <BulkImportDialog
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onRefresh={fetchUsers}
       />
 
       {/* Filters & Search */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
-        <div className="md:col-span-2 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-400" />
-          <Input 
-            placeholder="Search name, username, or email..." 
-            className="pl-11 h-12 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 border-none focus:ring-2 focus:ring-primary-500/20"
+        <div className="md:col-span-2 ">
+          <Input
+            prefix={<Search />}
+            placeholder="Search name, username, or email..."
             value={searchQuery}
+            clearable
+            onClear={() => setSearchQuery('')}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="relative">
-          <Select 
+        <div className="">
+          <Select
             placeholder="Filter Type"
             options={[
               { label: 'All Types', value: 'ALL' },
@@ -150,11 +151,10 @@ export default function AdminUsersPage() {
             ]}
             value={typeFilter}
             onChange={(val: string) => setTypeFilter(val)}
-            className="h-12 !rounded-2xl"
           />
         </div>
-        <div className="relative">
-          <Select 
+        <div className="">
+          <Select
             placeholder="Filter Status"
             options={[
               { label: 'All Status', value: 'ALL' },
@@ -165,7 +165,6 @@ export default function AdminUsersPage() {
             ]}
             value={statusFilter}
             onChange={(val: string) => setStatusFilter(val)}
-            className="h-12 !rounded-2xl"
           />
         </div>
       </div>
@@ -188,8 +187,8 @@ export default function AdminUsersPage() {
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
-                       <Loader2 className="w-10 h-10 animate-spin text-primary-500" />
-                       <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">Searching Users...</p>
+                      <Loader2 className="w-10 h-10 animate-spin text-primary-500" />
+                      <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">Searching Users...</p>
                     </div>
                   </td>
                 </tr>
@@ -197,8 +196,8 @@ export default function AdminUsersPage() {
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
-                       <ShieldQuestion className="w-12 h-12 text-secondary-200" />
-                       <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">No users found</p>
+                      <ShieldQuestion className="w-12 h-12 text-secondary-200" />
+                      <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">No users found</p>
                     </div>
                   </td>
                 </tr>
@@ -211,58 +210,58 @@ export default function AdminUsersPage() {
                         <div className="min-w-0">
                           <p className="font-black text-secondary-900 dark:text-white truncate uppercase tracking-tight">{user.name}</p>
                           <div className="flex items-center gap-2 text-xs font-bold text-secondary-500">
-                             <span>@{user.username}</span>
-                             <span className="w-1 h-1 bg-secondary-300 rounded-full" />
-                             <span className="truncate">{user.email}</span>
+                            <span>@{user.username}</span>
+                            <span className="w-1 h-1 bg-secondary-300 rounded-full" />
+                            <span className="truncate">{user.email}</span>
                           </div>
                           {user.companyName && (
                             <div className="flex items-center gap-1 mt-1 text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest">
-                               <Globe className="w-3 h-3" /> {user.companyName}
+                              <Globe className="w-3 h-3" /> {user.companyName}
                             </div>
                           )}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                       <div className={cn(
-                         "inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border",
-                         user.userType === 'BUSINESS' ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800" :
-                         user.userType === 'ADMIN' ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800" :
-                         "bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 border-secondary-200 dark:border-secondary-700"
-                       )}>
-                          {user.userType === 'BUSINESS' ? <ShieldCheck className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                          {user.userType}
-                       </div>
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border",
+                        user.userType === 'BUSINESS' ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800" :
+                          user.userType === 'ADMIN' ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800" :
+                            "bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 border-secondary-200 dark:border-secondary-700"
+                      )}>
+                        {user.userType === 'BUSINESS' ? <ShieldCheck className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                        {user.userType}
+                      </div>
                     </td>
                     <td className="px-6 py-5">
-                       <span className={cn(
-                         "px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border",
-                         user.verificationStatus === 'VERIFIED' ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800" :
-                         user.verificationStatus === 'PENDING' ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800" :
-                         user.verificationStatus === 'REJECTED' ? "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800" :
-                         "bg-secondary-100 dark:bg-secondary-800 text-secondary-500 border-secondary-200"
-                       )}>
-                         {user.verificationStatus}
-                       </span>
+                      <span className={cn(
+                        "px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border",
+                        user.verificationStatus === 'VERIFIED' ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800" :
+                          user.verificationStatus === 'PENDING' ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800" :
+                            user.verificationStatus === 'REJECTED' ? "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800" :
+                              "bg-secondary-100 dark:bg-secondary-800 text-secondary-500 border-secondary-200"
+                      )}>
+                        {user.verificationStatus}
+                      </span>
                     </td>
                     <td className="px-6 py-5 font-bold text-xs text-secondary-500">
                       {format(new Date(user.createdAt), 'MMM d, yyyy')}
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                         {user.verificationStatus !== 'VERIFIED' && (
-                           <button 
-                             onClick={() => handleManualVerify(user.id, 'VERIFIED', 'BUSINESS')}
-                             disabled={!!processingId}
-                             className="p-2.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
-                             title="Manual Verify (Make Business)"
-                           >
-                             <ShieldCheck className="w-5 h-5" />
-                           </button>
-                         )}
-                         <button className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm">
-                           <UserCog className="w-5 h-5" />
-                         </button>
+                        {user.verificationStatus !== 'VERIFIED' && (
+                          <button
+                            onClick={() => handleManualVerify(user.id, 'VERIFIED', 'BUSINESS')}
+                            disabled={!!processingId}
+                            className="p-2.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                            title="Manual Verify (Make Business)"
+                          >
+                            <ShieldCheck className="w-5 h-5" />
+                          </button>
+                        )}
+                        <button className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm">
+                          <UserCog className="w-5 h-5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -272,14 +271,14 @@ export default function AdminUsersPage() {
           </table>
         </div>
       </Card>
-      
+
       {/* Help Section */}
       <div className="flex items-center gap-4 p-6 bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/20 rounded-[2rem]">
-         <AlertCircle className="w-6 h-6 text-primary-500 shrink-0" />
-         <div className="flex-1">
-            <p className="text-sm font-bold text-primary-900 dark:text-primary-100 uppercase tracking-tight">Manual Verification Tip</p>
-            <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">Manual verification automatically grants the user a BUSINESS type and the verified badge. Use this for VIPs or offline verified businesses.</p>
-         </div>
+        <AlertCircle className="w-6 h-6 text-primary-500 shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-bold text-primary-900 dark:text-primary-100 uppercase tracking-tight">Manual Verification Tip</p>
+          <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">Manual verification automatically grants the user a BUSINESS type and the verified badge. Use this for VIPs or offline verified businesses.</p>
+        </div>
       </div>
     </div>
   );

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { moderationService } from '@/services/api/moderation';
-import { 
-  ShieldAlert, Clock, CheckCircle, XCircle, AlertCircle, 
+import {
+  ShieldAlert, Clock, CheckCircle, XCircle, AlertCircle,
   MoreHorizontal, User, FileText, CalendarDays, MessageSquare,
   Search, Filter, ChevronDown, ExternalLink, Loader2, Eye,
   ShieldQuestion, UserX, Trash2
@@ -72,8 +72,8 @@ export default function AdminReportsPage() {
 
   const filteredReports = reports.filter(r => {
     const matchesFilter = filter === 'ALL' || r.status === filter;
-    const matchesSearch = r.reason.toLowerCase().includes(search.toLowerCase()) || 
-                          r.reporter.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = r.reason.toLowerCase().includes(search.toLowerCase()) ||
+      r.reporter.name.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -90,25 +90,26 @@ export default function AdminReportsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-           <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-black uppercase tracking-widest rounded-2xl border border-red-100 dark:border-red-800 flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4" />
-              {reports.filter(r => r.status === 'PENDING').length} Urgent Flags
-           </div>
+          <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-black uppercase tracking-widest rounded-2xl border border-red-100 dark:border-red-800 flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4" />
+            {reports.filter(r => r.status === 'PENDING').length} Urgent Flags
+          </div>
         </div>
       </div>
 
       {/* Filters & Search */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
-        <div className="md:col-span-2 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-400" />
+        <div className="md:col-span-2">
           <Input
+            prefix={<Search />}
+            clearable
+            onClear={() => setSearch('')}
             placeholder="Search reports or reporters..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-11 h-12 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 border-none focus:ring-2 focus:ring-primary-500/20"
           />
         </div>
-        <div className="relative">
+        <div className="">
           <Select
             value={filter}
             onChange={(val: any) => setFilter(val)}
@@ -119,7 +120,6 @@ export default function AdminReportsPage() {
               { label: 'Resolved', value: 'RESOLVED' },
               { label: 'Dismissed', value: 'DISMISSED' },
             ]}
-            className="h-12 !rounded-2xl"
           />
         </div>
       </div>
@@ -142,8 +142,8 @@ export default function AdminReportsPage() {
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
-                       <Loader2 className="w-10 h-10 animate-spin text-primary-500" />
-                       <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">Fetching Flags...</p>
+                      <Loader2 className="w-10 h-10 animate-spin text-primary-500" />
+                      <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">Fetching Flags...</p>
                     </div>
                   </td>
                 </tr>
@@ -151,8 +151,8 @@ export default function AdminReportsPage() {
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-4">
-                       <ShieldQuestion className="w-12 h-12 text-secondary-200" />
-                       <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">Clear Skies! No reports</p>
+                      <ShieldQuestion className="w-12 h-12 text-secondary-200" />
+                      <p className="font-bold text-secondary-400 uppercase text-xs tracking-widest">Clear Skies! No reports</p>
                     </div>
                   </td>
                 </tr>
@@ -189,8 +189,8 @@ export default function AdminReportsPage() {
                         <div className="flex items-center gap-3">
                           <Avatar src={report.reporter.avatar} name={report.reporter.name} className="w-8 h-8 rounded-xl shadow-sm" />
                           <div>
-                             <p className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate max-w-[120px]">{report.reporter.name}</p>
-                             <p className="text-[10px] font-bold text-secondary-400 truncate max-w-[120px]">@{report.reporter.username}</p>
+                            <p className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate max-w-[120px]">{report.reporter.name}</p>
+                            <p className="text-[10px] font-bold text-secondary-400 truncate max-w-[120px]">@{report.reporter.username}</p>
                           </div>
                         </div>
                       </td>
@@ -203,23 +203,23 @@ export default function AdminReportsPage() {
                           {statusInfo.label}
                         </div>
                         <p className="text-[9px] font-bold text-secondary-400 mt-1 uppercase tracking-widest">
-                           {formatDistanceToNow(new Date(report.createdAt), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(report.createdAt), { addSuffix: true })}
                         </p>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           {report.targetType === 'POST' && (
-                            <Link 
-                                href={`/post/${report.targetId}`} 
-                                target="_blank"
-                                className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm"
-                                title="View Content"
+                            <Link
+                              href={`/post/${report.targetId}`}
+                              target="_blank"
+                              className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                              title="View Content"
                             >
-                                <ExternalLink className="w-4 h-4" />
+                              <ExternalLink className="w-4 h-4" />
                             </Link>
                           )}
                           {report.status !== 'RESOLVED' && (
-                            <button 
+                            <button
                               onClick={() => handleUpdateStatus(report.id, 'RESOLVED')}
                               className="p-2.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
                               title="Resolve"
@@ -228,16 +228,16 @@ export default function AdminReportsPage() {
                             </button>
                           )}
                           {report.status === 'PENDING' && (
-                             <button 
-                               onClick={() => handleUpdateStatus(report.id, 'REVIEWED')}
-                               className="p-2.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-500 hover:text-white transition-all active:scale-95 shadow-sm"
-                               title="Mark Reviewed"
-                             >
-                               <Eye className="w-4 h-4" />
-                             </button>
+                            <button
+                              onClick={() => handleUpdateStatus(report.id, 'REVIEWED')}
+                              className="p-2.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                              title="Mark Reviewed"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
                           )}
                           {report.status !== 'DISMISSED' && (
-                            <button 
+                            <button
                               onClick={() => handleUpdateStatus(report.id, 'DISMISSED')}
                               className="p-2.5 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all active:scale-95 shadow-sm"
                               title="Dismiss"
@@ -255,21 +255,21 @@ export default function AdminReportsPage() {
           </table>
         </div>
       </Card>
-      
+
       {/* Footer Summary Cards */}
       {!loading && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-           {[
-             { label: 'Pending', count: reports.filter(r => r.status === 'PENDING').length, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/10' },
-             { label: 'Reviewed', count: reports.filter(r => r.status === 'REVIEWED').length, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/10' },
-             { label: 'Resolved', count: reports.filter(r => r.status === 'RESOLVED').length, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/10' },
-             { label: 'Dismissed', count: reports.filter(r => r.status === 'DISMISSED').length, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/10' },
-           ].map(stat => (
-             <div key={stat.label} className={cn("p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm", stat.bg)}>
-                <p className="text-[10px] font-black uppercase tracking-widest text-secondary-400 mb-1">{stat.label}</p>
-                <p className={cn("text-2xl font-black", stat.color)}>{stat.count}</p>
-             </div>
-           ))}
+          {[
+            { label: 'Pending', count: reports.filter(r => r.status === 'PENDING').length, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/10' },
+            { label: 'Reviewed', count: reports.filter(r => r.status === 'REVIEWED').length, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/10' },
+            { label: 'Resolved', count: reports.filter(r => r.status === 'RESOLVED').length, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/10' },
+            { label: 'Dismissed', count: reports.filter(r => r.status === 'DISMISSED').length, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/10' },
+          ].map(stat => (
+            <div key={stat.label} className={cn("p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm", stat.bg)}>
+              <p className="text-[10px] font-black uppercase tracking-widest text-secondary-400 mb-1">{stat.label}</p>
+              <p className={cn("text-2xl font-black", stat.color)}>{stat.count}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>

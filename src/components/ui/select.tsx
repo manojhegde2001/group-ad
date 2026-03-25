@@ -1,6 +1,8 @@
 'use client';
 
-import { Select as RizzuiSelect } from 'rizzui';
+import { Fragment } from 'react';
+import { Listbox, Transition, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/react';
+import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SelectOption {
@@ -29,6 +31,27 @@ interface SelectProps {
   className?: string;
 }
 
+const sizeClasses = {
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-4 py-2.5 text-sm',
+  lg: 'px-5 py-3 text-base',
+  xl: 'px-6 py-4 text-lg',
+};
+
+const roundedClasses = {
+  none: 'rounded-none',
+  sm: 'rounded-lg',
+  md: 'rounded-xl',
+  lg: 'rounded-2xl',
+  pill: 'rounded-full',
+};
+
+const variantClasses = {
+  outline: 'border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-900',
+  flat: 'border-none bg-secondary-100 dark:bg-secondary-800',
+  text: 'border-none bg-transparent hover:bg-secondary-50 dark:hover:bg-secondary-800',
+};
+
 export const Select = ({
   label,
   error,
@@ -42,45 +65,85 @@ export const Select = ({
   size = 'md',
   rounded = 'md',
   disabled = false,
-  clearable = false,
-  searchable = false,
   required = false,
-  name,
   className,
 }: SelectProps) => {
-  const handleChange = (selectedValue: unknown) => {
-    if (onChange && typeof selectedValue === 'string') {
-      onChange(selectedValue);
-    }
-  };
+  const selectedOption = options.find((opt) => opt.value === value);
 
   return (
     <div className={cn('w-full', className)}>
       {label && (
-        <label className="block text-sm font-medium mb-1.5 text-gray-900 dark:text-gray-100">
+        <label className="block text-sm font-black mb-2 text-secondary-900 dark:text-white uppercase tracking-tight">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      <div className="[&_.rizzui-select-container]:bg-white [&_.rizzui-select-container]:dark:bg-gray-800 [&_.rizzui-select-container]:border-gray-300 [&_.rizzui-select-container]:dark:border-gray-600 [&_.rizzui-select-trigger]:text-gray-900 [&_.rizzui-select-trigger]:dark:text-gray-100 [&_.rizzui-select-dropdown]:bg-white [&_.rizzui-select-dropdown]:dark:bg-gray-800 [&_.rizzui-select-option]:hover:bg-gray-100 [&_.rizzui-select-option]:dark:hover:bg-gray-700 [&_.rizzui-select-option]:text-gray-900 [&_.rizzui-select-option]:dark:text-gray-100">
-        <RizzuiSelect
-          options={options}
-          value={value}
-          onChange={handleChange}
-          placeholder={placeholder}
-          variant={variant}
-          color={error ? 'danger' : color}
-          size={size}
-          rounded={rounded}
-          disabled={disabled}
-          clearable={clearable}
-          searchable={searchable}
-          name={name}
-        />
-      </div>
-      {error && <p className="mt-1.5 text-sm text-red-500 dark:text-red-400">{error}</p>}
+
+      <Listbox value={value} onChange={onChange} disabled={disabled}>
+        <div className="relative">
+          <ListboxButton
+            className={cn(
+              'relative w-full text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
+              sizeClasses[size],
+              roundedClasses[rounded],
+              variantClasses[variant],
+              error && 'border-red-500 ring-1 ring-red-500/20',
+              disabled && 'opacity-50 cursor-not-allowed',
+              'flex items-center justify-between gap-2'
+            )}
+          >
+            <span className={cn('block truncate font-bold', !selectedOption && 'text-secondary-400')}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+            <span className="pointer-events-none flex items-center">
+              <ChevronDown
+                className={cn('h-4 w-4 text-secondary-400 transition-transform duration-200')}
+                aria-hidden="true"
+              />
+            </span>
+          </ListboxButton>
+
+          <Transition
+            as={Fragment}
+            leave="transition ease-in duration-100"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <ListboxOptions className="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white dark:bg-secondary-900 border border-secondary-100 dark:border-secondary-800 py-1 text-base shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+              {options.map((option) => (
+                <ListboxOption
+                  key={option.value}
+                  className={({ active, selected }) =>
+                    cn(
+                      'relative cursor-pointer select-none py-3 px-4 transition-colors',
+                      active ? 'bg-secondary-50 dark:bg-secondary-800 text-primary-600' : 'text-secondary-700 dark:text-secondary-300',
+                      selected && 'font-black bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
+                    )
+                  }
+                  value={option.value}
+                >
+                  {({ selected }) => (
+                    <>
+                      <span className={cn('block truncate text-xs uppercase tracking-widest', selected ? 'font-black' : 'font-bold')}>
+                        {option.label}
+                      </span>
+                      {selected && (
+                        <span className="absolute inset-y-0 right-4 flex items-center">
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                      )}
+                    </>
+                  )}
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </Transition>
+        </div>
+      </Listbox>
+
+      {error && <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-red-500">{error}</p>}
       {!error && helperText && (
-        <p className="mt-1.5 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-[10px] font-bold text-secondary-400 uppercase tracking-widest">
           {helperText}
         </p>
       )}

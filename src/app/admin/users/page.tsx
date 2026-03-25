@@ -11,11 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Search, Filter, User, ShieldCheck, ShieldAlert, 
   MoreVertical, Check, X, Loader2, Mail, Globe,
-  ShieldQuestion, UserCog, AlertCircle
+  ShieldQuestion, UserCog, AlertCircle, UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import BulkImportDialog from '@/components/admin/BulkImportDialog';
 
 interface AdminUser {
   id: string;
@@ -38,6 +39,7 @@ export default function AdminUsersPage() {
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -95,14 +97,29 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase">
-          User Management
-        </h1>
-        <p className="text-secondary-500 font-medium mt-1 uppercase text-xs tracking-widest">
-          Manage profiles, handle verifications, and monitor platform activity
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase">
+            User Management
+          </h1>
+          <p className="text-secondary-500 font-medium mt-1 uppercase text-xs tracking-widest">
+            Manage profiles, handle verifications, and monitor platform activity
+          </p>
+        </div>
+        <button 
+          onClick={() => setIsImportOpen(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all"
+        >
+           <UserPlus className="w-4 h-4" />
+           Bulk Onboarding
+        </button>
       </div>
+
+      <BulkImportDialog 
+        isOpen={isImportOpen} 
+        onClose={() => setIsImportOpen(false)} 
+        onRefresh={fetchUsers} 
+      />
 
       {/* Filters & Search */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">

@@ -11,23 +11,22 @@ export async function middleware(req: NextRequest) {
   // 1. Detect Admin Subdomain (e.g., admin.groupad.net or admin.localhost:3000)
   const isAdminSubdomain = host.startsWith('admin.');
 
-  // 2. Subdomain Rewrite Logic
+  // 2. Domain-Aware Redirections & Rewrites
   if (isAdminSubdomain) {
-    // If accessing root of subdomain, rewrite to internal admin dashboard
+    // REWRITE: On subdomain, map / to /admin internally
     if (pathname === '/') {
       return NextResponse.rewrite(new URL('/admin', req.url));
     }
-    // If accessing a path that doesn't already start with /admin, prefix it
+    // Prefix other subpaths if needed (but avoid double prefix)
     if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
       return NextResponse.rewrite(new URL(`/admin${pathname}`, req.url));
     }
-  }
-
-  // 3. Prevent direct access to /admin via the main domain (optional but recommended)
-  if (!isAdminSubdomain && pathname.startsWith('/admin') && !pathname.startsWith('/admin/analytics')) { // allow analytics for now or specific routes
-      // Optionally redirect to admin subdomain in production
-      // For now, we'll just allow it to avoid breaking dev, 
-      // but in a real prod env, you'd redirect groupad.net/admin -> admin.groupad.net
+  } else {
+    // REDIRECT: On main domain, forward /admin to the subdomain
+    if (pathname.startsWith('/admin')) {
+      const targetPath = pathname.replace('/admin', '') || '/';
+      return NextResponse.redirect(new URL(`https://admin.groupad.net${targetPath}`, req.url));
+    }
   }
 
   // 4. Authentication Logic

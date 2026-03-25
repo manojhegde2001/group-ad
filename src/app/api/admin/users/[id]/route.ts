@@ -14,7 +14,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, email, userType, categoryId, verificationStatus } = body;
+    const { name, email, userType, categoryId, verificationStatus, website, websiteLabel } = body;
 
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -22,6 +22,8 @@ export async function PATCH(
         name,
         email,
         userType,
+        website,
+        websiteLabel,
         categoryId: categoryId === 'NONE' ? null : categoryId,
         verificationStatus,
         // If becoming verified, set verifiedAt
@@ -34,6 +36,8 @@ export async function PATCH(
         name: true,
         email: true,
         userType: true,
+        website: true,
+        websiteLabel: true,
         verificationStatus: true,
       }
     });

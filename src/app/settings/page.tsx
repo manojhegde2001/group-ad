@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const [name, setName]               = useState('');
   const [bio, setBio]                 = useState('');
   const [website, setWebsite]         = useState('');
+  const [websiteLabel, setWebsiteLabel] = useState('');
   const [location, setLocation]       = useState('');
   const [linkedin, setLinkedin]       = useState('');
   const [twitter, setTwitter]         = useState('');
@@ -103,6 +104,7 @@ export default function SettingsPage() {
     setName(profile.name ?? '');
     setBio(profile.bio ?? '');
     setWebsite(profile.website ?? '');
+    setWebsiteLabel(profile.websiteLabel ?? '');
     setLocation(profile.location ?? '');
     setLinkedin(profile.linkedin ?? '');
     setTwitter(profile.twitter ?? '');
@@ -144,7 +146,7 @@ export default function SettingsPage() {
       return;
     }
     updateProfile({
-      name, bio, website, location, linkedin, twitter,
+      name, bio, website, websiteLabel, location, linkedin, twitter,
       visibility, gstNumber, phone, address, pincode, externalLink,
     }, {
       onError: (error: any) => {
@@ -403,7 +405,8 @@ export default function SettingsPage() {
                     <SettingsCard className="p-6 sm:p-8">
                       <SectionTitle icon={Globe} label="Professional Links" accent="text-blue-500 bg-blue-100 dark:bg-blue-900/30" />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                        <Field label="Website" span2 error={fieldErrors.website}><div className="relative"><Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="url" value={website} onChange={e => setWebsite(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.website && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
+                        <Field label="Website URL" span2 error={fieldErrors.website}><div className="relative"><Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="url" value={website} onChange={e => setWebsite(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.website && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
+                        <Field label="Website Link Label (e.g. 'Book a Demo')" span2 error={fieldErrors.websiteLabel}><input type="text" value={websiteLabel} onChange={e => setWebsiteLabel(e.target.value)} className={cn(inputCls, fieldErrors.websiteLabel && 'ring-1 ring-red-500 border-red-500')} placeholder="E.g. Book a Demo, Download App" /></Field>
                         <Field label="LinkedIn" error={fieldErrors.linkedin}><div className="relative"><Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="text" value={linkedin} onChange={e => setLinkedin(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.linkedin && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                         <Field label="Twitter / X" error={fieldErrors.twitter}><div className="relative"><Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="text" value={twitter} onChange={e => setTwitter(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.twitter && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                       </div>

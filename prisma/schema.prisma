@@ -200,6 +200,7 @@ model User {
   phone     String?  @unique
   location  String?
   website   String?
+  websiteLabel String?
   
   // New Business Fields
   address         String?

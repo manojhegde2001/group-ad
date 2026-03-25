@@ -254,7 +254,7 @@ export default function ProfileView({ username }: { username: string }) {
                                 )}
                                 {profile.website && (
                                     <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary-500 hover:underline">
-                                        <LinkIcon className="w-4 h-4" /> {profile.website.replace(/^https?:\/\//, '')}
+                                        <LinkIcon className="w-4 h-4" /> {profile.websiteLabel || profile.website.replace(/^https?:\/\//, '')}
                                     </a>
                                 )}
                             </div>

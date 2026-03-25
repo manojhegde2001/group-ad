@@ -20,6 +20,7 @@ const updateProfileSchema = z.object({
   phone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number').optional().or(z.literal('')),
   location: z.string().max(100).optional(),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  websiteLabel: z.string().max(30, 'Label too long').optional().or(z.literal('')),
   avatar: z.string().url('Invalid avatar URL').optional().or(z.literal('')),
   address: z.string().max(200).optional().or(z.literal('')),
   pincode: z.string().max(20).optional().or(z.literal('')),
@@ -91,6 +92,7 @@ export async function GET(request: NextRequest) {
         phone: true,
         location: true,
         website: true,
+        websiteLabel: true,
         address: true,
         pincode: true,
         externalLink: true,
@@ -224,7 +226,7 @@ export async function PATCH(request: NextRequest) {
     // Update user - only include fields present in body
     const updateData: any = {};
     const stringFields = [
-      'name', 'username', 'bio', 'phone', 'location', 'website', 'avatar',
+      'name', 'username', 'bio', 'phone', 'location', 'website', 'websiteLabel', 'avatar',
       'address', 'pincode', 'externalLink', 'categoryId', 'turnover',
       'companySize', 'industry', 'gstNumber', 'establishedYear', 'companyWebsite',
       'linkedin', 'twitter', 'facebook', 'instagram'
@@ -259,6 +261,7 @@ export async function PATCH(request: NextRequest) {
         phone: true,
         location: true,
         website: true,
+        websiteLabel: true,
         address: true,
         pincode: true,
         externalLink: true,

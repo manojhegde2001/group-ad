@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import { Avatar } from '@/components/ui/avatar';
 import {
   ShieldCheck, Users, CalendarDays, Building, FileText,
   TrendingUp, Clock, CheckCircle, AlertCircle, Loader2,
-  ArrowUpRight, BarChart3, Eye, Tags, ShieldAlert
+  ArrowUpRight, BarChart3, Eye, Tags, ShieldAlert, Plus
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -59,6 +59,7 @@ export default function AdminDashboardPage() {
     { href: '/admin/categories', label: 'Manage Categories', icon: Tags, desc: 'Add, edit, and organize interest categories' },
     { href: '/admin/events', label: 'Manage Events', icon: CalendarDays, desc: 'Create, edit, publish, cancel events' },
     { href: '/admin/businesses', label: 'Businesses', icon: Building, desc: 'Review and verify business accounts' },
+    { href: '/admin/events/create', label: 'Create New Event', icon: Plus, desc: 'Instantly start the event creation wizard' },
   ];
 
   return (

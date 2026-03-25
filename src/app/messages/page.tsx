@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
-import { Search, Send, Plus, MessageSquare, X, Loader2, ArrowLeft, MoreVertical, Info, Users } from 'lucide-react';
+import { Search, Send, Plus, MessageSquare, X, Loader2, ArrowLeft, MoreVertical, Info, Users, Phone, Camera, Mic, Image as ImageIcon, Smile } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
@@ -352,45 +352,48 @@ export default function MessagesPage() {
         showMobileChat ? 'hidden md:flex' : 'flex'
       )}>
         {/* Header with Tabs */}
-        <div className="pt-4 md:pt-6 px-3 md:px-4 pb-2 flex flex-col gap-3 md:gap-4 shrink-0 bg-white dark:bg-secondary-950">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-1 p-1 bg-secondary-50 dark:bg-secondary-900 rounded-[1.25rem] w-full shadow-inner border border-secondary-100 dark:border-secondary-800">
-              <button
-                onClick={() => setActiveTab('messages')}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 py-1.5 md:py-2 text-[10px] md:text-xs font-black uppercase tracking-wider rounded-xl transition-all',
-                  activeTab === 'messages' 
-                    ? 'bg-white dark:bg-secondary-800 text-primary-500 shadow-sm' 
-                    : 'text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200'
-                )}
-              >
-                <MessageSquare className="w-3 md:w-3.5 h-3 md:h-3.5" />
-                Messages
-              </button>
-              <button
-                onClick={() => setActiveTab('contacts')}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 py-1.5 md:py-2 text-[10px] md:text-xs font-black uppercase tracking-wider rounded-xl transition-all',
-                  activeTab === 'contacts' 
-                    ? 'bg-white dark:bg-secondary-800 text-primary-500 shadow-sm' 
-                    : 'text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200'
-                )}
-              >
-                <Users className="w-3 md:w-3.5 h-3 md:h-3.5" />
-                Contacts
-              </button>
-            </div>
+        <div className="pt-5 md:pt-8 px-4 md:px-6 pb-4 flex flex-col gap-4 md:gap-6 shrink-0 bg-white dark:bg-secondary-950">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl md:text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">Messages</h1>
+            <button className="w-10 h-10 rounded-full bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-secondary-900 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors">
+                <Plus className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Unified Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" />
+          <div className="flex gap-1.5 p-1 bg-secondary-50/50 dark:bg-secondary-900/50 rounded-2xl w-full border border-secondary-100 dark:border-secondary-800">
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 py-2 text-[11px] font-black uppercase tracking-widest rounded-[0.8rem] transition-all',
+                activeTab === 'messages' 
+                  ? 'bg-white dark:bg-secondary-800 text-primary-600 shadow-sm border border-secondary-100 dark:border-secondary-700' 
+                  : 'text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200'
+              )}
+            >
+              Primary
+            </button>
+            <button
+              onClick={() => setActiveTab('contacts')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 py-2 text-[11px] font-black uppercase tracking-widest rounded-[0.8rem] transition-all',
+                activeTab === 'contacts' 
+                  ? 'bg-white dark:bg-secondary-800 text-primary-600 shadow-sm border border-secondary-100 dark:border-secondary-700' 
+                  : 'text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200'
+              )}
+            >
+              General
+            </button>
+          </div>
+
+          {/* Unified Search Bar - Instagram style */}
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-400 group-focus-within:text-primary-500 transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={activeTab === 'messages' ? "Search..." : "Search contacts..."}
-              className="w-full bg-secondary-50 dark:bg-secondary-900 border border-secondary-100 dark:border-secondary-800 rounded-xl md:rounded-2xl pl-9 pr-4 py-2 md:py-3 text-xs md:text-sm font-medium outline-none focus:ring-2 ring-primary-500/20 transition-all font-semibold"
+              placeholder="Search chats..."
+              className="w-full bg-secondary-50 dark:bg-secondary-900 border-none rounded-2xl pl-11 pr-4 py-3 text-sm font-semibold outline-none ring-1 ring-secondary-200 dark:ring-secondary-800 focus:ring-2 ring-primary-500/20 transition-all placeholder:text-secondary-400"
             />
           </div>
         </div>
@@ -427,28 +430,28 @@ export default function MessagesPage() {
                       key={conv.id}
                       onClick={() => { setSelectedConvId(conv.id); setShowMobileChat(true); }}
                       className={cn(
-                        'w-full flex items-center gap-3 px-3 md:px-4 py-3 md:py-4 hover:bg-secondary-50 dark:hover:bg-secondary-900 transition-all text-left relative group border-b border-secondary-50/50 dark:border-secondary-900/50',
-                        isSelected && 'bg-[#f6f7fb] dark:bg-primary-900/10'
+                        'w-full flex items-center gap-4 px-4 md:px-6 py-4 md:py-5 hover:bg-secondary-50 dark:hover:bg-secondary-900 transition-all text-left relative group',
+                        isSelected && 'bg-primary-50/30 dark:bg-primary-900/10'
                       )}
                     >
                       <div className="relative shrink-0">
-                        <Avatar src={other?.avatar ?? undefined} name={other?.name || '?'} size="md" className="w-10 h-10 md:w-12 md:h-12 border-2 border-transparent group-hover:border-primary-200 dark:group-hover:border-primary-900/30 transition-all shadow-sm" />
+                        <Avatar src={other?.avatar ?? undefined} name={other?.name || '?'} size="lg" className="w-14 h-14 md:w-16 md:h-16 border-2 border-transparent group-hover:border-primary-200 dark:group-hover:border-primary-900/30 transition-all shadow-sm" />
                         {conv.unreadCount > 0 && (
-                          <div className="absolute -top-0.5 -right-0.5 w-4 h-4 md:w-5 md:h-5 bg-primary-500 border-2 border-white dark:border-secondary-950 rounded-full flex items-center justify-center shadow-sm">
-                            <span className="text-[8px] md:text-[9px] text-white font-black">{conv.unreadCount}</span>
+                          <div className="absolute top-0 right-0 w-5 h-5 bg-primary-500 border-2 border-white dark:border-secondary-950 rounded-full flex items-center justify-center shadow-lg">
+                            <span className="text-[10px] text-white font-black">{conv.unreadCount}</span>
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-0.5">
-                          <p className={cn('font-black text-xs md:text-sm truncate uppercase tracking-tight', isSelected ? 'text-primary-600 dark:text-primary-400' : 'text-secondary-900 dark:text-white')}>
+                        <div className="flex justify-between items-baseline mb-1">
+                          <p className={cn('font-black text-sm md:text-[15px] truncate tracking-tight', isSelected ? 'text-primary-600 dark:text-primary-400' : 'text-secondary-900 dark:text-white')}>
                             {other?.name || 'Unknown'}
                           </p>
-                          <p className="text-[9px] md:text-[10px] text-secondary-400 font-bold uppercase tracking-widest shrink-0 ml-1">
+                          <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-widest shrink-0 ml-2">
                             {formatDistanceToNow(new Date(conv.lastMessageAt), { addSuffix: false })}
                           </p>
                         </div>
-                        <p className={cn('text-[11px] md:text-xs truncate font-medium', conv.unreadCount > 0 ? 'text-secondary-900 dark:text-white font-bold' : 'text-secondary-400')}>
+                        <p className={cn('text-xs md:text-sm truncate font-medium max-w-[90%]', conv.unreadCount > 0 ? 'text-secondary-900 dark:text-white font-bold' : 'text-secondary-400')}>
                           {conv.lastMessage?.content || 'Sent a message'}
                         </p>
                       </div>
@@ -520,29 +523,29 @@ export default function MessagesPage() {
           </div>
         ) : (
           <>
-            {/* Chat Header */}
-            <div className="px-3 md:px-6 py-2.5 md:py-4 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0 bg-white/80 dark:bg-secondary-950/80 backdrop-blur-xl sticky top-0 z-10 shadow-sm shadow-secondary-900/5">
-              <div className="flex items-center gap-3 md:gap-4">
-                <button onClick={() => { setShowMobileChat(false); }} className="md:hidden -ml-1 p-2 hover:bg-secondary-100 dark:hover:bg-secondary-900 rounded-xl transition-colors">
-                    <ArrowLeft className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
+            {/* Chat Header - Instagram style */}
+            <div className="px-4 md:px-8 py-4 md:py-6 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl sticky top-0 z-20 shadow-sm shadow-secondary-900/5">
+              <div className="flex items-center gap-3 md:gap-5">
+                <button onClick={() => { setShowMobileChat(false); }} className="md:hidden -ml-2 p-2.5 hover:bg-secondary-100 dark:hover:bg-secondary-900 rounded-full transition-colors active:scale-95">
+                    <ArrowLeft className="w-6 h-6 text-secondary-900 dark:text-white" />
                 </button>
-                <Link href={`/profile/${otherUser?.username}`} className="flex items-center gap-2.5 md:gap-3.5 group">
+                <Link href={`/profile/${otherUser?.username}`} className="flex items-center gap-3 md:gap-4 group">
                     <div className="relative">
-                        <Avatar src={otherUser?.avatar ?? undefined} name={otherUser?.name || '?'} size="md" className="w-9 h-9 md:w-11 md:h-11 border-2 border-white dark:border-secondary-900 group-hover:border-primary-200 transition-all shadow-sm" />
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white dark:border-secondary-950 rounded-full shadow-sm" />
+                        <Avatar src={otherUser?.avatar ?? undefined} name={otherUser?.name || '?'} size="lg" className="w-11 h-11 md:w-14 md:h-14 border-2 border-white dark:border-secondary-900 group-hover:border-primary-200 transition-all shadow-md" />
+                        <div className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-secondary-950 rounded-full shadow-sm" />
                     </div>
                     <div>
-                        <p className="font-black text-secondary-900 dark:text-white text-sm md:text-[15px] leading-tight group-hover:text-primary-600 transition-colors uppercase tracking-tight">{otherUser?.name}</p>
-                        <p className="text-[9px] md:text-[11px] text-secondary-400 font-bold uppercase tracking-widest mt-0.5 md:mt-1">@{otherUser?.username}</p>
+                        <p className="font-black text-secondary-900 dark:text-white text-base md:text-[18px] leading-tight group-hover:text-primary-600 transition-colors tracking-tight">{otherUser?.name}</p>
+                        <p className="text-[10px] md:text-xs text-secondary-400 font-bold uppercase tracking-widest mt-1">Active Now</p>
                     </div>
                 </Link>
               </div>
-              <div className="flex items-center gap-1">
-                <button title="Conversation Info" className="p-2 md:p-2.5 text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-xl transition-all">
-                    <Info className="w-4.5 h-4.5 md:w-5 md:h-5" />
+              <div className="flex items-center gap-2">
+                <button title="Phone" className="hidden sm:flex p-3 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
+                    <Phone className="w-5 h-5" />
                 </button>
-                <button title="More Actions" className="p-2 md:p-2.5 text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-xl transition-all">
-                    <MoreVertical className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                <button title="Info" className="p-3 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
+                    <Info className="w-5.5 h-5.5" />
                 </button>
               </div>
             </div>
@@ -561,28 +564,36 @@ export default function MessagesPage() {
                   <p className="text-xs md:text-sm text-secondary-400 font-medium">Be the first to say "Hello!"</p>
                 </div>
               ) : (
-                messages.map((msg) => {
+                messages.map((msg, idx) => {
                   const isMine = msg.senderId === (user?.id as string);
+                  const showAvatar = !isMine && (idx === 0 || messages[idx - 1].senderId !== msg.senderId);
+                  
                   return (
-                    <div key={msg.id} className={cn('flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300', isMine ? 'items-end' : 'items-start')}>
-                      <div className={cn('flex max-w-[90%] sm:max-w-[75%]', isMine ? 'flex-row-reverse' : 'flex-row')}>
+                    <div key={msg.id} className={cn('flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500', isMine ? 'items-end' : 'items-start', idx > 0 && messages[idx-1].senderId === msg.senderId ? 'mt-1' : 'mt-6')}>
+                      <div className={cn('flex max-w-[85%] sm:max-w-[70%]', isMine ? 'flex-row-reverse' : 'flex-row')}>
                         {!isMine && (
-                          <Link href={`/profile/${msg.sender.username}`} className="shrink-0 self-end mb-1 mr-2 md:mr-3 transition-transform hover:scale-110">
-                            <Avatar src={msg.sender.avatar ?? undefined} name={msg.sender.name} size="sm" className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl border-2 border-white dark:border-secondary-900 shadow-sm" />
-                          </Link>
+                          <div className="w-10 md:w-12 shrink-0 self-end mb-1">
+                            {showAvatar ? (
+                                <Link href={`/profile/${msg.sender.username}`} className="transition-transform hover:scale-110 block">
+                                    <Avatar src={msg.sender.avatar ?? undefined} name={msg.sender.name} size="sm" className="w-8 h-8 md:w-9 md:h-9 rounded-full border-2 border-white dark:border-secondary-900 shadow-sm" />
+                                </Link>
+                            ) : <div className="w-8 h-8 md:w-9 md:h-9" />}
+                          </div>
                         )}
                         <div className="flex flex-col">
                           <div className={cn(
-                            'px-3 md:px-4 py-2 md:py-3 rounded-xl md:rounded-2xl text-[13px] md:text-sm leading-relaxed shadow-sm font-medium',
+                            'px-4 md:px-5 py-3 md:py-3.5 text-[14px] md:text-[15px] leading-relaxed shadow-sm font-medium transition-all hover:brightness-[0.98]',
                             isMine
-                              ? 'bg-gradient-to-br from-primary-500 to-indigo-600 text-white rounded-br-none font-semibold'
-                              : 'bg-white dark:bg-secondary-900 text-secondary-800 dark:text-secondary-200 rounded-bl-none border border-secondary-100 dark:border-secondary-800 shadow-secondary-100/50 dark:shadow-none'
+                              ? 'bg-gradient-to-br from-primary-500 to-indigo-600 text-white rounded-[1.4rem] rounded-br-[0.3rem] font-semibold'
+                              : 'bg-[#f0f2f5] dark:bg-secondary-800 text-secondary-900 dark:text-secondary-100 rounded-[1.4rem] rounded-bl-[0.3rem] shadow-secondary-100/50 dark:shadow-none'
                           )}>
                             {msg.content}
                           </div>
-                          <p className={cn('text-[8px] md:text-[9px] text-secondary-400 mt-1.5 md:mt-2 font-black uppercase tracking-widest px-1', isMine ? 'text-right' : 'text-left')}>
-                            {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                          </p>
+                          {(idx === messages.length - 1 || messages[idx + 1].senderId !== msg.senderId) && (
+                              <p className={cn('text-[9px] text-secondary-400 mt-2 font-bold uppercase tracking-widest px-1 opacity-70', isMine ? 'text-right' : 'text-left')}>
+                                {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                              </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -606,33 +617,52 @@ export default function MessagesPage() {
                 </div>
             )}
 
-            {/* Input */}
-            <div className="px-3 md:px-4 py-2.5 md:py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0 bg-white dark:bg-secondary-950">
-              <form onSubmit={handleSend} className="flex items-end gap-2 max-w-4xl mx-auto w-full">
-                <div className="flex-1 bg-secondary-50 dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-700 rounded-xl md:rounded-2xl px-3 md:px-4 py-2.5 md:py-3 ring-offset-white dark:ring-offset-secondary-950 transition-all focus-within:ring-2 ring-primary-500/20">
+            {/* Input - Instagram style Pill */}
+            <div className="px-4 md:px-6 py-4 md:py-6 border-t border-secondary-100 dark:border-secondary-800 shrink-0 bg-white dark:bg-secondary-950">
+              <form onSubmit={handleSend} className="flex items-center gap-3 max-w-5xl mx-auto w-full">
+                <div className="flex-1 flex items-center bg-secondary-50 dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-700 rounded-[2rem] px-4 md:px-6 py-2 md:py-2.5 transition-all focus-within:ring-2 ring-primary-500/20 group shadow-sm">
+                  <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors hidden sm:block">
+                    <Camera className="w-5 h-5" />
+                  </button>
                   <textarea
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e as any); }
                     }}
-                    placeholder="Type a message..."
+                    placeholder="Message..."
                     rows={1}
-                    className="w-full bg-transparent outline-none text-[13px] md:text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 resize-none max-h-32 font-medium"
+                    className="flex-1 bg-transparent outline-none text-[14px] md:text-base text-secondary-900 dark:text-secondary-100 placeholder:text-secondary-400 placeholder:font-medium resize-none max-h-32 py-2 px-2 md:px-3"
                   />
+                  <div className="flex items-center gap-1 md:gap-2">
+                    <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors">
+                        <Smile className="w-5 h-5" />
+                    </button>
+                    {!messageInput.trim() && (
+                        <>
+                            <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors">
+                                <Mic className="w-5 h-5" />
+                            </button>
+                            <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors">
+                                <ImageIcon className="w-5 h-5" />
+                            </button>
+                        </>
+                    )}
+                  </div>
                 </div>
-                <button
-                  type="submit"
-                  disabled={!messageInput.trim() || sending}
-                  className={cn(
-                    'w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all shrink-0',
-                    messageInput.trim()
-                      ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/25 active:scale-90 scale-100'
-                      : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-300 pointer-events-none'
-                  )}
-                >
-                  {sending ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" /> : <Send className="w-4 h-4 md:w-5 md:h-5" />}
-                </button>
+                
+                {messageInput.trim() && (
+                    <button
+                        type="submit"
+                        disabled={sending}
+                        className={cn(
+                            'text-primary-500 hover:text-primary-600 font-bold text-[15px] md:text-base px-3 transition-all active:scale-95',
+                            sending && 'opacity-50'
+                        )}
+                    >
+                        {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send'}
+                    </button>
+                )}
               </form>
             </div>
           </>

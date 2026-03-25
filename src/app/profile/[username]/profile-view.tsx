@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { FollowButton } from '@/components/profile/follow-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
-import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban } from 'lucide-react';
+import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare } from 'lucide-react';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
 import { useCreatePost } from '@/hooks/use-feed';
@@ -176,11 +176,19 @@ export default function ProfileView({ username }: { username: string }) {
                                         </Link>
                                     </div>
                                 ) : (
-                                    <FollowButton 
-                                        userId={profile.id} 
-                                        initialFollowing={profile.isFollowing} 
-                                        initialFollowerCount={profile._count?.followers || 0} 
-                                    />
+                                    <>
+                                        <FollowButton 
+                                            userId={profile.id} 
+                                            initialFollowing={profile.isFollowing} 
+                                            initialFollowerCount={profile._count?.followers || 0} 
+                                        />
+                                        <Link href={`/messages?userId=${profile.id}`}>
+                                            <Button variant="outline" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-secondary-50 transition-colors">
+                                                <MessageSquare className="w-3.5 h-3.5 mt-0.5" />
+                                                Message
+                                            </Button>
+                                        </Link>
+                                    </>
                                 )}
                                 <div className="flex items-center gap-2">
                                     <ActionIcon variant="outline" rounded="full" onClick={handleShareProfile} className="h-10 w-10 border-2">

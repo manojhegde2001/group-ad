@@ -96,7 +96,7 @@ export default function AdminSidebar({ userName }: AdminSidebarProps) {
       </nav>
 
       <div className="p-3">
-        <Link href="/" className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-400 hover:text-secondary-600 transition-colors">
+        <Link href={isAdminSubdomain ? "https://groupad.net/" : "/"} className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-400 hover:text-secondary-600 transition-colors">
           ← Back to App
         </Link>
       </div>

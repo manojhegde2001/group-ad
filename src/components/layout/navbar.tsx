@@ -251,7 +251,7 @@ export function Navbar() {
                       </Link>
                       
                       {(user as any).userType === 'ADMIN' && (
-                      <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                      <Link href="https://admin.groupad.net/" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
                           <ShieldCheck className="w-5 h-5" /> Admin Panel
                       </Link>
                       )}
@@ -315,7 +315,7 @@ export function Navbar() {
                           ) : null}
                           
                           {(user as any).userType === 'ADMIN' && (
-                              <Link href="/admin" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
+                              <Link href="https://admin.groupad.net/" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
                                   <ShieldCheck className="w-5 h-5" /> Admin Panel
                               </Link>
                           )}
@@ -402,7 +402,7 @@ export function Navbar() {
                         <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Account</p>
                         <DrawerLink href={`/profile/${(user as any).username || ''}`} icon={User} label="My Profile" onClick={() => setMobileDrawerOpen(false)} active={pathname === `/profile/${(user as any).username}`} />
                         {(user as any)?.userType === 'ADMIN' && (
-                             <DrawerLink href="/admin" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
+                             <DrawerLink href="https://admin.groupad.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
                         )}
                         <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
                     </div>

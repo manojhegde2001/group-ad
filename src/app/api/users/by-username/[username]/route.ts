@@ -27,12 +27,22 @@ export async function GET(
                 userType: true,
                 verificationStatus: true,
                 createdAt: true,
-                phone: true, // Fetch phone but conditionally return it
+                phone: true, 
             },
         });
 
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        // Record profile view for analytics
+        if (user.id) {
+            prisma.profileView.create({
+                data: {
+                    viewedId: user.id,
+                    viewerId: currentUserId,
+                }
+            }).catch(err => console.error('Error recording profile view:', err));
         }
 
         // Get counts, follow status, and block status separately

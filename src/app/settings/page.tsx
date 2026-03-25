@@ -7,21 +7,23 @@ import {
   User, Shield, Lock, Bell, Globe, CheckCircle,
   Save, LogOut, ChevronRight, MapPin, Link2, CreditCard,
   Building2, Briefcase, Users, Layout, Map, Compass, Trash2,
-  Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter
+  Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
 import toast from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
 import { useAuthModal } from '@/hooks/use-modal';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 
-type Tab = 'profile' | 'security' | 'privacy' | 'notifications';
+type Tab = 'profile' | 'security' | 'privacy' | 'notifications' | 'analytics';
 
 const TABS: { key: Tab; label: string; icon: any; accent: string }[] = [
   { key: 'profile', label: 'My Profile', icon: User, accent: 'text-violet-500 bg-violet-100 dark:bg-violet-900/30' },
   { key: 'security', label: 'Security', icon: Lock, accent: 'text-blue-500 bg-blue-100 dark:bg-blue-900/30' },
   { key: 'privacy', label: 'Privacy', icon: Globe, accent: 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30' },
   { key: 'notifications', label: 'Alerts', icon: Bell, accent: 'text-amber-500 bg-amber-100 dark:bg-amber-900/30' },
+  { key: 'analytics', label: 'Analytics', icon: BarChart3, accent: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/30' },
 ];
 
 export default function SettingsPage() {
@@ -449,6 +451,20 @@ export default function SettingsPage() {
                 </div>
                 <div className="pt-6"><Button onClick={() => toast.success('Preferences saved!')} className="px-8 rounded-2xl font-black uppercase text-xs">Save Preferences</Button></div>
               </SettingsCard>
+            )}
+
+            {tab === 'analytics' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
+                  <div>
+                    <h2 className="text-xl font-black text-secondary-900 dark:text-white tracking-tight">Impact Analytics</h2>
+                    <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest mt-0.5">Performance Intelligence</p>
+                  </div>
+                  <BarChart3 className="w-8 h-8 text-indigo-500 opacity-20" />
+                </div>
+                
+                <AnalyticsDashboard userType={profile?.userType} />
+              </div>
             )}
           </main>
         </div>

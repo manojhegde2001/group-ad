@@ -263,6 +263,10 @@ model User {
   blocksSent          Block[]      @relation("BlocksSent")
   blocksReceived      Block[]      @relation("BlocksReceived")
 
+  profileViewsReceived ProfileView[] @relation("ViewedProfile")
+  profileViewsSent     ProfileView[] @relation("ViewerProfile")
+  postViews            PostView[]
+
   @@index([userType])
   @@index([verificationStatus])
   @@index([isProfileCompleted])
@@ -343,6 +347,7 @@ model Post {
   postComments PostComment[]
   bookmarks    Bookmark[]
   boardPosts   BoardPost[]
+  postViews    PostView[]
 
   @@index([userId])
   @@index([companyId])
@@ -712,4 +717,36 @@ model Block {
   @@unique([blockerId, blockedId])
   @@index([blockerId])
   @@index([blockedId])
+}
+
+model ProfileView {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  viewerId  String?  @db.ObjectId
+  viewer    User?    @relation("ViewerProfile", fields: [viewerId], references: [id])
+  
+  viewedId  String   @db.ObjectId
+  viewed    User     @relation("ViewedProfile", fields: [viewedId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@index([viewedId])
+  @@index([viewerId])
+  @@index([createdAt])
+}
+
+model PostView {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  viewerId  String?  @db.ObjectId
+  viewer    User?    @relation(fields: [viewerId], references: [id])
+  
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@index([viewerId])
+  @@index([createdAt])
 }

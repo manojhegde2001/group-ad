@@ -52,8 +52,18 @@ export async function GET(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    // Increment view count fire-and-forget
-    prisma.post.update({ where: { id: postId }, data: { views: { increment: 1 } } }).catch(() => { });
+    // Record post view for analytics (detailed + counter)
+    if (postId) {
+      Promise.all([
+        prisma.post.update({ where: { id: postId }, data: { views: { increment: 1 } } }),
+        prisma.postView.create({
+          data: {
+            postId: postId,
+            viewerId: currentUserId,
+          }
+        })
+      ]).catch((err) => console.error('Error recording post view:', err));
+    }
 
     const post = {
       ...(postRaw as any),

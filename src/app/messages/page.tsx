@@ -532,20 +532,15 @@ export default function MessagesPage() {
                 <Link href={`/profile/${otherUser?.username}`} className="flex items-center gap-3 md:gap-4 group">
                     <div className="relative">
                         <Avatar src={otherUser?.avatar ?? undefined} name={otherUser?.name || '?'} size="lg" className="w-11 h-11 md:w-14 md:h-14 border-2 border-white dark:border-secondary-900 group-hover:border-primary-200 transition-all shadow-md" />
-                        <div className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-secondary-950 rounded-full shadow-sm" />
                     </div>
                     <div>
                         <p className="font-black text-secondary-900 dark:text-white text-base md:text-[18px] leading-tight group-hover:text-primary-600 transition-colors tracking-tight">{otherUser?.name}</p>
-                        <p className="text-[10px] md:text-xs text-secondary-400 font-bold uppercase tracking-widest mt-1">Active Now</p>
                     </div>
                 </Link>
               </div>
               <div className="flex items-center gap-2">
                 <button title="Phone" className="hidden sm:flex p-3 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
                     <Phone className="w-5 h-5" />
-                </button>
-                <button title="Info" className="p-3 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
-                    <Info className="w-5.5 h-5.5" />
                 </button>
               </div>
             </div>
@@ -558,7 +553,6 @@ export default function MessagesPage() {
                 <div className="flex flex-col items-center justify-center py-12 md:py-16 gap-3 text-center animate-in fade-in duration-700">
                   <div className="relative mb-2">
                     <Avatar src={otherUser?.avatar ?? undefined} name={otherUser?.name || '?'} size="xl" className="w-16 h-16 md:w-20 md:h-20 shadow-xl" />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 md:w-5 md:h-5 bg-emerald-400 border-4 border-white dark:border-secondary-950 rounded-full" />
                   </div>
                   <p className="font-black text-lg md:text-xl text-secondary-900 dark:text-white uppercase tracking-tight">{otherUser?.name}</p>
                   <p className="text-xs md:text-sm text-secondary-400 font-medium">Be the first to say "Hello!"</p>

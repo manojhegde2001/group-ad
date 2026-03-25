@@ -1,105 +1,181 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  BarChart3, LayoutDashboard, Tags, Users, Building2, 
-  Plus, ShieldAlert, CalendarDays 
+import { signOut } from 'next-auth/react';
+import {
+  LayoutDashboard, BarChart3, Tags, Users, Building2,
+  ShieldAlert, CalendarDays, MapPin, Settings,
+  LogOut, ChevronRight, ExternalLink, ShieldCheck, Menu, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Avatar } from '@/components/ui/avatar';
 
 interface AdminSidebarProps {
   userName: string;
+  userEmail: string;
+  userAvatar?: string;
 }
 
-const MENU_ITEMS = [
-  { href: '/admin/analytics', label: 'Platform Analytics', icon: BarChart3 },
-  { href: '/admin/events', label: 'Events Dashboard', icon: LayoutDashboard },
-  { href: '/admin/categories', label: 'Manage Categories', icon: Tags },
-  { href: '/admin/users', label: 'Manage Users', icon: Users },
-  { href: '/admin/businesses', label: 'Manage Businesses', icon: Building2 },
-  { href: '/admin/events/create', label: 'Create Event', icon: Plus },
-  { href: '/admin/reports', label: 'Moderation Reports', icon: ShieldAlert, danger: true },
+const NAV_ITEMS = [
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/users', label: 'Users', icon: Users },
+  { href: '/businesses', label: 'Businesses', icon: Building2 },
+  { href: '/categories', label: 'Categories', icon: Tags },
+  { href: '/events', label: 'Events', icon: CalendarDays },
+  { href: '/venues', label: 'Venues', icon: MapPin },
+  { href: '/reports', label: 'Reports', icon: ShieldAlert, danger: true },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export default function AdminSidebar({ userName }: AdminSidebarProps) {
+export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [isAdminSubdomain, setIsAdminSubdomain] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsAdminSubdomain(window.location.hostname.startsWith('admin.'));
-    }
-  }, []);
-
-  const getHref = (href: string) => {
-    // If it's the external link to public events, don't touch it
-    if (href === '/events') return href;
-    
-    // If we are on the admin subdomain, paths shouldn't have the /admin prefix in the URL
-    if (isAdminSubdomain) {
-      return href.startsWith('/admin') ? href.replace('/admin', '') || '/' : href;
-    }
-    
-    // If on main domain, ensure /admin prefix exists
-    return href.startsWith('/admin') ? href : `/admin${href}`;
+  // On admin subdomain, internal paths are without /admin prefix
+  // (middleware rewrites / → /admin, /users → /admin/users, etc.)
+  // The pathname here is what Next.js sees internally, so still /admin/*
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/admin' || pathname === '/';
+    return pathname.startsWith(`/admin${href}`) || pathname.startsWith(href);
   };
 
-  return (
-    <aside className="w-60 shrink-0 bg-white dark:bg-secondary-900 border-r border-secondary-200 dark:border-secondary-800 flex flex-col">
-      <div className="px-5 py-4 border-b border-secondary-100 dark:border-secondary-800">
-        <span className="text-xs font-semibold text-secondary-400 uppercase tracking-wider">Admin Panel</span>
-        <p className="text-sm font-semibold text-secondary-800 dark:text-white mt-0.5 truncate">{userName}</p>
+  const getHref = (href: string) => {
+    if (typeof window === 'undefined') return href;
+    const isAdminSubdomain = window.location.hostname.startsWith('admin.');
+    if (isAdminSubdomain) return href; // subdomain: /users, /analytics, etc.
+    return `/admin${href === '/' ? '' : href}`; // main domain: /admin/users
+  };
+
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      {/* Brand */}
+      <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+            <ShieldCheck className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Group Ad</p>
+            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Admin Panel</p>
+          </div>
+        </div>
       </div>
-      
-      <nav className="flex-1 p-3 space-y-1">
-        {MENU_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const href = getHref(item.href);
-          // For active state, we check if the internal path matches
-          // (if on subdomain, pathname is /users, but it maps to /admin/users)
-          const isActive = isAdminSubdomain 
-            ? pathname === (item.href.replace('/admin', '') || '/') 
-            : pathname === item.href;
-          
+
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        {NAV_ITEMS.map(({ href, label, icon: Icon, danger }) => {
+          const active = isActive(href);
           return (
-            <Link 
-              key={item.href} 
-              href={href} 
+            <Link
+              key={href}
+              href={getHref(href)}
+              onClick={() => setMobileOpen(false)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                isActive 
-                  ? item.danger 
-                    ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/30"
-                    : "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 border border-primary-100 dark:border-primary-900/30 shadow-sm"
-                  : item.danger
-                    ? "text-secondary-700 dark:text-secondary-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-700 dark:hover:text-red-400 border border-transparent"
-                    : "text-secondary-700 dark:text-secondary-300 hover:bg-primary-50 dark:hover:bg-primary-900/10 hover:text-primary-700 dark:hover:text-primary-400 border border-transparent"
+                'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                active
+                  ? danger
+                    ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                    : 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400'
+                  : danger
+                    ? 'text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
               )}
             >
-              <Icon className={cn("w-4 h-4", isActive ? "" : "opacity-70 group-hover:opacity-100")} />
-              {item.label}
+              <Icon
+                className={cn(
+                  'w-4 h-4 shrink-0 transition-colors',
+                  active
+                    ? danger ? 'text-red-600 dark:text-red-400' : 'text-violet-600 dark:text-violet-400'
+                    : 'opacity-60 group-hover:opacity-100'
+                )}
+              />
+              <span className="flex-1 truncate">{label}</span>
+              {active && (
+                <div className={cn(
+                  'w-1.5 h-1.5 rounded-full shrink-0',
+                  danger ? 'bg-red-500' : 'bg-violet-500'
+                )} />
+              )}
             </Link>
           );
         })}
-        
-        <div className="pt-4 mt-4 border-t border-secondary-100 dark:border-secondary-800">
-          <Link 
-            href="/events" 
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-colors"
-          >
-            <CalendarDays className="w-4 h-4 opacity-70" /> 
-            View Public Events
-          </Link>
-        </div>
       </nav>
 
-      <div className="p-3">
-        <Link href={isAdminSubdomain ? "https://groupad.net/" : "/"} className="flex items-center gap-2 px-3 py-2 text-xs text-secondary-400 hover:text-secondary-600 transition-colors">
-          ← Back to App
+      {/* Divider */}
+      <div className="mx-4 border-t border-slate-100 dark:border-slate-800" />
+
+      {/* Footer links */}
+      <div className="p-3 space-y-0.5">
+        <Link
+          href="https://www.groupad.net"
+          target="_blank"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 transition-all"
+        >
+          <ExternalLink className="w-4 h-4 shrink-0 opacity-60" />
+          <span className="flex-1">View Live Site</span>
         </Link>
+        <button
+          onClick={() => signOut({ callbackUrl: 'https://admin.groupad.net/login' })}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 transition-all"
+        >
+          <LogOut className="w-4 h-4 shrink-0 opacity-60" />
+          <span className="flex-1 text-left">Sign Out</span>
+        </button>
       </div>
-    </aside>
+
+      {/* User avatar / identity */}
+      <div className="px-4 py-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-3 px-2">
+          <Avatar
+            src={userAvatar}
+            name={userName}
+            className="w-8 h-8 rounded-full shrink-0 ring-2 ring-slate-100 dark:ring-slate-800"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate leading-tight">{userName}</p>
+            <p className="text-[11px] text-slate-400 truncate">{userEmail}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile toggle */}
+      <button
+        className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-slate-900 rounded-lg shadow-md border border-slate-200 dark:border-slate-800 lg:hidden"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label="Toggle menu"
+      >
+        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — mobile drawer */}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 w-60 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 shadow-xl transition-transform duration-300 lg:hidden',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar — desktop static */}
+      <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 h-screen sticky top-0">
+        <SidebarContent />
+      </aside>
+    </>
   );
 }

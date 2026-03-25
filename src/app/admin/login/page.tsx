@@ -28,8 +28,9 @@ export default function AdminLoginPage() {
       if (result?.error) {
         setError('Invalid credentials. Please try again.');
       } else {
-        // Redirect to admin dashboard root — middleware will handle the rewrite
-        router.push('/');
+        // On localhost go to /admin directly; on admin subdomain / is rewritten to /admin
+        const isLocalhost = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+        router.push(isLocalhost ? '/admin' : '/');
         router.refresh();
       }
     } catch {

@@ -1,16 +1,20 @@
 import { Server as NetServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
-let io: SocketIOServer | undefined;
+// Use globalThis to store the Socket.io instance
+// This ensures it persists across Next.js reloads and is shared across the app context
+declare global {
+    var io: SocketIOServer | undefined;
+}
 
 export const initSocket = (server: NetServer) => {
-    if (!io) {
-        io = new SocketIOServer(server, {
+    if (!global.io) {
+        global.io = new SocketIOServer(server, {
             path: '/api/socket/io',
             addTrailingSlash: false,
         });
 
-        io.on('connection', (socket) => {
+        global.io.on('connection', (socket) => {
             console.log('Socket connected:', socket.id);
 
             socket.on('join-user', (userId: string) => {
@@ -33,7 +37,7 @@ export const initSocket = (server: NetServer) => {
             });
         });
     }
-    return io;
+    return global.io;
 };
 
-export const getIO = () => io;
+export const getIO = () => global.io;

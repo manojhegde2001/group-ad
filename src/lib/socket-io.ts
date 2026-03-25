@@ -32,6 +32,14 @@ export const initSocket = (server: NetServer) => {
                 console.log(`Socket ${socket.id} left conversation room: conv:${conversationId}`);
             });
 
+            socket.on('typing', ({ conversationId, userId, name }: { conversationId: string; userId: string; name: string }) => {
+                socket.to(`conv:${conversationId}`).emit('user_typing', { conversationId, userId, name });
+            });
+
+            socket.on('stop_typing', ({ conversationId, userId }: { conversationId: string; userId: string }) => {
+                socket.to(`conv:${conversationId}`).emit('user_stop_typing', { conversationId, userId });
+            });
+
             socket.on('disconnect', () => {
                 console.log('Socket disconnected:', socket.id);
             });

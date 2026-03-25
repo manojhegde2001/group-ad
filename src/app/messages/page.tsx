@@ -62,9 +62,14 @@ export default function MessagesPage() {
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollConvsRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Live state for other user typing
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState<string | null>(null);
   // We keep a slow poll as a fallback, but primary updates are live via socket
 
   // Filtered lists
@@ -153,34 +158,31 @@ export default function MessagesPage() {
     } catch { /* silent */ }
   }, []);
 
-  // Handle Room Joining and Live Messages
+  // Join Room & Live Listeners
   useEffect(() => {
-    if (!socket || !selectedConvId) return;
+    if (!socket || !isConnected || !selectedConvId) return;
 
-    // Join the conversation room
+    // Join the conversation room (Ensures re-join on reconnect)
     socket.emit('join-conversation', selectedConvId);
 
     const onNewMessage = (msg: Message) => {
+      console.log('💬 Socket: new_message received', msg.id);
       if (msg.conversationId === selectedConvId) {
         setMessages((prev) => {
-          // Prevent duplicates (optimistic UI vs real message)
           if (prev.some(m => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
-        
-        // Mark as read instantly on the backend if we are in the chat
         markConversationRead(selectedConvId);
+        setIsOtherTyping(false); // Stop typing immediately when msg arrives
       }
       
-      // Update conversations list regardless of which one was selected
+      // Update sidebar
       setConversations((prev) => {
         const existing = prev.find(c => c.id === msg.conversationId);
         if (!existing) {
-          // If a new conversation starts, we might need to refresh the whole list
           fetchConversations();
           return prev;
         }
-
         return prev.map(c => c.id === msg.conversationId 
           ? { ...c, lastMessage: { content: msg.content, sender: msg.sender }, lastMessageAt: msg.createdAt, unreadCount: msg.conversationId === selectedConvId ? 0 : c.unreadCount + 1 } 
           : c
@@ -188,13 +190,51 @@ export default function MessagesPage() {
       });
     };
 
+    const onUserTyping = (data: { conversationId: string; userId: string; name: string }) => {
+        if (data.conversationId === selectedConvId && data.userId !== user?.id) {
+            setIsOtherTyping(true);
+            setTypingUser(data.name);
+        }
+    };
+
+    const onUserStopTyping = (data: { conversationId: string; userId: string }) => {
+        if (data.conversationId === selectedConvId && data.userId !== user?.id) {
+            setIsOtherTyping(false);
+        }
+    };
+
     socket.on('new_message', onNewMessage);
+    socket.on('user_typing', onUserTyping);
+    socket.on('user_stop_typing', onUserStopTyping);
 
     return () => {
       socket.emit('leave-conversation', selectedConvId);
       socket.off('new_message', onNewMessage);
+      socket.off('user_typing', onUserTyping);
+      socket.off('user_stop_typing', onUserStopTyping);
     };
-  }, [socket, selectedConvId, markConversationRead, fetchConversations]);
+  }, [socket, isConnected, selectedConvId, user?.id, markConversationRead, fetchConversations]);
+
+  // Handle Input Changes with Typing Emission
+  useEffect(() => {
+    if (!socket || !selectedConvId || !messageInput.trim()) {
+        if (socket && selectedConvId) {
+            socket.emit('stop_typing', { conversationId: selectedConvId, userId: user?.id });
+        }
+        return;
+    }
+
+    // Emit typing
+    socket.emit('typing', { conversationId: selectedConvId, userId: user?.id, name: user?.name });
+
+    // Set timeout to stop typing
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+        socket.emit('stop_typing', { conversationId: selectedConvId, userId: user?.id });
+    }, 3000);
+
+    return () => { if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current); };
+  }, [messageInput, socket, selectedConvId, user]);
 
   // Handle Global Notifications for other updates
   useEffect(() => {
@@ -241,7 +281,7 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ 
       behavior: isNewConv ? 'auto' : 'smooth' 
     });
-  }, [messages, selectedConvId]);
+  }, [messages, selectedConvId, isOtherTyping]);
 
   const startConversation = async (participantId: string) => {
     try {
@@ -551,6 +591,20 @@ export default function MessagesPage() {
               )}
               <div ref={messagesEndRef} />
             </div>
+
+            {/* Typing Indicator */}
+            {isOtherTyping && (
+                <div className="px-4 py-1 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex items-center gap-2 text-[11px] text-secondary-400 font-bold uppercase tracking-widest italic">
+                        <div className="flex gap-1">
+                            <span className="w-1 h-1 bg-primary-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                            <span className="w-1 h-1 bg-primary-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                            <span className="w-1 h-1 bg-primary-500 rounded-full animate-bounce"></span>
+                        </div>
+                        {typingUser || otherUser?.name} is typing...
+                    </div>
+                </div>
+            )}
 
             {/* Input */}
             <div className="px-3 md:px-4 py-2.5 md:py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0 bg-white dark:bg-secondary-950">

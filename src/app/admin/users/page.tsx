@@ -1,8 +1,7 @@
 'use client';
-
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/use-auth';
-import { redirect } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -16,7 +15,11 @@ import {
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import BulkImportDialog from '@/components/admin/BulkImportDialog';
+
+const BulkImportDialog = dynamic(() => import('@/components/admin/BulkImportDialog'), {
+  ssr: false,
+  loading: () => null
+});
 
 interface AdminUser {
   id: string;
@@ -91,8 +94,11 @@ export default function AdminUsersPage() {
 
   if (authLoading) return null;
   if (!isAuthenticated || (currentUser as any)?.userType !== 'ADMIN') {
-    redirect('/');
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      </div>
+    );
   }
 
   return (

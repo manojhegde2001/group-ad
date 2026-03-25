@@ -20,13 +20,21 @@ export async function PATCH(
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    // Determine target userType if not provided
+    let targetUserType = userType;
+    if (!targetUserType && status === 'UNVERIFIED') {
+        targetUserType = 'INDIVIDUAL';
+    } else if (!targetUserType && status === 'VERIFIED') {
+        targetUserType = 'BUSINESS';
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         verificationStatus: status,
-        ...(userType ? { userType } : {}),
-        ...(status === 'VERIFIED' ? { verifiedAt: new Date() } : {}),
+        ...(targetUserType ? { userType: targetUserType as any } : {}),
         verificationNote: note,
+        ...(status === 'VERIFIED' ? { verifiedAt: new Date() } : { verifiedAt: null }),
       },
     });
 

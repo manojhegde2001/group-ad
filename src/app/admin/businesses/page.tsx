@@ -1,13 +1,16 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { redirect } from 'next/navigation';
 import { Card } from '@/components/ui/card';
-import { Check, X, Loader2, Building2, User, Calendar, Globe, MapPin, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { 
+  Check, X, Loader2, Building2, User, Calendar, Globe, 
+  MapPin, ShieldCheck, ShieldAlert, Search, RefreshCcw,
+  UserPlus, UserMinus, ShieldQuestion, ExternalLink
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
+import { Input, Button, Badge } from 'rizzui';
 
 interface VerificationRequest {
   id: string;
@@ -36,6 +39,11 @@ export default function AdminBusinessesPage() {
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Search States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -80,6 +88,52 @@ export default function AdminBusinessesPage() {
     }
   };
 
+  const handleGlobalSearch = async () => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/admin/users?q=${encodeURIComponent(searchTerm)}`);
+      const data = await res.json();
+      if (res.ok) {
+        setSearchResults(data.users || []);
+      }
+    } catch {
+      toast.error('Search failed');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleManualVerify = async (userId: string, targetStatus: 'VERIFIED' | 'UNVERIFIED') => {
+    setProcessingId(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/verify`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: targetStatus,
+          userType: targetStatus === 'VERIFIED' ? 'BUSINESS' : 'INDIVIDUAL'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        // Refresh both search and requests if needed
+        handleGlobalSearch();
+        fetchRequests();
+      } else {
+        toast.error(data.error || 'Update failed');
+      }
+    } catch {
+      toast.error('An error occurred');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -97,12 +151,110 @@ export default function AdminBusinessesPage() {
     <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
       <div>
         <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase">
-          Business Verification
+          Business Center
         </h1>
         <p className="text-secondary-500 font-medium mt-1 uppercase text-xs tracking-widest">
-          Review and manage professional account requests
+          Verify professionals, manage business profiles, and handle requests
         </p>
       </div>
+
+      {/* Global Search & Verify Section */}
+      <Card className="p-8 border-2 border-primary-100 dark:border-primary-900/30 rounded-[2rem] shadow-sm bg-gradient-to-br from-white to-primary-50/20 dark:from-secondary-950 dark:to-primary-900/5">
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div className="flex items-center gap-4">
+               <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/40 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400">
+                  <Search className="w-6 h-6" />
+               </div>
+               <div>
+                  <h3 className="font-black text-lg text-secondary-900 dark:text-white uppercase tracking-tight">Search & Verify</h3>
+                  <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest">Find any user to instantly manage verification</p>
+               </div>
+            </div>
+            <div className="flex flex-1 max-w-md gap-3">
+               <Input 
+                 placeholder="Name, Username, or Email..." 
+                 className="flex-1 !rounded-2xl"
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 onKeyDown={(e) => e.key === 'Enter' && handleGlobalSearch()}
+               />
+               <Button 
+                 onClick={handleGlobalSearch} 
+                 isLoading={searching}
+                 className="!rounded-2xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black"
+               >
+                  Search
+               </Button>
+            </div>
+         </div>
+
+         {searchResults.length > 0 && (
+           <div className="border border-secondary-100 dark:border-secondary-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-secondary-900">
+              <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                    <thead>
+                       <tr className="bg-secondary-50 dark:bg-secondary-800/50 border-b border-secondary-100 dark:border-secondary-800">
+                          <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-secondary-400">User Details</th>
+                          <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-secondary-400">Current Status</th>
+                          <th className="px-6 py-4 text-right text-[9px] font-black uppercase tracking-widest text-secondary-400">Actions</th>
+                       </tr>
+                    </thead>
+                    <tbody className="divide-y divide-secondary-50 dark:divide-secondary-800">
+                       {searchResults.map((user) => (
+                          <tr key={user.id} className="hover:bg-secondary-50/50 dark:hover:bg-secondary-800/20 transition-colors">
+                             <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                   <Avatar src={user.avatar} name={user.name} size="sm" className="w-10 h-10 rounded-xl" />
+                                   <div>
+                                      <p className="font-black text-xs text-secondary-900 dark:text-white uppercase">{user.name}</p>
+                                      <p className="text-[10px] text-secondary-500 font-medium tracking-tight">@{user.username}</p>
+                                   </div>
+                                </div>
+                             </td>
+                             <td className="px-6 py-4">
+                                <div className="flex gap-2">
+                                   <Badge variant="flat" color={user.userType === 'BUSINESS' ? 'primary' : 'secondary'} className="rounded-lg !text-[8px] font-black uppercase tracking-widest">
+                                      {user.userType}
+                                   </Badge>
+                                   <Badge variant="flat" color={user.verificationStatus === 'VERIFIED' ? 'success' : 'secondary'} className="rounded-lg !text-[8px] font-black uppercase tracking-widest">
+                                      {user.verificationStatus}
+                                   </Badge>
+                                </div>
+                             </td>
+                             <td className="px-6 py-4 text-right">
+                                {user.verificationStatus === 'VERIFIED' ? (
+                                   <Button 
+                                     size="sm" 
+                                     color="danger" 
+                                     variant="flat" 
+                                     onClick={() => handleManualVerify(user.id, 'UNVERIFIED')}
+                                     disabled={processingId === user.id}
+                                     className="rounded-xl font-black !text-[10px] uppercase tracking-widest"
+                                   >
+                                      <UserMinus className="w-3.5 h-3.5 mr-1.5" />
+                                      Unverify
+                                   </Button>
+                                ) : (
+                                   <Button 
+                                     size="sm" 
+                                     variant="solid" 
+                                     onClick={() => handleManualVerify(user.id, 'VERIFIED')}
+                                     disabled={processingId === user.id}
+                                     className="rounded-xl font-black !text-[10px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-600 text-white"
+                                   >
+                                      <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                                      Verify Now
+                                   </Button>
+                                )}
+                             </td>
+                          </tr>
+                       ))}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+         )}
+      </Card>
 
       <div className="grid grid-cols-1 gap-6">
         <Card className="p-8 border-2 border-secondary-100 dark:border-secondary-800 rounded-[2rem] shadow-sm overflow-hidden">

@@ -336,6 +336,28 @@ export default function SettingsPage() {
                   </div>
                 )}
 
+                {profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'UNVERIFIED' && !showBusinessForm && (
+                  <div className="p-6 border-2 border-dashed border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shrink-0"><CheckCircle className="w-8 h-8" /></div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Get Verified</h3>
+                      <p className="text-sm text-secondary-500 font-medium mt-1">Submit your business details for official verification.</p>
+                    </div>
+                    <Button variant="outline" onClick={() => setShowBusinessForm(true)} rounded="pill" className="font-black uppercase tracking-widest text-xs h-11 px-8">Verify Now</Button>
+                  </div>
+                )}
+
+                {profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'PENDING' && (
+                  <div className="p-6 border-2 border-dashed border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-white shadow-lg shrink-0"><Shield className="w-8 h-8" /></div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Verification Pending</h3>
+                      <p className="text-sm text-secondary-500 font-medium mt-1">Our team is reviewing your business details. We'll notify you soon.</p>
+                    </div>
+                    <div className="px-6 py-2 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-amber-200 dark:border-amber-800">Under Review</div>
+                  </div>
+                )}
+
                 {showBusinessForm && (
                   <SettingsCard className="p-6 sm:p-8 border-2 border-indigo-500/20 animate-in slide-in-from-bottom-4">
                     <div className="flex items-center justify-between mb-8">

@@ -27,6 +27,14 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { userType: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     // Check for existing pending request
     const existingRequest = await prisma.userTypeChangeRequest.findFirst({
@@ -44,7 +52,7 @@ export async function POST(request: NextRequest) {
     const typeChangeRequest = await prisma.userTypeChangeRequest.create({
       data: {
         userId,
-        fromType: 'INDIVIDUAL',
+        fromType: user.userType,
         toType: 'BUSINESS',
         companyName,
         industry,
@@ -58,12 +66,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Immediately update user type to BUSINESS (but verificationStatus stays UNVERIFIED until approved)
+    // Update user type and set verificationStatus to PENDING
     await prisma.user.update({
       where: { id: userId },
       data: {
         userType: 'BUSINESS',
-        verificationStatus: 'PENDING', // Set to PENDING since they just requested verification
+        verificationStatus: 'PENDING',
         companyName,
         categoryId,
         industry,

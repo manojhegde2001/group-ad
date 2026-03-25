@@ -18,7 +18,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(reports);
+    return NextResponse.json({ reports });
   } catch (error) {
     console.error('Admin reports error:', error);
     return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 });

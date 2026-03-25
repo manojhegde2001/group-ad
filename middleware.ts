@@ -30,15 +30,25 @@ export async function middleware(req: NextRequest) {
   }
 
   // 4. Authentication Logic
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET })) as any;
   const isAuthRoute = pathname.startsWith('/dashboard') || 
                       pathname.startsWith('/profile') || 
                       pathname.startsWith('/events') ||
                       pathname.startsWith('/admin') ||
                       pathname.startsWith('/settings');
 
+  // If on admin subdomain, we MUST have an ADMIN token
+  if (isAdminSubdomain) {
+    if (!token || token.userType !== 'ADMIN') {
+      const loginUrl = new URL('https://www.groupad.net/', req.url);
+      loginUrl.searchParams.set('auth', 'required');
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // General auth routes on main domain
   if (isAuthRoute && !token) {
-    const loginUrl = new URL('/', req.url);
+    const loginUrl = new URL('https://www.groupad.net/', req.url);
     loginUrl.searchParams.set('auth', 'required');
     return NextResponse.redirect(loginUrl);
   }

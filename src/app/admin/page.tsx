@@ -26,7 +26,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (!loading && (!isAuthenticated || (user as any)?.userType !== 'ADMIN')) {
-    redirect('/');
+    redirect('https://www.groupad.net/');
   }
 
   const statCards = stats

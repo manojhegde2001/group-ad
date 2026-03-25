@@ -1,9 +1,19 @@
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+    // Allow the login page to render without auth — middleware sets this header
+    const headersList = await headers();
+    const isLoginPage = headersList.get('x-is-admin-login') === '1';
+
+    if (isLoginPage) {
+        // Render login page with no chrome/sidebar
+        return <>{children}</>;
+    }
+
     const session = await auth();
     if (!session?.user?.id) redirect('/admin/login');
 

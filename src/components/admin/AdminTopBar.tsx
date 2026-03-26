@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Bell, Search, ChevronRight, Settings, LogOut, User, Clock, ShieldAlert, Activity, Building2, CalendarDays } from 'lucide-react';
+import { Bell, Search, Settings, LogOut, User, Clock, ShieldAlert, Activity, Building2, CalendarDays, LayoutDashboard } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { ActionIcon } from '@/components/ui/action-icon';
@@ -38,14 +38,7 @@ const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
 });
 
-function getBreadcrumbs(pathname: string) {
-  const label = ROUTE_LABELS[pathname] ?? 'Admin';
-  if (pathname === '/admin') return [{ label: 'Dashboard', href: '/admin' }];
-  return [
-    { label: 'Admin', href: '/admin' },
-    { label, href: pathname },
-  ];
-}
+
 
 export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) {
   const pathname = usePathname();
@@ -57,8 +50,7 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
   const [notifCount, setNotifCount] = useState(0);
   const [loadingNotifs, setLoadingNotifs] = useState(true);
 
-  const crumbs = getBreadcrumbs(pathname);
-  const currentPage = crumbs[crumbs.length - 1].label;
+  const currentPage = ROUTE_LABELS[pathname] ?? 'Admin';
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -85,14 +77,28 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
        return;
     }
     setSearching(true);
+    
+    // Local Menu Search
+    const lowerVal = val.toLowerCase();
+    const menuResults = Object.entries(ROUTE_LABELS)
+      .filter(([path, label]) => label.toLowerCase().includes(lowerVal))
+      .map(([path, label]) => ({
+        id: `menu-${path}`,
+        type: 'menu',
+        title: label,
+        subtitle: 'Navigation Menu',
+        href: path,
+      }));
+
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
       try {
          const res = await fetch(`/api/admin/search?q=${encodeURIComponent(val)}`);
          const data = await res.json();
-         setSearchResults(data.results || []);
+         setSearchResults([...menuResults, ...(data.results || [])]);
       } catch (err) {
          console.error('Search failed');
+         setSearchResults(menuResults);
       } finally {
          setSearching(false);
       }
@@ -108,34 +114,8 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
       {/* Brand & Breadcrumb Area */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
         {/* Logo - Always visible */}
-        <Link href="/admin" className="flex items-center gap-2 shrink-0 transition-all hover:scale-105">
-           <div className="w-10 h-10 flex items-center justify-center">
-             <Logo iconOnly className="w-8 h-8 object-contain" />
-           </div>
-           <span className="hidden sm:inline-block font-black text-slate-900 dark:text-white tracking-tight text-sm">Console</span>
-        </Link>
 
-        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2 hidden lg:block" />
 
-        {/* Breadcrumb - Desktop */}
-        <div className="flex items-center gap-1.5 min-w-0 lg:flex hidden">
-          {crumbs.map((crumb, i) => (
-            <div key={crumb.href} className="flex items-center gap-1.5">
-              {i > 0 && <ChevronRight className="w-3 h-3 text-slate-400" />}
-              <Link
-                href={crumb.href.startsWith('/admin') ? crumb.href : `/admin${crumb.href}`}
-                className={cn(
-                  'text-sm transition-colors hover:text-primary',
-                  i === crumbs.length - 1
-                    ? 'font-semibold text-slate-900 dark:text-white'
-                    : 'text-slate-400'
-                )}
-              >
-                {crumb.label}
-              </Link>
-            </div>
-          ))}
-        </div>
         
         {/* Mobile Page Title */}
         <div className="lg:hidden pl-8">
@@ -201,7 +181,7 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
                            className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 group/link transition-all"
                         >
                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                             {res.type === 'user' ? <User className="w-4 h-4 text-primary" /> : res.type === 'business' ? <Building2 className="w-4 h-4 text-violet-500" /> : <CalendarDays className="w-4 h-4 text-emerald-500" />}
+                             {res.type === 'menu' ? <LayoutDashboard className="w-4 h-4 text-sky-500" /> : res.type === 'user' ? <User className="w-4 h-4 text-primary" /> : res.type === 'business' ? <Building2 className="w-4 h-4 text-violet-500" /> : <CalendarDays className="w-4 h-4 text-emerald-500" />}
                            </div>
                            <div className="flex-1 min-w-0">
                               <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{res.title}</p>

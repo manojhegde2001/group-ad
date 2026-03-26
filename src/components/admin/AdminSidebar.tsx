@@ -188,23 +188,6 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
         </button>
       </div>
 
-      {/* User identity footer */}
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-900/20">
-        <div className="flex items-center gap-3 px-1 py-1 rounded-xl group/user cursor-pointer">
-          <div className="relative shrink-0">
-             <Avatar
-               src={userAvatar}
-               name={userName}
-               className="w-9 h-9 rounded-full ring-2 ring-slate-100 dark:ring-slate-800 group-hover/user:ring-primary/30 transition-all border border-transparent dark:border-slate-700"
-             />
-             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-slate-900 dark:text-white truncate leading-none mb-0.5">{userName}</p>
-            <p className="text-[10px] font-medium text-slate-400 truncate tracking-tight">{userEmail}</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 

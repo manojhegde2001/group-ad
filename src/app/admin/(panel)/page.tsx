@@ -93,16 +93,8 @@ export default function AdminDashboardPage() {
         <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-primary/5 to-transparent" />
         <div className="relative z-10 flex items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Live</span>
-            </div>
             <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">Admin Dashboard</h1>
             <p className="text-slate-500 dark:text-white/40 text-sm mt-0.5 font-medium">Platform overview — Group Ad</p>
-          </div>
-          <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm">
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-slate-700 dark:text-white/70">v2.1</span>
           </div>
         </div>
       </div>

@@ -203,11 +203,6 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
             <p className="text-sm font-bold text-slate-900 dark:text-white truncate leading-none mb-0.5">{userName}</p>
             <p className="text-[10px] font-medium text-slate-400 truncate tracking-tight">{userEmail}</p>
           </div>
-          <div className="hidden xl:block">
-             <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
-               Pro
-             </span>
-          </div>
         </div>
       </div>
     </div>

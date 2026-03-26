@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Bell, Search, ChevronRight, Settings, LogOut, User, Clock, ShieldAlert } from 'lucide-react';
+import { Bell, Search, ChevronRight, Settings, LogOut, User, Clock, ShieldAlert, Activity, Building2, CalendarDays } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { Popover, Button, Text } from 'rizzui';
@@ -30,16 +30,11 @@ const ROUTE_LABELS: Record<string, string> = {
   '/admin/settings': 'Settings',
 };
 
+import { formatDistanceToNow } from 'date-fns';
+
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
 });
-
-const NOTIFICATIONS = [
-  { id: 1, title: 'New Business Request', message: 'Nexus Tech is waiting for verification', time: '2 mins ago', type: 'system', unread: true },
-  { id: 2, title: 'Security Alert', message: 'New admin login from Mumbai, India', time: '45 mins ago', type: 'security', unread: true },
-  { id: 3, title: 'Report Filed', message: 'User @john_doe reported a post for spam', time: '3 hours ago', type: 'activity', unread: false },
-  { id: 4, title: 'System Update', message: 'V2.4.0 successfully deployed to production', time: '5 hours ago', type: 'system', unread: false },
-];
 
 function getBreadcrumbs(pathname: string) {
   const label = ROUTE_LABELS[pathname] ?? 'Admin';
@@ -53,8 +48,53 @@ function getBreadcrumbs(pathname: string) {
 export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) {
   const pathname = usePathname();
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifCount, setNotifCount] = useState(0);
+  const [loadingNotifs, setLoadingNotifs] = useState(true);
+
   const crumbs = getBreadcrumbs(pathname);
   const currentPage = crumbs[crumbs.length - 1].label;
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      setLoadingNotifs(true);
+      const res = await fetch('/api/admin/notifications');
+      const data = await res.json();
+      setNotifications(data.notifications || []);
+      setNotifCount(data.count || 0);
+    } catch (err) {
+      console.error('Failed to fetch admin notifications');
+    } finally {
+      setLoadingNotifs(false);
+    }
+  };
+
+  // Search logic
+  const handleSearch = async (val: string) => {
+    setSearchQuery(val);
+    if (val.length < 2) {
+       setSearchResults([]);
+       return;
+    }
+    setSearching(true);
+    try {
+       const res = await fetch(`/api/admin/search?q=${encodeURIComponent(val)}`);
+       const data = await res.json();
+       setSearchResults(data.results || []);
+    } catch (err) {
+       console.error('Search failed');
+    } finally {
+       setSearching(false);
+    }
+  };
+
+  useState(() => {
+    fetchNotifications();
+  });
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shrink-0 transition-colors duration-300">
@@ -96,49 +136,74 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
 
       {/* Right Actions Area */}
       <div className="flex items-center gap-3">
-        {/* Search - Desktop with Mockup Functionality */}
+        {/* Search - Desktop with Real Functionality */}
         <Popover placement="bottom-start" showArrow={false}>
           <Popover.Trigger>
             <div
-              className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-200 cursor-text ${
+              className={cn(
+                "hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-200 cursor-text",
                 searchFocused
                   ? 'bg-white dark:bg-slate-800 border-primary shadow-lg shadow-primary/5 w-64'
                   : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 w-48'
-              }`}
+              )}
             >
               <Search className={cn("w-3.5 h-3.5 shrink-0 transition-colors", searchFocused ? "text-primary" : "text-slate-400")} />
               <input
                 type="text"
                 placeholder="Search console… (⌘K)"
+                value={searchQuery}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="bg-transparent text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none w-full"
               />
             </div>
           </Popover.Trigger>
-          <Popover.Content className="p-3 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800">
+          <Popover.Content className="p-3 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800">
              <div className="space-y-3">
-                <div>
-                   <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">
-                      Recent Searches
-                   </Text>
-                   <div className="space-y-1">
+                {searching ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Activity className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                ) : searchQuery.length < 2 ? (
+                  <div>
+                    <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">
+                      Quick Access
+                    </Text>
+                    <div className="space-y-1">
                       {['New users this week', 'Audit logs', 'Business verification'].map(q => (
                         <button key={q} className="w-full text-left px-2 py-1.5 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
                            <Clock className="w-3 h-3 opacity-50" /> {q}
                         </button>
                       ))}
-                   </div>
-                </div>
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                   <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">
-                      Quick Transitions
-                   </Text>
-                   <div className="grid grid-cols-2 gap-1.5">
-                      <Link href="/admin/users" className="px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-[10px] font-bold text-center hover:bg-primary/10 hover:text-primary transition-all">Users</Link>
-                      <Link href="/admin/reports" className="px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-[10px] font-bold text-center hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-all">Reports</Link>
-                   </div>
-                </div>
+                    </div>
+                  </div>
+                ) : searchResults.length === 0 ? (
+                  <div className="text-center py-4 text-xs text-slate-400 font-bold">No matches found for "{searchQuery}"</div>
+                ) : (
+                  <div>
+                    <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">
+                      Search Results
+                    </Text>
+                    <div className="space-y-0.5">
+                      {searchResults.map((res: any) => (
+                        <Link 
+                           key={res.id} 
+                           href={res.href || `/admin/${res.type === 'user' ? 'users' : res.type === 'business' ? 'businesses' : 'events'}`}
+                           className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 group/link transition-all"
+                        >
+                           <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                             {res.type === 'user' ? <User className="w-4 h-4 text-primary" /> : res.type === 'business' ? <Building2 className="w-4 h-4 text-violet-500" /> : <CalendarDays className="w-4 h-4 text-emerald-500" />}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{res.title}</p>
+                              <p className="text-[10px] text-slate-400 font-medium truncate">{res.subtitle}</p>
+                           </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
              </div>
           </Popover.Content>
         </Popover>
@@ -149,41 +214,67 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
         {/* Notifications */}
         <Popover placement="bottom-end">
           <Popover.Trigger>
-            <button className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+            <button 
+              onClick={fetchNotifications}
+              className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+            >
               <Bell className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm" />
+              {notifCount > 0 && (
+                <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center text-[9px] font-black text-white">
+                  {notifCount}
+                </span>
+              )}
             </button>
           </Popover.Trigger>
           <Popover.Content className="z-[100] p-0 w-[320px] sm:w-[380px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
-              <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-white">Notifications</h3>
-              <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-full">2 New</span>
+              <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-white">Live Alert Center</h3>
+              <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-full">
+                {notifCount} Active
+              </span>
             </div>
             <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-              {NOTIFICATIONS.map((n) => (
-                <div key={n.id} className={cn(
-                  "px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group/item",
-                  n.unread && "bg-primary/[0.02] dark:bg-primary/[0.01]"
-                )}>
-                  <div className="flex gap-4">
-                    <div className={cn(
-                      "w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border",
-                      n.type === 'system' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-500 border-blue-100 dark:border-blue-800" :
-                      n.type === 'security' ? "bg-red-50 dark:bg-red-900/20 text-red-500 border-red-100 dark:border-red-800" :
-                      "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 border-emerald-100 dark:border-emerald-800"
-                    )}>
-                      {n.type === 'system' ? <Settings className="w-5 h-5" /> : n.type === 'security' ? <ShieldAlert className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{n.title}</p>
-                        <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap ml-2">{n.time}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">{n.message}</p>
-                    </div>
-                  </div>
+              {loadingNotifs ? (
+                <div className="flex items-center justify-center py-10">
+                   <Activity className="w-6 h-6 animate-spin text-primary" />
                 </div>
-              ))}
+              ) : notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                  <Bell className="w-8 h-8 mb-2 opacity-20" />
+                  <p className="text-xs font-bold uppercase tracking-widest">No pending actions</p>
+                </div>
+              ) : (
+                notifications.map((n: any) => (
+                  <Link 
+                    key={n.id} 
+                    href={n.href}
+                    className={cn(
+                      "block px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group/item",
+                      n.unread && "bg-primary/[0.02]"
+                    )}
+                  >
+                    <div className="flex gap-4">
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border",
+                        n.type === 'system' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-500 border-blue-100 dark:border-blue-800" :
+                        n.type === 'security' ? "bg-red-50 dark:bg-red-900/20 text-red-500 border-red-100 dark:border-red-800" :
+                        "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 border-emerald-100 dark:border-emerald-800"
+                      )}>
+                        {n.type === 'system' ? <Settings className="w-5 h-5" /> : n.type === 'security' ? <ShieldAlert className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{n.title}</p>
+                          <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap ml-2">
+                             {formatDistanceToNow(new Date(n.time), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">{n.message}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
             </div>
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 text-center">
               <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View All Notifications</button>

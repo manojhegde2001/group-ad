@@ -9,18 +9,21 @@ interface LogoProps {
 }
 
 export default function Logo({ className, iconOnly = false }: LogoProps) {
+  // If iconOnly, we want a square logo (logo-small.svg)
+  // If not iconOnly, we want the full horizontal logo (logo-full.svg / logo-full-dark.svg)
+  
   return (
     <div className={cn(
-      'relative flex items-center justify-center group select-none',
-      iconOnly ? 'w-10 h-10' : 'w-32 h-10',
+      'relative flex items-center justify-center select-none shrink-0',
       className
     )}>
       {iconOnly ? (
         <Image
           src="/auth/logo-small.svg"
           alt="Logo"
-          fill
-          className="object-contain"
+          width={40}
+          height={40}
+          className="w-full h-full object-contain"
           priority
         />
       ) : (
@@ -28,15 +31,17 @@ export default function Logo({ className, iconOnly = false }: LogoProps) {
           <Image
             src="/auth/logo-full.svg"
             alt="Logo"
-            fill
-            className="object-contain dark:hidden"
+            width={160}
+            height={48}
+            className="w-auto h-full object-contain dark:hidden"
             priority
           />
           <Image
             src="/auth/logo-full-dark.svg"
             alt="Logo"
-            fill
-            className="object-contain hidden dark:block"
+            width={160}
+            height={48}
+            className="w-auto h-full object-contain hidden dark:block"
             priority
           />
         </>

@@ -85,7 +85,7 @@ export default function AdminVenuesPage() {
   };
 
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-8">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border-b border-secondary-200 dark:border-secondary-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-secondary-900 dark:text-white flex items-center gap-3">

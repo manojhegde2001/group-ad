@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Bell, Search, ChevronRight, Settings, LogOut, User, Clock } from 'lucide-react';
+import { Bell, Search, ChevronRight, Settings, LogOut, User, Clock, ShieldAlert } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { Popover, Button, Text } from 'rizzui';
@@ -29,6 +30,17 @@ const ROUTE_LABELS: Record<string, string> = {
   '/admin/settings': 'Settings',
 };
 
+const Logo = dynamic(() => import('../ui/logo'), {
+  ssr: false,
+});
+
+const NOTIFICATIONS = [
+  { id: 1, title: 'New Business Request', message: 'Nexus Tech is waiting for verification', time: '2 mins ago', type: 'system', unread: true },
+  { id: 2, title: 'Security Alert', message: 'New admin login from Mumbai, India', time: '45 mins ago', type: 'security', unread: true },
+  { id: 3, title: 'Report Filed', message: 'User @john_doe reported a post for spam', time: '3 hours ago', type: 'activity', unread: false },
+  { id: 4, title: 'System Update', message: 'V2.4.0 successfully deployed to production', time: '5 hours ago', type: 'system', unread: false },
+];
+
 function getBreadcrumbs(pathname: string) {
   const label = ROUTE_LABELS[pathname] ?? 'Admin';
   if (pathname === '/admin') return [{ label: 'Dashboard', href: '/admin' }];
@@ -49,10 +61,8 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
       {/* Brand & Breadcrumb Area */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
         {/* Logo - Always visible */}
-        <Link href="/admin" className="flex items-center gap-2 shrink-0">
-           <div className="w-9 h-9 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm transition-transform hover:scale-105">
-              <Image src="/auth/logo-small.svg" alt="Logo" width={28} height={28} className="w-7 h-7 object-contain" />
-           </div>
+        <Link href="/admin" className="flex items-center gap-2 shrink-0 transition-all hover:scale-105">
+           <Logo iconOnly className="w-9 h-9" />
            <span className="hidden sm:inline-block font-black text-slate-900 dark:text-white tracking-tight text-sm">Console</span>
         </Link>
 
@@ -137,10 +147,49 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
         <ThemeSwitcher />
 
         {/* Notifications */}
-        <button className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
-          <Bell className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
-        </button>
+        <Popover placement="bottom-end">
+          <Popover.Trigger>
+            <button className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+              <Bell className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm" />
+            </button>
+          </Popover.Trigger>
+          <Popover.Content className="z-[100] p-0 w-[320px] sm:w-[380px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+              <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-white">Notifications</h3>
+              <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-full">2 New</span>
+            </div>
+            <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+              {NOTIFICATIONS.map((n) => (
+                <div key={n.id} className={cn(
+                  "px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group/item",
+                  n.unread && "bg-primary/[0.02] dark:bg-primary/[0.01]"
+                )}>
+                  <div className="flex gap-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border",
+                      n.type === 'system' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-500 border-blue-100 dark:border-blue-800" :
+                      n.type === 'security' ? "bg-red-50 dark:bg-red-900/20 text-red-500 border-red-100 dark:border-red-800" :
+                      "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 border-emerald-100 dark:border-emerald-800"
+                    )}>
+                      {n.type === 'system' ? <Settings className="w-5 h-5" /> : n.type === 'security' ? <ShieldAlert className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{n.title}</p>
+                        <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap ml-2">{n.time}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">{n.message}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 text-center">
+              <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View All Notifications</button>
+            </div>
+          </Popover.Content>
+        </Popover>
 
         <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block" />
 

@@ -32,8 +32,10 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                     userEmail={dbUser.email ?? ''}
                     userAvatar={dbUser.avatar ?? undefined}
                 />
-                <main className="flex-1 overflow-auto">
-                    {children}
+                <main className="flex-1 overflow-y-auto">
+                    <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-[1600px] mx-auto min-h-[calc(100vh-4rem)]">
+                        {children}
+                    </div>
                 </main>
             </div>
         </div>

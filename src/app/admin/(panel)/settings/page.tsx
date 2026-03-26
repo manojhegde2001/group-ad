@@ -14,7 +14,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8">
       <div className="flex items-center gap-4 border-b border-secondary-200 dark:border-secondary-800 pb-6">
         <div className="p-3 bg-secondary-100 dark:bg-secondary-800 rounded-2xl text-secondary-600 dark:text-secondary-400">
           <SettingsIcon className="w-8 h-8" />

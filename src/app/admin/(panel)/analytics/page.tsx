@@ -62,7 +62,7 @@ export default function AdminAnalyticsPage() {
   const userDistData = Object.entries(data.distribution.users).map(([name, value]) => ({ name, value }));
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-secondary-200 dark:border-secondary-800 pb-8">

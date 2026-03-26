@@ -150,7 +150,7 @@ export default function AdminBusinessesPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase">
           Business Center

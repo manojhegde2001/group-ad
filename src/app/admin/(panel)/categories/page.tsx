@@ -183,26 +183,17 @@ export default function AdminCategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 pb-20">
-      {/* Admin Details Header */}
-      <div className="bg-white dark:bg-secondary-900 border-b border-secondary-200 dark:border-secondary-800 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/admin"
-              className="p-2 -ml-2 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-full transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-6 h-6 text-primary-500" />
-              <h1 className="text-xl font-bold text-secondary-900 dark:text-white">Category Management</h1>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase">
+          Category Management
+        </h1>
+        <p className="text-secondary-500 font-medium mt-1 uppercase text-xs tracking-widest">
+          Manage platform tags, interests, and discovery hubs
+        </p>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Form Area */}

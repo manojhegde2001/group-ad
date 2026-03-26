@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase">

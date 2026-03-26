@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -58,6 +59,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+const Logo = dynamic(() => import('../ui/logo'), {
+  ssr: false,
+});
+
 export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -83,23 +88,10 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
       {/* Brand */}
       <div className="px-5 py-6 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-900/40">
-        <Link href={getHref('/')} className="flex items-center gap-3.5 group/logo">
-          <div className="relative shrink-0">
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm transition-transform group-hover/logo:scale-105">
-              <Image
-                src="/auth/logo-small.svg"
-                alt="Logo"
-                width={36}
-                height={36}
-                className="w-8 h-8 object-contain"
-                priority
-              />
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-base font-black text-slate-900 dark:text-white tracking-tight leading-none mb-0.5">Group Ad</span>
-            <span className="text-[10px] font-bold text-primary uppercase tracking-[0.18em]">Admin Console</span>
+        <Link href={getHref('/')} className="flex items-center gap-3 transition-opacity hover:opacity-80 group/logo">
+          <Logo className="h-9 w-auto" />
+          <div className="flex flex-col ml-0.5">
+             <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] leading-none">Console</span>
           </div>
         </Link>
       </div>

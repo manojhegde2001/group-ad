@@ -1,10 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+
+const Logo = dynamic(() => import('../../../components/ui/logo'), {
+  ssr: false,
+});
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -49,13 +54,10 @@ export default function AdminLoginPage() {
 
       {/* Left panel — branding */}
       <div className="hidden lg:flex flex-1 flex-col items-start justify-between p-16 relative z-10">
-        <div className="flex items-center gap-4 group/logo">
-          <div className="w-11 h-11 rounded-2xl overflow-hidden bg-white flex items-center justify-center border border-white/20 shadow-xl transition-transform group-hover/logo:scale-105">
-            <Image src="/auth/logo-small.svg" alt="Group Ad" width={40} height={40} className="w-9 h-9 object-contain" priority />
-          </div>
-          <div className="flex flex-col">
-            <p className="text-xl font-black text-white tracking-tighter leading-none mb-1">Group Ad</p>
-            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-[0.2em]">Admin Console</p>
+        <div className="flex items-center gap-5 group/logo transition-all hover:opacity-90">
+          <Logo className="h-14 w-auto drop-shadow-2xl" />
+          <div className="flex flex-col border-l border-white/10 pl-5">
+            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-[0.3em] leading-none">Console</p>
           </div>
         </div>
 
@@ -95,12 +97,9 @@ export default function AdminLoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="flex items-center gap-4 lg:hidden mb-10 group/logo">
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center border border-white/20 shadow-lg">
-              <Image src="/auth/logo-small.svg" alt="Group Ad" width={32} height={32} className="w-8 h-8 object-contain" priority />
-            </div>
-            <div className="flex flex-col">
-              <p className="text-lg font-black text-white leading-none mb-1 tracking-tight">Group Ad</p>
-              <p className="text-[10px] text-violet-400 uppercase tracking-widest font-bold">Admin Console</p>
+            <Logo className="h-10 w-auto" />
+            <div className="flex flex-col border-l border-white/10 pl-4">
+              <p className="text-[10px] text-violet-400 uppercase tracking-widest font-bold leading-none">Console</p>
             </div>
           </div>
 

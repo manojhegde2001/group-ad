@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="px-6 py-8 md:px-8 space-y-8 max-w-[1600px] mx-auto transition-colors duration-300">
+    <div className="space-y-8 transition-colors duration-300">
       {/* Welcome banner */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 via-primary/5 to-transparent pointer-events-none" />

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -28,7 +29,6 @@ export default function AdminLoginPage() {
       if (result?.error) {
         setError('Invalid credentials. Please try again.');
       } else {
-        // On localhost go to /admin directly; on admin subdomain / is rewritten to /admin
         const isLocalhost = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
         router.push(isLocalhost ? '/admin' : '/');
         router.refresh();
@@ -41,95 +41,161 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 p-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Brand */}
-        <div className="flex flex-col items-center mb-8 text-center">
-          <div className="p-4 bg-purple-500/20 border border-purple-500/30 rounded-2xl mb-4 backdrop-blur-sm">
-            <ShieldCheck className="w-10 h-10 text-purple-400" />
+    <div className="min-h-screen flex bg-[#0a0a0f] relative overflow-hidden">
+      {/* Ambient glow blobs */}
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-purple-800/5 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Left panel — branding */}
+      <div className="hidden lg:flex flex-1 flex-col items-start justify-between p-16 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+            <Image src="/auth/logo-small.svg" alt="Group Ad" width={32} height={32} className="w-8 h-8 object-contain" priority />
           </div>
-          <h1 className="text-2xl font-black text-white">Admin Portal</h1>
-          <p className="text-slate-400 text-sm mt-1">Group Ad — Restricted Access</p>
+          <div>
+            <p className="text-sm font-bold text-white tracking-tight">Group Ad</p>
+            <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-[0.15em]">Admin Console</p>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="bg-white/5 border border-white/10 rounded-3xl backdrop-blur-xl p-8 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Identifier */}
-            <div>
-              <label htmlFor="identifier" className="block text-sm font-medium text-slate-300 mb-1.5">
-                Email or Phone
-              </label>
-              <input
-                id="identifier"
-                type="text"
-                autoComplete="username"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="admin@example.com"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition disabled:opacity-50"
-              />
-            </div>
+        <div className="max-w-md">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-semibold text-violet-300">All systems operational</span>
+          </div>
+          <h1 className="text-4xl font-black text-white leading-tight mb-4">
+            Welcome back,<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
+              administrator.
+            </span>
+          </h1>
+          <p className="text-white/40 text-lg leading-relaxed">
+            Your central command for managing Group Ad — users, content, analytics, and platform health at a glance.
+          </p>
 
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition disabled:opacity-50 pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition p-1"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+          {/* Feature list */}
+          <div className="mt-10 space-y-3">
+            {[
+              { label: 'Real-time platform analytics', color: 'text-violet-400' },
+              { label: 'User & business management', color: 'text-indigo-400' },
+              { label: 'Content moderation & reports', color: 'text-purple-400' },
+            ].map(({ label, color }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div className={`w-1.5 h-1.5 rounded-full bg-current ${color}`} />
+                <span className="text-sm text-white/50">{label}</span>
               </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="flex items-center gap-2.5 p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || !identifier || !password}
-              className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Signing in…
-                </>
-              ) : (
-                'Sign In to Admin'
-              )}
-            </button>
-          </form>
+            ))}
+          </div>
         </div>
 
-        <p className="text-center text-slate-600 text-xs mt-6">
-          This portal is restricted to administrators only.
+        <p className="text-white/20 text-xs">
+          © 2024 Group Ad · Restricted to administrators only
         </p>
+      </div>
+
+      {/* Right panel — login form */}
+      <div className="flex-1 lg:max-w-[480px] flex items-center justify-center p-6 lg:p-12 relative z-10">
+        <div className="w-full max-w-sm">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-3 lg:hidden mb-10">
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+              <Image src="/auth/logo-small.svg" alt="Group Ad" width={32} height={32} className="w-8 h-8 object-contain" priority />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Group Ad</p>
+              <p className="text-[10px] text-violet-400 uppercase tracking-widest font-semibold">Admin Console</p>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-2xl font-black text-white">Sign in</h2>
+            <p className="text-white/40 text-sm mt-1">Enter your credentials to access the admin panel</p>
+          </div>
+
+          {/* Card */}
+          <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl backdrop-blur-xl p-7 shadow-2xl">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email */}
+              <div>
+                <label htmlFor="identifier" className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
+                  Email or Phone
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+                  <input
+                    id="identifier"
+                    type="text"
+                    autoComplete="username"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    required
+                    disabled={loading}
+                    placeholder="admin@groupad.net"
+                    className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all text-sm disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label htmlFor="password" className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    placeholder="••••••••••••"
+                    className="w-full pl-10 pr-12 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all text-sm disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition p-1"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="flex items-center gap-2.5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading || !identifier || !password}
+                className="w-full py-3 px-6 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-violet-900/30 mt-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Authenticating…
+                  </>
+                ) : (
+                  'Sign in to Admin Console'
+                )}
+              </button>
+            </form>
+          </div>
+
+          <p className="text-center text-white/20 text-xs mt-6">
+            This portal is restricted to administrators only.
+          </p>
+        </div>
       </div>
     </div>
   );

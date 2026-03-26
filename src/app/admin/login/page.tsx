@@ -54,13 +54,9 @@ export default function AdminLoginPage() {
 
       {/* Left panel — branding */}
       <div className="hidden lg:flex flex-1 flex-col items-start justify-between p-16 relative z-10">
-        <div className="flex items-center gap-5 group/logo transition-all hover:opacity-90">
-          <Logo className="h-14 w-auto drop-shadow-2xl" />
-          <div className="flex flex-col border-l border-white/10 pl-5">
-            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-[0.3em] leading-none">Console</p>
-          </div>
+        <div className="absolute top-12 left-12 z-10 animate-fade-in animate-delay-200">
+          <Logo className="w-48 h-14 drop-shadow-2xl" />
         </div>
-
         <div className="max-w-md">
           <h1 className="text-4xl font-black text-white leading-tight mb-4">
             Welcome back,<br />
@@ -96,11 +92,8 @@ export default function AdminLoginPage() {
       <div className="flex-1 lg:max-w-[480px] flex items-center justify-center p-6 lg:p-12 relative z-10">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
-          <div className="flex items-center gap-4 lg:hidden mb-10 group/logo">
-            <Logo className="h-10 w-auto" />
-            <div className="flex flex-col border-l border-white/10 pl-4">
-              <p className="text-[10px] text-violet-400 uppercase tracking-widest font-bold leading-none">Console</p>
-            </div>
+          <div className="flex justify-center mb-8">
+            <Logo className="w-36 h-10" />
           </div>
 
           <div className="mb-8">

@@ -89,9 +89,9 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
       {/* Brand */}
       <div className="px-5 py-6 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-900/40">
         <Link href={getHref('/')} className="flex items-center gap-3 transition-opacity hover:opacity-80 group/logo">
-          <Logo className="h-9 w-auto" />
+          <Logo className="w-32 h-9" />
           <div className="flex flex-col ml-0.5">
-             <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] leading-none">Console</span>
+             <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] leading-none mt-1">Console</span>
           </div>
         </Link>
       </div>

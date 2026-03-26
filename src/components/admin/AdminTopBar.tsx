@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,6 +8,8 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Bell, Search, ChevronRight, Settings, LogOut, User, Clock, ShieldAlert, Activity, Building2, CalendarDays } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { ActionIcon } from '@/components/ui/action-icon';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { Popover, Button, Text } from 'rizzui';
 import { signOut } from 'next-auth/react';
@@ -73,28 +75,33 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
     }
   };
 
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
   // Search logic
-  const handleSearch = async (val: string) => {
+  const handleSearch = (val: string) => {
     setSearchQuery(val);
     if (val.length < 2) {
        setSearchResults([]);
        return;
     }
     setSearching(true);
-    try {
-       const res = await fetch(`/api/admin/search?q=${encodeURIComponent(val)}`);
-       const data = await res.json();
-       setSearchResults(data.results || []);
-    } catch (err) {
-       console.error('Search failed');
-    } finally {
-       setSearching(false);
-    }
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(async () => {
+      try {
+         const res = await fetch(`/api/admin/search?q=${encodeURIComponent(val)}`);
+         const data = await res.json();
+         setSearchResults(data.results || []);
+      } catch (err) {
+         console.error('Search failed');
+      } finally {
+         setSearching(false);
+      }
+    }, 400);
   };
 
-  useState(() => {
+  useEffect(() => {
     fetchNotifications();
-  });
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shrink-0 transition-colors duration-300">
@@ -102,7 +109,9 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
       <div className="flex items-center gap-4 flex-1 min-w-0">
         {/* Logo - Always visible */}
         <Link href="/admin" className="flex items-center gap-2 shrink-0 transition-all hover:scale-105">
-           <Logo iconOnly className="w-9 h-9" />
+           <div className="w-10 h-10 flex items-center justify-center">
+             <Logo iconOnly className="w-8 h-8 object-contain" />
+           </div>
            <span className="hidden sm:inline-block font-black text-slate-900 dark:text-white tracking-tight text-sm">Console</span>
         </Link>
 
@@ -139,23 +148,22 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
         {/* Search - Desktop with Real Functionality */}
         <Popover placement="bottom-start" showArrow={false}>
           <Popover.Trigger>
-            <div
-              className={cn(
-                "hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-200 cursor-text",
-                searchFocused
-                  ? 'bg-white dark:bg-slate-800 border-primary shadow-lg shadow-primary/5 w-64'
-                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 w-48'
-              )}
-            >
-              <Search className={cn("w-3.5 h-3.5 shrink-0 transition-colors", searchFocused ? "text-primary" : "text-slate-400")} />
-              <input
+            <div>
+              <Input
                 type="text"
                 placeholder="Search console… (⌘K)"
                 value={searchQuery}
                 onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="bg-transparent text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none w-full"
+                variant="flat"
+                rounded="pill"
+                size="md"
+                prefix={<Search className={cn("w-4 h-4 transition-colors", searchFocused ? "text-primary" : "text-slate-400")} />}
+                clearable={!!searchQuery}
+                onClear={() => { setSearchQuery(''); setSearchResults([]); }}
+                className={cn("hidden sm:block transition-all duration-300", searchFocused ? "w-64 lg:w-80" : "w-48 lg:w-64")}
+                inputClassName="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 focus:border-primary shadow-sm h-10"
               />
             </div>
           </Popover.Trigger>
@@ -214,17 +222,16 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
         {/* Notifications */}
         <Popover placement="bottom-end">
           <Popover.Trigger>
-            <button 
-              onClick={fetchNotifications}
-              className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
-            >
-              <Bell className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
-              {notifCount > 0 && (
-                <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center text-[9px] font-black text-white">
-                  {notifCount}
-                </span>
-              )}
-            </button>
+            <div className="relative">
+              <ActionIcon variant="text" onClick={fetchNotifications} className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 dark:text-slate-400">
+                <Bell className="w-[22px] h-[22px] stroke-[2px]" />
+                {notifCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[17px] h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1 ring-2 ring-white dark:ring-slate-900 leading-none shadow-sm pointer-events-none">
+                    {notifCount > 99 ? '99+' : notifCount}
+                  </span>
+                )}
+              </ActionIcon>
+            </div>
           </Popover.Trigger>
           <Popover.Content className="z-[100] p-0 w-[320px] sm:w-[380px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">

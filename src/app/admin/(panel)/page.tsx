@@ -40,7 +40,8 @@ export default function AdminDashboardPage() {
           border: 'border-violet-500/10 dark:border-violet-500/20',
           iconBg: 'bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300',
           sub: `${stats.stats.businessUsers} business · ${stats.stats.individualUsers} individual`,
-          trend: '+12%',
+          trend: stats.stats.trends?.users || '0%',
+          trendDanger: stats.stats.trends?.users?.startsWith('-'),
         },
         {
           label: 'Total Posts',
@@ -49,8 +50,9 @@ export default function AdminDashboardPage() {
           gradient: 'from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/20 dark:to-emerald-600/5',
           border: 'border-emerald-500/10 dark:border-emerald-500/20',
           iconBg: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300',
-          sub: 'published posts',
-          trend: '+8%',
+          sub: `${stats.stats.periodStats?.postsLast30 || 0} in last 30d`,
+          trend: stats.stats.trends?.posts || '0%',
+          trendDanger: stats.stats.trends?.posts?.startsWith('-'),
         },
         {
           label: 'Events',
@@ -60,7 +62,8 @@ export default function AdminDashboardPage() {
           border: 'border-amber-500/10 dark:border-amber-500/20',
           iconBg: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300',
           sub: `${stats.stats.publishedEvents} published`,
-          trend: '+5%',
+          trend: stats.stats.trends?.events || '0%',
+          trendDanger: stats.stats.trends?.events?.startsWith('-'),
         },
         {
           label: 'Pending Reports',

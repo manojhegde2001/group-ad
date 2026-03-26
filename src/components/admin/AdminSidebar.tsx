@@ -82,32 +82,26 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-3">
+      <div className="px-5 py-6 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-900/40">
+        <Link href={getHref('/')} className="flex items-center gap-3.5 group/logo">
           <div className="relative shrink-0">
-            <div className="w-9 h-9 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm transition-transform group-hover/logo:scale-105">
               <Image
                 src="/auth/logo-small.svg"
-                alt="Group Ad"
-                width={32}
-                height={32}
+                alt="Logo"
+                width={36}
+                height={36}
                 className="w-8 h-8 object-contain"
                 priority
               />
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white dark:border-slate-900" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm" />
           </div>
-          <div>
-            <p className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Group Ad</p>
-            <p className="text-[10px] font-semibold text-primary uppercase tracking-[0.15em]">Admin Console</p>
+          <div className="flex flex-col">
+            <span className="text-base font-black text-slate-900 dark:text-white tracking-tight leading-none mb-0.5">Group Ad</span>
+            <span className="text-[10px] font-bold text-primary uppercase tracking-[0.18em]">Admin Console</span>
           </div>
-        </div>
-      </div>
-
-      {/* Status bar */}
-      <div className="mx-3 mt-3 mb-1 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-2">
-        <Activity className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">All systems operational</span>
+        </Link>
       </div>
 
       {/* Nav */}
@@ -141,33 +135,34 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
                         href={getHref(href)}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
-                          'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                          'group relative flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200',
                           active
                             ? danger
-                              ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                              : 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary'
+                              ? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-bold shadow-sm'
+                              : 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary font-bold shadow-sm'
                             : danger
-                              ? 'text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400'
-                              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                              ? 'text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-300 font-medium'
+                              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white font-medium'
                         )}
                       >
+                        <div className={cn(
+                          'p-1.5 rounded-lg transition-colors',
+                          active
+                            ? danger ? 'bg-red-100 dark:bg-red-900/40' : 'bg-primary/20 dark:bg-primary/30'
+                            : 'bg-transparent'
+                        )}>
+                          <Icon
+                            className={cn(
+                              'w-4 h-4 shrink-0 transition-all',
+                              active
+                                ? danger ? 'text-red-600 dark:text-red-400 scale-110' : 'text-primary scale-110'
+                                : 'opacity-60 group-hover:opacity-100 group-hover:scale-105'
+                            )}
+                          />
+                        </div>
+                        <span className="flex-1 truncate tracking-tight">{label}</span>
                         {active && (
-                          <span className={cn(
-                            'absolute left-0 inset-y-2 w-0.5 rounded-r-full',
-                            danger ? 'bg-red-500' : 'bg-primary'
-                          )} />
-                        )}
-                        <Icon
-                          className={cn(
-                            'w-4 h-4 shrink-0 transition-colors',
-                            active
-                              ? danger ? 'text-red-600 dark:text-red-400' : 'text-primary'
-                              : 'opacity-60 group-hover:opacity-100'
-                          )}
-                        />
-                        <span className="flex-1 truncate">{label}</span>
-                        {active && (
-                          <div className={cn('w-1.5 h-1.5 rounded-full shrink-0', danger ? 'bg-red-500' : 'bg-primary')} />
+                          <div className={cn('w-1.5 h-1.5 rounded-full shrink-0 shadow-sm', danger ? 'bg-red-500' : 'bg-primary')} />
                         )}
                       </Link>
                     );
@@ -201,21 +196,26 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
         </button>
       </div>
 
-      {/* User identity */}
-      <div className="px-4 py-4 border-t border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-3 px-1">
-          <Avatar
-            src={userAvatar}
-            name={userName}
-            className="w-8 h-8 rounded-full shrink-0 ring-2 ring-slate-100 dark:ring-slate-700"
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate leading-tight">{userName}</p>
-            <p className="text-[11px] text-slate-400 truncate">{userEmail}</p>
+      {/* User identity footer */}
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-900/20">
+        <div className="flex items-center gap-3 px-1 py-1 rounded-xl group/user cursor-pointer">
+          <div className="relative shrink-0">
+             <Avatar
+               src={userAvatar}
+               name={userName}
+               className="w-9 h-9 rounded-full ring-2 ring-slate-100 dark:ring-slate-800 group-hover/user:ring-primary/30 transition-all border border-transparent dark:border-slate-700"
+             />
+             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
           </div>
-          <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-primary/10 dark:bg-primary/20 border border-primary/20">
-            <span className="text-[9px] font-bold text-primary uppercase tracking-wide">Admin</span>
-          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-slate-900 dark:text-white truncate leading-none mb-0.5">{userName}</p>
+            <p className="text-[10px] font-medium text-slate-400 truncate tracking-tight">{userEmail}</p>
+          </div>
+          <div className="hidden xl:block">
+             <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+               Pro
+             </span>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
@@ -42,35 +43,70 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
     }
   }, [isOpen]);
 
-  const downloadTemplate = () => {
-    // Standardized Template: Fixed headers and sample data
-    const wsData = [
-      ['Name', 'Username', 'Email', 'Password', 'UserType', 'CategoryName'],
-      ['John Doe', 'johndoe', 'john@example.com', 'Password123', 'INDIVIDUAL', 'Tech'],
-      ['Jane Business', 'janebiz', 'jane@business.com', 'Secure@2024', 'BUSINESS', 'Fashion'],
+  const downloadTemplate = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Onboarding Template');
+
+    // Define columns
+    worksheet.columns = [
+      { header: 'Name', key: 'name', width: 25 },
+      { header: 'Username', key: 'username', width: 20 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Password', key: 'password', width: 15 },
+      { header: 'UserType', key: 'userType', width: 15 },
+      { header: 'CategoryName', key: 'categoryName', width: 20 },
     ];
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    
-    // Set column widths
-    ws['!cols'] = [
-      { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 15 }
-    ];
+    // Add some sample data
+    worksheet.addRow({ name: 'John Doe', username: 'johndoe', email: 'john@example.com', password: 'Password123', userType: 'INDIVIDUAL', categoryName: 'Tech' });
+    worksheet.addRow({ name: 'Jane Business', username: 'janebiz', email: 'jane@business.com', password: 'Secure@2024', userType: 'BUSINESS', categoryName: 'Fashion' });
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+    // Stylize headers
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFEFEFEF' }
+    };
 
-    // Add Reference Sheet for Categories & Types
-    const refData = [
-      ['VALID ACCOUNT TYPES', '', 'CURRENT CATEGORIES'],
-      ['INDIVIDUAL', '', ...categories.map(c => c.name)],
-      ['BUSINESS', '', ''],
-    ];
-    const refWs = XLSX.utils.aoa_to_sheet(refData);
-    XLSX.utils.book_append_sheet(wb, refWs, 'Data-Reference');
+    // Add Data Validations (Dropdowns)
+    const typeList = ['INDIVIDUAL', 'BUSINESS'];
+    const categoryList = categories.map(c => c.name);
 
-    XLSX.writeFile(wb, 'GroupAd_Bulk_Template.xlsx');
-    toast.success('Professional template with references downloaded');
+    // Apply validations to rows 2 to 100 for UserType (Column E) and CategoryName (Column F)
+    for (let i = 2; i <= 100; i++) {
+      worksheet.getCell(`E${i}`).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [`"${typeList.join(',')}"`],
+        showErrorMessage: true,
+        errorTitle: 'Invalid Type',
+        error: 'Please select from the dropdown'
+      };
+
+      if (categoryList.length > 0) {
+        worksheet.getCell(`F${i}`).dataValidation = {
+          type: 'list',
+          allowBlank: true,
+          formulae: [`"${categoryList.join(',')}"`],
+          showErrorMessage: true,
+          errorTitle: 'Invalid Category',
+          error: 'Please select an active category from the dropdown'
+        };
+      }
+    }
+
+    // Generate buffer and save
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'GroupAd_Bulk_Template.xlsx';
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Professional template with dropdowns downloaded');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

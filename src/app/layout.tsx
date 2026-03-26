@@ -5,8 +5,8 @@ import NextAuthProvider from '@/components/providers/session-provider';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import ToastProvider from '@/components/providers/toast-provider';
 import QueryProvider from '@/components/providers/query-provider';
-import { LayoutContent } from '@/components/layout/layout-content';
 import { SocketProvider } from '@/components/providers/socket-provider';
+import { Analytics } from '@vercel/analytics/react';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -79,10 +79,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  modal,
 }: {
   children: React.ReactNode;
-  modal: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -96,8 +94,10 @@ export default function RootLayout({
                 enableSystem={false}
                 storageKey="theme"
               >
-                <LayoutContent modal={modal}>{children}</LayoutContent>
+                {/* Now only global providers here. Public layout is in (public)/layout.tsx */}
+                {children}
                 <ToastProvider />
+                <Analytics />
               </ThemeProvider>
             </SocketProvider>
           </QueryProvider>
@@ -106,4 +106,3 @@ export default function RootLayout({
     </html>
   );
 }
-

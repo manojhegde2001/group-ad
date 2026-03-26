@@ -22,6 +22,11 @@ const BulkImportDialog = dynamic(() => import('@/components/admin/BulkImportDial
   loading: () => null
 });
 
+const UserEditModal = dynamic(() => import('@/components/admin/UserEditModal'), {
+  ssr: false,
+  loading: () => null
+});
+
 interface AdminUser {
   id: string;
   name: string;
@@ -33,6 +38,8 @@ interface AdminUser {
   createdAt: string;
   companyName?: string;
   industry?: string;
+  website?: string;
+  websiteLabel?: string;
 }
 
 export default function AdminUsersPage() {
@@ -44,6 +51,7 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -259,9 +267,12 @@ export default function AdminUsersPage() {
                             <ShieldCheck className="w-5 h-5" />
                           </button>
                         )}
-                        <button className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm">
-                          <UserCog className="w-5 h-5" />
-                        </button>
+                          <button 
+                            onClick={() => setEditingUser(user)}
+                            className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                          >
+                            <UserCog className="w-5 h-5" />
+                          </button>
                       </div>
                     </td>
                   </tr>
@@ -280,6 +291,13 @@ export default function AdminUsersPage() {
           <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">Manual verification automatically grants the user a BUSINESS type and the verified badge. Use this for VIPs or offline verified businesses.</p>
         </div>
       </div>
+      {/* User Edit Modal */}
+      <UserEditModal 
+        isOpen={!!editingUser}
+        user={editingUser}
+        onClose={() => setEditingUser(null)}
+        onRefresh={fetchUsers}
+      />
     </div>
   );
 }

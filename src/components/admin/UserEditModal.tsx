@@ -24,6 +24,10 @@ export default function UserEditModal({ user, isOpen, onClose, onRefresh }: User
     userType: '',
     categoryId: '',
     verificationStatus: '',
+    companyName: '',
+    industry: '',
+    website: '',
+    websiteLabel: '',
   });
 
   useEffect(() => {
@@ -34,6 +38,10 @@ export default function UserEditModal({ user, isOpen, onClose, onRefresh }: User
         userType: user.userType || 'INDIVIDUAL',
         categoryId: user.categoryId || 'NONE',
         verificationStatus: user.verificationStatus || 'UNVERIFIED',
+        companyName: user.companyName || '',
+        industry: user.industry || '',
+        website: user.website || '',
+        websiteLabel: user.websiteLabel || '',
       });
     }
   }, [user]);
@@ -138,6 +146,42 @@ export default function UserEditModal({ user, isOpen, onClose, onRefresh }: User
               { label: 'Rejected', value: 'REJECTED' },
             ]}
           />
+
+          <div className="pt-4 border-t border-secondary-100 dark:border-secondary-900">
+             <p className="text-[10px] font-black uppercase tracking-[0.15em] text-primary-500 mb-4">Business & Employee Configuration</p>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Company Name"
+                  placeholder="ACME Corp"
+                  value={form.companyName}
+                  onChange={e => setForm({ ...form, companyName: e.target.value })}
+                />
+                <Input
+                  label="Industry"
+                  placeholder="Technology"
+                  value={form.industry}
+                  onChange={e => setForm({ ...form, industry: e.target.value })}
+                />
+             </div>
+          </div>
+
+          <div className="pt-4 border-t border-secondary-100 dark:border-secondary-900">
+             <p className="text-[10px] font-black uppercase tracking-[0.15em] text-primary-500 mb-4">Custom Branding</p>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Website URL"
+                  placeholder="https://example.com"
+                  value={form.website}
+                  onChange={e => setForm({ ...form, website: e.target.value })}
+                />
+                <Input
+                  label="Website Label"
+                  placeholder="Portfolio"
+                  value={form.websiteLabel}
+                  onChange={e => setForm({ ...form, websiteLabel: e.target.value })}
+                />
+             </div>
+          </div>
         </div>
 
         <div className="p-8 bg-secondary-50 dark:bg-secondary-900/50 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-end gap-3">

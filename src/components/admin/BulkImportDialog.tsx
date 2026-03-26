@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 import toast from 'react-hot-toast';
 
 interface BulkUserResult {
@@ -22,6 +23,7 @@ interface BulkUserResult {
   categoryId?: string;
   isValid: boolean;
   errors: string[];
+  selected?: boolean;
 }
 
 export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose: () => void, onRefresh: () => void }) {
@@ -57,8 +59,18 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
     ];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Template');
+
+    // Add Reference Sheet for Categories & Types
+    const refData = [
+      ['VALID ACCOUNT TYPES', '', 'CURRENT CATEGORIES'],
+      ['INDIVIDUAL', '', ...categories.map(c => c.name)],
+      ['BUSINESS', '', ''],
+    ];
+    const refWs = XLSX.utils.aoa_to_sheet(refData);
+    XLSX.utils.book_append_sheet(wb, refWs, 'Data-Reference');
+
     XLSX.writeFile(wb, 'GroupAd_Bulk_Template.xlsx');
-    toast.success('Professional template downloaded');
+    toast.success('Professional template with references downloaded');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +119,7 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
         
         const result = await res.json();
         if (res.ok) {
-          setData(result.results);
+          setData(result.results.map((u: any) => ({ ...u, selected: true })));
           setStep(2);
         } else {
           toast.error(result.error || 'Validation server error');
@@ -129,9 +141,9 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
   };
 
   const executeImport = async () => {
-    const validUsers = data.filter(u => u.isValid);
+    const validUsers = data.filter(u => u.isValid && u.selected);
     if (validUsers.length === 0) {
-      toast.error('No valid accounts found in selection');
+      toast.error('No valid accounts selected for deployment');
       return;
     }
 
@@ -161,15 +173,15 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-secondary-900/60 backdrop-blur-md animate-in fade-in duration-300">
-      <Card className="w-full max-w-5xl bg-white dark:bg-secondary-950 rounded-[3.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden flex flex-col max-h-[90vh]">
+      <Card className="w-full max-w-4xl bg-white dark:bg-secondary-950 rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-8 md:p-10 flex items-center justify-between border-b border-secondary-100 dark:border-secondary-900 bg-secondary-50/40 dark:bg-secondary-900/40">
-           <div className="flex items-center gap-5">
-              <div className="w-14 h-14 bg-primary-500 rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-primary-500/20 ring-4 ring-primary-50 dark:ring-primary-900/20">
-                 {step === 3 ? <CheckCircle2 className="w-7 h-7" /> : <Upload className="w-7 h-7" />}
+        <div className="p-6 md:p-8 flex items-center justify-between border-b border-secondary-100 dark:border-secondary-900 bg-secondary-50/40 dark:bg-secondary-900/40">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary-500/20 ring-4 ring-primary-50 dark:ring-primary-900/20 text-white">
+                 {step === 3 ? <CheckCircle2 className="w-6 h-6" /> : <Upload className="w-6 h-6" />}
               </div>
               <div>
-                 <h2 className="text-2xl md:text-3xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">
+                 <h2 className="text-xl md:text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">
                     {step === 1 && "Bulk Deployment"}
                     {step === 2 && "Identity Review"}
                     {step === 3 && "Workspace Updated"}
@@ -187,39 +199,34 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-8 md:p-12 relative">
+        <div className="flex-1 overflow-auto p-6 md:p-8 relative">
           {step === 1 && (
-            <div className="flex flex-col items-center justify-center h-full space-y-10 py-10">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl">
-                  {/* Download Template */}
+            <div className="flex flex-col items-center justify-center h-full space-y-8 py-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
                   <button 
                     onClick={downloadTemplate}
-                    className="group relative p-10 bg-secondary-50 dark:bg-secondary-900 border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-[3rem] hover:border-primary-500 hover:bg-white dark:hover:bg-secondary-800 transition-all duration-300 text-center space-y-5"
+                    className="group relative p-8 bg-secondary-50 dark:bg-secondary-900 border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-3xl hover:border-primary-500 hover:bg-white dark:hover:bg-secondary-800 transition-all duration-300 text-center space-y-4"
                   >
-                     <div className="w-20 h-20 bg-white dark:bg-secondary-800 rounded-[2rem] mx-auto flex items-center justify-center text-secondary-300 group-hover:text-primary-500 shadow-lg group-hover:shadow-primary-500/10 transition-all ring-8 ring-secondary-50/50 dark:ring-secondary-900/50 group-hover:ring-primary-50 group-hover:dark:ring-primary-900/20">
-                        <Download className="w-9 h-9" />
+                     <div className="w-16 h-16 bg-white dark:bg-secondary-800 rounded-2xl mx-auto flex items-center justify-center text-secondary-300 group-hover:text-primary-500 shadow-lg group-hover:shadow-primary-500/10 transition-all ring-8 ring-secondary-50/50 dark:ring-secondary-900/50 group-hover:ring-primary-50 group-hover:dark:ring-primary-900/20">
+                        <Download className="w-7 h-7" />
                      </div>
                      <div>
-                        <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight text-lg">Download Template</p>
-                        <p className="text-[10px] font-bold text-secondary-400 mt-2 uppercase tracking-widest">Restricted Excel Format (.xlsx)</p>
-                     </div>
-                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <HelpCircle className="w-5 h-5 text-primary-400" />
+                        <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight text-base">Download Template</p>
+                        <p className="text-[10px] font-bold text-secondary-400 mt-2 uppercase tracking-widest">Restricted Excel Format</p>
                      </div>
                   </button>
 
-                  {/* Upload File */}
                   <button 
                     disabled={loading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="group p-10 bg-primary-500 rounded-[3rem] hover:bg-primary-600 transition-all duration-300 text-center space-y-5 text-white shadow-2xl shadow-primary-500/30 active:scale-95"
+                    className="group p-8 bg-primary-500 rounded-3xl hover:bg-primary-600 transition-all duration-300 text-center space-y-4 text-white shadow-2xl shadow-primary-500/30 active:scale-95"
                   >
-                     <div className="w-20 h-20 bg-white/10 rounded-[2rem] mx-auto flex items-center justify-center text-white shadow-inner backdrop-blur-sm group-hover:scale-110 transition-transform">
-                        {loading ? <Loader2 className="w-10 h-10 animate-spin" /> : <FileSpreadsheet className="w-10 h-10" />}
+                     <div className="w-16 h-16 bg-white/10 rounded-2xl mx-auto flex items-center justify-center text-white shadow-inner backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : <FileSpreadsheet className="w-8 h-8" />}
                      </div>
                      <div>
-                        <p className="font-black uppercase tracking-tight text-lg">Initialize Upload</p>
-                        <p className="text-[10px] font-black text-white/50 mt-2 uppercase tracking-widest">Supports .XLSX, .XLS, .CSV</p>
+                        <p className="font-black uppercase tracking-tight text-base">Initialize Upload</p>
+                        <p className="text-[10px] font-black text-white/50 mt-2 uppercase tracking-widest">Supports .XLSX, .CSV</p>
                      </div>
                      <input type="file" hidden ref={fileInputRef} accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
                   </button>
@@ -250,6 +257,12 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
                     <table className="w-full text-left border-collapse">
                        <thead className="sticky top-0 z-10">
                           <tr className="bg-secondary-50 dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800">
+                             <th className="px-6 py-5">
+                                <Checkbox 
+                                  checked={data.length > 0 && data.every(d => d.selected)}
+                                  onChange={(e) => setData(data.map(d => ({ ...d, selected: e.target.checked })))}
+                                />
+                             </th>
                              <th className="px-8 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Identity Details</th>
                              <th className="px-6 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Account Type</th>
                              <th className="px-6 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Category</th>
@@ -257,8 +270,14 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
                           </tr>
                        </thead>
                        <tbody className="divide-y divide-secondary-50 dark:divide-secondary-900">
-                          {data.map((row, i) => (
+                           {data.map((row, i) => (
                              <tr key={i} className={cn("transition-colors group", !row.isValid ? "bg-red-50/30 dark:bg-red-900/10" : "hover:bg-secondary-50/50 dark:hover:bg-secondary-900/30")}>
+                                <td className="px-6 py-4">
+                                   <Checkbox 
+                                     checked={row.selected}
+                                     onChange={(e) => updateRowField(i, 'selected', e.target.checked)}
+                                   />
+                                </td>
                                 <td className="px-8 py-6">
                                    <div className="flex items-center gap-4">
                                       <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-800 rounded-xl flex items-center justify-center text-xs font-black text-secondary-400 group-hover:text-primary-500 transition-colors shadow-sm">{i + 1}</div>

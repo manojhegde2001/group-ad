@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         companyName: true,
         industry: true,
+        website: true,
+        websiteLabel: true,
       },
       orderBy: { createdAt: 'desc' },
       take: 50,

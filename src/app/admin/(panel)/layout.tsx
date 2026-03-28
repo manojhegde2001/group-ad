@@ -20,7 +20,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
     if (!dbUser || dbUser.userType !== 'ADMIN') redirect('/admin/login');
 
     return (
-        <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="min-h-screen flex bg-background transition-colors duration-300 font-jakarta">
             <AdminSidebar
                 userName={dbUser.name ?? 'Admin'}
                 userEmail={dbUser.email ?? ''}

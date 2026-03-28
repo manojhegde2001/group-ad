@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail, Activity } from 'lucide-react';
 
 const Logo = dynamic(() => import('../../../components/ui/logo'), {
   ssr: false,
@@ -46,143 +46,116 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#0a0a0f] relative overflow-hidden">
-      {/* Ambient glow blobs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[300px] h-[300px] bg-purple-800/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden font-jakarta">
+      {/* Dynamic Background Accents */}
+      <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex flex-1 flex-col items-start justify-between p-16 relative z-10">
-        <div className="absolute top-12 left-12 z-10 animate-fade-in animate-delay-200">
-          <Logo className="w-48 h-14 drop-shadow-2xl" />
-        </div>
-        <div className="max-w-md">
-          <h1 className="text-4xl font-black text-white leading-tight mb-4">
-            Welcome back,<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
-              administrator.
-            </span>
-          </h1>
-          <p className="text-white/40 text-lg leading-relaxed">
-            Your central command for managing Group Ad — users, content, analytics, and platform health at a glance.
-          </p>
-
-          {/* Feature list */}
-          <div className="mt-10 space-y-3">
-            {[
-              { label: 'Real-time platform analytics', color: 'text-violet-400' },
-              { label: 'User & business management', color: 'text-indigo-400' },
-              { label: 'Content moderation & reports', color: 'text-purple-400' },
-            ].map(({ label, color }) => (
-              <div key={label} className="flex items-center gap-3">
-                <div className={`w-1.5 h-1.5 rounded-full bg-current ${color}`} />
-                <span className="text-sm text-white/50">{label}</span>
-              </div>
-            ))}
+      <div className="w-full max-w-[440px] px-6 relative z-10 animate-fade-in">
+        <div className="flex flex-col items-center mb-10">
+          <Logo className="w-44 h-12 mb-6 text-foreground" />
+          <div className="text-center">
+            <h1 className="text-2xl font-black text-foreground tracking-tight mb-2">
+              Admin Console
+            </h1>
+            <p className="text-secondary-500 text-sm font-medium">
+              Enterprise management portal for Group Ad
+            </p>
           </div>
         </div>
 
-        <p className="text-white/20 text-xs">
-          © 2024 Group Ad · Restricted to administrators only
-        </p>
-      </div>
-
-      {/* Right panel — login form */}
-      <div className="flex-1 lg:max-w-[480px] flex items-center justify-center p-6 lg:p-12 relative z-10">
-        <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="flex justify-center mb-8">
-            <Logo className="w-36 h-10" />
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-black text-white">Sign in</h2>
-            <p className="text-white/40 text-sm mt-1">Enter your credentials to access the admin panel</p>
-          </div>
-
-          {/* Card */}
-          <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl backdrop-blur-xl p-7 shadow-2xl">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label htmlFor="identifier" className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-                  Email or Phone
+        {/* Login Card */}
+        <div className="bg-white/70 dark:bg-secondary-900/40 backdrop-blur-xl border border-secondary-200 dark:border-secondary-800 rounded-[2rem] p-8 shadow-2xl shadow-black/5 ring-1 ring-black/5">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              {/* Email/Identifier field */}
+              <div className="space-y-2">
+                <label htmlFor="identifier" className="text-[10px] font-black uppercase tracking-[0.15em] text-secondary-500 ml-1">
+                  Administrator ID
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-400 group-focus-within:text-primary transition-colors" />
                   <input
                     id="identifier"
                     type="text"
-                    autoComplete="username"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     required
                     disabled={loading}
                     placeholder="admin@groupad.net"
-                    className="w-full pl-10 pr-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all text-sm disabled:opacity-50"
+                    className="w-full pl-11 pr-4 py-3.5 bg-secondary-50/50 dark:bg-secondary-800/20 border border-secondary-200 dark:border-secondary-700/50 rounded-2xl text-foreground placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm disabled:opacity-50"
                   />
                 </div>
               </div>
 
-              {/* Password */}
-              <div>
-                <label htmlFor="password" className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-                  Password
+              {/* Password field */}
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.15em] text-secondary-500 ml-1">
+                  Access Key
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-400 group-focus-within:text-primary transition-colors" />
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
                     placeholder="••••••••••••"
-                    className="w-full pl-10 pr-12 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all text-sm disabled:opacity-50"
+                    className="w-full pl-11 pr-12 py-3.5 bg-secondary-50/50 dark:bg-secondary-800/20 border border-secondary-200 dark:border-secondary-700/50 rounded-2xl text-foreground placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition p-1"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-foreground transition p-1"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
+            </div>
 
-              {/* Error */}
-              {error && (
-                <div className="flex items-center gap-2.5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
+            {/* Error Message */}
+            {error && (
+              <div className="flex items-center gap-2.5 p-4 bg-red-500/5 border border-red-500/10 rounded-2xl text-red-500 text-xs font-bold animate-shake">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading || !identifier || !password}
+              className="w-full py-4 bg-primary hover:bg-primary-600 text-white font-black rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] mt-2 group"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Authenticating…</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign in to Cluster</span>
+                  <Activity className="w-4 h-4 opacity-70 group-hover:translate-x-0.5 transition-transform" />
+                </>
               )}
+            </button>
+          </form>
+        </div>
 
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading || !identifier || !password}
-                className="w-full py-3 px-6 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-violet-900/30 mt-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Authenticating…
-                  </>
-                ) : (
-                  'Sign in to Admin Console'
-                )}
-              </button>
-            </form>
-          </div>
-
-          <p className="text-center text-white/20 text-xs mt-6">
-            This portal is restricted to administrators only.
+        {/* Footer */}
+        <div className="mt-12 text-center space-y-4">
+          <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-[0.2em]">
+            Restricted Administrator Zone
           </p>
+          <div className="flex items-center justify-center gap-6">
+             <div className="w-12 h-px bg-secondary-100 dark:bg-secondary-800" />
+             <span className="text-[10px] text-secondary-300 dark:text-secondary-600 font-bold">© 2024 GROUP AD</span>
+             <div className="w-12 h-px bg-secondary-100 dark:bg-secondary-800" />
+          </div>
         </div>
       </div>
     </div>

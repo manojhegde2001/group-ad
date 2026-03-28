@@ -18,6 +18,8 @@ const updateProfileSchema = z.object({
     .optional(),
   bio: z.string().max(500, 'Bio must be at most 500 characters').optional(),
   phone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number').optional().or(z.literal('')),
+  secondaryPhone: z.string().regex(/^\+?[\d\s\-()]{7,20}$/, 'Invalid phone number').optional().or(z.literal('')),
+  phoneVisibility: z.enum(['PRIMARY', 'SECONDARY', 'BOTH', 'NONE']).optional(),
   location: z.string().max(100).optional(),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
   websiteLabel: z.string().max(30, 'Label too long').optional().or(z.literal('')),
@@ -90,6 +92,8 @@ export async function GET(request: NextRequest) {
         avatar: true,
         bio: true,
         phone: true,
+        secondaryPhone: true,
+        phoneVisibility: true,
         location: true,
         website: true,
         websiteLabel: true,
@@ -226,7 +230,7 @@ export async function PATCH(request: NextRequest) {
     // Update user - only include fields present in body
     const updateData: any = {};
     const stringFields = [
-      'name', 'username', 'bio', 'phone', 'location', 'website', 'websiteLabel', 'avatar',
+      'name', 'username', 'bio', 'phone', 'secondaryPhone', 'location', 'website', 'websiteLabel', 'avatar',
       'address', 'pincode', 'externalLink', 'categoryId', 'turnover',
       'companySize', 'industry', 'gstNumber', 'establishedYear', 'companyWebsite',
       'linkedin', 'twitter', 'facebook', 'instagram'
@@ -244,6 +248,9 @@ export async function PATCH(request: NextRequest) {
     if (validatedData.visibility !== undefined) {
       updateData.visibility = validatedData.visibility;
     }
+    if (validatedData.phoneVisibility !== undefined) {
+      updateData.phoneVisibility = validatedData.phoneVisibility;
+    }
     if (validatedData.interests !== undefined) {
       updateData.interests = validatedData.interests;
     }
@@ -259,6 +266,8 @@ export async function PATCH(request: NextRequest) {
         avatar: true,
         bio: true,
         phone: true,
+        secondaryPhone: true,
+        phoneVisibility: true,
         location: true,
         website: true,
         websiteLabel: true,

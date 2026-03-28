@@ -254,6 +254,16 @@ export default function ProfileView({ username }: { username: string }) {
                                         <LinkIcon className="w-4 h-4" /> {profile.websiteLabel || profile.website.replace(/^https?:\/\//, '')}
                                     </a>
                                 )}
+                                {profile.phone && (
+                                    <div className="flex items-center gap-1.5 text-secondary-500">
+                                        <Phone className="w-4 h-4" /> {profile.phone}
+                                    </div>
+                                )}
+                                {profile.secondaryPhone && (
+                                    <div className="flex items-center gap-1.5 text-secondary-500">
+                                        <Phone className="w-4 h-4" /> {profile.secondaryPhone}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

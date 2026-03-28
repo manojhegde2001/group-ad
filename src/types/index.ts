@@ -15,6 +15,8 @@ export interface User {
   companySize?: string;
   industry?: string;
   gstNumber?: string;
+  secondaryPhone?: string;
+  phoneVisibility?: 'PRIMARY' | 'SECONDARY' | 'BOTH' | 'NONE';
 }
 
 export interface Post {
@@ -48,6 +50,8 @@ export type ProfileUser = Prisma.UserGetPayload<{
     avatar: true;
     bio: true;
     phone: true;
+    secondaryPhone: true;
+    phoneVisibility: true;
     location: true;
     website: true;
     address: true;
@@ -125,6 +129,8 @@ export type PostWithRelations = {
     industry: string | null;
     website: string | null;
     companyWebsite: string | null;
+    secondaryPhone: string | null;
+    phoneVisibility: 'PRIMARY' | 'SECONDARY' | 'BOTH' | 'NONE';
     connectionStatus?: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED' | null;
     connectionInitiator?: boolean;
   };

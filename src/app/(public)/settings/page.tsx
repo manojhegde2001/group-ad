@@ -7,7 +7,7 @@ import {
   User, Shield, Lock, Bell, Globe, CheckCircle,
   Save, LogOut, ChevronRight, MapPin, Link2, CreditCard,
   Building2, Briefcase, Users, Layout, Map, Compass, Trash2,
-  Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3
+  Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
@@ -46,6 +46,8 @@ export default function SettingsPage() {
   const [twitter, setTwitter]         = useState('');
   const [gstNumber, setGstNumber]     = useState('');
   const [phone, setPhone]             = useState('');
+  const [secondaryPhone, setSecondaryPhone] = useState('');
+  const [phoneVisibility, setPhoneVisibility] = useState('NONE');
   const [address, setAddress]         = useState('');
   const [pincode, setPincode]         = useState('');
   const [externalLink, setExternalLink] = useState('');
@@ -110,6 +112,8 @@ export default function SettingsPage() {
     setTwitter(profile.twitter ?? '');
     setGstNumber(profile.gstNumber ?? '');
     setPhone(profile.phone ?? '');
+    setSecondaryPhone(profile.secondaryPhone ?? '');
+    setPhoneVisibility(profile.phoneVisibility ?? 'NONE');
     setAddress(profile.address ?? '');
     setPincode(profile.pincode ?? '');
     setExternalLink(profile.externalLink ?? '');
@@ -147,7 +151,7 @@ export default function SettingsPage() {
     }
     updateProfile({
       name, bio, website, websiteLabel, location, linkedin, twitter,
-      visibility, gstNumber, phone, address, pincode, externalLink,
+      visibility, gstNumber, phone, secondaryPhone, phoneVisibility, address, pincode, externalLink,
     }, {
       onError: (error: any) => {
         if (error.data?.details) {
@@ -397,7 +401,20 @@ export default function SettingsPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                         <Field label="Full Name" span2 error={fieldErrors.name}><input type="text" value={name} onChange={e => setName(e.target.value)} className={cn(inputCls, fieldErrors.name && 'ring-1 ring-red-500 border-red-500')} /></Field>
                         <Field label="Location" error={fieldErrors.location}><div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="text" value={location} onChange={e => setLocation(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.location && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
-                        <Field label="Phone" error={fieldErrors.phone}><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={cn(inputCls, fieldErrors.phone && 'ring-1 ring-red-500 border-red-500')} /></Field>
+                        <Field label="Primary Phone" error={fieldErrors.phone}><div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.phone && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
+                        <Field label="Secondary Phone (Optional)" error={fieldErrors.secondaryPhone}><div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="tel" value={secondaryPhone} onChange={e => setSecondaryPhone(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.secondaryPhone && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
+                        <Field label="Phone Visibility">
+                          <select 
+                            value={phoneVisibility} 
+                            onChange={e => setPhoneVisibility(e.target.value)} 
+                            className={cn(inputCls, "appearance-none")}
+                          >
+                            <option value="NONE">Hide All Numbers</option>
+                            <option value="PRIMARY">Primary Only</option>
+                            <option value="SECONDARY">Secondary Only</option>
+                            <option value="BOTH">Show Both Numbers</option>
+                          </select>
+                        </Field>
                         <Field label="Bio" span2 error={fieldErrors.bio}><textarea value={bio} onChange={e => setBio(e.target.value)} className={cn(inputCls, "resize-none", fieldErrors.bio && 'ring-1 ring-red-500 border-red-500')} rows={3} maxLength={300} /><div className="flex justify-end mt-1 text-[10px] font-bold text-secondary-400">{bio.length}/300</div></Field>
                       </div>
                     </SettingsCard>

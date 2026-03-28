@@ -72,6 +72,13 @@ enum ConnectionStatus {
   BLOCKED
 }
 
+enum PhoneVisibility {
+  PRIMARY
+  SECONDARY
+  BOTH
+  NONE
+}
+
 enum MessageType {
   TEXT
   IMAGE
@@ -198,6 +205,8 @@ model User {
   avatar    String?
   bio       String?
   phone     String?  @unique
+  secondaryPhone String?
+  phoneVisibility PhoneVisibility @default(NONE)
   location  String?
   website   String?
   websiteLabel String?

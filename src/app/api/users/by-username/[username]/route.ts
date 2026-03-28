@@ -27,7 +27,9 @@ export async function GET(
                 userType: true,
                 verificationStatus: true,
                 createdAt: true,
-                phone: true, 
+                phone: true,
+                secondaryPhone: true,
+                phoneVisibility: true,
             },
         });
 
@@ -89,12 +91,22 @@ export async function GET(
         }
 
         const isConnected = connectionRecord?.status === 'ACCEPTED';
-        const canViewPhone = currentUserId === user.id || (isConnected && hasSharedAttendance);
+        const isSelf = currentUserId === user.id;
+        const canViewPhoneAtAll = isSelf || (isConnected && hasSharedAttendance);
 
-        // Strip phone if not allowed
+        // Strip phone if not allowed based on global criteria AND user preferences
         const userData = { ...user };
-        if (!canViewPhone) {
-            userData.phone = null;
+        
+        if (!isSelf) {
+            if (!canViewPhoneAtAll || user.phoneVisibility === 'NONE') {
+                userData.phone = null;
+                userData.secondaryPhone = null;
+            } else if (user.phoneVisibility === 'PRIMARY') {
+                userData.secondaryPhone = null;
+            } else if (user.phoneVisibility === 'SECONDARY') {
+                userData.phone = null;
+            }
+            // If user.phoneVisibility === 'BOTH', we keep both
         }
 
         return NextResponse.json({

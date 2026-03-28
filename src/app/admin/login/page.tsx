@@ -63,16 +63,7 @@ export default function AdminLoginPage() {
              style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
 
         <div className="relative z-10 space-y-8 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-md animate-slide-up">
-            <ShieldCheck className="w-4 h-4 text-primary-400" />
-            <span className="text-xs font-bold tracking-widest uppercase text-white/80">Secured Control Panel</span>
-          </div>
-          
           <div className="space-y-4">
-            <h1 className="text-5xl lg:text-6xl font-black text-white leading-tight animate-slide-up stagger-1">
-              Command <br />
-              <span className="text-primary-400">Your Vision.</span>
-            </h1>
             <p className="text-lg text-secondary-400 font-medium leading-relaxed animate-slide-up stagger-2">
               Welcome back, Administrator. Access the core of your platform to manage, monitor, and scale your operations with precision.
             </p>

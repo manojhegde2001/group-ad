@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { ActionIcon } from '../ui/action-icon';
 import { LoginForm } from '../auth/login-form';
 import SignupForm from '../auth/signup-form';
-import { useEffect } from 'react';
+import { Modal } from 'rizzui';
 
 export function AuthModal() {
   const { isOpen, mode, close, setMode, isDirty } = useAuthModal();
@@ -19,33 +19,14 @@ export function AuthModal() {
     close();
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
-    };
-    if (isOpen) document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen, handleClose]);
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-4" onClick={handleClose}>
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
-
-      {/* Modal */}
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      containerClassName="flex items-end sm:items-center justify-center sm:p-4"
+    >
       <div
-        className="relative z-10 w-full sm:max-w-md bg-white dark:bg-secondary-900 sm:rounded-2xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in rounded-t-2xl"
+        className="relative w-full sm:max-w-md bg-white dark:bg-secondary-900 sm:rounded-2xl shadow-2xl overflow-hidden rounded-t-2xl m-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header bar */}
@@ -107,6 +88,6 @@ export function AuthModal() {
           {mode === 'login' ? <LoginForm /> : <SignupForm />}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

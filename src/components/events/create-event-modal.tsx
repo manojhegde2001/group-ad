@@ -10,7 +10,7 @@ import {
     Upload, Loader2, CheckCircle, Plus, Image as ImageIcon,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/button';
+import { Modal, Button } from 'rizzui';
 import { Avatar } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,12 +37,6 @@ export function CreateEventModal() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Lock body scroll
-    useEffect(() => {
-        if (isOpen) document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
-    }, [isOpen]);
 
     const reset = () => {
         setTitle('');
@@ -141,14 +135,14 @@ export function CreateEventModal() {
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={handleClose}>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
-
+        <Modal
+            isOpen={isOpen}
+            onClose={handleClose}
+            containerClassName="flex items-end sm:items-center justify-center p-0 sm:p-4"
+        >
             <div
-                className="relative z-10 w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-2xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-2xl"
+                className="relative w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-2xl shadow-2xl overflow-hidden max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-2xl m-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -382,6 +376,6 @@ export function CreateEventModal() {
                     </div>
                 )}
             </div>
-        </div>
+        </Modal>
     );
 }

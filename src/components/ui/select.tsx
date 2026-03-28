@@ -109,13 +109,16 @@ export const Select = ({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <ListboxOptions className="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white dark:bg-secondary-900 border border-secondary-100 dark:border-secondary-800 py-1 text-base shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            <ListboxOptions 
+              anchor="bottom start"
+              className="z-[70] mt-1 max-h-60 w-[calc(var(--input-width))] min-w-[12rem] [--anchor-gap:4px] overflow-auto rounded-xl bg-white dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 py-1 text-sm shadow-2xl ring-1 ring-black/5 focus:outline-none"
+            >
               {options.map((option) => (
                 <ListboxOption
                   key={option.value}
                   className={({ active, selected }) =>
                     cn(
-                      'relative cursor-pointer select-none py-3 px-4 transition-colors',
+                      'relative cursor-pointer select-none py-2.5 px-3.5 transition-colors',
                       active ? 'bg-secondary-50 dark:bg-secondary-800 text-primary-600' : 'text-secondary-700 dark:text-secondary-300',
                       selected && 'font-black bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
                     )
@@ -124,12 +127,12 @@ export const Select = ({
                 >
                   {({ selected }) => (
                     <>
-                      <span className={cn('block truncate text-xs uppercase tracking-widest', selected ? 'font-black' : 'font-bold')}>
+                      <span className={cn('block truncate text-[11px] uppercase tracking-wider', selected ? 'font-black' : 'font-bold')}>
                         {option.label}
                       </span>
                       {selected && (
-                        <span className="absolute inset-y-0 right-4 flex items-center">
-                          <Check className="h-4 w-4" aria-hidden="true" />
+                        <span className="absolute inset-y-0 right-3 flex items-center">
+                          <Check className="h-3.5 w-3.5" aria-hidden="true" />
                         </span>
                       )}
                     </>

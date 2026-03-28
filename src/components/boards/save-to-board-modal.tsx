@@ -5,6 +5,7 @@ import { useSaveToBoard } from '@/hooks/use-feed';
 import { X, Plus, Check, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { Modal } from 'rizzui';
 
 interface Board {
   id: string;
@@ -103,18 +104,13 @@ export function SaveToBoardModal() {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={close}
-      />
-
-      {/* Modal Content */}
-      <div className="relative w-full max-w-sm bg-white dark:bg-secondary-900 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+    <Modal
+      isOpen={isOpen}
+      onClose={close}
+      containerClassName="flex items-center justify-center p-4"
+    >
+      <div className="relative w-full max-w-sm bg-white dark:bg-secondary-900 rounded-3xl shadow-2xl overflow-hidden m-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-100 dark:border-secondary-800">
           <h2 className="text-xl font-bold text-secondary-900 dark:text-white">Save to board</h2>
           <button 
@@ -210,6 +206,6 @@ export function SaveToBoardModal() {
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

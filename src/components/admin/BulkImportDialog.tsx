@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
-import { Button } from '@/components/ui/button';
+import { Modal, Button } from 'rizzui';
 import { Card } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -205,129 +205,103 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-secondary-900/60 backdrop-blur-md animate-in fade-in duration-300">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      containerClassName="flex items-center justify-center p-4"
+    >
       <Card className="w-full max-w-4xl bg-white dark:bg-secondary-950 rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 md:p-8 flex items-center justify-between border-b border-secondary-100 dark:border-secondary-900 bg-secondary-50/40 dark:bg-secondary-900/40">
-           <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary-500/20 ring-4 ring-primary-50 dark:ring-primary-900/20 text-white">
-                 {step === 3 ? <CheckCircle2 className="w-6 h-6" /> : <Upload className="w-6 h-6" />}
-              </div>
-              <div>
-                 <h2 className="text-xl md:text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">
-                    {step === 1 && "Bulk Deployment"}
-                    {step === 2 && "Identity Review"}
-                    {step === 3 && "Workspace Updated"}
-                 </h2>
-                 <p className="text-[10px] font-black text-secondary-400 tracking-[0.3em] uppercase mt-1">
-                    {step === 1 && "Standardized Onboarding Protocol"}
-                    {step === 2 && `Validating ${data.length} Security Identities`}
-                    {step === 3 && "Accounts Synchronized Successfully"}
-                 </p>
-              </div>
+        <div className="p-5 md:p-6 flex items-center justify-between border-b border-secondary-100 dark:border-secondary-900 bg-secondary-50/20 dark:bg-secondary-900/40">
+           <div>
+              <h2 className="text-lg md:text-xl font-bold text-secondary-900 dark:text-white">
+                 {step === 1 && "Bulk Import"}
+                 {step === 2 && "Review Users"}
+                 {step === 3 && "Import Complete"}
+              </h2>
            </div>
-           <button onClick={onClose} className="p-3 hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-3xl transition-all active:scale-90">
-              <X className="w-7 h-7 text-secondary-400" />
+           <button onClick={onClose} className="p-1.5 hover:bg-secondary-200/50 dark:hover:bg-secondary-800 rounded-lg transition-all">
+              <X className="w-5 h-5 text-secondary-400" />
            </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6 md:p-8 relative">
+        <div className="flex-1 overflow-auto p-5 md:p-6 relative">
           {step === 1 && (
-            <div className="flex flex-col items-center justify-center h-full space-y-8 py-6">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-                  <button 
-                    onClick={downloadTemplate}
-                    className="group relative p-8 bg-secondary-50 dark:bg-secondary-900 border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-3xl hover:border-primary-500 hover:bg-white dark:hover:bg-secondary-800 transition-all duration-300 text-center space-y-4"
-                  >
-                     <div className="w-16 h-16 bg-white dark:bg-secondary-800 rounded-2xl mx-auto flex items-center justify-center text-secondary-300 group-hover:text-primary-500 shadow-lg group-hover:shadow-primary-500/10 transition-all ring-8 ring-secondary-50/50 dark:ring-secondary-900/50 group-hover:ring-primary-50 group-hover:dark:ring-primary-900/20">
-                        <Download className="w-7 h-7" />
-                     </div>
-                     <div>
-                        <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight text-base">Download Template</p>
-                        <p className="text-[10px] font-bold text-secondary-400 mt-2 uppercase tracking-widest">Restricted Excel Format</p>
-                     </div>
-                  </button>
+            <div className="flex flex-col items-center justify-center h-full space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-xl">
+                  {/* Template Card */}
+                  <div className="p-6 bg-secondary-50/50 dark:bg-secondary-900/30 border border-secondary-200 dark:border-secondary-800 rounded-2xl transition-all">
+                     <h3 className="font-bold text-secondary-900 dark:text-white mb-1">Template</h3>
+                     <p className="text-xs text-secondary-500 mb-4">Download the Excel format.</p>
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       onClick={downloadTemplate}
+                       className="w-full rounded-xl font-bold border-secondary-200"
+                     >
+                        Download
+                     </Button>
+                  </div>
 
-                  <button 
-                    disabled={loading}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="group p-8 bg-primary-500 rounded-3xl hover:bg-primary-600 transition-all duration-300 text-center space-y-4 text-white shadow-2xl shadow-primary-500/30 active:scale-95"
-                  >
-                     <div className="w-16 h-16 bg-white/10 rounded-2xl mx-auto flex items-center justify-center text-white shadow-inner backdrop-blur-sm group-hover:scale-110 transition-transform">
-                        {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : <FileSpreadsheet className="w-8 h-8" />}
-                     </div>
-                     <div>
-                        <p className="font-black uppercase tracking-tight text-base">Initialize Upload</p>
-                        <p className="text-[10px] font-black text-white/50 mt-2 uppercase tracking-widest">Supports .XLSX, .CSV</p>
-                     </div>
+                  {/* Upload Card */}
+                  <div className="p-6 bg-primary-500 rounded-2xl text-white">
+                     <h3 className="font-bold mb-1">Upload</h3>
+                     <p className="text-xs text-white/70 mb-4">Select your filled-out file.</p>
+                     <Button 
+                       size="sm"
+                       disabled={loading}
+                       onClick={() => fileInputRef.current?.click()}
+                       className="w-full bg-white text-primary-600 hover:bg-primary-50 rounded-xl font-bold border-none"
+                     >
+                        {loading ? "..." : "Select File"}
+                     </Button>
                      <input type="file" hidden ref={fileInputRef} accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
-                  </button>
-               </div>
-               
-               <div className="p-6 bg-secondary-50 dark:bg-secondary-900/50 rounded-3xl border border-secondary-100 dark:border-secondary-800 max-w-xl">
-                  <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] leading-relaxed text-center">
-                    Security Protocol: All passwords are encrypted on creation. Emails must be unique. Workspace categories are auto-mapped based on template names.
-                  </p>
+                  </div>
                </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-8 h-full flex flex-col">
-               <div className="flex items-center gap-5 p-5 bg-amber-50 dark:bg-amber-900/10 border-2 border-amber-100 dark:border-amber-900/20 rounded-[2rem]">
-                  <ShieldAlert className="w-8 h-8 text-amber-500 shrink-0" />
-                  <div>
-                    <p className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-tight">Manual Verification Required</p>
-                    <p className="text-[10px] font-bold text-amber-700/70 dark:text-amber-400/70 uppercase tracking-widest mt-0.5">
-                      Review types and categories below. Red rows contain critical validation errors.
-                    </p>
-                  </div>
-               </div>
-
-               <div className="flex-1 overflow-hidden border-2 border-secondary-50 dark:border-secondary-900 rounded-[2.5rem] bg-white dark:bg-secondary-950 shadow-inner">
-                  <div className="overflow-auto h-full scrollbar-hide">
-                    <table className="w-full text-left border-collapse">
-                       <thead className="sticky top-0 z-10">
+            <div className="space-y-4 h-full flex flex-col">
+               <div className="flex-1 overflow-hidden border border-secondary-100 dark:border-secondary-800 rounded-2xl bg-white dark:bg-secondary-950">
+                  <div className="overflow-auto h-full">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
+                       <thead className="sticky top-0 z-[20]">
                           <tr className="bg-secondary-50 dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800">
-                             <th className="px-6 py-5">
+                             <th className="px-4 py-3 w-10">
                                 <Checkbox 
                                   checked={data.length > 0 && data.every(d => d.selected)}
-                                  onChange={(e) => setData(data.map(d => ({ ...d, selected: e.target.checked })))}
+                                  onChange={(e: any) => setData(data.map(d => ({ ...d, selected: e.target.checked })))}
                                 />
                              </th>
-                             <th className="px-8 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Identity Details</th>
-                             <th className="px-6 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Account Type</th>
-                             <th className="px-6 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Category</th>
-                             <th className="px-8 py-5 font-black uppercase text-[10px] tracking-[0.2em] text-secondary-400">Status</th>
+                             <th className="px-3 py-3 font-bold text-[10px] text-secondary-500 uppercase tracking-wider">User</th>
+                             <th className="px-3 py-3 font-bold text-[10px] text-secondary-500 uppercase tracking-wider">Type</th>
+                             <th className="px-3 py-3 font-bold text-[10px] text-secondary-500 uppercase tracking-wider">Category</th>
+                             <th className="px-4 py-3 font-bold text-[10px] text-secondary-500 uppercase tracking-wider text-right">Status</th>
                           </tr>
                        </thead>
                        <tbody className="divide-y divide-secondary-50 dark:divide-secondary-900">
                            {data.map((row, i) => (
-                             <tr key={i} className={cn("transition-colors group", !row.isValid ? "bg-red-50/30 dark:bg-red-900/10" : "hover:bg-secondary-50/50 dark:hover:bg-secondary-900/30")}>
-                                <td className="px-6 py-4">
+                             <tr key={i} className={cn("transition-colors", !row.isValid ? "bg-red-500/5" : "hover:bg-secondary-50/50 dark:hover:bg-secondary-900/30")}>
+                                <td className="px-4 py-3">
                                    <Checkbox 
                                      checked={row.selected}
-                                     onChange={(e) => updateRowField(i, 'selected', e.target.checked)}
+                                     onChange={(e: any) => updateRowField(i, 'selected', e.target.checked)}
                                    />
                                 </td>
-                                <td className="px-8 py-6">
-                                   <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-800 rounded-xl flex items-center justify-center text-xs font-black text-secondary-400 group-hover:text-primary-500 transition-colors shadow-sm">{i + 1}</div>
-                                      <div className="min-w-0">
-                                         <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate">{row.name}</p>
-                                         <p className="text-[10px] font-bold text-secondary-400 tracking-tight truncate">@{row.username} • {row.email}</p>
-                                      </div>
+                                <td className="px-3 py-3">
+                                   <div className="min-w-0">
+                                      <p className="font-bold text-secondary-900 dark:text-white truncate text-sm leading-tight">{row.name}</p>
+                                      <p className="text-[10px] text-secondary-400 truncate tracking-tight">{row.email}</p>
                                    </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                   <div className="w-36">
+                                <td className="px-3 py-3">
+                                   <div className="w-28">
                                       <Select 
                                         size="sm"
-                                        rounded="lg"
+                                        rounded="sm"
                                         value={row.userType} 
                                         onChange={(val) => updateRowField(i, 'userType', val)}
                                         options={[
@@ -337,37 +311,35 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
                                       />
                                    </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                   <div className="w-48">
+                                <td className="px-3 py-3">
+                                   <div className="w-36">
                                       <Select 
                                         size="sm"
-                                        rounded="lg"
+                                        rounded="sm"
                                         value={row.categoryId} 
                                         onChange={(val) => updateRowField(i, 'categoryId', val)}
                                         options={[
                                           { label: 'None', value: 'NONE' },
-                                          ...categories.map(c => ({ label: c.name.toUpperCase(), value: c.id }))
+                                          ...categories.map(c => ({ label: c.name, value: c.id }))
                                         ]}
                                       />
                                    </div>
                                 </td>
-                                <td className="px-8 py-4">
+                                <td className="px-4 py-3 text-right">
                                    {row.isValid ? (
-                                      <div className="inline-flex items-center gap-2 text-emerald-500 dark:text-emerald-400 font-black text-[10px] uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800">
-                                         <CheckCircle2 className="w-3.5 h-3.5" /> SECURE
-                                      </div>
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
                                    ) : (
-                                      <div className="space-y-1.5 min-w-[150px]">
+                                      <div className="flex flex-col items-end gap-0.5">
                                          {row.errors.map((err, ei) => (
-                                            <div key={ei} className="inline-flex items-center gap-2 text-red-500 font-black text-[9px] uppercase tracking-widest bg-red-50 dark:bg-red-900/20 px-2.5 py-1 rounded-lg border border-red-100 dark:border-red-800/40">
-                                               <AlertCircle className="w-3 h-3" /> {err}
-                                            </div>
+                                            <span key={ei} className="text-red-500 font-bold text-[9px] uppercase tracking-tight">
+                                               {err}
+                                            </span>
                                          ))}
                                       </div>
                                    )}
                                 </td>
                              </tr>
-                          ))}
+                           ))}
                        </tbody>
                     </table>
                   </div>
@@ -376,21 +348,20 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
           )}
 
           {step === 3 && (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-8 animate-in zoom-in duration-500 py-20">
-               <div className="relative">
-                  <div className="w-40 h-40 bg-emerald-500 rounded-[3.5rem] shadow-[0_20px_50px_rgba(16,185,129,0.4)] flex items-center justify-center text-white scale-110 active:scale-100 transition-transform">
-                     <CheckCircle2 className="w-20 h-20" />
-                  </div>
-                  <div className="absolute -top-4 -right-4 w-14 h-14 bg-white dark:bg-secondary-900 rounded-[1.5rem] flex items-center justify-center text-emerald-500 shadow-2xl border-4 border-emerald-500 ring-8 ring-white/10">
-                     <p className="font-black text-lg">+{data.filter(u => u.isValid).length}</p>
-                  </div>
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-8">
+               <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                  <CheckCircle2 className="w-8 h-8" />
                </div>
-               <div className="max-w-md space-y-4">
-                  <h3 className="text-4xl font-black text-secondary-900 dark:text-white tracking-tighter uppercase leading-none">Onboarding Complete</h3>
-                  <p className="text-secondary-500 font-bold uppercase text-[10px] tracking-[0.2em] opacity-70">New professional identities have been successfully synchronized with the primary workspace architecture.</p>
+               <div className="space-y-1">
+                  <h3 className="text-xl font-bold text-secondary-900 dark:text-white">Imported Successfully</h3>
+                  <p className="text-secondary-500 text-xs font-medium">{data.filter(u => u.isValid).length} users have been added to your platform.</p>
                </div>
-               <Button onClick={onClose} className="rounded-[1.5rem] h-14 px-12 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-transform">
-                  Dismiss Workspace
+               <Button 
+                size="sm"
+                onClick={onClose} 
+                className="rounded-xl px-8 font-bold mt-4"
+              >
+                  Close
                </Button>
             </div>
           )}
@@ -398,27 +369,21 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
 
         {/* Footer */}
         {step === 2 && (
-          <div className="p-8 md:p-10 bg-secondary-50 dark:bg-secondary-900 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-6">
-             <button onClick={() => setStep(1)} className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-400 hover:text-primary-500 transition-colors flex items-center gap-2">
-                ← Reset Protocol
+          <div className="p-5 md:p-6 bg-secondary-50/50 dark:bg-secondary-900/50 border-t border-secondary-100 dark:border-secondary-800 flex items-center justify-between gap-4">
+             <button onClick={() => setStep(1)} className="text-xs font-bold text-secondary-400 hover:text-secondary-600 transition-colors">
+                ← Back
              </button>
-             <div className="flex gap-6 items-center">
-                <div className="hidden md:flex flex-col items-end">
-                   <p className="text-[10px] font-black text-secondary-900 dark:text-white uppercase tracking-widest">Selected Capacity</p>
-                   <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest">{data.filter(u => u.isValid).length} / {data.length} Deployable</p>
-                </div>
-                <Button 
-                  onClick={executeImport}
-                  disabled={loading || data.filter(u => u.isValid).length === 0}
-                  className="rounded-[1.5rem] h-14 px-10 bg-primary-500 hover:bg-primary-600 font-black uppercase tracking-widest text-white shadow-2xl shadow-primary-500/30 group"
-                >
-                   {loading ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : <ChevronRight className="w-6 h-6 mr-3 group-hover:translate-x-1 transition-transform" />}
-                   Finalize Deployment
-                </Button>
-             </div>
+             <Button 
+               onClick={executeImport}
+               disabled={loading || data.filter(u => u.isValid && u.selected).length === 0}
+               className="rounded-xl h-10 px-6 bg-primary-500 hover:bg-primary-600 font-bold text-white text-xs border-none"
+             >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ChevronRight className="w-4 h-4 mr-2" />}
+                Create {data.filter(u => u.isValid && u.selected).length} Users
+             </Button>
           </div>
         )}
       </Card>
-    </div>
+    </Modal>
   );
 }

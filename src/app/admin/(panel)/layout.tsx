@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -19,12 +20,17 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
     if (!dbUser || dbUser.userType !== 'ADMIN') redirect('/admin/login');
 
+    const headersList = await headers();
+    const host = headersList.get('host') || '';
+    const isAdminSubdomain = host.startsWith('admin.');
+
     return (
         <div className="min-h-screen flex bg-background transition-colors duration-300 font-jakarta">
             <AdminSidebar
                 userName={dbUser.name ?? 'Admin'}
                 userEmail={dbUser.email ?? ''}
                 userAvatar={dbUser.avatar ?? undefined}
+                isAdminSubdomain={isAdminSubdomain}
             />
             <div className="flex-1 flex flex-col min-w-0">
                 <AdminTopBar

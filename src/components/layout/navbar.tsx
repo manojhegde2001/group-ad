@@ -14,6 +14,9 @@ import { Button } from '@/components/ui/button';
 import {
   LogOut,
   Settings,
+  Bell,
+  Check,
+  CheckCheck,
   Loader2,
   X,
   Menu,
@@ -26,7 +29,6 @@ import {
   PlusCircle,
   User,
   Layout,
-  Bell,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -35,6 +37,7 @@ import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { SearchBar } from './search-bar';
 import { ActionIcon } from '../ui/action-icon';
 import { cn } from '@/lib/utils';
+import { Drawer, Popover } from 'rizzui';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -82,7 +85,7 @@ export function Navbar() {
   const loading = authLoading || (isAuthenticated && meLoading && !meUser);
 
   const { openLogin, openSignup } = useAuthModal();
-  const { searchQuery, setSearch } = useFeedFilter();
+  const { setSearch } = useFeedFilter();
   const { open: openCreatePost } = useCreatePost();
   const { totalUnread: unreadMessages } = useUnreadMessages();
   const { unreadCount: unreadNotifications } = useUnreadNotifications();
@@ -93,7 +96,6 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [queryStarted, setQueryStarted] = useState(false);
 
   useEffect(() => {
@@ -109,25 +111,6 @@ export function Navbar() {
   }, [openLogin, queryStarted]);
 
   useEffect(() => { setMounted(true); }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (mobileDrawerOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; }
-  }, [mobileDrawerOpen]);
 
   const handleLogout = async () => {
     setDropdownOpen(false);
@@ -205,221 +188,197 @@ export function Navbar() {
 
             <ThemeSwitcher />
 
-            {/* Profile Dropdown Toggle */}
-            <div className="relative ml-1 md:ml-2" ref={dropdownRef}>
+            {/* Profile Menu */}
+            <div className="ml-1 md:ml-2">
               {loading || isLoggingOut ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+                <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
               ) : (
-                  <button
-                      onClick={() => setDropdownOpen(!dropdownOpen)}
-                      className="flex items-center justify-center w-10 h-10 rounded-full hover:ring-4 ring-secondary-100 dark:ring-secondary-800 transition-all"
-                  >
+                <Popover isOpen={dropdownOpen} setIsOpen={setDropdownOpen} placement="bottom-end">
+                  <Popover.Trigger>
+                    <button className="flex items-center justify-center w-10 h-10 rounded-full hover:ring-4 ring-secondary-100 dark:ring-secondary-800 transition-all shrink-0">
                       <Avatar
-                          src={(user?.avatar as string) ?? undefined}
-                          name={(user?.name as string) || 'User'}
-                          size="sm"
-                          rounded="full"
-                          className="w-10 h-10 object-cover"
+                        src={(user?.avatar as string) ?? undefined}
+                        name={(user?.name as string) || 'User'}
+                        size="sm"
+                        rounded="full"
+                        className="w-10 h-10 object-cover shadow-sm"
                       />
-                  </button>
-              )}
+                    </button>
+                  </Popover.Trigger>
+                  <Popover.Content className="z-[9999] p-2 w-[min(calc(100vw-2rem),280px)] bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden">
+                    <div className="flex flex-col gap-1">
+                      {/* Profile Header */}
+                      <Link
+                        href={`/profile/${(user as any).username || ''}`}
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors group"
+                      >
+                        <Avatar
+                          src={(user?.avatar as string) || undefined}
+                          name={user?.name || 'User'}
+                          size="sm"
+                          className="w-11 h-11 shadow-sm transition-transform group-hover:scale-105"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-bold text-secondary-900 dark:text-white leading-tight truncate">{user?.name}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-secondary-400 mt-1">
+                            {(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal Account'}
+                          </p>
+                        </div>
+                      </Link>
 
-              {/* Desktop Dropdown */}
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-secondary-900 sm:bg-white sm:dark:bg-secondary-900 sm:backdrop-blur-md rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700 overflow-hidden z-[200] p-2 hidden md:block">
-                  <div className="px-3 py-3 rounded-xl mb-1 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white">
-                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
-                          <div className="flex items-center gap-3">
-                              <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="sm" className="w-12 h-12" />
-                              <div>
-                                  <p className="font-bold leading-tight">{user?.name}</p>
-                                  <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal'}</p>
-                              </div>
-                          </div>
-                      </Link>
-                  </div>
-                  
-                  <div className="space-y-1">
-                      {(user as any).userType === 'ADMIN' || (user as any).userType === 'BUSINESS' ? (
-                        <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                            <Calendar className="w-5 h-5" /> Events
+                      <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+
+                      {/* Menu Links */}
+                      <div className="space-y-0.5">
+                        {((user as any).userType === 'ADMIN' || (user as any).userType === 'BUSINESS') && (
+                          <Link
+                            href="/events/calendar"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800/50 font-bold text-xs text-secondary-700 dark:text-secondary-300 transition-colors"
+                          >
+                            <Calendar className="w-4 h-4" /> Events Calendar
+                          </Link>
+                        )}
+                        <Link
+                          href={`/profile/${(user as any).username || ''}`}
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800/50 font-bold text-xs text-secondary-700 dark:text-secondary-300 transition-colors"
+                        >
+                          <Library className="w-4 h-4" /> My Workspace
                         </Link>
-                      ) : null}
-                      
-                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                          <Library className="w-5 h-5" /> My Posts
-                      </Link>
-                      
-                      {(user as any).userType === 'ADMIN' && (
-                      <Link href="https://admin.groupad.net/" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
-                          <ShieldCheck className="w-5 h-5" /> Admin Panel
-                      </Link>
-                      )}
-                      <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                      <Settings className="w-5 h-5" /> Settings
-                      </Link>
-                      <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                      <LogOut className="w-5 h-5" /> Log out
+
+                        {(user as any).userType === 'ADMIN' && (
+                          <Link
+                            href="https://admin.groupad.net/"
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/10 font-bold text-xs text-primary-600 dark:text-primary-400 transition-colors"
+                          >
+                            <ShieldCheck className="w-4 h-4" /> Admin Console
+                          </Link>
+                        )}
+
+                        <Link
+                          href="/settings"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800/50 font-bold text-xs text-secondary-700 dark:text-secondary-300 transition-colors"
+                        >
+                          <Settings className="w-4 h-4" /> Account Settings
+                        </Link>
+                      </div>
+
+                      <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/10 font-bold text-xs text-red-500 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" /> Terminate Session
                       </button>
-                  </div>
-                </div>
+                    </div>
+                  </Popover.Content>
+                </Popover>
               )}
             </div>
 
             {/* Mobile Menu Trigger */}
             <button
-                className="md:hidden p-3 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
-                onClick={() => setMobileDrawerOpen(true)}
+              className="md:hidden p-3 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
+              onClick={() => setMobileDrawerOpen(true)}
             >
-                <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-300" />
+              <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-300" />
             </button>
           </div>
         </div>
       </nav>
 
-      {/* PORTAL/OUTSIDE DRAWERS TO AVOID BACKDROP-FILTER CLIPPING */}
-      
-      {/* Mobile Profile Drawer */}
-      {dropdownOpen && (
-          <div className="fixed inset-0 z-[150] md:hidden">
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDropdownOpen(false)} />
-              <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-secondary-900 rounded-t-3xl shadow-2xl p-4 animate-slide-up flex flex-col max-h-[80vh]">
-                  <div className="flex items-center justify-between mb-4 px-2">
-                      <span className="font-bold text-lg text-secondary-900 dark:text-white">Profile</span>
-                      <ActionIcon
-                          variant="flat"
-                          color="secondary"
-                          rounded="full"
-                          onClick={() => setDropdownOpen(false)}
-                      >
-                          <X className="w-5 h-5" />
-                      </ActionIcon>
-                  </div>
-                  
-                  <div className="overflow-y-auto space-y-4 pb-6">
-                      <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setDropdownOpen(false)}>
-                          <div className="flex items-center gap-4 p-4 bg-secondary-50 dark:bg-secondary-800 rounded-2xl">
-                              <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-16 h-16" />
-                              <div>
-                                  <p className="font-bold text-lg text-secondary-900 dark:text-white leading-tight">{user?.name}</p>
-                                  <p className="text-sm text-secondary-500">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
-                              </div>
-                          </div>
-                      </Link>
-                      
-                      <div className="space-y-1">
-                          {(user as any).userType === 'ADMIN' || (user as any).userType === 'BUSINESS' ? (
-                            <Link href="/events/calendar" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                                <Calendar className="w-5 h-5" /> Events
-                            </Link>
-                          ) : null}
-                          
-                          {(user as any).userType === 'ADMIN' && (
-                              <Link href="https://admin.groupad.net/" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-primary-600 dark:text-primary-400">
-                                  <ShieldCheck className="w-5 h-5" /> Admin Panel
-                              </Link>
-                          )}
-                          <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-secondary-900 dark:text-white">
-                              <Settings className="w-5 h-5" /> Settings
-                          </Link>
-                          <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 font-semibold text-red-500">
-                              <LogOut className="w-5 h-5" /> Log out
-                          </button>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
+      <Drawer
+          isOpen={mobileDrawerOpen}
+          onClose={() => setMobileDrawerOpen(false)}
+          placement="right"
+          containerClassName="md:hidden w-[85vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl flex flex-col overflow-hidden"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-secondary-100 dark:border-secondary-800">
+            <div className="flex items-center gap-2">
+                <Logo className="w-8 h-8" iconOnly />
+                <span className="font-bold text-xl text-secondary-900 dark:text-white">Menu</span>
+            </div>
+            <ActionIcon
+                variant="flat"
+                rounded="full"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="hover:rotate-90 transition-transform duration-300"
+            >
+                <X className="w-5 h-5" />
+            </ActionIcon>
+        </div>
 
-      {/* Mobile Menu Drawer */}
-      {mobileDrawerOpen && (
-          <div className="fixed inset-0 z-[200] md:hidden">
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setMobileDrawerOpen(false)} />
-              <div className="absolute top-0 right-0 w-[85vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl z-50 flex flex-col animate-slide-in-right overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-secondary-100 dark:border-secondary-800">
-                    <div className="flex items-center gap-2">
-                        <Logo className="w-8 h-8" iconOnly />
-                        <span className="font-bold text-xl text-secondary-900 dark:text-white">Menu</span>
-                    </div>
-                    <ActionIcon
-                        variant="flat"
-                        color="secondary"
-                        rounded="full"
-                        onClick={() => setMobileDrawerOpen(false)}
-                        className="hover:rotate-90 transition-transform duration-300"
-                    >
-                        <X className="w-5 h-5" />
-                    </ActionIcon>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-none">
-                    {/* User Profile Section */}
-                    {isAuthenticated && user && (
-                        <div className="p-4 bg-secondary-50 dark:bg-secondary-800/50 rounded-2xl border border-secondary-100 dark:border-secondary-800">
-                           <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setMobileDrawerOpen(false)} className="flex items-center gap-4">
-                                <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-14 h-14 ring-2 ring-white dark:ring-secondary-700 shadow-sm" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-secondary-900 dark:text-white truncate">{user?.name}</p>
-                                    <p className="text-sm text-secondary-500 truncate">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
-                                </div>
-                           </Link>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-none">
+            {/* User Profile Section */}
+            {isAuthenticated && user && (
+                <div className="p-4 bg-secondary-50 dark:bg-secondary-800/50 rounded-2xl border border-secondary-100 dark:border-secondary-800">
+                   <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setMobileDrawerOpen(false)} className="flex items-center gap-4">
+                        <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-14 h-14 ring-2 ring-white dark:ring-secondary-700 shadow-sm" />
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-secondary-900 dark:text-white truncate">{user?.name}</p>
+                            <p className="text-sm text-secondary-500 truncate">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
                         </div>
-                    )}
-
-                    {/* Main Navigation */}
-                    <nav className="space-y-1">
-                        <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Navigation</p>
-                        <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
-                        <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
-                        <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
-                        <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
-                        {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
-                          <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
-                        )}
-                        <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
-                    </nav>
-
-                    {/* Create Post Section - Only for authorized users */}
-                    {( (user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED') ) && (
-                        <div className="space-y-1">
-                             <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Actions</p>
-                             <button
-                                onClick={() => {
-                                    setMobileDrawerOpen(false);
-                                    openCreatePost();
-                                }}
-                                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary-500 text-white font-bold shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
-                             >
-                                <PlusCircle className="w-6 h-6" /> Create Post
-                             </button>
-                        </div>
-                    )}
-
-                    {/* Account Section */}
-                    <div className="space-y-1">
-                        <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Account</p>
-                        <DrawerLink href={`/profile/${(user as any).username || ''}`} icon={User} label="My Profile" onClick={() => setMobileDrawerOpen(false)} active={pathname === `/profile/${(user as any).username}`} />
-                        {(user as any)?.userType === 'ADMIN' && (
-                             <DrawerLink href="https://admin.groupad.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
-                        )}
-                        <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
-                    </div>
+                   </Link>
                 </div>
+            )}
 
-                {/* Footer */}
-                <div className="p-6 border-t border-secondary-100 dark:border-secondary-800">
-                    <button 
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                    >
-                        <LogOut className="w-5 h-5" /> Log out
-                    </button>
+            {/* Main Navigation */}
+            <nav className="space-y-1">
+                <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Navigation</p>
+                <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
+                <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
+                <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
+                <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
+                {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
+                  <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
+                )}
+                <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
+            </nav>
+
+            {/* Create Post Section - Only for authorized users */}
+            {( (user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED') ) && (
+                <div className="space-y-1">
+                     <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Actions</p>
+                     <button
+                        onClick={() => {
+                            setMobileDrawerOpen(false);
+                            openCreatePost();
+                        }}
+                        className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary-500 text-white font-bold shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
+                     >
+                        <PlusCircle className="w-6 h-6" /> Create Post
+                     </button>
                 </div>
-              </div>
-          </div>
-      )}
+            )}
+
+            {/* Account Section */}
+            <div className="space-y-1">
+                <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Account</p>
+                <DrawerLink href={`/profile/${(user as any).username || ''}`} icon={User} label="My Profile" onClick={() => setMobileDrawerOpen(false)} active={pathname === `/profile/${(user as any).username}`} />
+                {(user as any)?.userType === 'ADMIN' && (
+                     <DrawerLink href="https://admin.groupad.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
+                )}
+                <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
+            </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-secondary-100 dark:border-secondary-800">
+            <button 
+                onClick={handleLogout}
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            >
+                <LogOut className="w-5 h-5" /> Log out
+            </button>
+        </div>
+      </Drawer>
     </>
   );
 }

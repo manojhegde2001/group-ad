@@ -11,6 +11,7 @@ import {
   ShieldAlert, CalendarDays, MapPin, Settings,
   LogOut, ExternalLink, Menu, X, ChevronDown, Activity,
 } from 'lucide-react';
+import { Drawer } from 'rizzui';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 
@@ -18,6 +19,7 @@ interface AdminSidebarProps {
   userName: string;
   userEmail: string;
   userAvatar?: string;
+  isAdminSubdomain?: boolean;
 }
 
 interface NavItem {
@@ -63,7 +65,7 @@ const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
 });
 
-export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminSidebarProps) {
+export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminSubdomain = false }: AdminSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -74,9 +76,7 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
   };
 
   const getHref = (href: string) => {
-    if (typeof window === 'undefined') return href;
-    const isAdminSubdomain = window.location.hostname.startsWith('admin.');
-    if (isAdminSubdomain) return href;
+    if (isAdminSubdomain) return href || '/';
     return `/admin${href === '/' ? '' : href}`;
   };
 
@@ -195,30 +195,23 @@ export default function AdminSidebar({ userName, userEmail, userAvatar }: AdminS
     <>
       {/* Mobile toggle */}
       <button
-        className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 lg:hidden"
+        className="fixed top-4 left-4 z-[40] p-2 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 lg:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
         {mobileOpen ? <X className="w-5 h-5 text-slate-700 dark:text-white" /> : <Menu className="w-5 h-5 text-slate-700 dark:text-white" />}
       </button>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar — mobile drawer */}
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 shadow-2xl transition-transform duration-300 lg:hidden',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
+      {/* Mobile drawer */}
+      <Drawer
+        isOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        placement="left"
+        size="sm"
+        className="z-50"
       >
         <SidebarContent />
-      </aside>
+      </Drawer>
 
       {/* Sidebar — desktop static */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0">

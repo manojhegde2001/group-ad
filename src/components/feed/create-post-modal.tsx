@@ -9,7 +9,7 @@ import {
     Tags,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/button';
+import { Modal, Button } from 'rizzui';
 import { Avatar } from '@/components/ui/avatar';
 
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
@@ -50,16 +50,12 @@ export function CreatePostModal() {
         }
     }, [editingPost, user]);
 
-    // Lock body scroll
+    // Validation
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            if (!isAllowed) {
-                toast.error('Only business accounts can create/edit posts');
-                close();
-            }
+        if (isOpen && !isAllowed) {
+            toast.error('Only business accounts can create/edit posts');
+            close();
         }
-        return () => { document.body.style.overflow = ''; };
     }, [isOpen, isAllowed, close]);
 
     const reset = () => {
@@ -103,8 +99,6 @@ export function CreatePostModal() {
                     toast.error(`${file.name} is too large (Max: 100MB video)`);
                     return;
                 }
-                // Check if we already have a video? 
-                // User said "mix", so multiple videos should be fine if Cloudinary supports it.
             } else {
                 if (file.size > 25 * 1024 * 1024) {
                     toast.error(`${file.name} is too large (Max: 25MB image)`);
@@ -118,7 +112,6 @@ export function CreatePostModal() {
         if (newFiles.length > 0) {
             setMediaFiles(prev => [...prev, ...newFiles]);
             setMediaPreviews(prev => [...prev, ...newPreviews]);
-            // Infer post type: if any video, set to VIDEO (for backend compatibility primarily)
             const hasVideo = [...mediaFiles, ...newFiles].some(f => f.type.startsWith('video/'));
             setPostType(hasVideo ? 'VIDEO' : 'IMAGE');
         }
@@ -155,7 +148,7 @@ export function CreatePostModal() {
         setMediaPreviews(newPreviews);
         
         if (newPreviews.length === 0) {
-            setPostType('IMAGE'); // Reset to default
+            setPostType('IMAGE');
         }
     };
 
@@ -261,20 +254,17 @@ export function CreatePostModal() {
         }
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div 
-            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" 
-            onClick={handleClose}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={handleDrop}
+        <Modal
+            isOpen={isOpen}
+            onClose={handleClose}
+            containerClassName="flex items-end sm:items-center justify-center p-0 sm:p-4"
         >
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
-
             <div
-                className={`relative z-10 w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-3xl border border-transparent transition-all duration-300 ${isDragging ? 'border-primary-500 scale-[1.02] ring-4 ring-primary-500/20' : ''}`}
+                className={`relative w-full sm:max-w-2xl bg-white dark:bg-secondary-900 sm:rounded-3xl shadow-2xl overflow-hidden max-h-[96vh] sm:max-h-[90vh] flex flex-col rounded-t-3xl border border-transparent transition-all duration-300 m-auto ${isDragging ? 'border-primary-500 scale-[1.02] ring-4 ring-primary-500/20' : ''}`}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={handleDrop}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Drag Overlay */}
@@ -468,6 +458,6 @@ export function CreatePostModal() {
                     </form>
                 )}
             </div>
-        </div>
+        </Modal>
     );
 }

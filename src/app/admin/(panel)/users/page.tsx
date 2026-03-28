@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import {
   Search, Filter, User, ShieldCheck, ShieldAlert,
   MoreVertical, Check, X, Loader2, Mail, Globe,
-  ShieldQuestion, UserCog, AlertCircle, UserPlus
+  ShieldQuestion, UserCog, AlertCircle, UserPlus,
+  ShieldX
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -257,7 +258,16 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {user.verificationStatus !== 'VERIFIED' && (
+                        {user.verificationStatus === 'VERIFIED' ? (
+                          <button
+                            onClick={() => handleManualVerify(user.id, 'UNVERIFIED', user.userType)}
+                            disabled={!!processingId}
+                            className="p-2.5 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all active:scale-95 shadow-sm group/revoke"
+                            title="Revoke Verification"
+                          >
+                            <ShieldX className="w-5 h-5 group-hover/revoke:animate-pulse" />
+                          </button>
+                        ) : (
                           <button
                             onClick={() => handleManualVerify(user.id, 'VERIFIED', 'BUSINESS')}
                             disabled={!!processingId}
@@ -267,12 +277,13 @@ export default function AdminUsersPage() {
                             <ShieldCheck className="w-5 h-5" />
                           </button>
                         )}
-                          <button 
-                            onClick={() => setEditingUser(user)}
-                            className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm"
-                          >
-                            <UserCog className="w-5 h-5" />
-                          </button>
+                        <button 
+                          onClick={() => setEditingUser(user)}
+                          className="p-2.5 bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 rounded-xl hover:bg-primary-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                          title="Edit Profile"
+                        >
+                          <UserCog className="w-5 h-5" />
+                        </button>
                       </div>
                     </td>
                   </tr>

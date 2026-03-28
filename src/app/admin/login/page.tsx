@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useTheme } from 'next-themes';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail, Activity, ArrowRight, ShieldCheck, Sparkles, Sun, Moon } from 'lucide-react';
+import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail, Activity, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
 const Logo = dynamic(() => import('../../../components/ui/logo'), {
   ssr: false,
@@ -13,7 +13,7 @@ const Logo = dynamic(() => import('../../../components/ui/logo'), {
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   
   const [identifier, setIdentifier] = useState('');
@@ -58,15 +58,6 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex lg:grid lg:grid-cols-2 bg-background relative overflow-hidden font-jakarta select-none">
       
-      {/* Theme Toggle Button */}
-      <div className="absolute top-8 right-8 z-[60]">
-        <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-3 bg-white/5 dark:bg-white/5 border border-secondary-200 dark:border-white/10 rounded-2xl backdrop-blur-xl hover:scale-110 active:scale-95 transition-all shadow-xl shadow-black/5 dark:shadow-none"
-        >
-          {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-primary-600" />}
-        </button>
-      </div>
 
       {/* Logo Area - Absolute Top Left */}
       <div className="absolute top-8 left-8 z-50 animate-fade-in group">
@@ -85,11 +76,6 @@ export default function AdminLoginPage() {
              style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }} />
 
         <div className="relative z-10 space-y-8 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500/5 dark:bg-white/5 border border-primary-500/10 dark:border-white/10 rounded-full backdrop-blur-md animate-slide-up">
-            <ShieldCheck className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-            <span className="text-[10px] font-black tracking-widest uppercase text-primary-900/60 dark:text-white/80">Secured Control Panel</span>
-          </div>
-          
           <div className="space-y-4">
             <h1 className="text-5xl lg:text-6xl font-black text-secondary-900 dark:text-white leading-tight animate-slide-up stagger-1">
               Command <br />
@@ -221,15 +207,6 @@ export default function AdminLoginPage() {
               </button>
             </form>
           </div>
-          
-          <div className="mt-12 lg:hidden text-center opacity-30">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em]">Administrator Zone &copy; 2026</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
           
           <div className="mt-12 lg:hidden text-center opacity-30">
             <p className="text-[10px] font-black uppercase tracking-[0.3em]">Administrator Zone &copy; 2026</p>

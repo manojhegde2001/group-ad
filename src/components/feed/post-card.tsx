@@ -198,9 +198,6 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                                     <Video className="w-5 h-5 text-white" />
                                                 </div>
                                             </div>
-                                            <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white text-[9px] px-2 py-0.5 rounded-lg font-bold border border-white/10 uppercase tracking-widest z-10 shadow-sm">
-                                                Video
-                                            </div>
                                         </div>
                                     ) : (
                                         <div className="relative overflow-hidden w-full" style={{ aspectRatio: 'auto' }}>

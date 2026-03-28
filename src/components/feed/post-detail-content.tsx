@@ -11,6 +11,7 @@ import {
     Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
+import { ConnectionButton } from '@/components/profile/connection-button';
 import { Button } from '@/components/ui/button';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,8 +56,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const shareOpen = activePostId === post?.id && (source === 'drawer' || source === 'page');
     const [copied, setCopied] = useState(false);
-    const [isFollowing, setIsFollowing] = useState(false);
-    const [isFollowLoading, setIsFollowLoading] = useState(false);
     
     const { open: openCreatePost } = useCreatePost();
     const deleteMutation = useDeletePost();
@@ -105,17 +104,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
 
     }, [postId, initialPost]);
 
-    // Fetch follow status
-    useEffect(() => {
-        if (!post || !user || post.user.id === user.id) return;
-        
-        fetch(`/api/users/${post.user.id}/follow`)
-            .then((r) => r.json())
-            .then((d) => {
-                if (typeof d.isFollowing === 'boolean') setIsFollowing(d.isFollowing);
-            })
-            .catch(() => { });
-    }, [post?.user?.id, user?.id]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -158,31 +146,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const prevImage = () => {
         if (!post?.images?.length) return;
         setCurrentImageIndex((i) => (i - 1 + post.images.length) % post.images.length);
-    };
-
-    const handleFollow = async () => {
-        requireAuth(async () => {
-            if (isFollowLoading || !post) return;
-            setIsFollowLoading(true);
-            const nextFollowState = !isFollowing;
-            
-            // Optimistic UI
-            setIsFollowing(nextFollowState);
-            
-            try {
-                const res = await fetch(`/api/users/${post.user.id}/follow`, {
-                    method: nextFollowState ? 'POST' : 'DELETE',
-                });
-                if (!res.ok) throw new Error();
-                toast.success(nextFollowState ? `Following ${post.user.name}` : `Unfollowed ${post.user.name}`);
-            } catch {
-                // Revert
-                setIsFollowing(!nextFollowState);
-                toast.error('Failed to update follow status');
-            } finally {
-                setIsFollowLoading(false);
-            }
-        });
     };
 
     const handleCommentSubmit = async (e: React.FormEvent) => {
@@ -429,23 +392,13 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
                         {user?.id !== post.user.id && (
-                            <Button 
-                                variant={isFollowing ? "flat" : "solid"}
-                                color={isFollowing ? "secondary" : "primary"}
-                                size="sm" 
-                                rounded="pill" 
-                                className={`text-xs px-4 h-8 font-bold transition-all ${isFollowing ? 'bg-secondary-100 dark:bg-secondary-800' : ''}`}
-                                onClick={handleFollow}
-                                disabled={isFollowLoading}
-                            >
-                                {isFollowLoading ? (
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : isFollowing ? (
-                                    'Following'
-                                ) : (
-                                    'Follow'
-                                )}
-                            </Button>
+                            <ConnectionButton 
+                                userId={post.user.id} 
+                                targetName={post.user.name}
+                                initialStatus={(post.user as any).connectionStatus}
+                                isInitiator={(post.user as any).connectionInitiator}
+                                size="sm"
+                            />
                         )}
 
                         {/* Moderation Actions */}

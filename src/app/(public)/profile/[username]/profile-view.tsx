@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
-import { FollowButton } from '@/components/profile/follow-button';
+import { ConnectionButton } from '@/components/profile/connection-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
 import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare } from 'lucide-react';
@@ -177,10 +177,11 @@ export default function ProfileView({ username }: { username: string }) {
                                     </div>
                                 ) : (
                                     <>
-                                        <FollowButton 
+                                        <ConnectionButton 
                                             userId={profile.id} 
-                                            initialFollowing={profile.isFollowing} 
-                                            initialFollowerCount={profile._count?.followers || 0} 
+                                            targetName={profile.name}
+                                            initialStatus={profile.connectionStatus}
+                                            isInitiator={profile.connectionInitiator}
                                         />
                                         <Link href={`/messages?userId=${profile.id}`}>
                                             <Button variant="outline" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-secondary-50 transition-colors">
@@ -228,18 +229,14 @@ export default function ProfileView({ username }: { username: string }) {
                         </div>
 
                         {/* Stats */}
-                        <div className="flex items-center justify-center md:justify-start gap-8 mb-8">
+                        <div className="flex items-center justify-center md:justify-start gap-12 mb-8">
                             <div className="text-center md:text-left transition-transform hover:scale-105">
                                 <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.posts || 0}</p>
                                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Posts</p>
                             </div>
                             <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.followers || 0}</p>
-                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Followers</p>
-                            </div>
-                            <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.following || 0}</p>
-                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Following</p>
+                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.connections || 0}</p>
+                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Connections</p>
                             </div>
                         </div>
 

@@ -65,12 +65,30 @@ export async function GET(
       ]).catch((err) => console.error('Error recording post view:', err));
     }
 
+    // Fetch connection status if user is logged in
+    let connectionRecord = null;
+    if (currentUserId && currentUserId !== postRaw.user.id) {
+      connectionRecord = await prisma.connection.findFirst({
+        where: {
+          OR: [
+            { requesterId: currentUserId, receiverId: postRaw.user.id },
+            { requesterId: postRaw.user.id, receiverId: currentUserId },
+          ],
+        },
+      });
+    }
+
     const post = {
       ...(postRaw as any),
       isLikedByUser: currentUserId
         ? Array.isArray((postRaw as any).postLikes) && (postRaw as any).postLikes.length > 0
         : false,
       postLikes: undefined, // strip raw join data
+      user: {
+        ...(postRaw.user as any),
+        connectionStatus: connectionRecord?.status || null,
+        connectionInitiator: connectionRecord?.requesterId === currentUserId,
+      }
     };
 
     return NextResponse.json({ post });

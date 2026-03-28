@@ -114,7 +114,7 @@ export type PostWithRelations = {
   companyId: string | null;
   createdAt: Date;
   updatedAt: Date;
-  user: {
+    user: {
     id: string;
     name: string;
     username: string;
@@ -125,6 +125,8 @@ export type PostWithRelations = {
     industry: string | null;
     website: string | null;
     companyWebsite: string | null;
+    connectionStatus?: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED' | null;
+    connectionInitiator?: boolean;
   };
   category: {
     id: string;

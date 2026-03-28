@@ -20,7 +20,6 @@ async function main() {
   await prisma.conversation.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.connection.deleteMany();
-  await prisma.follow.deleteMany();
   await prisma.user.deleteMany();
   await prisma.company.deleteMany();
   await prisma.category.deleteMany();

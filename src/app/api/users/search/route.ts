@@ -32,13 +32,6 @@ export async function GET(request: NextRequest) {
             }
           },
           {
-            followers: {
-              some: {
-                followerId: session.user.id,
-              },
-            },
-          },
-          {
             OR: [
               { name: { contains: q, mode: 'insensitive' } },
               { username: { contains: q, mode: 'insensitive' } },

@@ -53,13 +53,7 @@ export async function GET(
             }
         });
 
-        // Get current user's connections to see if they are already connected/following
-        const myFollowing = await prisma.follow.findMany({
-            where: { followerId: session.user.id },
-            select: { followingId: true },
-        });
-        const followingIds = new Set(myFollowing.map(f => f.followingId));
-
+        // Get current user's connections to see if they are already connected
         const myConnections = await prisma.connection.findMany({
             where: {
                 OR: [
@@ -75,7 +69,6 @@ export async function GET(
 
         const mappedAttendees = coAttendees.map(enrollment => ({
             ...enrollment.user,
-            isFollowing: followingIds.has(enrollment.user.id),
             isConnected: connectionIds.has(enrollment.user.id),
         }));
 

@@ -45,22 +45,25 @@ export async function GET(
             }).catch(err => console.error('Error recording profile view:', err));
         }
 
-        // Get counts, follow status, and block status separately
-        const [followerCount, followingCount, postCount, followRecord, reverseFollowRecord, blockRecord] = await Promise.all([
-            prismaAny.follow.count({ where: { followingId: user.id } }),
-            prismaAny.follow.count({ where: { followerId: user.id } }),
+        // Get counts, connection status, and block status separately
+        const [connectionCount, postCount, connectionRecord, blockRecord] = await Promise.all([
+            prisma.connection.count({ 
+                where: { 
+                    status: 'ACCEPTED',
+                    OR: [
+                        { requesterId: user.id },
+                        { receiverId: user.id }
+                    ]
+                } 
+            }),
             prisma.post.count({ where: { userId: user.id } }),
             currentUserId
-                ? prismaAny.follow.findUnique({
+                ? prisma.connection.findFirst({
                     where: {
-                        followerId_followingId: { followerId: currentUserId, followingId: user.id },
-                    },
-                })
-                : null,
-            currentUserId
-                ? prismaAny.follow.findUnique({
-                    where: {
-                        followerId_followingId: { followerId: user.id, followingId: currentUserId },
+                        OR: [
+                            { requesterId: currentUserId, receiverId: user.id },
+                            { requesterId: user.id, receiverId: currentUserId },
+                        ],
                     },
                 })
                 : null,
@@ -75,26 +78,18 @@ export async function GET(
 
         let hasSharedAttendance = false;
         if (currentUserId && currentUserId !== user.id) {
-            // Check if both users attended the same event
             const sharedEvent = await prisma.eventEnrollment.findFirst({
                 where: {
                     userId: currentUserId,
                     attended: true,
-                    event: {
-                        enrollments: {
-                            some: {
-                                userId: user.id,
-                                attended: true
-                            }
-                        }
-                    }
+                    event: { enrollments: { some: { userId: user.id, attended: true } } }
                 }
             });
             hasSharedAttendance = !!sharedEvent;
         }
 
-        const isMutualFollow = !!followRecord && !!reverseFollowRecord;
-        const canViewPhone = currentUserId === user.id || (isMutualFollow && hasSharedAttendance);
+        const isConnected = connectionRecord?.status === 'ACCEPTED';
+        const canViewPhone = currentUserId === user.id || (isConnected && hasSharedAttendance);
 
         // Strip phone if not allowed
         const userData = { ...user };
@@ -105,12 +100,12 @@ export async function GET(
         return NextResponse.json({
             user: {
                 ...userData,
-                isFollowing: !!followRecord,
+                connectionStatus: connectionRecord?.status || null,
+                connectionInitiator: connectionRecord?.requesterId === currentUserId,
                 isBlocked: !!blockRecord,
                 _count: {
                     posts: postCount,
-                    followers: followerCount,
-                    following: followingCount,
+                    connections: connectionCount,
                 },
             },
         });

@@ -257,9 +257,6 @@ model User {
   bookmarks           Bookmark[]
   boards              Board[]          @relation("UserBoards")
 
-  followers           Follow[]     @relation("Followers")
-  following           Follow[]     @relation("Following")
-
   reportsSent         Report[]     @relation("ReportsSent")
   blocksSent          Block[]      @relation("BlocksSent")
   blocksReceived      Block[]      @relation("BlocksReceived")
@@ -398,26 +395,6 @@ model PostComment {
   
   @@index([postId])
   @@index([userId])
-}
-
-// ============================================================================
-// FOLLOW MODEL
-// ============================================================================
-
-model Follow {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-
-  followerId  String   @db.ObjectId
-  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
-
-  followingId String   @db.ObjectId
-  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime @default(now())
-
-  @@unique([followerId, followingId])
-  @@index([followerId])
-  @@index([followingId])
 }
 
 // ============================================================================

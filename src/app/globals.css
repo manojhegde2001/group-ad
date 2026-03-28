@@ -264,6 +264,14 @@ body {
   .stagger-4 {
     animation-delay: 0.2s;
   }
+
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
 }
 
 /* Modal backdrop */

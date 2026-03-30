@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
@@ -10,67 +10,58 @@ import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
 import { useSocket } from '@/components/providers/socket-provider';
+import { 
+    useConversations, 
+    useMessages, 
+    useSendMessage, 
+    useMarkMessagesRead, 
+    useStartConversation 
+} from '@/hooks/use-api/use-messages';
+import { useFollowing } from '@/hooks/use-api/use-user';
+import { useQueryClient } from '@tanstack/react-query';
+import { Conversation, Message } from '@/services/api/messages';
 
-interface Conversation {
-  id: string;
-  participants: { id: string; name: string; username: string; avatar: string | null }[];
-  lastMessage: { content: string; sender: { name: string } } | null;
-  lastMessageAt: string;
-  unreadCount: number;
-}
+// Interfaces are now imported from @/services/api/messages
 
-interface Message {
-  id: string;
-  content: string;
-  createdAt: string;
-  senderId: string;
-  conversationId: string;
-  sender: { id: string; name: string; username: string; avatar: string | null };
-}
-
-interface FollowedUser {
-  id: string;
-  name: string;
-  username: string;
-  avatar: string | null;
-  userType: string;
-}
-
-export default function MessagesPage() {
+function MessagesContent() {
   const { user } = useAuth();
   const { refresh: refreshUnreadBadge } = useUnreadMessages();
   const searchParams = useSearchParams();
   const initialUserId = searchParams.get('userId');
+  const queryClient = useQueryClient();
   
-  // Tabs & Lists
+  // Tabs & UI State
   const [activeTab, setActiveTab] = useState<'messages' | 'contacts'>('messages');
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [followingUsers, setFollowingUsers] = useState<FollowedUser[]>([]);
-  
-  // Loading states
-  const [loadingConvs, setLoadingConvs] = useState(true);
-  const [loadingFollowing, setLoadingFollowing] = useState(false);
-  
-  // Selected Chat
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loadingMsgs, setLoadingMsgs] = useState(false);
-  
-  // Input & UI
   const [messageInput, setMessageInput] = useState('');
-  const [sending, setSending] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const { socket, isConnected } = useSocket();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollConvsRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Live state for other user typing
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
-  // We keep a slow poll as a fallback, but primary updates are live via socket
+
+  const { socket, isConnected } = useSocket();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Queries
+  const { data: convsData, isLoading: loadingConvs } = useConversations({
+    enabled: !!user,
+    refetchInterval: 60000,
+  });
+  const conversations = convsData?.conversations || [];
+
+  const { data: followingData, isLoading: loadingFollowing } = useFollowing();
+  const followingUsers = followingData?.users || [];
+
+  const { data: msgsData, isLoading: loadingMsgs } = useMessages(selectedConvId as string, {}, {
+    enabled: !!selectedConvId,
+  });
+  const messages = msgsData?.messages || [];
+
+  // Mutations
+  const sendMessageMutation = useSendMessage(selectedConvId as string);
+  const markReadMutation = useMarkMessagesRead();
+  const startConvMutation = useStartConversation();
 
   // Filtered lists
   const filteredConversations = useMemo(() => {
@@ -89,41 +80,26 @@ export default function MessagesPage() {
       u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)
     );
   }, [followingUsers, searchQuery]);
-
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
   const otherUser = selectedConv?.participants[0];
 
-  const fetchConversations = useCallback(async () => {
-    try {
-      const r = await fetch('/api/conversations');
-      const d = await r.json();
-      setConversations(d.conversations || []);
-    } catch { /* silent */ }
-  }, []);
+  const startConversation = async (participantId: string) => {
+    startConvMutation.mutate(participantId, {
+      onSuccess: (data) => {
+        if (data.conversation) {
+          setSelectedConvId(data.conversation.id);
+          setActiveTab('messages');
+          setShowMobileChat(true);
+          setSearchQuery('');
+        }
+      }
+    });
+  };
 
-  const fetchFollowing = useCallback(async () => {
-    setLoadingFollowing(true);
-    try {
-      const r = await fetch('/api/users/following');
-      const d = await r.json();
-      setFollowingUsers(d.users || []);
-    } catch { /* silent */ }
-    finally { setLoadingFollowing(false); }
-  }, []);
-
-  // Load conversations on mount + slow fallback poll
-  useEffect(() => {
-    fetchConversations().finally(() => setLoadingConvs(false));
-    pollConvsRef.current = setInterval(fetchConversations, 60_000); // Slowed down from 15s to 60s
-    return () => { if (pollConvsRef.current) clearInterval(pollConvsRef.current); };
-  }, [fetchConversations]);
-
-  // Load following when switching to contacts tab
-  useEffect(() => {
-    if (activeTab === 'contacts' && followingUsers.length === 0) {
-      fetchFollowing();
-    }
-  }, [activeTab, followingUsers.length, fetchFollowing]);
+  const markConversationRead = useCallback((convId: string) => {
+    markReadMutation.mutate(convId);
+    refreshUnreadBadge();
+  }, [markReadMutation, refreshUnreadBadge]);
 
   // Handle initial user from redirect
   useEffect(() => {
@@ -138,25 +114,7 @@ export default function MessagesPage() {
         startConversation(initialUserId);
       }
     }
-  }, [initialUserId, loadingConvs, conversations]);
-
-  const markConversationRead = useCallback(async (convId: string) => {
-    try {
-      await fetch(`/api/conversations/${convId}/read`, { method: 'PATCH' });
-      setConversations((prev) =>
-        prev.map((c) => (c.id === convId ? { ...c, unreadCount: 0 } : c))
-      );
-      refreshUnreadBadge();
-    } catch { /* silent */ }
-  }, [refreshUnreadBadge]);
-
-  const fetchMessages = useCallback(async (convId: string) => {
-    try {
-      const r = await fetch(`/api/conversations/${convId}/messages`);
-      const d = await r.json();
-      setMessages(d.messages || []);
-    } catch { /* silent */ }
-  }, []);
+  }, [initialUserId, loadingConvs, conversations, startConvMutation]);
 
   // Join Room & Live Listeners
   useEffect(() => {
@@ -168,26 +126,11 @@ export default function MessagesPage() {
     const onNewMessage = (msg: Message) => {
       console.log('💬 Socket: new_message received', msg.id);
       if (msg.conversationId === selectedConvId) {
-        setMessages((prev) => {
-          if (prev.some(m => m.id === msg.id)) return prev;
-          return [...prev, msg];
-        });
+        queryClient.invalidateQueries({ queryKey: ['messages', selectedConvId] });
         markConversationRead(selectedConvId);
-        setIsOtherTyping(false); // Stop typing immediately when msg arrives
+        setIsOtherTyping(false);
       }
-      
-      // Update sidebar
-      setConversations((prev) => {
-        const existing = prev.find(c => c.id === msg.conversationId);
-        if (!existing) {
-          fetchConversations();
-          return prev;
-        }
-        return prev.map(c => c.id === msg.conversationId 
-          ? { ...c, lastMessage: { content: msg.content, sender: msg.sender }, lastMessageAt: msg.createdAt, unreadCount: msg.conversationId === selectedConvId ? 0 : c.unreadCount + 1 } 
-          : c
-        ).sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
-      });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     };
 
     const onUserTyping = (data: { conversationId: string; userId: string; name: string }) => {
@@ -209,11 +152,8 @@ export default function MessagesPage() {
 
     return () => {
       socket.emit('leave-conversation', selectedConvId);
-      socket.off('new_message', onNewMessage);
-      socket.off('user_typing', onUserTyping);
-      socket.off('user_stop_typing', onUserStopTyping);
     };
-  }, [socket, isConnected, selectedConvId, user?.id, markConversationRead, fetchConversations]);
+  }, [socket, isConnected, selectedConvId, user?.id, markConversationRead, queryClient]);
 
   // Handle Input Changes with Typing Emission
   useEffect(() => {
@@ -242,18 +182,16 @@ export default function MessagesPage() {
     
     const onNotification = (payload: any) => {
       if (payload.type === 'MESSAGE_RECEIVED') {
-        // Handled by new_message listener if it's a message
-        // But we might want to refresh unread badges
         refreshUnreadBadge();
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
       } else {
-          // For other notifications, refresh the conversations list just in case
-          fetchConversations();
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
       }
     };
     
     socket.on('notification', onNotification);
     socket.on('refresh_unread', () => {
-        fetchConversations();
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
         refreshUnreadBadge();
     });
     
@@ -261,16 +199,14 @@ export default function MessagesPage() {
       socket.off('notification', onNotification);
       socket.off('refresh_unread');
     };
-  }, [socket, fetchConversations, refreshUnreadBadge]);
+  }, [socket, queryClient, refreshUnreadBadge]);
 
-  // Initial load for selected conversation
+  // Handle Mark Read when conversation switches
   useEffect(() => {
-    if (!selectedConvId) return;
-    setLoadingMsgs(true);
-    setMessages([]);
-    fetchMessages(selectedConvId).finally(() => setLoadingMsgs(false));
-    markConversationRead(selectedConvId);
-  }, [selectedConvId, fetchMessages, markConversationRead]);
+    if (selectedConvId) {
+      markConversationRead(selectedConvId);
+    }
+  }, [selectedConvId, markConversationRead]);
 
   const lastConvIdRef = useRef<string | null>(null);
 
@@ -283,64 +219,13 @@ export default function MessagesPage() {
     });
   }, [messages, selectedConvId, isOtherTyping]);
 
-  const startConversation = async (participantId: string) => {
-    try {
-      const res = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantId }),
-      });
-      const data = await res.json();
-      if (data.conversation) {
-        await fetchConversations();
-        setSelectedConvId(data.conversation.id);
-        setActiveTab('messages');
-        setShowMobileChat(true);
-        setSearchQuery('');
-      }
-    } catch { /* silent */ }
-  };
-
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageInput.trim() || !selectedConvId || sending) return;
-
     const content = messageInput.trim();
+    if (!content || !selectedConvId || sendMessageMutation.isPending) return;
+
     setMessageInput('');
-    setSending(true);
-
-    const optimistic: Message = {
-      id: `opt-${Date.now()}`,
-      content,
-      conversationId: selectedConvId,
-      createdAt: new Date().toISOString(),
-      senderId: user?.id as string,
-      sender: { id: user?.id as string, name: user?.name as string, username: (user as any)?.username, avatar: (user as any)?.avatar },
-    };
-    setMessages((prev) => [...prev, optimistic]);
-
-    try {
-      const res = await fetch(`/api/conversations/${selectedConvId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
-      });
-      const data = await res.json();
-      if (data.message) {
-        setMessages((prev) => prev.map((m) => m.id === optimistic.id ? data.message : m));
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === selectedConvId
-              ? { ...c, lastMessage: { content, sender: { name: user?.name as string } }, lastMessageAt: new Date().toISOString() }
-              : c
-          )
-        );
-      }
-    } catch {
-      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-    } finally {
-      setSending(false);
-    }
+    sendMessageMutation.mutate({ content });
   };
 
   return (
@@ -648,13 +533,13 @@ export default function MessagesPage() {
                 {messageInput.trim() && (
                     <button
                         type="submit"
-                        disabled={sending}
+                        disabled={sendMessageMutation.isPending}
                         className={cn(
                             'text-primary-500 hover:text-primary-600 font-bold text-[15px] md:text-base px-3 transition-all active:scale-95',
-                            sending && 'opacity-50'
+                            sendMessageMutation.isPending && 'opacity-50'
                         )}
                     >
-                        {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send'}
+                        {sendMessageMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send'}
                     </button>
                 )}
               </form>
@@ -662,6 +547,20 @@ export default function MessagesPage() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <div className="h-screen bg-white dark:bg-secondary-950">
+      <Suspense fallback={
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        </div>
+      }>
+        <MessagesContent />
+      </Suspense>
     </div>
   );
 }

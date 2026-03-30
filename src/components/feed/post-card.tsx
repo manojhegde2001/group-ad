@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { useSaveToBoard, useSharePost, useCreatePost } from '@/hooks/use-feed';
+import { useSaveToBoard, useSharePost, useCreatePostModal } from '@/hooks/use-feed';
 import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
@@ -32,7 +32,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
     const { open: openSaveToBoard } = useSaveToBoard();
-    const { open: openCreatePost } = useCreatePost();
+    const { open: openCreatePostModal } = useCreatePostModal();
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const likeMutation = useLikePost();
     const deletePostMutation = useDeletePost();
@@ -295,7 +295,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                     </div>
                                     {(user && (user.id === post.userId || (user as any).userType === 'ADMIN')) && (
                                         <>
-                                            <button onClick={() => { openCreatePost(post); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-secondary-700 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-xl transition-colors text-left border-none bg-transparent">
+                                            <button onClick={() => { openCreatePostModal(post); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-secondary-700 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 rounded-xl transition-colors text-left border-none bg-transparent">
                                                 <Edit2 className="w-4 h-4" /> Edit Post
                                             </button>
                                             <button onClick={() => { handleDeletePost(); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors text-left border-none bg-transparent">

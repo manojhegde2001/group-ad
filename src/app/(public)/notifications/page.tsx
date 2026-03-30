@@ -1,21 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar } from '@/components/ui/avatar';
 import { Bell, CheckCheck, Loader2, X, RefreshCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-  sender?: { id: string; name: string; username: string; avatar?: string | null } | null;
-}
+import { 
+    useNotifications, 
+    useMarkNotificationRead, 
+    useMarkAllNotificationsRead, 
+    useDeleteNotification 
+} from '@/hooks/use-api/use-notifications';
 
 const NOTIF_ICONS: Record<string, string> = {
   CONNECTION_REQUEST: '👤',
@@ -35,44 +31,21 @@ const NOTIF_ICONS: Record<string, string> = {
 
 export default function NotificationsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [markingAll, setMarkingAll] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  const fetchNotifications = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setLoading(true);
-    try {
-      const res = await fetch('/api/notifications?limit=50');
-      const data = await res.json();
-      setNotifications(data.notifications || []);
-    } catch {}
-    finally { setLoading(false); }
-  }, [isAuthenticated]);
+  const { data, isLoading, isFetching, refetch } = useNotifications(
+    { limit: 50 },
+    { enabled: isAuthenticated }
+  );
 
-  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+  const markReadMutation = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
+  const deleteMutation = useDeleteNotification();
 
-  const markOne = async (id: string) => {
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, isRead: true } : n));
-    await fetch(`/api/notifications/${id}`, { method: 'PATCH' }).catch(() => {});
-  };
-
-  const deleteOne = async (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    await fetch(`/api/notifications/${id}`, { method: 'DELETE' }).catch(() => {});
-  };
-
-  const markAll = async () => {
-    setMarkingAll(true);
-    try {
-      await fetch('/api/notifications/read-all', { method: 'PATCH' });
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    } finally { setMarkingAll(false); }
-  };
+  const notifications = data?.notifications || [];
+  const unreadCount = data?.unreadCount ?? 0;
 
   const displayed = filter === 'unread' ? notifications.filter((n) => !n.isRead) : notifications;
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   if (authLoading) {
     return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-primary-500" /></div>;
@@ -92,16 +65,21 @@ export default function NotificationsPage() {
             {unreadCount > 0 && <p className="text-sm text-secondary-500 mt-0.5">{unreadCount} unread</p>}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={fetchNotifications} className="p-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors" title="Refresh">
-              <RefreshCw className="w-4 h-4" />
+            <button 
+              onClick={() => refetch()} 
+              disabled={isFetching}
+              className="p-2 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors disabled:opacity-50" 
+              title="Refresh"
+            >
+              <RefreshCw className={cn("w-4 h-4", isFetching && "animate-spin")} />
             </button>
             {unreadCount > 0 && (
               <button
-                onClick={markAll}
-                disabled={markingAll}
+                onClick={() => markAllReadMutation.mutate()}
+                disabled={markAllReadMutation.isPending}
                 className="flex items-center gap-1.5 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
               >
-                {markingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />}
+                {markAllReadMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />}
                 Mark all read
               </button>
             )}
@@ -126,7 +104,7 @@ export default function NotificationsPage() {
 
         {/* List */}
         <div className="bg-white dark:bg-secondary-900 rounded-2xl border border-secondary-100 dark:border-secondary-800 overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary-500" /></div>
           ) : displayed.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
@@ -139,7 +117,7 @@ export default function NotificationsPage() {
               {displayed.map((n) => (
                 <div
                   key={n.id}
-                  onClick={() => !n.isRead && markOne(n.id)}
+                  onClick={() => !n.isRead && markReadMutation.mutate(n.id)}
                   className={cn(
                     'flex items-start gap-3 px-4 py-4 cursor-pointer hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors group',
                     !n.isRead && 'bg-primary-50/50 dark:bg-primary-900/10'
@@ -163,7 +141,7 @@ export default function NotificationsPage() {
                   <div className="flex items-center gap-2 shrink-0 mt-1">
                     {!n.isRead && <span className="w-2 h-2 rounded-full bg-primary-500" />}
                     <button
-                      onClick={(e) => { e.stopPropagation(); deleteOne(n.id); }}
+                      onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(n.id); }}
                       className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-all"
                     >
                       <X className="w-3.5 h-3.5" />

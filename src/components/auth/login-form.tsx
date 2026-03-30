@@ -11,7 +11,7 @@ import { Input } from '../ui/input';
 import { Password } from '../ui/password';
 import { Button } from '../ui/button';
 
-export function LoginForm() {
+export function LoginForm({ hideFooter, onToggle }: { hideFooter?: boolean; onToggle?: () => void } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { close, setMode, isOpen, onSuccessCallback, setIsDirty } = useAuthModal();
@@ -114,24 +114,28 @@ export function LoginForm() {
         {isSubmitting ? 'Logging in...' : 'Login'}
       </Button>
 
-      <div className="text-center pt-2">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Don't have an account?{' '}
-          <button
-            type="button"
-            onClick={() => {
-              if (isOpen) {
-                setMode('signup');
-              } else {
-                router.push('/signup');
-              }
-            }}
-            className="text-primary-600 dark:text-primary-400 hover:underline font-medium transition-colors"
-          >
-            Sign up
-          </button>
-        </p>
-      </div>
+      {!hideFooter && (
+        <div className="text-center pt-2">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Don't have an account?{' '}
+            <button
+              type="button"
+              onClick={() => {
+                if (onToggle) {
+                  onToggle();
+                } else if (isOpen) {
+                  setMode('signup');
+                } else {
+                  router.push('/auth?mode=signup');
+                }
+              }}
+              className="text-primary-600 dark:text-primary-400 hover:underline font-medium transition-colors"
+            >
+              Sign up
+            </button>
+          </p>
+        </div>
+      )}
     </form>
   );
 }

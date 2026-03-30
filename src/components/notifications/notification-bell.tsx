@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, Check, CheckCheck, Loader2, X, Trash2 } from 'lucide-react';
-import { ActionIcon } from '@/components/ui/action-icon';
+import { Bell, CheckCheck, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -10,21 +9,13 @@ import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { useSocket } from '@/components/providers/socket-provider';
 import { Popover } from 'rizzui';
 import { cn } from '@/lib/utils';
-
-interface Notification {
-    id: string;
-    type: string;
-    title: string;
-    message: string;
-    isRead: boolean;
-    createdAt: string;
-    sender?: {
-        id: string;
-        name: string;
-        username: string;
-        avatar?: string | null;
-    } | null;
-}
+import { 
+    useNotifications, 
+    useMarkNotificationRead, 
+    useMarkAllNotificationsRead, 
+    useDeleteNotification 
+} from '@/hooks/use-api/use-notifications';
+import { useQueryClient } from '@tanstack/react-query';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
     CONNECTION_REQUEST: '👤',
@@ -50,6 +41,7 @@ interface NotificationBellProps {
 export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: NotificationBellProps) {
     const { isAuthenticated } = useAuth();
     const [internalOpen, setInternalOpen] = useState(false);
+    const queryClient = useQueryClient();
 
     const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
     const setOpen = useCallback((val: boolean | ((v: boolean) => boolean)) => {
@@ -58,17 +50,21 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
         else setInternalOpen(next);
     }, [open, onOpenChange]);
 
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const { unreadCount, refresh: refreshUnreadCount } = useUnreadNotifications();
-    const [loading, setLoading] = useState(false);
-    const [markingAll, setMarkingAll] = useState(false);
-    const panelRef = useRef<HTMLDivElement>(null);
-    // Track previously seen notification IDs to detect new ones
-    const seenIdsRef = useRef<Set<string>>(new Set());
-    const isFirstFetchRef = useRef(true);
+    const { unreadCount } = useUnreadNotifications();
     const { socket } = useSocket();
 
-    // Request browser notification permission once on mount
+    const { data, isLoading } = useNotifications(
+        { limit: 15 },
+        { enabled: isAuthenticated && open }
+    );
+
+    const markReadMutation = useMarkNotificationRead();
+    const markAllReadMutation = useMarkAllNotificationsRead();
+    const deleteMutation = useDeleteNotification();
+
+    const notifications = data?.notifications || [];
+
+    // Browser Notification permission
     useEffect(() => {
         if (typeof window !== 'undefined' && 'Notification' in window) {
             if (Notification.permission === 'default') {
@@ -93,84 +89,34 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
             const n = new Notification(title, {
                 body,
                 icon: '/auth/logo-small.png',
-                tag: notif.id, // prevents duplicate toasts
+                tag: notif.id,
             });
             setTimeout(() => n.close(), 5000);
         } catch { /* silent */ }
     }, []);
 
-    const fetchNotifications = useCallback(async () => {
-        if (!isAuthenticated) return;
-        try {
-            const res = await fetch('/api/notifications?limit=15');
-            if (!res.ok) return;
-            const data = await res.json();
-            const fetched: Notification[] = data.notifications ?? [];
-
-            // Update seen IDs
-            fetched.forEach((n) => seenIdsRef.current.add(n.id));
-            isFirstFetchRef.current = false;
-
-            setNotifications(fetched);
-            refreshUnreadCount();
-        } catch { /* silent */ }
-    }, [isAuthenticated, refreshUnreadCount]);
-
     // Socket.io Listener
     useEffect(() => {
-        if (!socket) return;
+        if (!socket || !isAuthenticated) return;
 
-        socket.on('notification', (payload) => {
-            console.log('Real-time notification socket event:', payload);
-            fetchNotifications(); // Refresh the list
+        const handleNotification = (payload: any) => {
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
             
-            // Fire a browser notification for messages if not on the messages page
             if (payload.type === 'MESSAGE_RECEIVED' && window.location.pathname !== '/messages') {
                 fireBrowserNotification(payload);
             }
-        });
+        };
 
+        socket.on('notification', handleNotification);
         socket.on('refresh_unread', () => {
-            fetchNotifications();
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
         });
 
         return () => {
-            socket.off('notification');
+            socket.off('notification', handleNotification);
             socket.off('refresh_unread');
         };
-    }, [socket, fetchNotifications, fireBrowserNotification]);
-
-    const markOne = async (id: string) => {
-        setNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-        );
-        await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
-        refreshUnreadCount();
-    };
-
-    const markAll = async () => {
-        setMarkingAll(true);
-        try {
-            await fetch('/api/notifications/read-all', { method: 'PATCH' });
-            setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-            refreshUnreadCount();
-        } finally {
-            setMarkingAll(false);
-        }
-    };
-
-    const deleteOne = async (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-        await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
-        refreshUnreadCount();
-    };
-
-    // Initial fetch
-    useEffect(() => {
-        if (!isAuthenticated) return;
-        fetchNotifications();
-    }, [isAuthenticated, fetchNotifications]);
+    }, [socket, isAuthenticated, queryClient, fireBrowserNotification]);
 
     if (!isAuthenticated) return null;
 
@@ -204,11 +150,11 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                         </div>
                         {unreadCount > 0 && (
                             <button
-                                onClick={markAll}
-                                disabled={markingAll}
+                                onClick={() => markAllReadMutation.mutate()}
+                                disabled={markAllReadMutation.isPending}
                                 className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors disabled:opacity-50"
                             >
-                                {markingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3.5 h-3.5" />}
+                                {markAllReadMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3.5 h-3.5" />}
                                 Mark all read
                             </button>
                         )}
@@ -216,7 +162,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
 
                     {/* Scrollable List */}
                     <div className="max-h-[70vh] sm:max-h-[480px] overflow-y-auto overscroll-contain">
-                        {loading ? (
+                        {isLoading ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-3">
                                 <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
                                 <p className="text-[10px] font-black uppercase tracking-widest text-secondary-400">Syncing...</p>
@@ -236,11 +182,11 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                         key={notif.id}
                                         role="button"
                                         tabIndex={0}
-                                        onClick={() => !notif.isRead && markOne(notif.id)}
+                                        onClick={() => !notif.isRead && markReadMutation.mutate(notif.id)}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
-                                                !notif.isRead && markOne(notif.id);
+                                                !notif.isRead && markReadMutation.mutate(notif.id);
                                             }
                                         }}
                                         className={cn(
@@ -283,7 +229,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                                 <span className="w-1.5 h-1.5 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
                                             )}
                                             <button
-                                                onClick={(e) => deleteOne(notif.id, e)}
+                                                onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(notif.id); }}
                                                 className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-secondary-400 hover:text-red-500 transition-all active:scale-90"
                                                 title="Delete Notification"
                                             >

@@ -17,7 +17,7 @@ import {
   Bell
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useCreatePost } from '@/hooks/use-feed';
+import { useCreatePostModal } from '@/hooks/use-feed';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 
@@ -28,7 +28,7 @@ const Logo = dynamic(() => import('../ui/logo'), {
 export function Sidebar() {
   const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
-  const { open: openCreatePost } = useCreatePost();
+  const createPostModal = useCreatePostModal();
   const { totalUnread: unreadMessages } = useUnreadMessages();
   const { unreadCount: unreadNotifications } = useUnreadNotifications();
 
@@ -102,7 +102,7 @@ export function Sidebar() {
         ))}
         {(isAdmin || isBusiness) && (
           <button
-            onClick={() => openCreatePost()}
+            onClick={() => createPostModal.open()}
             title="Create Post"
             className="flex items-center justify-center w-12 h-12 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-all shadow-lg hover:shadow-primary-500/30 group relative mt-2"
           >

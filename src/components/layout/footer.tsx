@@ -19,7 +19,7 @@ const footerLinks = {
 export function Footer() {
   return (
     <footer className="bg-secondary-50 dark:bg-secondary-900 border-t border-secondary-200 dark:border-secondary-800 mt-auto">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-4 sm:py-10">
         {/* Top — brand + link columns */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand */}

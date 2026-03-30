@@ -5,23 +5,13 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  icon?: string | null;
-  banner?: string | null;
-  _count: {
-    posts: number;
-  };
-}
+import { useCategories } from '@/hooks/use-api/use-categories';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80';
 
 export function TrendingCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useCategories({ trending: true, limit: 8 });
+  const categories = data?.categories || [];
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     align: 'start',
@@ -49,15 +39,7 @@ export function TrendingCategories() {
     };
   }, [emblaApi, onSelect]);
 
-  useEffect(() => {
-    fetch('/api/categories?trending=true&limit=8')
-      .then((r) => r.json())
-      .then((d) => setCategories(d.categories?.slice(0, 8) || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex gap-4 overflow-x-hidden px-4 sm:px-6">
         {[...Array(5)].map((_, i) => (
@@ -113,7 +95,7 @@ export function TrendingCategories() {
           {/* Embla Viewport */}
           <div className="overflow-hidden px-4 sm:px-6" ref={emblaRef}>
             <div className="flex gap-4 sm:gap-6 pb-8">
-              {categories.map((cat, idx) => (
+              {categories.map((cat: any) => (
                 <div key={cat.id} className="flex-[0_0_280px] sm:flex-[0_0_340px] min-w-0">
                   <Link
                     href={`/explore/${cat.slug}`}
@@ -167,7 +149,7 @@ export function TrendingCategories() {
                             <div className="h-full bg-primary-500 w-2/3 group-hover:w-full transition-all duration-1000" />
                          </div>
                          <p className="text-[11px] text-white font-black uppercase tracking-widest shrink-0">
-                          {cat._count.posts} Active
+                          {cat._count?.posts || 0} Active
                         </p>
                       </div>
                     </div>

@@ -87,7 +87,7 @@ export default function AboutPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
-              href="/signup" 
+              href="/auth?mode=signup"
               className="px-8 py-4 bg-primary-600 text-white rounded-2xl font-bold hover:bg-primary-700 transition-all flex items-center gap-2 shadow-xl shadow-primary-500/20 active:scale-95"
             >
               Get Started Now <ArrowRight className="w-5 h-5" />
@@ -251,7 +251,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-10">
                 <Link 
-                    href="/signup" 
+                    href="/auth?mode=signup"
                     className="px-10 py-5 bg-white text-primary-600 rounded-2xl font-black shadow-xl hover:bg-secondary-50 transition-all active:scale-95"
                 >
                     Create Free Account

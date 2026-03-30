@@ -4,11 +4,11 @@ import ExploreView from './explore-view';
 import { notFound } from 'next/navigation';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = params;
+  const { slug } = await params;
 
   const category = await prisma.category.findUnique({
     where: { slug },
@@ -42,8 +42,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CategoryPage({ params }: Props) {
+  const { slug } = await params;
   const category = await prisma.category.findUnique({
-    where: { slug: params.slug },
+    where: { slug: slug },
     select: { id: true, name: true, slug: true },
   });
 

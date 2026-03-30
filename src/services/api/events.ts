@@ -10,4 +10,5 @@ export const eventService = {
     enrollEvent: (id: string) => apiClient.post<any>(`/api/events/${id}/enroll`),
     unenrollEvent: (id: string) => apiClient.delete<any>(`/api/events/${id}/enroll`),
     getMyEnrollment: (id: string, userId: string) => apiClient.get<any>(`/api/events/${id}/enrollments/${userId}`),
+    getCoAttendees: (eventId: string) => apiClient.get<{ coAttendees: any[] }>(`/api/events/${eventId}/co-attendees`),
 };

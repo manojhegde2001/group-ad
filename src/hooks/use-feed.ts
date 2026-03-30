@@ -17,7 +17,7 @@ interface CreatePostStore {
     notifyDeleted: (postId: string) => void;
 }
 
-export const useCreatePost = create<CreatePostStore>((set, get) => ({
+export const useCreatePostModal = create<CreatePostStore>((set, get) => ({
     isOpen: false,
     editingPost: null,
     open: (post) => set({ isOpen: true, editingPost: post || null }),

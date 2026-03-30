@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useMe } from '@/hooks/use-api/use-user';
 import { useAuthModal } from '@/hooks/use-modal';
-import { useCreatePost } from '@/hooks/use-feed';
-import { useFeedFilter } from '@/hooks/use-feed';
+import { useCreatePostModal, useFeedFilter } from '@/hooks/use-feed';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -86,7 +85,7 @@ export function Navbar() {
 
   const { openLogin, openSignup } = useAuthModal();
   const { setSearch } = useFeedFilter();
-  const { open: openCreatePost } = useCreatePost();
+  const createPostModal = useCreatePostModal();
   const { totalUnread: unreadMessages } = useUnreadMessages();
   const { unreadCount: unreadNotifications } = useUnreadNotifications();
   const pathname = usePathname();
@@ -125,14 +124,14 @@ export function Navbar() {
 
   if (!mounted) {
     return (
-      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-transparent h-16 md:h-20" />
+      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-transparent h-14 md:h-20" />
     );
   }
 
   // --- Guest View (Logged Out) ---
   if (!isAuthenticated) {
     return (
-      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 h-16 md:h-20 flex items-center">
+      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 h-14 md:h-20 flex items-center">
         <div className="max-w-[1440px] mx-auto w-full flex items-center justify-between px-4 md:px-8 gap-4">
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center">
@@ -152,8 +151,12 @@ export function Navbar() {
 
           {/* Auth Buttons */}
           <div className="flex items-center gap-3 shrink-0">
-             <Button onClick={() => openLogin()} variant="text" color="secondary" className="font-bold text-secondary-900 dark:text-white px-4">Log in</Button>
-             <Button onClick={() => openSignup()} variant="solid" color="danger" className="font-bold px-4 py-2 bg-[#e60023] hover:bg-[#ad081b] rounded-full text-white">Sign up</Button>
+             {pathname !== '/auth' && (
+               <>
+                 <Button onClick={() => openLogin()} variant="text" color="secondary" className="font-bold text-secondary-900 dark:text-white px-4">Log in</Button>
+                 <Button onClick={() => openSignup()} variant="solid" color="danger" className="font-bold px-4 py-2 bg-[#e60023] hover:bg-[#ad081b] rounded-full text-white">Sign up</Button>
+               </>
+             )}
           </div>
         </div>
       </nav>
@@ -164,7 +167,7 @@ export function Navbar() {
     <>
       <nav className={cn(
           "sticky top-0 z-50 bg-white/80 dark:bg-secondary-900/80 backdrop-blur-md transition-all duration-300",
-          "h-16 md:h-20 flex items-center",
+          "h-14 md:h-20 flex items-center",
           isAuthenticated ? "md:ml-0" : "" 
       )}>
         <div className="flex-1 flex items-center px-4 md:px-6 gap-2 md:gap-4 h-full">
@@ -349,7 +352,7 @@ export function Navbar() {
                      <button
                         onClick={() => {
                             setMobileDrawerOpen(false);
-                            openCreatePost();
+                            createPostModal.open();
                         }}
                         className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary-500 text-white font-bold shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
                      >

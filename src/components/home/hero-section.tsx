@@ -13,7 +13,7 @@ export function HeroSection() {
   if (loading || user) return null;
 
   return (
-    <section className="relative bg-white dark:bg-secondary-950 border-b border-secondary-100 dark:border-secondary-800 py-8 px-4">
+    <section className="relative bg-white dark:bg-secondary-950 border-b border-secondary-100 dark:border-secondary-800 py-4 md:py-12 px-4">
       <div className="max-w-2xl mx-auto text-center">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-secondary-900 dark:text-white mb-4 tracking-tight leading-[1.1]">
           Group Ad — The{' '}

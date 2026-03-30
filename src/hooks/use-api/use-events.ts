@@ -62,3 +62,10 @@ export const useCreateEvent = () => {
         },
     });
 };
+export const useCoAttendees = (eventId: string) => {
+    return useQuery({
+        queryKey: ['events', eventId, 'co-attendees'],
+        queryFn: () => eventService.getCoAttendees(eventId),
+        enabled: !!eventId,
+    });
+};

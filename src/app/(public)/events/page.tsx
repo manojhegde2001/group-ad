@@ -11,17 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCreateEvent } from '@/hooks/use-feed';
 import { Button } from '@/components/ui/button';
 
-function useEvents(params: Record<string, any> = {}) {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => { if (v) query.set(k, String(v)); });
-  return useQuery({
-    queryKey: ['events', params],
-    queryFn: async () => {
-      const res = await fetch(`/api/events?${query.toString()}`);
-      return res.json();
-    },
-  });
-}
+import { useEvents } from '@/hooks/use-api/use-events';
 
 export default function EventsPage() {
   const [search, setSearch] = useState('');

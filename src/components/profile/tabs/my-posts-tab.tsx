@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCreatePost } from '@/hooks/use-feed';
+import { useCreatePostModal } from '@/hooks/use-feed';
 import type { PostWithRelations } from '@/types';
 import {
     Heart, MessageCircle, Eye, Trash2, Edit3, Globe, Lock,
@@ -19,7 +19,7 @@ export default function MyPostsTab() {
     const { user } = useAuth();
     const router = useRouter();
 
-    const { open: openCreatePost, setOnCreated } = useCreatePost();
+    const { open: openCreatePost, setOnCreated } = useCreatePostModal();
     const queryClient = useQueryClient();
 
     const { data, isLoading: loading } = useMyPosts();

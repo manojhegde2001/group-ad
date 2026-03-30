@@ -1,59 +1,47 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/components/providers/socket-provider';
+import { useUnreadMessagesCount } from '@/hooks/use-api/use-messages';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useUnreadMessages(pollInterval = 30_000) {
-  const { isAuthenticated } = useAuth();
-  const [totalUnread, setTotalUnread] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { socket } = useSocket();
+    const { isAuthenticated } = useAuth();
+    const { socket } = useSocket();
+    const queryClient = useQueryClient();
 
-  const fetchUnread = useCallback(async () => {
-    if (!isAuthenticated) return;
-    try {
-      const res = await fetch('/api/conversations/unread-count');
-      if (!res.ok) return;
-      const data = await res.json();
-      setTotalUnread(data.totalUnread ?? 0);
-    } catch {
-      /* silent */
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    // Listen for messages to update the badge
-    socket.on('notification', (payload) => {
-      if (payload.type === 'MESSAGE_RECEIVED') {
-        fetchUnread();
-      }
+    const { data } = useUnreadMessagesCount({
+        enabled: isAuthenticated,
+        refetchInterval: pollInterval,
+        refetchOnWindowFocus: true,
     });
 
-    socket.on('refresh_unread', () => {
-      fetchUnread();
-    });
+    const totalUnread = data?.count ?? 0;
 
-    return () => {
-      socket.off('notification');
-      socket.off('refresh_unread');
+    const refresh = () => {
+        queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
     };
-  }, [socket, fetchUnread]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setTotalUnread(0);
-      return;
-    }
-    fetchUnread();
-    intervalRef.current = setInterval(fetchUnread, pollInterval);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isAuthenticated, fetchUnread, pollInterval]);
+    useEffect(() => {
+        if (!socket || !isAuthenticated) return;
 
-  // Allows components to manually trigger a refresh (e.g. after reading messages)
-  return { totalUnread, refresh: fetchUnread };
+        const handleUpdate = () => {
+            refresh();
+        };
+
+        socket.on('notification', (payload) => {
+            if (payload.type === 'MESSAGE_RECEIVED') {
+                handleUpdate();
+            }
+        });
+        socket.on('refresh_unread', handleUpdate);
+
+        return () => {
+            socket.off('notification');
+            socket.off('refresh_unread', handleUpdate);
+        };
+    }, [socket, isAuthenticated]);
+
+    return { totalUnread, refresh };
 }

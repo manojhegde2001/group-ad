@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePostDetail, useSharePost, useSaveToBoard, useCreatePost } from '@/hooks/use-feed';
+import { useSharePost, useSaveToBoard, useCreatePostModal } from '@/hooks/use-feed';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -20,7 +20,7 @@ import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 import { Popover } from 'rizzui';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
-import { useDeletePost } from '@/hooks/use-api/use-posts';
+import { useDeletePost, usePost, usePostComments, useLikePost, useCommentOnPost, useBookmarkPost } from '@/hooks/use-api/use-posts';
 
 interface Comment {
     id: string;
@@ -40,70 +40,42 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
 
-    const [post, setPost] = useState<PostWithRelations | null>(initialPost || null);
-    const [loading, setLoading] = useState(!initialPost);
-    const [liked, setLiked] = useState(false);
-    const [isLiking, setIsLiking] = useState(false);
-    const [saved, setSaved] = useState(false);
-    const [likeCount, setLikeCount] = useState(0);
+    // Queries
+    const { data: postData, isLoading: loadingPost } = usePost(postId);
+    const post = postData?.post || initialPost || null;
+    
+    const { data: commentsData, isLoading: loadingComments } = usePostComments(postId);
+    const comments = ((commentsData as any)?.comments as Comment[]) || [];
+
+    // Mutations
+    const likeMutation = useLikePost();
+    const commentMutation = useCommentOnPost();
+    const bookmarkMutation = useBookmarkPost();
+
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [comment, setComment] = useState('');
-    const [comments, setComments] = useState<Comment[]>([]);
-    const [loadingComments, setLoadingComments] = useState(false);
-    const [submittingComment, setSubmittingComment] = useState(false);
 
     const { open: openSaveToBoard } = useSaveToBoard();
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const shareOpen = activePostId === post?.id && (source === 'drawer' || source === 'page');
     const [copied, setCopied] = useState(false);
     
-    const { open: openCreatePost } = useCreatePost();
+    const { open: openCreatePostModal } = useCreatePostModal();
     const deleteMutation = useDeletePost();
     const reportMutation = useReport();
     const blockMutation = useBlock();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Fetch post + comments when opened
-    useEffect(() => {
-        if (!postId) return;
+    // Derived State
+    const liked = post?.isLikedByUser || false;
+    const likeCount = post?._count?.postLikes ?? (post as any)?.likes ?? 0;
+    const saved = (post as any)?.isBookmarked || false;
 
+    // Reset index when postId changes
+    useEffect(() => {
         setCurrentImageIndex(0);
         setComment('');
-
-        // Seed from cached post while we fetch fresh data
-        if (initialPost) {
-            setPost(initialPost);
-            setLikeCount(initialPost._count?.postLikes ?? (initialPost as any).likes ?? 0);
-            setLiked((initialPost as any).isLikedByUser ?? false);
-            setSaved((initialPost as any).isBookmarked ?? false);
-        }
-
-        // Fetch fresh post data
-        if (!initialPost) setLoading(true);
-        fetch(`/api/posts/${postId}`)
-            .then((r) => r.json())
-            .then((d) => {
-                if (d.post) {
-                    setPost(d.post);
-                    setLikeCount(d.post._count?.postLikes ?? d.post.likes ?? 0);
-                    setLiked(d.post.isLikedByUser ?? false);
-                    setSaved(d.post.isBookmarked ?? false);
-                }
-            })
-            .catch(() => { })
-            .finally(() => setLoading(false));
-
-        // Fetch comments
-        setLoadingComments(true);
-        setComments([]);
-        fetch(`/api/posts/${postId}/comments`)
-            .then((r) => r.json())
-            .then((d) => { if (d.comments) setComments(d.comments); })
-            .catch(() => { })
-            .finally(() => setLoadingComments(false));
-
-    }, [postId, initialPost]);
-
+    }, [postId]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -120,22 +92,10 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
 
     const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
 
-    const handleLike = async () => {
-        requireAuth(async () => {
-            if (isLiking || !post) return;
-            setIsLiking(true);
-            const newLiked = !liked;
-            setLiked(newLiked);
-            setLikeCount((c) => (newLiked ? c + 1 : Math.max(0, c - 1)));
-            try {
-                await fetch(`/api/posts/${post.id}/like`, { method: newLiked ? 'POST' : 'DELETE' });
-            } catch {
-                // revert
-                setLiked(!newLiked);
-                setLikeCount((c) => (!newLiked ? c + 1 : Math.max(0, c - 1)));
-            } finally {
-                setIsLiking(false);
-            }
+    const handleLike = () => {
+        requireAuth(() => {
+            if (!post) return;
+            likeMutation.mutate({ postId: post.id, liked: !liked });
         });
     };
 
@@ -148,44 +108,19 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
         setCurrentImageIndex((i) => (i - 1 + post.images.length) % post.images.length);
     };
 
-    const handleCommentSubmit = async (e: React.FormEvent) => {
+    const handleCommentSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!user || !post) { openLogin(); return; }
         if (!comment.trim()) return;
-        setSubmittingComment(true);
 
-        // Optimistic UI
-        const optimistic: Comment = {
-            id: `opt-${Date.now()}`,
-            content: comment.trim(),
-            createdAt: new Date().toISOString(),
-            user: {
-                id: user.id as string,
-                name: user.name as string,
-                username: (user as any).username,
-                avatar: (user as any).avatar || null,
-            },
-        };
-        setComments((prev) => [optimistic, ...prev]);
-        setComment('');
-
-        try {
-            const res = await fetch(`/api/posts/${post.id}/comments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: optimistic.content }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed');
-            // Replace optimistic entry with real one
-            setComments((prev) => prev.map((c) => c.id === optimistic.id ? data.comment : c));
-        } catch {
-            // Remove optimistic on failure
-            setComments((prev) => prev.filter((c) => c.id !== optimistic.id));
-            toast.error('Failed to post comment');
-        } finally {
-            setSubmittingComment(false);
-        }
+        commentMutation.mutate(
+            { postId: post.id, content: comment.trim() },
+            {
+                onSuccess: () => {
+                    setComment('');
+                }
+            }
+        );
     };
 
     const postUrl = typeof window !== 'undefined' && post
@@ -234,7 +169,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
         });
     };
 
-    if (loading && !post) {
+    if (loadingPost && !post) {
         return <PostDetailSkeleton isModal={isModal} onClose={onClose} />;
     }
 
@@ -283,7 +218,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </button>
                 )}
 
-                {loading ? (
+                {loadingPost ? (
                     <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
                         <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
                     </div>
@@ -352,7 +287,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                 )}
             </div>
 
-            {/* Right panel ΓÇö Details */}
+            {/* Right panel — Details */}
             <div className={`w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800 ${!isModal ? 'min-h-[600px] md:min-h-0' : ''}`}>
                 {/* Desktop Close Button (Only in Modal) */}
                 {isModal && onClose && (
@@ -417,7 +352,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     {user && (user.id === post.user.id || (user as any).userType === 'ADMIN') && (
                                         <>
                                             <button 
-                                                onClick={() => { openCreatePost(post); setIsMenuOpen(false); }}
+                                                onClick={() => { openCreatePostModal(post); setIsMenuOpen(false); }}
                                                 className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors cursor-pointer text-secondary-900 dark:text-white"
                                             >
                                                 <Edit2 className="w-4 h-4" /> Edit Post
@@ -500,7 +435,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         {/* Like */}
                         <button
                             onClick={handleLike}
-                            disabled={isLiking}
+                            disabled={likeMutation.isPending}
                             className={`flex items-center gap-1.5 font-medium text-sm transition-all ${liked ? 'text-red-500' : 'text-secondary-500 dark:text-secondary-400 hover:text-red-500'}`}
                         >
                             <Heart className={`w-5 h-5 transition-transform active:scale-125 ${liked ? 'fill-red-500' : ''}`} />
@@ -631,11 +566,11 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             {comment.trim() && (
                                 <button
                                     type="submit"
-                                    disabled={submittingComment}
+                                    disabled={commentMutation.isPending}
                                     className="text-primary-600 hover:text-primary-700 transition-colors shrink-0"
                                     aria-label="Send comment"
                                 >
-                                    {submittingComment
+                                    {commentMutation.isPending
                                         ? <Loader2 className="w-4 h-4 animate-spin" />
                                         : <Send className="w-4 h-4" />
                                     }

@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
 import { UserPlus, UserCheck, UserX, Loader2, Check, X, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { toast } from 'react-hot-toast';
+import { 
+    useConnectMutation, 
+    useUpdateConnectionMutation, 
+    useRemoveConnectionMutation 
+} from '@/hooks/use-api/use-connections';
 
 type ConnectionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED' | null;
 
@@ -31,86 +34,45 @@ export function ConnectionButton({
 }: ConnectionButtonProps) {
     const { user, isAuthenticated } = useAuth();
     const { openLogin } = useAuthModal();
-    const [status, setStatus] = useState<ConnectionStatus>(initialStatus);
-    const [loading, setLoading] = useState(false);
+    
+    // Mutations
+    const connectMutation = useConnectMutation();
+    const updateMutation = useUpdateConnectionMutation();
+    const removeMutation = useRemoveConnectionMutation();
+    
+    // We'll keep local status for immediate UI feedback, 
+    // but the mutations will trigger cache invalidation.
+    // For simplicity, we can also just rely on the parent component's 
+    // re-rendering after invalidation, but a small local state is smoother.
+    // However, the current component is receiving 'initialStatus' as a prop.
+    const status = initialStatus;
+    const loading = connectMutation.isPending || updateMutation.isPending || removeMutation.isPending;
 
     // Don't render if viewing own profile
     if (isAuthenticated && user?.id === userId) return null;
 
-    const handleConnect = async () => {
+    const handleConnect = () => {
         if (!isAuthenticated) {
             openLogin();
             return;
         }
-        if (loading) return;
-
-        setLoading(true);
-        try {
-            const res = await fetch('/api/connections', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ receiverId: userId }),
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                setStatus('PENDING');
-                toast.success(`Connection request sent to ${targetName}`);
-                onStatusChange?.('PENDING');
-            } else {
-                toast.error(data.error || 'Failed to send request');
-            }
-        } catch (error) {
-            toast.error('Something went wrong');
-        } finally {
-            setLoading(false);
-        }
+        
+        connectMutation.mutate(userId, {
+            onSuccess: () => onStatusChange?.('PENDING')
+        });
     };
 
-    const handleAction = async (action: 'ACCEPT' | 'REJECT' | 'REMOVE') => {
-        if (loading) return;
-        setLoading(true);
-
-        try {
-            // Note: We need the connection ID. For ACCEPT/REJECT/REMOVE, 
-            // the API currently expects the connection record ID.
-            // Since we only have the target userId here, we might need to 
-            // fetch the connection first or change the API to accept targetUserId.
-            
-            // For now, assume we'll use a specialized endpoint if needed or 
-            // the profile API will provide the connection ID.
-            
-            // OPTIMIZATION: Fetch connection ID if not provided (placeholder logic)
-            // Ideally, the parent component passes the connectionId.
-            
-            // To keep this component robust, let's assume we might need a 
-            // 'by-user' endpoint for connections.
-            
-            const endpoint = `/api/connections/by-user/${userId}`;
-            const res = await fetch(endpoint, {
-                method: action === 'REMOVE' ? 'DELETE' : 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: action === 'REMOVE' ? undefined : JSON.stringify({ action }),
-            });
-            
-            if (res.ok) {
-                if (action === 'ACCEPT') {
-                    setStatus('ACCEPTED');
-                    toast.success(`Now connected with ${targetName}`);
-                    onStatusChange?.('ACCEPTED');
-                } else if (action === 'REJECT' || action === 'REMOVE') {
-                    setStatus(null);
-                    toast.success(action === 'REMOVE' ? 'Connection removed' : 'Request ignored');
-                    onStatusChange?.(null);
-                }
-            } else {
-                const data = await res.json();
-                toast.error(data.error || 'Operation failed');
+    const handleAction = (action: 'ACCEPT' | 'REJECT' | 'REMOVE') => {
+        if (action === 'REMOVE') {
+            if (window.confirm(`Are you sure you want to remove ${targetName} from your network?`)) {
+                removeMutation.mutate(userId, {
+                    onSuccess: () => onStatusChange?.(null)
+                });
             }
-        } catch (error) {
-            toast.error('Communication error');
-        } finally {
-            setLoading(false);
+        } else {
+            updateMutation.mutate({ targetUserId: userId, action }, {
+                onSuccess: () => onStatusChange?.(action === 'ACCEPT' ? 'ACCEPTED' : null)
+            });
         }
     };
 
@@ -186,11 +148,7 @@ export function ConnectionButton({
     if (status === 'ACCEPTED') {
         return (
             <Button
-                onClick={() => {
-                    if (window.confirm(`Are you sure you want to remove ${targetName} from your network?`)) {
-                        handleAction('REMOVE');
-                    }
-                }}
+                onClick={() => handleAction('REMOVE')}
                 disabled={loading}
                 variant="outline"
                 color="primary"

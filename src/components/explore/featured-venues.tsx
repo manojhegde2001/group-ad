@@ -1,16 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Building2, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-
-interface Venue {
-  id: string;
-  name: string;
-  city: string;
-  state: string;
-}
+import { useVenues } from '@/hooks/use-api/use-venues';
 
 const VENUE_IMAGES = [
     'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
@@ -21,19 +14,12 @@ const VENUE_IMAGES = [
 
 export function FeaturedVenues() {
   const { user } = useAuth();
-  const [venues, setVenues] = useState<Venue[]>([]);
-  const [loading, setLoading] = useState(true);
-
   
-  useEffect(() => {
-    fetch('/api/venues')
-      .then((r) => r.json())
-      .then((d) => setVenues(d.venues?.slice(0, 4) || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  // Queries
+  const { data, isLoading } = useVenues();
+  const venues = data?.venues?.slice(0, 4) || [];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 sm:px-6">
         {[...Array(4)].map((_, i) => (
@@ -62,7 +48,7 @@ export function FeaturedVenues() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 sm:px-6">
-        {venues.map((venue, idx) => {
+        {venues.map((venue: any, idx: number) => {
           const isNearby = (user as any)?.location?.toLowerCase().includes(venue.city.toLowerCase());
           const image = VENUE_IMAGES[idx % VENUE_IMAGES.length];
           

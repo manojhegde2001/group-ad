@@ -1,52 +1,46 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, PieChart, Pie
 } from 'recharts';
 import { 
   Eye, TrendingUp, Users, FileText, 
-  ArrowUpRight, Award, Box, Zap, 
-  Info, Loader2, BarChart3, Target
+  ArrowUpRight, Award, Zap, 
+  Loader2, Target, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
-
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b'];
+import { useProfileAnalytics, usePostsAnalytics, useBusinessAnalytics } from '@/hooks/use-api/use-analytics';
 
 export default function AnalyticsDashboard({ userType }: { userType: string }) {
   const [activeView, setActiveView] = useState<'profile' | 'posts' | 'business'>('profile');
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const endpoint = activeView === 'profile' ? '/api/analytics/profile' 
-                      : activeView === 'posts' ? '/api/analytics/posts' 
-                      : '/api/analytics/business';
-        const res = await fetch(endpoint);
-        const d = await res.json();
-        setData(d);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [activeView]);
+  // Queries
+  const profileQuery = useProfileAnalytics();
+  const postsQuery = usePostsAnalytics();
+  const businessQuery = useBusinessAnalytics();
+
+  const currentQuery = activeView === 'profile' ? profileQuery 
+                    : activeView === 'posts' ? postsQuery 
+                    : businessQuery;
+
+  const data = currentQuery.data;
+  const loading = currentQuery.isLoading;
 
   if (loading) return (
     <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 text-secondary-500">
       <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-      <p className="font-bold border-b border-primary-500 pb-1">Generating Insights...</p>
+      <p className="font-bold border-b border-primary-500 pb-1 uppercase tracking-widest text-[10px]">Generating Insights...</p>
     </div>
   );
 
-  if (!data) return null;
+  if (!data) return (
+    <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 text-secondary-500 bg-white dark:bg-secondary-900 rounded-[2rem] border border-secondary-100 dark:border-secondary-800">
+      <BarChart3 className="w-12 h-12 text-secondary-200" />
+      <p className="font-bold text-sm uppercase tracking-tight">No analytics data available yet</p>
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -109,7 +103,7 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
       </div>
 
       {/* Main Chart */}
-      <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50">
+      <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem] overflow-hidden">
         <div className="mb-8">
             <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">
                 {activeView === 'profile' ? 'Profile Visibility' : activeView === 'posts' ? 'Reach Trend' : 'Brand vs Market Growth'}
@@ -151,7 +145,7 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Viewers or Top Posts */}
         {activeView === 'profile' && (
-          <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50">
+          <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem]">
             <h4 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-widest mb-6">Recent Viewers</h4>
             <div className="space-y-4">
               {data.recentViewers?.map((viewer: any) => (
@@ -179,7 +173,7 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
         )}
 
         {activeView === 'posts' && (
-          <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50">
+          <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem]">
             <h4 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-widest mb-6">Top Performing Posts</h4>
             <div className="space-y-4">
               {data.topPosts?.map((post: any) => (
@@ -202,7 +196,7 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
         )}
 
         {activeView === 'business' && (
-            <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50">
+            <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem]">
                 <h4 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-widest mb-6">Industry Neighbors</h4>
                 <div className="space-y-4">
                     {data.competitors?.map((comp: any) => (
@@ -230,7 +224,7 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
 
 function StatCard({ label, value, icon: Icon, color, bg }: any) {
     return (
-        <Card className="p-5 border-none shadow-sm dark:bg-secondary-900/50 hover:shadow-md transition-all group overflow-hidden relative">
+        <Card className="p-5 border-none shadow-sm dark:bg-secondary-900/50 hover:shadow-md transition-all group overflow-hidden relative rounded-[2rem]">
             <div className={cn("absolute -right-4 -top-4 w-16 h-16 rounded-full opacity-10 group-hover:scale-110 transition-transform", bg.replace('50', '500'))} />
             <div className="flex items-center gap-4 relative z-10">
                 <div className={cn("p-3 rounded-2xl shrink-0 transition-transform group-hover:scale-110", bg, color)}>

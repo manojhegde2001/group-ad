@@ -1,22 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  icon?: string | null;
-  banner?: string | null;
-}
+import { useCategories } from '@/hooks/use-api/use-categories';
 
 const DEFAULT_CATEGORY_IMAGE = 'https://images.unsplash.com/photo-1616469829581-73993eb86b02?w=500&q=80';
 
 function CategorySkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-8">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         {[...Array(10)].map((_, i) => (
           <Skeleton key={i} className="w-full aspect-[4/5] rounded-2xl md:rounded-3xl" />
@@ -27,25 +19,17 @@ function CategorySkeleton() {
 }
 
 export function CategoryCards() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useCategories();
+  const categories = data?.categories || [];
 
-  useEffect(() => {
-    fetch('/api/categories')
-      .then((r) => r.json())
-      .then((d) => setCategories(d.categories || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <CategorySkeleton />;
+  if (isLoading) return <CategorySkeleton />;
   if (categories.length === 0) return null;
 
   return (
     <div className="w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-8">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-8">
-          {categories.map((cat, idx) => {
+          {categories.map((cat: any) => {
             const bgImage = cat.banner || DEFAULT_CATEGORY_IMAGE;
 
             return (

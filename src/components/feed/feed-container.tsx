@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Masonry from 'react-masonry-css';
 import { PostCard } from './post-card';
 import { CategoryBar } from './category-bar';
-import { useFeedFilter, useCreatePost } from '@/hooks/use-feed';
+import { useFeedFilter, useCreatePostModal } from '@/hooks/use-feed';
 import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
@@ -103,7 +103,7 @@ interface FeedContainerProps {
 export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedContainerProps) {
   const { selectedCategoryId, searchQuery } = useFeedFilter();
   const effectiveCategoryId = initialCategoryId !== undefined ? initialCategoryId : selectedCategoryId;
-  const { setOnCreated, setOnDeleted } = useCreatePost();
+  const { setOnCreated, setOnDeleted } = useCreatePostModal();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -174,7 +174,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
 
   if (isLoading) {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-2 md:py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {[...Array(10)].map((_, i) => (
             <div key={i} className="space-y-3">
@@ -210,7 +210,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
   }
 
   return (
-    <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 2xl:px-12 py-5">
+    <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-12 py-2 md:py-6">
       {/* Visually hidden H1 for SEO stability across auth states */}
       <h1 className="sr-only">Group Ad — Discover Professional Ideas & Business Networking Feed</h1>
 

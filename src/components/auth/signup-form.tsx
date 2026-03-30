@@ -26,7 +26,7 @@ interface Category {
   description: string;
 }
 
-export default function SignupForm() {
+export default function SignupForm({ hideFooter, onToggle }: { hideFooter?: boolean; onToggle?: () => void } = {}) {
   const router = useRouter();
   const { setMode, isOpen } = useAuthModal();
 
@@ -206,24 +206,28 @@ export default function SignupForm() {
       </div>
 
       {/* Footer */}
-      <div className="sm:col-span-2">
-        <Text className="text-center text-sm text-gray-600 dark:text-gray-400">
-          Already have an account?{' '}
-          <button
-            type="button"
-            onClick={() => {
-              if (isOpen) {
-                setMode('login');
-              } else {
-                router.push('/login');
-              }
-            }}
-            className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 hover:underline transition-colors"
-          >
-            Login here
-          </button>
-        </Text>
-      </div>
+      {!hideFooter && (
+        <div className="sm:col-span-2">
+          <Text className="text-center text-sm text-gray-600 dark:text-gray-400">
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={() => {
+                if (onToggle) {
+                  onToggle();
+                } else if (isOpen) {
+                  setMode('login');
+                } else {
+                  router.push('/auth');
+                }
+              }}
+              className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 hover:underline transition-colors"
+            >
+              Login here
+            </button>
+          </Text>
+        </div>
+      )}
     </form>
   );
 }

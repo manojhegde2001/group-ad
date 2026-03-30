@@ -4,29 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useFeedFilter } from '@/hooks/use-feed';
 import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Category {
-    id: string;
-    name: string;
-    slug: string;
-    icon?: string | null;
-}
+import { useCategories } from '@/hooks/use-api/use-categories';
 
 export function CategoryBar() {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
     const { selectedCategoryId, setCategory } = useFeedFilter();
+    
+    // Queries
+    const { data, isLoading } = useCategories();
+    const categories = data?.categories || [];
+
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
-
-    useEffect(() => {
-        fetch('/api/categories')
-            .then((r) => r.json())
-            .then((d) => setCategories(d.categories || []))
-            .catch(() => { })
-            .finally(() => setLoading(false));
-    }, []);
 
     const checkScroll = () => {
         const el = scrollRef.current;
@@ -51,10 +40,10 @@ export function CategoryBar() {
         scrollRef.current?.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="sticky top-[57px] z-40 bg-white/90 dark:bg-secondary-950/90 backdrop-blur-md border-b border-secondary-100 dark:border-secondary-800/50">
-                <div className="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 py-2 md:py-3 flex gap-2 overflow-hidden">
                     {[...Array(8)].map((_, i) => (
                         <Skeleton key={i} className="shrink-0 h-8 w-20 rounded-full" />
                     ))}
@@ -88,7 +77,7 @@ export function CategoryBar() {
                 {/* Pills */}
                 <div
                     ref={scrollRef}
-                    className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide"
+                    className="flex items-center gap-2 py-2 md:py-3 overflow-x-auto scrollbar-hide"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {allCategories.map((cat) => {

@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useProfile, useUpdateProfile, useChangePassword, useUploadAvatar } from '@/hooks/use-api/use-user';
+import { useProfile, useUpdateProfile, useChangePassword, useUploadAvatar, useTypeChangeRequest, useSubmitTypeChangeRequest } from '@/hooks/use-api/use-user';
+import { useCategories } from '@/hooks/use-api/use-categories';
 import {
   User, Shield, Lock, Bell, Globe, CheckCircle,
   Save, LogOut, ChevronRight, MapPin, Link2, CreditCard,
@@ -69,10 +70,13 @@ export default function SettingsPage() {
 
   // Business Transition fields
   const [showBusinessForm, setShowBusinessForm] = useState(false);
-  const [categories, setCategories]             = useState<{id: string, name: string}[]>([]);
-  const [pendingRequest, setPendingRequest]     = useState<any>(null);
-  const [loadingRequest, setLoadingRequest]     = useState(true);
-  
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData?.categories || [];
+  const { data: requestData, isLoading: loadingRequest } = useTypeChangeRequest();
+  const pendingRequest = requestData?.request;
+  const submitTypeChange = useSubmitTypeChangeRequest();
+  const submittingRequest = submitTypeChange.isPending;
+
   // Business form fields
   const [bsCompanyName, setBsCompanyName]         = useState('');
   const [bsCategoryId, setBsCategoryId]           = useState('');
@@ -82,22 +86,6 @@ export default function SettingsPage() {
   const [bsEstablishedYear, setBsEstablishedYear] = useState('');
   const [bsCompanyWebsite, setBsCompanyWebsite]   = useState('');
   const [bsReason, setBsReason]                   = useState('');
-  const [submittingRequest, setSubmittingRequest] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data.categories || []))
-      .catch(() => {});
-
-    fetch('/api/user/type-change/request')
-      .then(res => res.json())
-      .then(data => {
-        setPendingRequest(data.request);
-      })
-      .catch(() => {})
-      .finally(() => setLoadingRequest(false));
-  }, []);
 
   const profile = profileData?.user ?? profileData;
 
@@ -161,42 +149,28 @@ export default function SettingsPage() {
     });
   };
 
-  const handleBusinessRequest = async () => {
+  const handleBusinessRequest = () => {
     if (!bsCompanyName || !bsCategoryId) {
       toast.error('Company Name and Category are required');
       return;
     }
-    setSubmittingRequest(true);
-    try {
-      const res = await fetch('/api/user/type-change/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          companyName: bsCompanyName,
-          categoryId: bsCategoryId,
-          industry: bsIndustry,
-          gstNumber, 
-          turnover: bsTurnover,
-          companySize: bsCompanySize,
-          establishedYear: bsEstablishedYear,
-          companyWebsite: bsCompanyWebsite,
-          reason: bsReason
-        })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast.success(data.message);
-        setPendingRequest(data.request);
+    
+    submitTypeChange.mutate({
+      companyName: bsCompanyName,
+      categoryId: bsCategoryId,
+      industry: bsIndustry,
+      gstNumber, 
+      turnover: bsTurnover,
+      companySize: bsCompanySize,
+      establishedYear: bsEstablishedYear,
+      companyWebsite: bsCompanyWebsite,
+      reason: bsReason
+    }, {
+      onSuccess: () => {
         setShowBusinessForm(false);
-        window.location.reload();
-      } else {
-        toast.error(data.error || 'Failed to submit request');
+        // Refresh or sync state if needed, hook already invalidates query.
       }
-    } catch {
-      toast.error('An error occurred');
-    } finally {
-      setSubmittingRequest(false);
-    }
+    });
   };
 
   const handlePasswordChange = () => {

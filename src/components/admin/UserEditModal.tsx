@@ -6,19 +6,24 @@ import { X, Save, User, Shield, Ban, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
+import { useCategories } from '@/hooks/use-api/use-categories';
+import { useUpdateAdminUser } from '@/hooks/use-api/use-admin';
 
 interface UserEditModalProps {
   user: any;
   isOpen: boolean;
   onClose: () => void;
-  onRefresh: () => void;
 }
 
-export default function UserEditModal({ user, isOpen, onClose, onRefresh }: UserEditModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
+export default function UserEditModal({ user, isOpen, onClose }: UserEditModalProps) {
   const [mounted, setMounted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Queries & Mutations
+  const { data: catData } = useCategories();
+  const categories = catData?.categories || [];
+  const { mutate: updateUser, isPending: loading } = useUpdateAdminUser();
+
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -49,13 +54,6 @@ export default function UserEditModal({ user, isOpen, onClose, onRefresh }: User
     }
   }, [user]);
 
-  useEffect(() => {
-    fetch('/api/categories')
-      .then(r => r.json())
-      .then(d => setCategories(d.categories || []))
-      .catch(() => {});
-  }, []);
-
   // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -66,27 +64,19 @@ export default function UserEditModal({ user, isOpen, onClose, onRefresh }: User
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const handleSave = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const result = await res.json();
-      if (res.ok) {
-        toast.success('User updated successfully');
-        onRefresh();
-        onClose();
-      } else {
-        toast.error(result.error || 'Update failed');
+  const handleSave = () => {
+    updateUser(
+      { id: user.id, data: form },
+      {
+        onSuccess: () => {
+          toast.success('User updated successfully');
+          onClose();
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.error || 'Update failed');
+        }
       }
-    } catch {
-      toast.error('Internal server error');
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   if (!isOpen || !user || !mounted) return null;

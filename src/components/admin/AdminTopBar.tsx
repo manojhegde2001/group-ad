@@ -39,48 +39,29 @@ const Logo = dynamic(() => import('../ui/logo'), {
 });
 
 
+import { useAdminNotifications, useAdminSearch } from '@/hooks/use-api/use-admin';
 
 export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) {
   const pathname = usePathname();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [notifCount, setNotifCount] = useState(0);
-  const [loadingNotifs, setLoadingNotifs] = useState(true);
-
+  
   const currentPage = ROUTE_LABELS[pathname] ?? 'Admin';
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
-    try {
-      setLoadingNotifs(true);
-      const res = await fetch('/api/admin/notifications');
-      const data = await res.json();
-      setNotifications(data.notifications || []);
-      setNotifCount(data.count || 0);
-    } catch (err) {
-      console.error('Failed to fetch admin notifications');
-    } finally {
-      setLoadingNotifs(false);
-    }
-  };
+  // Queries
+  const { data: notifData, isLoading: loadingNotifs, refetch } = useAdminNotifications();
+  const notifications = notifData?.notifications || [];
+  const notifCount = notifData?.count || 0;
 
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { data: searchData, isFetching: searching } = useAdminSearch(debouncedSearch);
+  
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Search logic
-  const handleSearch = (val: string) => {
-    setSearchQuery(val);
-    if (val.length < 2) {
-       setSearchResults([]);
-       return;
-    }
-    setSearching(true);
-    
-    // Local Menu Search
+  // Local Menu Search
+  const getMenuResults = (val: string) => {
     const lowerVal = val.toLowerCase();
-    const menuResults = Object.entries(ROUTE_LABELS)
+    return Object.entries(ROUTE_LABELS)
       .filter(([path, label]) => label.toLowerCase().includes(lowerVal))
       .map(([path, label]) => ({
         id: `menu-${path}`,
@@ -89,25 +70,26 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
         subtitle: 'Navigation Menu',
         href: path,
       }));
-
-    clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(async () => {
-      try {
-         const res = await fetch(`/api/admin/search?q=${encodeURIComponent(val)}`);
-         const data = await res.json();
-         setSearchResults([...menuResults, ...(data.results || [])]);
-      } catch (err) {
-         console.error('Search failed');
-         setSearchResults(menuResults);
-      } finally {
-         setSearching(false);
-      }
-    }, 400);
   };
 
+  const menuResults = searchQuery.length >= 2 ? getMenuResults(searchQuery) : [];
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    setSearchResults([...menuResults, ...(searchData?.results || [])]);
+  }, [searchData, searchQuery]);
+
+  const handleSearch = (val: string) => {
+    setSearchQuery(val);
+    clearTimeout(searchTimer.current);
+    if (val.length >= 2) {
+      searchTimer.current = setTimeout(() => {
+        setDebouncedSearch(val);
+      }, 400);
+    } else {
+      setDebouncedSearch('');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shrink-0 transition-colors duration-300">
@@ -203,7 +185,7 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
         <Popover placement="bottom-end">
           <Popover.Trigger>
             <div className="relative">
-              <ActionIcon variant="text" onClick={fetchNotifications} className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 dark:text-slate-400">
+              <ActionIcon variant="text" onClick={() => refetch()} className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 dark:text-slate-400">
                 <Bell className="w-[22px] h-[22px] stroke-[2px]" />
                 {notifCount > 0 && (
                   <span className="absolute top-1 right-1 min-w-[17px] h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1 ring-2 ring-white dark:ring-slate-900 leading-none shadow-sm pointer-events-none">

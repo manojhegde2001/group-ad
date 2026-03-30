@@ -1,60 +1,46 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/components/providers/socket-provider';
+import { useNotifications } from '@/hooks/use-api/use-notifications';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useUnreadNotifications(pollInterval = 30_000) {
-  const { isAuthenticated } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const { isAuthenticated } = useAuth();
+    const { socket } = useSocket();
+    const queryClient = useQueryClient();
 
-  const { socket } = useSocket();
+    const { data } = useNotifications(
+        { limit: 1 },
+        { 
+            enabled: isAuthenticated,
+            refetchInterval: pollInterval,
+            refetchOnWindowFocus: true,
+        }
+    );
 
-  const fetchUnread = useCallback(async () => {
-    if (!isAuthenticated) return;
-    try {
-      // We fetch with limit=1 because we only care about the unreadCount field 
-      // returned by the standard /api/notifications endpoint.
-      const res = await fetch('/api/notifications?limit=1');
-      if (!res.ok) return;
-      const data = await res.json();
-      setUnreadCount(data.unreadCount ?? 0);
-    } catch {
-      /* silent */
-    }
-  }, [isAuthenticated]);
+    const unreadCount = data?.unreadCount ?? 0;
 
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('notification', () => {
-      fetchUnread();
-    });
-
-    socket.on('refresh_unread', () => {
-      fetchUnread();
-    });
-
-    return () => {
-      socket.off('notification');
-      socket.off('refresh_unread');
+    const refresh = () => {
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
     };
-  }, [socket, fetchUnread]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setUnreadCount(0);
-      return;
-    }
-    
-    fetchUnread();
-    intervalRef.current = setInterval(fetchUnread, pollInterval);
-    
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isAuthenticated, fetchUnread, pollInterval]);
+    useEffect(() => {
+        if (!socket || !isAuthenticated) return;
 
-  return { unreadCount, refresh: fetchUnread };
+        const handleNotification = () => {
+            refresh();
+        };
+
+        socket.on('notification', handleNotification);
+        socket.on('refresh_unread', handleNotification);
+
+        return () => {
+            socket.off('notification', handleNotification);
+            socket.off('refresh_unread', handleNotification);
+        };
+    }, [socket, isAuthenticated]);
+
+    return { unreadCount, refresh };
 }

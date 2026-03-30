@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useCreatePost } from '@/hooks/use-feed';
+import { useCreatePostModal } from '@/hooks/use-feed';
+import { useCreatePost, useUpdatePost } from '@/hooks/use-api/use-posts';
 import { useAuth } from '@/hooks/use-auth';
 import {
     X, Image as ImageIcon, Type, Tag, Globe, Lock,
@@ -15,7 +16,7 @@ import { Avatar } from '@/components/ui/avatar';
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
 export function CreatePostModal() {
-    const { isOpen, close, notifyCreated, editingPost } = useCreatePost();
+    const { isOpen, close, notifyCreated, editingPost } = useCreatePostModal();
     const { user } = useAuth();
 
     const [postType, setPostType] = useState<PostType>('IMAGE');
@@ -26,7 +27,6 @@ export function CreatePostModal() {
     const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     
@@ -191,6 +191,10 @@ export function CreatePostModal() {
         }
     };
 
+    const createMutation = useCreatePost();
+    const updateMutation = useUpdatePost();
+    const submitting = createMutation.isPending || updateMutation.isPending;
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!content.trim()) {
@@ -202,7 +206,6 @@ export function CreatePostModal() {
             return;
         }
 
-        setSubmitting(true);
         try {
             const newMediaUrls = await uploadToCloudinary();
             const existingUrls = mediaPreviews.filter(p => !p.startsWith('blob:'));
@@ -213,44 +216,43 @@ export function CreatePostModal() {
                 .map((t) => t.trim().toLowerCase().replace(/^#/, ''))
                 .filter(Boolean);
 
-            const url = editingPost ? `/api/posts/${editingPost.id}` : '/api/posts';
-            const method = editingPost ? 'PATCH' : 'POST';
+            const postData = {
+                type: postType,
+                content: content.trim(),
+                images: finalMediaUrls,
+                tags: parsedTags,
+                visibility,
+            };
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: postType,
-                    content: content.trim(),
-                    images: finalMediaUrls,
-                    tags: parsedTags,
-                    visibility,
-                }),
-            });
-
-            if (!res.ok) {
-                let errMsg = `Failed to ${editingPost ? 'update' : 'publish'} post`;
-                try {
-                    const err = await res.json();
-                    errMsg = err.error || errMsg;
-                } catch (e) {
-                    errMsg = res.statusText || errMsg;
-                }
-                throw new Error(errMsg);
+            if (editingPost) {
+                updateMutation.mutate(
+                    { postId: editingPost.id, data: postData },
+                    {
+                        onSuccess: (data: any) => {
+                            setSuccess(true);
+                            setTimeout(() => {
+                                reset();
+                                notifyCreated(data.post);
+                            }, 1200);
+                        }
+                    }
+                );
+            } else {
+                createMutation.mutate(
+                    postData,
+                    {
+                        onSuccess: (data: any) => {
+                            setSuccess(true);
+                            setTimeout(() => {
+                                reset();
+                                notifyCreated(data.post);
+                            }, 1200);
+                        }
+                    }
+                );
             }
-
-            const data = await res.json();
-            setSuccess(true);
-            toast.success(`Post ${editingPost ? 'updated' : 'published'}! 🎉`);
-            
-            setTimeout(() => {
-                reset();
-                notifyCreated(data.post);
-            }, 1200);
         } catch (err: any) {
             toast.error(err.message || 'Error occurred');
-        } finally {
-            setSubmitting(false);
         }
     };
 

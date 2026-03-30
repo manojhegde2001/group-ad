@@ -85,3 +85,50 @@ export const useUploadAvatar = () => {
         },
     });
 };
+export const useFollowing = () => {
+    return useQuery({
+        queryKey: ['users', 'following'],
+        queryFn: () => userService.getFollowing(),
+    });
+};
+
+export const useTypeChangeRequest = () => {
+    return useQuery({
+        queryKey: ['user', 'type-change-request'],
+        queryFn: () => userService.getTypeChangeRequest(),
+    });
+};
+
+export const useSubmitTypeChangeRequest = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: any) => userService.submitTypeChangeRequest(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user', 'type-change-request'] });
+            toast.success('Request submitted successfully');
+            // We might want to reload or redirect, but let the component decide if needed.
+            // For now, just success message.
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to submit request');
+        },
+    });
+};
+
+export const useFollowUser = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (userId: string) => userService.followUser(userId),
+        onSuccess: (_, userId) => {
+            queryClient.invalidateQueries({ queryKey: ['me'] });
+            queryClient.invalidateQueries({ queryKey: ['user', userId] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'following'] });
+            toast.success('Followed successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to follow user');
+        },
+    });
+};

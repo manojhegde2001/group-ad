@@ -10,7 +10,7 @@ import Masonry from 'react-masonry-css';
 import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare } from 'lucide-react';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
-import { useCreatePost } from '@/hooks/use-feed';
+import { useCreatePostModal } from '@/hooks/use-feed';
 import { useReport, useBlock, useUnblock } from '@/hooks/use-api/use-moderation';
 import { Button } from '@/components/ui/button';
 import { Popover } from 'rizzui';
@@ -47,7 +47,7 @@ export default function ProfileView({ username }: { username: string }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Refresh logic when a post is created
-    const { setOnCreated } = useCreatePost();
+    const { setOnCreated } = useCreatePostModal();
     useEffect(() => {
         setOnCreated((newPost) => {
             // Refetch posts if we are on the profile

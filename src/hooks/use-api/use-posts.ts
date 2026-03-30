@@ -1,12 +1,22 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { postService } from '@/services/api/posts';
+import { apiClient } from '@/lib/api-client';
+import { PostWithRelations } from '@/types';
 import toast from 'react-hot-toast';
-import { useCreatePost as usePostStore } from '@/hooks/use-feed';
+import { useCreatePostModal as usePostStore } from '@/hooks/use-feed';
 
 export const usePosts = (params: Record<string, any> = {}) => {
     return useQuery({
         queryKey: ['posts', params],
         queryFn: () => postService.getPosts(params),
+    });
+};
+
+export const usePost = (postId: string) => {
+    return useQuery({
+        queryKey: ['posts', postId],
+        queryFn: () => apiClient.get<{ post: PostWithRelations }>(`/api/posts/${postId}`),
+        enabled: !!postId,
     });
 };
 
@@ -118,5 +128,25 @@ export const useSavedPosts = (params: any = {}, options: any = {}) => {
             return undefined;
         },
         ...options,
+    });
+};
+
+export const usePostComments = (postId: string) => {
+    return useQuery({
+        queryKey: ['posts', postId, 'comments'],
+        queryFn: () => postService.getPostComments(postId),
+        enabled: !!postId,
+    });
+};
+
+export const useCommentOnPost = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ postId, content }: { postId: string; content: string }) =>
+            postService.commentOnPost(postId, content),
+        onSuccess: (_, { postId }) => {
+            queryClient.invalidateQueries({ queryKey: ['posts', postId, 'comments'] });
+            toast.success('Comment posted');
+        },
     });
 };

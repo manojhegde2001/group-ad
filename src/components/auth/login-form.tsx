@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthModal } from '@/hooks/use-modal';
 import { useAuth } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth';
@@ -13,12 +13,14 @@ import { Button } from '../ui/button';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { close, setMode, isOpen, onSuccessCallback, setIsDirty } = useAuthModal();
   const { refreshAuth } = useAuth();
 
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -27,6 +29,13 @@ export function LoginForm() {
       password: '',
     },
   });
+
+  useEffect(() => {
+    const identifier = searchParams.get('identifier');
+    if (identifier) {
+      setValue('identifier', identifier);
+    }
+  }, [searchParams, setValue]);
 
   useEffect(() => {
     setIsDirty(isDirty);

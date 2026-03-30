@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { sendMail, bulkAccountCreatedEmail } from '@/lib/mailer';
 
 export async function POST(req: Request) {
   try {
@@ -51,10 +52,24 @@ export async function POST(req: Request) {
       data: usersToCreate,
     });
 
+    // Send Onboarding Emails (Asynchronous)
+    // Note: In production with large batches, this should be moved to a background job
+    usersToCreate.forEach(async (u) => {
+      try {
+        await sendMail({
+          to: u.email,
+          subject: 'Your Account is Ready - Group Ad',
+          html: bulkAccountCreatedEmail(u.name, u.username, u.email),
+        });
+      } catch (err) {
+        console.error(`Failed to send onboarding email to ${u.email}:`, err);
+      }
+    });
+
     return NextResponse.json({ 
       success: true, 
       count: usersToCreate.length,
-      message: `Successfully created ${usersToCreate.length} users` 
+      message: `Successfully created ${usersToCreate.length} users and queued welcome emails` 
     });
   } catch (error) {
     console.error('Bulk creation error:', error);

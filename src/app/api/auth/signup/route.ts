@@ -3,6 +3,7 @@ import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { signupSchema } from '@/lib/validations/auth';
 import { UserType } from '@prisma/client';
+import { sendMail, welcomeEmail } from '@/lib/mailer';
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,6 +81,20 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Send Welcome Email (Non-blocking but awaited before response for reliability)
+    try {
+      if (user.email) {
+        await sendMail({
+          to: user.email,
+          subject: 'Welcome to Group Ad!',
+          html: welcomeEmail(user.name || user.username, user.email),
+        });
+      }
+    } catch (mailError) {
+      console.error('Failed to send welcome email:', mailError);
+      // We don't fail the signup if the email fails
+    }
 
     return NextResponse.json(
       {

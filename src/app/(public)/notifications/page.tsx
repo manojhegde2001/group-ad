@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar } from '@/components/ui/avatar';
 import { Bell, CheckCheck, Loader2, X, RefreshCw } from 'lucide-react';
@@ -12,6 +13,8 @@ import {
     useMarkAllNotificationsRead, 
     useDeleteNotification 
 } from '@/hooks/use-api/use-notifications';
+import { useUpdateConnectionMutation } from '@/hooks/use-api/use-connections';
+import { Button } from '@/components/ui/button';
 
 const NOTIF_ICONS: Record<string, string> = {
   CONNECTION_REQUEST: '👤',
@@ -30,6 +33,7 @@ const NOTIF_ICONS: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
@@ -41,6 +45,7 @@ export default function NotificationsPage() {
   const markReadMutation = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
   const deleteMutation = useDeleteNotification();
+  const updateConnectionMutation = useUpdateConnectionMutation();
 
   const notifications = data?.notifications || [];
   const unreadCount = data?.unreadCount ?? 0;
@@ -117,7 +122,10 @@ export default function NotificationsPage() {
               {displayed.map((n) => (
                 <div
                   key={n.id}
-                  onClick={() => !n.isRead && markReadMutation.mutate(n.id)}
+                  onClick={() => {
+                    if (!n.isRead) markReadMutation.mutate(n.id);
+                    if (n.sender) router.push(`/profile/${n.sender.username}`);
+                  }}
                   className={cn(
                     'flex items-start gap-3 px-4 py-4 cursor-pointer hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors group',
                     !n.isRead && 'bg-primary-50/50 dark:bg-primary-900/10'
@@ -135,7 +143,36 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-secondary-900 dark:text-white leading-snug">{n.title}</p>
                     <p className="text-xs text-secondary-500 mt-0.5 leading-relaxed">{n.message}</p>
-                    <p className="text-[10px] text-secondary-400 mt-1">{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</p>
+                    {n.type === 'CONNECTION_REQUEST' && n.senderId && (
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateConnectionMutation.mutate({ targetUserId: n.senderId!, action: 'ACCEPT' }, {
+                              onSuccess: () => deleteMutation.mutate(n.id)
+                            });
+                          }}
+                          className="h-8 px-4 text-[10px] font-bold rounded-lg"
+                        >
+                           Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateConnectionMutation.mutate({ targetUserId: n.senderId!, action: 'REJECT' }, {
+                              onSuccess: () => deleteMutation.mutate(n.id)
+                            });
+                          }}
+                          className="h-8 px-4 text-[10px] font-bold rounded-lg border-2"
+                        >
+                           Reject
+                        </Button>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-secondary-400 mt-1.5">{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</p>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0 mt-1">

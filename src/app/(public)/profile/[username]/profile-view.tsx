@@ -254,14 +254,20 @@ export default function ProfileView({ username }: { username: string }) {
                                         <LinkIcon className="w-4 h-4" /> {profile.websiteLabel || profile.website.replace(/^https?:\/\//, '')}
                                     </a>
                                 )}
-                                {profile.phone && (
+                                {profile.phone && (isOwnProfile || profile.phoneVisibility === 'PRIMARY' || profile.phoneVisibility === 'BOTH') && (
                                     <div className="flex items-center gap-1.5 text-secondary-500">
                                         <Phone className="w-4 h-4" /> {profile.phone}
+                                        {isOwnProfile && profile.phoneVisibility !== 'PRIMARY' && profile.phoneVisibility !== 'BOTH' && (
+                                            <span className="text-[10px] bg-secondary-100 px-1.5 py-0.5 rounded text-secondary-400 uppercase font-bold">Only you</span>
+                                        )}
                                     </div>
                                 )}
-                                {profile.secondaryPhone && (
+                                {profile.secondaryPhone && (isOwnProfile || profile.phoneVisibility === 'SECONDARY' || profile.phoneVisibility === 'BOTH') && (
                                     <div className="flex items-center gap-1.5 text-secondary-500">
                                         <Phone className="w-4 h-4" /> {profile.secondaryPhone}
+                                        {isOwnProfile && profile.phoneVisibility !== 'SECONDARY' && profile.phoneVisibility !== 'BOTH' && (
+                                            <span className="text-[10px] bg-secondary-100 px-1.5 py-0.5 rounded text-secondary-400 uppercase font-bold">Only you</span>
+                                        )}
                                     </div>
                                 )}
                             </div>

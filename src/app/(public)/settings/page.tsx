@@ -11,7 +11,7 @@ import {
   Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
+import { Avatar, Button, Input, Textarea, Switch, Checkbox, Select } from 'rizzui';
 import toast from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -49,6 +49,13 @@ export default function SettingsPage() {
   const [phone, setPhone]             = useState('');
   const [secondaryPhone, setSecondaryPhone] = useState('');
   const [phoneVisibility, setPhoneVisibility] = useState('NONE');
+
+  const phoneVisibilityOptions = [
+    { label: 'Hide All Numbers', value: 'NONE' },
+    { label: 'Primary Only', value: 'PRIMARY' },
+    { label: 'Secondary Only', value: 'SECONDARY' },
+    { label: 'Both Numbers', value: 'BOTH' },
+  ];
   const [address, setAddress]         = useState('');
   const [pincode, setPincode]         = useState('');
   const [externalLink, setExternalLink] = useState('');
@@ -378,16 +385,16 @@ export default function SettingsPage() {
                         <Field label="Primary Phone" error={fieldErrors.phone}><div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.phone && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                         <Field label="Secondary Phone (Optional)" error={fieldErrors.secondaryPhone}><div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="tel" value={secondaryPhone} onChange={e => setSecondaryPhone(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.secondaryPhone && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                         <Field label="Phone Visibility">
-                          <select 
-                            value={phoneVisibility} 
-                            onChange={e => setPhoneVisibility(e.target.value)} 
-                            className={cn(inputCls, "appearance-none")}
-                          >
-                            <option value="NONE">Hide All Numbers</option>
-                            <option value="PRIMARY">Primary Only</option>
-                            <option value="SECONDARY">Secondary Only</option>
-                            <option value="BOTH">Show Both Numbers</option>
-                          </select>
+                          <Select
+                            value={phoneVisibility}
+                            onChange={(val: any) => setPhoneVisibility(val as string)}
+                            options={phoneVisibilityOptions}
+                            placeholder="Select visibility"
+                            className="w-full"
+                            selectClassName="rounded-2xl h-14 bg-secondary-50 dark:bg-secondary-800/50 border-none ring-0 font-bold text-sm"
+                            optionClassName="font-bold text-sm py-3"
+                            dropdownClassName="rounded-2xl border-secondary-100 dark:border-secondary-800 shadow-2xl p-2"
+                          />
                         </Field>
                         <Field label="Bio" span2 error={fieldErrors.bio}><textarea value={bio} onChange={e => setBio(e.target.value)} className={cn(inputCls, "resize-none", fieldErrors.bio && 'ring-1 ring-red-500 border-red-500')} rows={3} maxLength={300} /><div className="flex justify-end mt-1 text-[10px] font-bold text-secondary-400">{bio.length}/300</div></Field>
                       </div>

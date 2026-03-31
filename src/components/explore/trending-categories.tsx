@@ -43,7 +43,7 @@ export function TrendingCategories() {
     return (
       <div className="flex gap-4 overflow-x-hidden px-4 sm:px-6">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="min-w-[240px] h-32 rounded-3xl shrink-0" />
+          <Skeleton key={i} className="min-w-[240px] h-32 rounded-2xl shrink-0" />
         ))}
       </div>
     );
@@ -101,7 +101,7 @@ export function TrendingCategories() {
                     href={`/explore/${cat.slug}`}
                     className="
                       relative block w-full h-48
-                      rounded-[2.5rem] overflow-hidden 
+                      rounded-2xl overflow-hidden 
                       group transition-all duration-700 hover:-translate-y-2
                       shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]
                       dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]
@@ -118,7 +118,7 @@ export function TrendingCategories() {
                     <div className="absolute inset-0 bg-primary-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     
                     {/* Glass Rim */}
-                    <div className="absolute inset-0 border border-white/10 rounded-[2.5rem] pointer-events-none" />
+                    <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
 
                     {/* Top Badge */}
                     <div className="absolute top-5 left-5 right-5 flex justify-between items-start z-10">

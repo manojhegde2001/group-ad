@@ -136,21 +136,29 @@ export default function CalendarView() {
         }
         .rbc-header {
           padding: 8px 0;
-          md:padding: 16px 0;
           font-weight: 700;
           font-size: 0.65rem;
-          md:font-size: 0.8rem;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: #94a3b8;
           border-bottom: 1px solid #f1f5f9;
         }
+        @media (min-width: 768px) {
+          .rbc-header {
+            padding: 16px 0;
+            font-size: 0.8rem;
+          }
+        }
         .rbc-month-view {
           border-radius: 1rem;
-          md:border-radius: 1.5rem;
           overflow: hidden;
           border: 1px solid #f1f5f9;
           flex: 1;
+        }
+        @media (min-width: 768px) {
+          .rbc-month-view {
+            border-radius: 1.5rem;
+          }
         }
         .rbc-day-bg + .rbc-day-bg, .rbc-month-row + .rbc-month-row {
           border-left: 1px solid #f1f5f9;
@@ -159,15 +167,19 @@ export default function CalendarView() {
         .rbc-event {
           background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
           border-radius: 4px;
-          md:border-radius: 8px;
           font-size: 0.6rem;
-          md:font-size: 0.7rem;
           font-weight: 600;
           padding: 2px 4px;
-          md:padding: 4px 8px;
           margin: 1px 2px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.05);
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (min-width: 768px) {
+          .rbc-event {
+            border-radius: 8px;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+          }
         }
         @media (max-width: 640px) {
           .rbc-event-label { display: none; }
@@ -188,7 +200,11 @@ export default function CalendarView() {
           content: '✓';
           margin-left: 4px;
           font-size: 0.5rem;
-          md:font-size: 0.6rem;
+        }
+        @media (min-width: 768px) {
+          .rbc-event-enrolled::after {
+            font-size: 0.65rem;
+          }
         }
         .rbc-today {
           background-color: rgba(2, 132, 199, 0.03);
@@ -198,15 +214,19 @@ export default function CalendarView() {
         }
         .rbc-toolbar {
           margin-bottom: 1rem;
-          md:margin-bottom: 2rem;
           flex-wrap: wrap;
           gap: 8px;
           justify-content: center;
         }
+        @media (min-width: 768px) {
+          .rbc-toolbar {
+            margin-bottom: 2rem;
+            justify-content: space-between;
+          }
+        }
         .rbc-toolbar-label {
           font-weight: 800;
           font-size: 1.1rem;
-          md:font-size: 1.5rem;
           color: #0f172a;
           letter-spacing: -0.02em;
           width: 100%;
@@ -219,25 +239,27 @@ export default function CalendarView() {
             width: auto;
             margin: 0;
             order: 0;
+            font-size: 1.5rem;
           }
-           .rbc-toolbar {
-            justify-content: space-between;
-           }
         }
         .rbc-btn-group {
           margin: 0 !important;
         }
         .rbc-btn-group button {
           border-radius: 8px;
-          md:border-radius: 12px;
           padding: 6px 12px;
-          md:padding: 8px 20px;
           font-size: 0.75rem;
-          md:font-size: 0.85rem;
           font-weight: 600;
           color: #475569;
           transition: all 0.2s;
           background: white;
+        }
+        @media (min-width: 768px) {
+          .rbc-btn-group button {
+            border-radius: 12px;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+          }
         }
         .rbc-btn-group button:hover {
           background-color: #f8fafc;

@@ -276,7 +276,7 @@ export function Navbar() {
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/10 font-bold text-xs text-red-500 transition-colors"
                       >
-                        <LogOut className="w-4 h-4" /> Terminate Session
+                        <LogOut className="w-4 h-4" /> Log out
                       </button>
                     </div>
                   </Popover.Content>

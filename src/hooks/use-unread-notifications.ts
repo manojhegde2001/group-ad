@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/components/providers/socket-provider';
 import { useNotifications } from '@/hooks/use-api/use-notifications';
@@ -11,8 +11,9 @@ export function useUnreadNotifications(pollInterval = 30_000) {
     const { socket } = useSocket();
     const queryClient = useQueryClient();
 
+    const params = useMemo(() => ({ limit: 1 }), []);
     const { data } = useNotifications(
-        { limit: 1 },
+        params,
         { 
             enabled: isAuthenticated,
             refetchInterval: pollInterval,

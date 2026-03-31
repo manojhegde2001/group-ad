@@ -191,7 +191,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     }
 
     const hasImages = post.images && post.images.length > 0;
-    const isVideoPost = post.type === 'VIDEO';
     const isTextPost = !hasImages;
     const gradients = [
         'from-violet-500 to-indigo-600', 'from-rose-400 to-pink-600',
@@ -273,11 +272,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     ))}
                                 </div>
                             </>
-                        )}
-                        {isVideoPost && (
-                            <div className="absolute top-3 left-3 bg-black/60 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
-                                <Video className="w-3 h-3" /> Video
-                            </div>
                         )}
                     </>
                 ) : (

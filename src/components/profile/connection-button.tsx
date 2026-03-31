@@ -1,5 +1,5 @@
 'use client';
-
+import { useState, useEffect } from 'react';
 import { UserPlus, UserCheck, UserX, Loader2, Check, X, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -45,7 +45,12 @@ export function ConnectionButton({
     // For simplicity, we can also just rely on the parent component's 
     // re-rendering after invalidation, but a small local state is smoother.
     // However, the current component is receiving 'initialStatus' as a prop.
-    const status = initialStatus;
+    const [status, setStatus] = useState<ConnectionStatus>(initialStatus);
+
+    useEffect(() => {
+        setStatus(initialStatus);
+    }, [initialStatus]);
+
     const loading = connectMutation.isPending || updateMutation.isPending || removeMutation.isPending;
 
     // Don't render if viewing own profile
@@ -58,7 +63,10 @@ export function ConnectionButton({
         }
         
         connectMutation.mutate(userId, {
-            onSuccess: () => onStatusChange?.('PENDING')
+            onSuccess: () => {
+                setStatus('PENDING');
+                onStatusChange?.('PENDING');
+            }
         });
     };
 
@@ -66,12 +74,19 @@ export function ConnectionButton({
         if (action === 'REMOVE') {
             if (window.confirm(`Are you sure you want to remove ${targetName} from your network?`)) {
                 removeMutation.mutate(userId, {
-                    onSuccess: () => onStatusChange?.(null)
+                    onSuccess: () => {
+                        setStatus(null);
+                        onStatusChange?.(null);
+                    }
                 });
             }
         } else {
             updateMutation.mutate({ targetUserId: userId, action }, {
-                onSuccess: () => onStatusChange?.(action === 'ACCEPT' ? 'ACCEPTED' : null)
+                onSuccess: () => {
+                    const newStatus = action === 'ACCEPT' ? 'ACCEPTED' : null;
+                    setStatus(newStatus);
+                    onStatusChange?.(newStatus);
+                }
             });
         }
     };

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } fr
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
-import { Search, Send, Plus, MessageSquare, X, Loader2, ArrowLeft, MoreVertical, Info, Users, Phone, Camera, Mic, Image as ImageIcon, Smile } from 'lucide-react';
+import { Search, Send, Plus, MessageSquare, X, Loader2, ArrowLeft, MoreVertical, Info, Users, Phone, Camera, Mic, Image as ImageIcon, Smile, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
@@ -53,7 +53,8 @@ function MessagesContent() {
   const { data: followingData, isLoading: loadingFollowing } = useFollowing();
   const followingUsers = followingData?.users || [];
 
-  const { data: msgsData, isLoading: loadingMsgs } = useMessages(selectedConvId as string, {}, {
+  const messageQueryParams = useMemo(() => ({}), []);
+  const { data: msgsData, isLoading: loadingMsgs } = useMessages(selectedConvId as string, messageQueryParams, {
     enabled: !!selectedConvId,
   });
   const messages = msgsData?.messages || [];
@@ -255,7 +256,7 @@ function MessagesContent() {
                   : 'text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200'
               )}
             >
-              Primary
+              Messages
             </button>
             <button
               onClick={() => setActiveTab('contacts')}
@@ -266,7 +267,7 @@ function MessagesContent() {
                   : 'text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200'
               )}
             >
-              General
+              Contacts
             </button>
           </div>
 
@@ -424,8 +425,8 @@ function MessagesContent() {
                 </Link>
               </div>
               <div className="flex items-center gap-2">
-                <button title="Phone" className="hidden sm:flex p-3 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
-                    <Phone className="w-5 h-5" />
+                <button title="More options" className="flex p-3 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
+                    <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
             </div>

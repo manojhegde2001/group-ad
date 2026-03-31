@@ -31,7 +31,7 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
   if (loading) return (
     <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 text-secondary-500">
       <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-      <p className="font-bold border-b border-primary-500 pb-1 uppercase tracking-widest text-[10px]">Generating Insights...</p>
+      <p className="font-bold border-b border-primary-500 pb-1">Analyzing...</p>
     </div>
   );
 

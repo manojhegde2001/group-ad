@@ -11,7 +11,7 @@ function CategorySkeleton() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-8">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         {[...Array(10)].map((_, i) => (
-          <Skeleton key={i} className="w-full aspect-[4/5] rounded-2xl md:rounded-3xl" />
+          <Skeleton key={i} className="w-full aspect-[4/5] rounded-2xl" />
         ))}
       </div>
     </div>
@@ -39,7 +39,7 @@ export function CategoryCards() {
                 className="
                   group/card relative
                   w-full aspect-[3/4]
-                  overflow-hidden rounded-[2.5rem]
+                  overflow-hidden rounded-2xl
                   shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.25)]
                   hover:-translate-y-3
                   transition-all duration-700 cubic-bezier(0.2, 0, 0, 1)

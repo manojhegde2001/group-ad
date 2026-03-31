@@ -40,7 +40,7 @@ export const messageService = {
         apiClient.post<{ message: Message }>(`/api/conversations/${conversationId}/messages`, data),
     
     markAsRead: (conversationId: string) =>
-        apiClient.post(`/api/conversations/${conversationId}/read`, {}),
+        apiClient.patch(`/api/conversations/${conversationId}/read`, {}),
 
     getUnreadCount: () =>
         apiClient.get<{ count: number }>('/api/conversations/unread-count'),

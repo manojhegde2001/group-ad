@@ -16,10 +16,27 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
         },
     });
 
-    const data = await response.json();
+    let data: any = null;
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType && contentType.includes('application/json')) {
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.error('Error parsing JSON:', e);
+        }
+    } else {
+        // Handle non-JSON or empty response
+        const text = await response.text();
+        data = text ? { message: text } : {};
+    }
 
     if (!response.ok) {
-        throw new ApiError(response.status, data.error || 'Something went wrong', data);
+        throw new ApiError(
+            response.status, 
+            data?.error || data?.message || `API Error: ${response.status}`, 
+            data
+        );
     }
 
     return data as T;

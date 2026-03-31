@@ -112,7 +112,7 @@ export async function GET(
         return NextResponse.json({
             user: {
                 ...userData,
-                connectionStatus: connectionRecord?.status || null,
+                connectionStatus: (connectionRecord?.status === 'REJECTED') ? null : (connectionRecord?.status || null),
                 connectionInitiator: connectionRecord?.requesterId === currentUserId,
                 isBlocked: !!blockRecord,
                 _count: {

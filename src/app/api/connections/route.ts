@@ -63,6 +63,8 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    const userName = session.user.name || 'A user';
+    
     if (userId === receiverId) {
       return NextResponse.json({ error: 'Cannot connect with yourself' }, { status: 400 });
     }
@@ -78,7 +80,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      return NextResponse.json({ error: 'Connection already exists', connection: existing }, { status: 409 });
+      // If it was rejected, allow re-requesting by deleting the old record
+      if (existing.status === 'REJECTED') {
+        await prisma.connection.delete({ where: { id: existing.id } });
+      } else {
+        return NextResponse.json({ error: 'Connection already exists', connection: existing }, { status: 409 });
+      }
     }
 
     const connection = await prisma.connection.create({
@@ -95,7 +102,7 @@ export async function POST(request: NextRequest) {
         userId: receiverId,
         type: 'CONNECTION_REQUEST',
         title: 'New Connection Request',
-        message: 'Someone sent you a connection request',
+        message: `${userName} has sent you a connection request.`,
         senderId: userId,
         entityType: 'Connection',
         entityId: connection.id,

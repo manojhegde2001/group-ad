@@ -38,7 +38,7 @@ export const notificationService = {
         apiClient.patch(`/api/notifications/${id}`, { isRead: true }),
     
     markAllAsRead: () =>
-        apiClient.post('/api/notifications/read-all', {}),
+        apiClient.patch('/api/notifications/read-all', {}),
     
     deleteNotification: (id: string) =>
         apiClient.delete(`/api/notifications/${id}`),

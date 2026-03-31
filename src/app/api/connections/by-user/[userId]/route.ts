@@ -44,7 +44,7 @@ export async function PATCH(
           userId: targetUserId,
           type: 'CONNECTION_ACCEPTED',
           title: 'Connection Accepted',
-          message: 'Your connection request was accepted',
+          message: `${session.user.name} has accepted your connection request.`,
           senderId: currentUserId,
           entityType: 'Connection',
           entityId: connection.id,

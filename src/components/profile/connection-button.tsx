@@ -139,7 +139,7 @@ export function ConnectionButton({
                     color="primary"
                     size={size}
                     rounded="pill"
-                    className="h-10 px-4 font-black uppercase tracking-widest text-[10px]"
+                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px]"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Check className="w-3.5 h-3.5 mr-2" />}
                     Accept
@@ -151,9 +151,10 @@ export function ConnectionButton({
                     color="secondary"
                     size={size}
                     rounded="pill"
-                    className="h-10 px-4 font-black uppercase tracking-widest text-[10px] border-2"
+                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
                 >
-                    <X className="w-3.5 h-3.5" />
+                    {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <X className="w-3.5 h-3.5 mr-2" />}
+                    Reject
                 </Button>
             </div>
         );

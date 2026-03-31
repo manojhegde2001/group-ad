@@ -24,6 +24,7 @@ export async function GET(
                 bio: true,
                 location: true,
                 website: true,
+                websiteLabel: true,
                 userType: true,
                 verificationStatus: true,
                 createdAt: true,

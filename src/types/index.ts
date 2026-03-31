@@ -7,6 +7,8 @@ export interface User {
   username: string;
   avatar?: string;
   bio?: string;
+  website?: string;
+  websiteLabel?: string;
   userType: 'INDIVIDUAL' | 'BUSINESS';
   visibility: 'PUBLIC' | 'PRIVATE';
   category: string;
@@ -54,6 +56,7 @@ export type ProfileUser = Prisma.UserGetPayload<{
     phoneVisibility: true;
     location: true;
     website: true;
+    websiteLabel: true;
     address: true;
     pincode: true;
     externalLink: true;
@@ -128,6 +131,7 @@ export type PostWithRelations = {
     bio: string | null;
     industry: string | null;
     website: string | null;
+    websiteLabel: string | null;
     companyWebsite: string | null;
     secondaryPhone: string | null;
     phoneVisibility: 'PRIMARY' | 'SECONDARY' | 'BOTH' | 'NONE';

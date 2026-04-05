@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { Input } from '../ui/input';
 import { Password } from '../ui/password';
 import { Button } from '../ui/button';
+import Link from 'next/link';
 
 export function LoginForm({ hideFooter, onToggle }: { hideFooter?: boolean; onToggle?: () => void } = {}) {
   const router = useRouter();
@@ -104,6 +105,16 @@ export function LoginForm({ hideFooter, onToggle }: { hideFooter?: boolean; onTo
           />
         )}
       />
+
+      <div className="flex justify-end -mt-3">
+        <Link 
+          href="/auth/forgot-password" 
+          onClick={close}
+          className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+        >
+          Forgot Password?
+        </Link>
+      </div>
 
       <Button
         type="submit"

@@ -104,6 +104,28 @@ export function welcomeEmail(name: string, email: string) {
     return baseLayout('Welcome to Group Ad!', content);
 }
 
+export function passwordResetEmail(name: string, token: string) {
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${token}`;
+    
+    const content = `
+    <h1 style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Reset Your Password</h1>
+    <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;text-align:center;">
+        You requested to reset your password for your Group Ad account. Click the button below to set a new password.
+    </p>
+    <div style="text-align:center;margin:32px 0;">
+        <a href="${resetUrl}" style="display:inline-block;background-color:${accentColor};color:#ffffff;padding:16px 36px;border-radius:14px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 6px -1px rgba(124, 58, 237, 0.2);">Reset Password</a>
+    </div>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#9ca3af;text-align:center;">
+        If you didn't request this, you can safely ignore this email. This link will expire in 1 hour.
+    </p>
+    <div style="margin-top:24px;padding-top:24px;border-top:1px dashed #e5e7eb;word-break:break-all;font-size:12px;color:#9ca3af;text-align:center;">
+        If the button doesn't work, copy and paste this link into your browser:<br/>
+        <a href="${resetUrl}" style="color:${accentColor};text-decoration:none;">${resetUrl}</a>
+    </div>`;
+
+    return baseLayout('Reset Password - Group Ad', content);
+}
+
 export function bulkAccountCreatedEmail(name: string, username: string, email: string) {
     const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login?identifier=${encodeURIComponent(email)}`;
     

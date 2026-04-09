@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { adminAuth } from '@/lib/firebase-admin';
+import { getAdminAuth } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
     try {
@@ -10,10 +10,15 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const adminAuth = getAdminAuth();
+        if (!adminAuth) {
+            console.error('Firebase Admin not initialized - missing environment variables');
+            return NextResponse.json({ error: 'Messaging service unavailable' }, { status: 503 });
+        }
+
         const userId = session.user.id;
         
         // Generate a custom token for the user
-        // We can add claims if needed (e.g. role)
         const customToken = await adminAuth.createCustomToken(userId);
 
         return NextResponse.json({ token: customToken });

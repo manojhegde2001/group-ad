@@ -1,22 +1,51 @@
 import * as admin from 'firebase-admin';
 
-if (!admin.apps.length) {
+const getApp = () => {
+  if (admin.apps.length) return admin.apps[0];
+
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  // If we're missing credentials during build, don't crash the whole app.
+  // This allows 'next build' to complete even if keys aren't in env yet.
+  if (!projectId || !clientEmail || !privateKey) {
+    if (process.env.NODE_ENV === 'production') {
+        console.warn('Firebase Admin credentials missing in production environment');
+    }
+    // Return dummy init or just let it fail gracefully later
+    return null;
+  }
+
   try {
-    admin.initializeApp({
+    return admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        // Handling multi-line private key from env
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        projectId,
+        clientEmail,
+        privateKey,
       }),
     });
-    console.log('Firebase Admin initialized');
   } catch (error) {
     console.error('Firebase Admin initialization error', error);
+    return null;
   }
-}
+};
 
-export const adminAuth = admin.auth();
-export const adminDb = admin.firestore();
-export const adminMessaging = admin.messaging();
+export const getAdminAuth = () => {
+    const app = getApp();
+    return app ? admin.auth(app) : null;
+};
+
+export const getAdminDb = () => {
+    const app = getApp();
+    return app ? admin.firestore(app) : null;
+};
+
+export const getAdminMessaging = () => {
+    const app = getApp();
+    return app ? admin.messaging(app) : null;
+};
+
 export default admin;
+
+

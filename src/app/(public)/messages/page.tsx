@@ -112,10 +112,23 @@ function MessagesContent() {
     });
   };
 
+  const lastReadConvId = useRef<string | null>(null);
+
   const markConversationRead = useCallback((convId: string) => {
-    markReadMutation.mutate(convId);
-    refreshUnreadBadge();
-  }, [markReadMutation, refreshUnreadBadge]);
+    const conv = conversations.find(c => c.id === convId);
+    // Only mark as read if it has unread messages and we haven't just marked it as read
+    if (conv && conv.unreadCount > 0 && lastReadConvId.current !== convId) {
+      lastReadConvId.current = convId;
+      markReadMutation.mutate(convId, {
+        onSuccess: () => {
+             refreshUnreadBadge();
+             // We don't need to manually invalidate conversations here usually 
+             // because the mutation handles it, but even if it does, 
+             // lastReadConvId will prevent the immediate re-trigger.
+        }
+      });
+    }
+  }, [conversations, markReadMutation, refreshUnreadBadge]);
 
   // Handle initial user from redirect
   useEffect(() => {
@@ -131,6 +144,15 @@ function MessagesContent() {
       }
     }
   }, [initialUserId, loadingConvs, conversations, startConvMutation]);
+
+  // Handle Mark Read when conversation switches
+  useEffect(() => {
+    if (selectedConvId) {
+      markConversationRead(selectedConvId);
+    } else {
+        lastReadConvId.current = null;
+    }
+  }, [selectedConvId, markConversationRead]);
 
   const lastHandledMessageId = useRef<string | null>(null);
 

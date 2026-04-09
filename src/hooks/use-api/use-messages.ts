@@ -45,9 +45,11 @@ export const useMarkMessagesRead = () => {
     return useMutation({
         mutationFn: (conversationId: string) => messageService.markAsRead(conversationId),
         onSuccess: (_, conversationId) => {
+            // Use exact: false to catch lists, but we can be more specific
             queryClient.invalidateQueries({ queryKey: ['conversations'] });
-            queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
             queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
+            // For the specific conversation messages, we can just invalidate specifically
+            queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
         },
     });
 };

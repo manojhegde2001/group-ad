@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
-import { useSocket } from '@/components/providers/socket-provider';
 import { 
     useConversations, 
     useMessages, 
@@ -41,7 +40,6 @@ function MessagesContent() {
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
 
-  const { socket, isConnected } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

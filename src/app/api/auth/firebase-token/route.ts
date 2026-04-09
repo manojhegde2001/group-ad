@@ -12,8 +12,11 @@ export async function GET(request: NextRequest) {
 
         const adminAuth = getAdminAuth();
         if (!adminAuth) {
-            console.error('Firebase Admin not initialized - missing environment variables');
-            return NextResponse.json({ error: 'Messaging service unavailable' }, { status: 503 });
+            console.error('Firebase Admin not initialized - missing environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY)');
+            return NextResponse.json({ 
+                error: 'Messaging service unavailable',
+                details: 'Firebase Admin credentials missing in environment variables'
+            }, { status: 503 });
         }
 
         const userId = session.user.id;

@@ -5,7 +5,6 @@ import NextAuthProvider from '@/components/providers/session-provider';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import ToastProvider from '@/components/providers/toast-provider';
 import QueryProvider from '@/components/providers/query-provider';
-import { SocketProvider } from '@/components/providers/socket-provider';
 import { Analytics } from '@vercel/analytics/react';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -89,24 +88,21 @@ export default function RootLayout({
       <body className={plusJakarta.className}>
         <NextAuthProvider>
           <QueryProvider>
-            <SocketProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="light"
-                enableSystem={false}
-                storageKey="theme"
-              >
-                {/* Now only global providers here. Public layout is in (public)/layout.tsx */}
-                {children}
-                <FCMTokenManager />
-                <ToastProvider />
-                <Analytics />
-              </ThemeProvider>
-            </SocketProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem={false}
+              storageKey="theme"
+            >
+              {/* Now only global providers here. Public layout is in (public)/layout.tsx */}
+              {children}
+              <FCMTokenManager />
+              <ToastProvider />
+              <Analytics />
+            </ThemeProvider>
           </QueryProvider>
         </NextAuthProvider>
       </body>
     </html>
   );
 }
-

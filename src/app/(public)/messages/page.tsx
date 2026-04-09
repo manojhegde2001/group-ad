@@ -48,7 +48,6 @@ function MessagesContent() {
   // Queries
   const { data: convsData, isLoading: loadingConvs } = useConversations({
     enabled: !!user,
-    refetchInterval: 60000,
   });
   const conversations = convsData?.conversations || [];
 
@@ -76,7 +75,6 @@ function MessagesContent() {
     }
     return apiMessages;
   }, [apiMessages, firestoreMessages]);
-
 
   // Mutations
   const sendMessageMutation = useSendMessage(selectedConvId as string);
@@ -136,90 +134,12 @@ function MessagesContent() {
     }
   }, [initialUserId, loadingConvs, conversations, startConvMutation]);
 
-  // Join Room & Live Listeners
+  // Invalidate conversations when firestoreMessages changes (to show latest message in list)
   useEffect(() => {
-    if (!socket || !isConnected || !selectedConvId) return;
-
-    // Join the conversation room (Ensures re-join on reconnect)
-    socket.emit('join-conversation', selectedConvId);
-
-    const onNewMessage = (msg: Message) => {
-      console.log('💬 Socket: new_message received', msg.id);
-      if (msg.conversationId === selectedConvId) {
-        queryClient.invalidateQueries({ queryKey: ['messages', selectedConvId] });
-        markConversationRead(selectedConvId);
-        setIsOtherTyping(false);
-      }
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    };
-
-    const onUserTyping = (data: { conversationId: string; userId: string; name: string }) => {
-        if (data.conversationId === selectedConvId && data.userId !== user?.id) {
-            setIsOtherTyping(true);
-            setTypingUser(data.name);
-        }
-    };
-
-    const onUserStopTyping = (data: { conversationId: string; userId: string }) => {
-        if (data.conversationId === selectedConvId && data.userId !== user?.id) {
-            setIsOtherTyping(false);
-        }
-    };
-
-    socket.on('new_message', onNewMessage);
-    socket.on('user_typing', onUserTyping);
-    socket.on('user_stop_typing', onUserStopTyping);
-
-    return () => {
-      socket.emit('leave-conversation', selectedConvId);
-    };
-  }, [socket, isConnected, selectedConvId, user?.id, markConversationRead, queryClient]);
-
-  // Handle Input Changes with Typing Emission
-  useEffect(() => {
-    if (!socket || !selectedConvId || !messageInput.trim()) {
-        if (socket && selectedConvId) {
-            socket.emit('stop_typing', { conversationId: selectedConvId, userId: user?.id });
-        }
-        return;
+    if (firestoreMessages.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
-
-    // Emit typing
-    socket.emit('typing', { conversationId: selectedConvId, userId: user?.id, name: user?.name });
-
-    // Set timeout to stop typing
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-        socket.emit('stop_typing', { conversationId: selectedConvId, userId: user?.id });
-    }, 3000);
-
-    return () => { if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current); };
-  }, [messageInput, socket, selectedConvId, user]);
-
-  // Handle Global Notifications for other updates
-  useEffect(() => {
-    if (!socket) return;
-    
-    const onNotification = (payload: any) => {
-      if (payload.type === 'MESSAGE_RECEIVED') {
-        refreshUnreadBadge();
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      }
-    };
-    
-    socket.on('notification', onNotification);
-    socket.on('refresh_unread', () => {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        refreshUnreadBadge();
-    });
-    
-    return () => {
-      socket.off('notification', onNotification);
-      socket.off('refresh_unread');
-    };
-  }, [socket, queryClient, refreshUnreadBadge]);
+  }, [firestoreMessages, queryClient]);
 
   // Handle Mark Read when conversation switches
   useEffect(() => {
@@ -227,6 +147,7 @@ function MessagesContent() {
       markConversationRead(selectedConvId);
     }
   }, [selectedConvId, markConversationRead]);
+
 
   const lastConvIdRef = useRef<string | null>(null);
 

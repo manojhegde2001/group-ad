@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import { socketService } from '@/lib/socket-service';
 import { sendPushNotification } from '@/lib/fcm-service';
 
 export type NotificationType = 
@@ -29,7 +28,7 @@ interface CreateNotificationParams {
 
 export const notificationService = {
     /**
-     * Create a notification, emit via socket, and send FCM push
+     * Create a notification and send FCM push
      */
     async create(params: CreateNotificationParams) {
         try {
@@ -46,25 +45,13 @@ export const notificationService = {
                 },
             });
 
-            // 2. Emit via Socket.io
-            socketService.notifyUser(params.userId, {
-                type: params.type,
-                message: params.message,
-                data: {
-                    notificationId: notification.id,
-                    entityType: params.entityType,
-                    entityId: params.entityId,
-                }
-            });
-
-            // 3. Send FCM Push Notification
+            // 2. Send FCM Push Notification
             const user = await prisma.user.findUnique({
                 where: { id: params.userId },
                 select: { fcmTokens: true }
             });
 
             if (user?.fcmTokens && user.fcmTokens.length > 0) {
-                // To keep it simple, we'll try to send to all tokens
                 for (const token of user.fcmTokens) {
                     try {
                         await sendPushNotification(token, {
@@ -89,3 +76,4 @@ export const notificationService = {
         }
     }
 };
+

@@ -6,7 +6,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
-import { useSocket } from '@/components/providers/socket-provider';
+import { useQueryClient } from '@tanstack/react-query';
+import { messaging, ensureFirebaseAuth } from '@/lib/firebase';
+import { onMessage } from 'firebase/messaging';
 import { Popover } from 'rizzui';
 import { cn } from '@/lib/utils';
 import { 
@@ -15,7 +17,6 @@ import {
     useMarkAllNotificationsRead, 
     useDeleteNotification 
 } from '@/hooks/use-api/use-notifications';
-import { useQueryClient } from '@tanstack/react-query';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
     CONNECTION_REQUEST: '👤',
@@ -51,7 +52,6 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
     }, [open, onOpenChange]);
 
     const { unreadCount } = useUnreadNotifications();
-    const { socket } = useSocket();
 
     const { data, isLoading } = useNotifications(
         { limit: 15 },
@@ -95,28 +95,31 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
         } catch { /* silent */ }
     }, []);
 
-    // Socket.io Listener
+    // FCM Foreground Listener
     useEffect(() => {
-        if (!socket || !isAuthenticated) return;
+        if (!isAuthenticated || !messaging) return;
 
-        const handleNotification = (payload: any) => {
+        const unsubscribe = onMessage(messaging, (payload) => {
+            console.log('Foreground message received:', payload);
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
             
-            if (payload.type === 'MESSAGE_RECEIVED' && window.location.pathname !== '/messages') {
-                fireBrowserNotification(payload);
+            // Show browser notification if needed
+            if (window.location.pathname !== '/messages') {
+                fireBrowserNotification({
+                    title: payload.notification?.title,
+                    message: payload.notification?.body,
+                    type: payload.data?.type,
+                    id: payload.data?.notificationId
+                });
             }
-        };
-
-        socket.on('notification', handleNotification);
-        socket.on('refresh_unread', () => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
         });
 
-        return () => {
-            socket.off('notification', handleNotification);
-            socket.off('refresh_unread');
-        };
-    }, [socket, isAuthenticated, queryClient, fireBrowserNotification]);
+        // Ensure firebase auth is active to keep connection alive
+        ensureFirebaseAuth();
+
+        return () => unsubscribe();
+    }, [isAuthenticated, queryClient, fireBrowserNotification]);
+
 
     if (!isAuthenticated) return null;
 

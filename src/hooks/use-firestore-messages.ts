@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
+import { db, ensureFirebaseAuth } from '@/lib/firebase';
 import { 
     collection, 
     query, 
     orderBy, 
     onSnapshot,
-    limit as firestoreLimit,
-    Timestamp
+    limit as firestoreLimit
 } from 'firebase/firestore';
 
 export interface FirestoreMessage {
@@ -27,35 +26,52 @@ export function useFirestoreMessages(conversationId: string | null) {
             return;
         }
 
-        setLoading(true);
-        const messagesRef = collection(db, 'conversations', conversationId, 'messages');
-        const q = query(
-            messagesRef,
-            orderBy('createdAt', 'asc'),
-            firestoreLimit(100)
-        );
+        let unsubscribe: () => void;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const msgs: FirestoreMessage[] = [];
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                msgs.push({
-                    id: doc.id,
-                    content: data.content,
-                    senderId: data.senderId,
-                    type: data.type || 'TEXT',
-                    createdAt: data.createdAt?.toDate() || new Date(),
+        const setupListener = async () => {
+            setLoading(true);
+            
+            // Ensure we are authenticated with Firebase
+            await ensureFirebaseAuth();
+
+            const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+            const q = query(
+                messagesRef,
+                orderBy('createdAt', 'asc'),
+                firestoreLimit(50) // Reduced limit for better performance
+            );
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const msgs: FirestoreMessage[] = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Skip if createdAt is not yet set by server
+                    if (!data.createdAt) return;
+                    
+                    msgs.push({
+                        id: doc.id,
+                        content: data.content,
+                        senderId: data.senderId,
+                        type: data.type || 'TEXT',
+                        createdAt: data.createdAt.toDate(),
+                    });
                 });
+                
+                setMessages(msgs);
+                setLoading(false);
+            }, (error) => {
+                console.error('Firestore messages error:', error);
+                setLoading(false);
             });
-            setMessages(msgs);
-            setLoading(false);
-        }, (error) => {
-            console.error('Firestore messages error:', error);
-            setLoading(false);
-        });
+        };
 
-        return () => unsubscribe();
+        setupListener();
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
     }, [conversationId]);
 
     return { messages, loading };
 }
+

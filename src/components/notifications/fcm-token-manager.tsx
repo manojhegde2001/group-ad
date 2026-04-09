@@ -18,18 +18,27 @@ export function FCMTokenManager() {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
                     // Get FCM token
+                    // Use long VAPID key from environment if available
                     const token = await getToken(messaging, {
-                        vapidKey: 'BDP20S34RQ' 
+                        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || 'BDP20S34RQ' 
                     });
 
                     if (token) {
-                        console.log('FCM Token:', token);
+                        // Check if token already exists in session storage to prevent spamming
+                        const lastToken = sessionStorage.getItem('fcm_token');
+                        if (lastToken === token) return;
+
+                        console.log('FCM Token registered:', token);
                         // Save token to user profile
-                        await fetch('/api/user/fcm-token', {
+                        const res = await fetch('/api/user/fcm-token', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token }),
                         });
+                        
+                        if (res.ok) {
+                            sessionStorage.setItem('fcm_token', token);
+                        }
                     }
                 }
             } catch (error) {

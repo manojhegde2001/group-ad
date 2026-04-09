@@ -42,6 +42,7 @@ export function useFirestoreMessages(conversationId: string | null) {
             );
 
             unsubscribe = onSnapshot(q, (snapshot) => {
+                console.log(`[Firestore] Received snapshot for ${conversationId}: ${snapshot.size} messages`);
                 const msgs: FirestoreMessage[] = [];
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -60,7 +61,7 @@ export function useFirestoreMessages(conversationId: string | null) {
                 setMessages(msgs);
                 setLoading(false);
             }, (error) => {
-                console.error('Firestore messages error:', error);
+                console.error(`[Firestore] Connection error for ${conversationId}:`, error);
                 setLoading(false);
             });
         };

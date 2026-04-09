@@ -132,12 +132,23 @@ function MessagesContent() {
     }
   }, [initialUserId, loadingConvs, conversations, startConvMutation]);
 
-  // Invalidate conversations when firestoreMessages changes (to show latest message in list)
+  const lastHandledMessageId = useRef<string | null>(null);
+
+  // Invalidate conversations when a NEW message is received in firestore
   useEffect(() => {
     if (firestoreMessages.length > 0) {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        const latestMsg = firestoreMessages[firestoreMessages.length - 1];
+        if (latestMsg.id !== lastHandledMessageId.current) {
+            lastHandledMessageId.current = latestMsg.id;
+            // Only invalidate after a short delay to debounce multiple rapid messages
+            const timer = setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ['conversations'] });
+                refreshUnreadBadge();
+            }, 500);
+            return () => clearTimeout(timer);
+        }
     }
-  }, [firestoreMessages, queryClient]);
+  }, [firestoreMessages, queryClient, refreshUnreadBadge]);
 
   // Handle Mark Read when conversation switches
   useEffect(() => {

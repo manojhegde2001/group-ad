@@ -22,31 +22,43 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const messaging = typeof window !== 'undefined' ? getMessaging(app) : null;
 
+let authPromise: Promise<any> | null = null;
+
 /**
  * Ensures the user is authenticated with Firebase.
  * Fetches a custom token from our backend and signs in.
  */
 export const ensureFirebaseAuth = async () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return null;
     
-    // If already authenticated, return
+    // If already authenticated, return current user
     if (auth.currentUser) return auth.currentUser;
 
-    try {
-        const response = await fetch('/api/auth/firebase-token');
-        const { token, error } = await response.json();
-        
-        if (error || !token) {
-            console.error('Failed to get firebase custom token', error);
+    // If an auth process is already in progress, wait for it
+    if (authPromise) return authPromise;
+
+    authPromise = (async () => {
+        try {
+            const response = await fetch('/api/auth/firebase-token');
+            const data = await response.json();
+            
+            if (data.error || !data.token) {
+                console.error('Failed to get firebase custom token:', data.error || 'No token provided');
+                authPromise = null; // Reset so we can try again
+                return null;
+            }
+
+            const userCredential = await signInWithCustomToken(auth, data.token);
+            authPromise = null; // Success, clear promise
+            return userCredential.user;
+        } catch (error) {
+            console.error('Error during firebase sign-in:', error);
+            authPromise = null; // Error, reset so we can try again
             return null;
         }
+    })();
 
-        const userCredential = await signInWithCustomToken(auth, token);
-        return userCredential.user;
-    } catch (error) {
-        console.error('Error during firebase sign-in', error);
-        return null;
-    }
+    return authPromise;
 };
 
 // Initialize Analytics (optional, client-side only)

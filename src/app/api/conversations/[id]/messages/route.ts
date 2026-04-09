@@ -3,6 +3,10 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getIO } from '@/lib/socket-io';
 import { socketService } from '@/lib/socket-service';
+import { sendFirestoreMessage, syncConversationToFirestore } from '@/lib/firebase-chat';
+import { sendPushNotification } from '@/lib/fcm-service';
+
+
 
 // GET /api/conversations/[id]/messages
 export async function GET(
@@ -136,7 +140,49 @@ export async function POST(
       });
     });
 
+    // 3. Write to Firestore for real-time chat (New)
+    try {
+      await sendFirestoreMessage({
+        conversationId: id,
+        senderId: session.user.id,
+        content: content.trim(),
+        type: messageType
+      });
+      // Ensure participants are synced (one-time or check)
+      await syncConversationToFirestore(id, conversation.participantIds);
+    } catch (fsError) {
+      console.error('Firestore write error (non-blocking):', fsError);
+    }
+
+
+    // 4. Send FCM Push Notification (New)
+    try {
+        const receiverIds = conversation.participantIds.filter(pid => pid !== session.user.id);
+        const receivers = await prisma.user.findMany({
+            where: { id: { in: receiverIds } },
+            select: { fcmTokens: true }
+        });
+
+        for (const receiver of receivers) {
+            if (receiver.fcmTokens && receiver.fcmTokens.length > 0) {
+                for (const token of receiver.fcmTokens) {
+                    await sendPushNotification(token, {
+                        title: `New message from ${session.user.name}`,
+                        body: content.trim(),
+                        data: {
+                            conversationId: id,
+                            type: 'MESSAGE_RECEIVED'
+                        }
+                    });
+                }
+            }
+        }
+    } catch (pushError) {
+        console.error('FCM push error (non-blocking):', pushError);
+    }
+
     return NextResponse.json({ message }, { status: 201 });
+
   } catch (error) {
     console.error('POST conversation message error:', error);
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });

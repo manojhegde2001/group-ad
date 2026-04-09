@@ -20,6 +20,8 @@ import {
 import { useFollowing } from '@/hooks/use-api/use-user';
 import { useQueryClient } from '@tanstack/react-query';
 import { Conversation, Message } from '@/services/api/messages';
+import { useFirestoreMessages } from '@/hooks/use-firestore-messages';
+
 
 // Interfaces are now imported from @/services/api/messages
 
@@ -57,7 +59,24 @@ function MessagesContent() {
   const { data: msgsData, isLoading: loadingMsgs } = useMessages(selectedConvId as string, messageQueryParams, {
     enabled: !!selectedConvId,
   });
-  const messages = msgsData?.messages || [];
+  const apiMessages = msgsData?.messages || [];
+
+  // Use Firestore for real-time updates (Switch)
+  const { messages: firestoreMessages } = useFirestoreMessages(selectedConvId);
+
+  // Merge: Use Firestore messages if available, otherwise fallback to API
+  const messages = useMemo(() => {
+    if (firestoreMessages.length > 0) {
+        // Find existing sender info from apiMessages to enrich firestoreMessages
+        const senderMap = new Map(apiMessages.map(m => [m.senderId, m.sender]));
+        return firestoreMessages.map(fm => ({
+            ...fm,
+            sender: senderMap.get(fm.senderId) || { id: fm.senderId, name: 'User', username: 'user', avatar: null }
+        })) as unknown as Message[];
+    }
+    return apiMessages;
+  }, [apiMessages, firestoreMessages]);
+
 
   // Mutations
   const sendMessageMutation = useSendMessage(selectedConvId as string);

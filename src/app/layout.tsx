@@ -77,6 +77,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { FCMTokenManager } from '@/components/notifications/fcm-token-manager';
+
 export default function RootLayout({
   children,
 }: {
@@ -96,6 +98,7 @@ export default function RootLayout({
               >
                 {/* Now only global providers here. Public layout is in (public)/layout.tsx */}
                 {children}
+                <FCMTokenManager />
                 <ToastProvider />
                 <Analytics />
               </ThemeProvider>
@@ -106,3 +109,4 @@ export default function RootLayout({
     </html>
   );
 }
+

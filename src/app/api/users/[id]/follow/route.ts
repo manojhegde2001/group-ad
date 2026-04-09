@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
+import { notificationService } from '@/services/notification-service';
+
 
 const db = prisma as any; // new models (Follow, Bookmark) available at runtime after prisma generate
 
@@ -78,24 +80,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             select: { name: true, username: true },
         });
 
-        const notification = await prisma.notification.create({
-            data: {
-                userId: targetUserId,
-                type: 'CONNECTION_REQUEST',
-                title: 'New Follower',
-                message: `${followerUser?.name || 'Someone'} started following you`,
-                senderId: session.user.id,
-                entityType: 'user',
-                entityId: session.user.id,
-            },
+        await notificationService.create({
+            userId: targetUserId,
+            type: 'CONNECTION_REQUEST',
+            title: 'New Follower',
+            message: `${followerUser?.name || 'Someone'} started following you`,
+            senderId: session.user.id,
+            entityType: 'user',
+            entityId: session.user.id,
         });
 
-        // Emit real-time notification
-        socketService.notifyUser(targetUserId, {
-            type: 'CONNECTION_REQUEST',
-            message: notification.message,
-            data: { notificationId: notification.id, senderId: session.user.id }
-        });
 
         const followerCount = await db.follow.count({ where: { followingId: targetUserId } });
 

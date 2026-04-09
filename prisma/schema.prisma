@@ -252,6 +252,7 @@ model User {
   resetToken      String?  @unique
   resetTokenExpiry DateTime?
 
+  fcmTokens   String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

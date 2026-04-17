@@ -19,7 +19,8 @@ import {
 import { useFollowing } from '@/hooks/use-api/use-user';
 import { useQueryClient } from '@tanstack/react-query';
 import { Conversation, Message } from '@/services/api/messages';
-import { useFirestoreMessages } from '@/hooks/use-firestore-messages';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, where, orderBy, limit, doc, setDoc, deleteDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 
 
 // Interfaces are now imported from @/services/api/messages
@@ -58,21 +59,80 @@ function MessagesContent() {
   });
   const apiMessages = msgsData?.messages || [];
 
-  // Use Firestore for real-time updates (Switch)
-  const { messages: firestoreMessages } = useFirestoreMessages(selectedConvId);
+  const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
 
-  // Merge: Use Firestore messages if available, otherwise fallback to API
+  // 1. Listen for real-time messages from Firestore
+  useEffect(() => {
+    if (!selectedConvId || !user) return;
+
+    // We listen to the subcollection of the conversation
+    const messagesRef = collection(db, 'conversations', selectedConvId, 'messages');
+    const q = query(messagesRef, orderBy('createdAt', 'asc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const message = change.doc.data() as Message;
+          console.log('[Firestore] New message received:', message);
+          
+          setRealtimeMessages(prev => {
+            if (prev.some(m => m.id === message.id)) return prev;
+            return [...prev, message];
+          });
+          
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          refreshUnreadBadge();
+        }
+      });
+    });
+
+    return () => unsubscribe();
+  }, [selectedConvId, user, queryClient, refreshUnreadBadge]);
+
+  // 2. Listen for typing status from Firestore
+  useEffect(() => {
+    if (!selectedConvId || !user) return;
+
+    const typingRef = collection(db, 'conversations', selectedConvId, 'typing');
+    
+    const unsubscribe = onSnapshot(typingRef, (snapshot) => {
+      let typingOthers = false;
+      let othersName = '';
+      
+      snapshot.docs.forEach(doc => {
+        if (doc.id !== user.id) {
+          typingOthers = true;
+          othersName = doc.data().name;
+        }
+      });
+
+      setIsOtherTyping(typingOthers);
+      setTypingUser(othersName);
+    });
+
+    return () => unsubscribe();
+  }, [selectedConvId, user]);
+
+  // Merge API messages with real-time socket messages
   const messages = useMemo(() => {
-    if (firestoreMessages.length > 0) {
-        // Find existing sender info from apiMessages to enrich firestoreMessages
-        const senderMap = new Map(apiMessages.map(m => [m.senderId, m.sender]));
-        return firestoreMessages.map(fm => ({
-            ...fm,
-            sender: senderMap.get(fm.senderId) || { id: fm.senderId, name: 'User', username: 'user', avatar: null }
-        })) as unknown as Message[];
-    }
-    return apiMessages;
-  }, [apiMessages, firestoreMessages]);
+    const allMessages = [...apiMessages];
+    
+    // Append real-time messages that aren't already in apiMessages
+    realtimeMessages.forEach(rm => {
+      if (!allMessages.some(am => am.id === rm.id)) {
+        allMessages.push(rm);
+      }
+    });
+
+    return allMessages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }, [apiMessages, realtimeMessages]);
+
+  // Reset realtime messages when conversation changes
+  useEffect(() => {
+    setRealtimeMessages([]);
+    setIsOtherTyping(false);
+    setTypingUser(null);
+  }, [selectedConvId]);
 
   // Mutations
   const sendMessageMutation = useSendMessage(selectedConvId as string);
@@ -156,21 +216,13 @@ function MessagesContent() {
 
   const lastHandledMessageId = useRef<string | null>(null);
 
-  // Invalidate conversations when a NEW message is received in firestore
+  // Refetch unread badge periodically as a fallback
   useEffect(() => {
-    if (firestoreMessages.length > 0) {
-        const latestMsg = firestoreMessages[firestoreMessages.length - 1];
-        if (latestMsg.id !== lastHandledMessageId.current) {
-            lastHandledMessageId.current = latestMsg.id;
-            // Only invalidate after a short delay to debounce multiple rapid messages
-            const timer = setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ['conversations'] });
-                refreshUnreadBadge();
-            }, 500);
-            return () => clearTimeout(timer);
-        }
-    }
-  }, [firestoreMessages, queryClient, refreshUnreadBadge]);
+    const timer = setInterval(() => {
+      refreshUnreadBadge();
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [refreshUnreadBadge]);
 
   // Handle Mark Read when conversation switches
   useEffect(() => {
@@ -198,6 +250,28 @@ function MessagesContent() {
 
     setMessageInput('');
     sendMessageMutation.mutate({ content });
+    
+    if (selectedConvId && user) {
+        deleteDoc(doc(db, 'conversations', selectedConvId, 'typing', user.id));
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessageInput(e.target.value);
+    
+    if (selectedConvId && user) {
+        const typingRef = doc(db, 'conversations', selectedConvId, 'typing', user.id);
+        setDoc(typingRef, { 
+            name: user.name,
+            updatedAt: serverTimestamp()
+        });
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        
+        typingTimeoutRef.current = setTimeout(() => {
+            deleteDoc(typingRef);
+        }, 3000);
+    }
   };
 
   return (
@@ -477,7 +551,7 @@ function MessagesContent() {
                   </button>
                   <textarea
                     value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e as any); }
                     }}

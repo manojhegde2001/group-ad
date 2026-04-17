@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { socketService } from '@/lib/socket-service';
+import { firebaseService } from '@/lib/firebase-service';
 
 export async function PATCH(
   request: NextRequest,
@@ -50,8 +50,9 @@ export async function PATCH(
         }).catch(() => null);
 
         if (notification) {
-            socketService.notifyUser(userId, {
+            await firebaseService.notifyUser(userId, {
                 type: 'VERIFICATION_APPROVED',
+                title: 'Account Verified!',
                 message: notification.message,
                 data: { notificationId: notification.id }
             });

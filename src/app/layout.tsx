@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme/theme-provider';
 import ToastProvider from '@/components/providers/toast-provider';
 import QueryProvider from '@/components/providers/query-provider';
 import { Analytics } from '@vercel/analytics/react';
+import { FirebaseProvider } from '@/components/providers/firebase-provider';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -76,7 +77,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { FCMTokenManager } from '@/components/notifications/fcm-token-manager';
+
 
 export default function RootLayout({
   children,
@@ -94,9 +95,10 @@ export default function RootLayout({
               enableSystem={false}
               storageKey="theme"
             >
-              {/* Now only global providers here. Public layout is in (public)/layout.tsx */}
-              {children}
-              <FCMTokenManager />
+              <FirebaseProvider>
+                {/* Now only global providers here. Public layout is in (public)/layout.tsx */}
+                {children}
+              </FirebaseProvider>
               <ToastProvider />
               <Analytics />
             </ThemeProvider>

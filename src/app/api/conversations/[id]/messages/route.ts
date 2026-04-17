@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { getIO } from '@/lib/socket-io';
-import { socketService } from '@/lib/socket-service';
-import { sendFirestoreMessage, syncConversationToFirestore } from '@/lib/firebase-chat';
-import { sendPushNotification } from '@/lib/fcm-service';
+import { firebaseService } from '@/lib/firebase-service';
 
 
 
@@ -124,62 +121,21 @@ export async function POST(
       }),
     ]);
 
-    // Emit Socket.io events
-    // 1. Emit to the conversation channel for real-time chat update
-    socketService.emitMessage(id, message);
+    // Emit via Firebase
+    // 1. Write to Firestore for real-time chat update
+    await firebaseService.emitMessage(id, message);
 
-    // 2. Emit to other participants for unread message badges
+    // 2. Notify other participants via FCM
     const otherParticipants = conversation.participantIds.filter(
       (pid) => pid !== session.user.id
     );
-    otherParticipants.forEach((pid) => {
-      socketService.notifyUser(pid, {
+    otherParticipants.forEach(async (pid) => {
+      await firebaseService.notifyUser(pid, {
         type: 'MESSAGE_RECEIVED',
         message: `New message from ${session.user.name}`,
-        data: { conversationId: id, message }
+        data: { conversationId: id, messageId: message.id }
       });
     });
-
-    // 3. Write to Firestore for real-time chat (New)
-    try {
-      await sendFirestoreMessage({
-        conversationId: id,
-        senderId: session.user.id,
-        content: content.trim(),
-        type: messageType
-      });
-      // Ensure participants are synced (one-time or check)
-      await syncConversationToFirestore(id, conversation.participantIds);
-    } catch (fsError) {
-      console.error('Firestore write error (non-blocking):', fsError);
-    }
-
-
-    // 4. Send FCM Push Notification (New)
-    try {
-        const receiverIds = conversation.participantIds.filter(pid => pid !== session.user.id);
-        const receivers = await prisma.user.findMany({
-            where: { id: { in: receiverIds } },
-            select: { fcmTokens: true }
-        });
-
-        for (const receiver of receivers) {
-            if (receiver.fcmTokens && receiver.fcmTokens.length > 0) {
-                for (const token of receiver.fcmTokens) {
-                    await sendPushNotification(token, {
-                        title: `New message from ${session.user.name}`,
-                        body: content.trim(),
-                        data: {
-                            conversationId: id,
-                            type: 'MESSAGE_RECEIVED'
-                        }
-                    });
-                }
-            }
-        }
-    } catch (pushError) {
-        console.error('FCM push error (non-blocking):', pushError);
-    }
 
     return NextResponse.json({ message }, { status: 201 });
 

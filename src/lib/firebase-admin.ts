@@ -1,51 +1,37 @@
 import * as admin from 'firebase-admin';
 
-const getApp = () => {
-  if (admin.apps.length) return admin.apps[0];
+if (!admin.apps.length) {
+    try {
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY 
+            ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            : undefined;
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  // If we're missing credentials during build, don't crash the whole app.
-  // This allows 'next build' to complete even if keys aren't in env yet.
-  if (!projectId || !clientEmail || !privateKey) {
-    if (process.env.NODE_ENV === 'production') {
-        console.warn('Firebase Admin credentials missing in production environment');
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                privateKey: privateKey,
+            }),
+        });
+        console.log('Firebase Admin initialized successfully');
+    } catch (error) {
+        console.error('Firebase Admin initialization error', error);
     }
-    // Return dummy init or just let it fail gracefully later
-    return null;
-  }
-
-  try {
-    return admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
-  } catch (error) {
-    console.error('Firebase Admin initialization error', error);
-    return null;
-  }
-};
+}
 
 export const getAdminAuth = () => {
-    const app = getApp();
-    return app ? admin.auth(app) : null;
+    if (!admin.apps.length) throw new Error('Firebase Admin not initialized');
+    return admin.auth();
 };
 
 export const getAdminDb = () => {
-    const app = getApp();
-    return app ? admin.firestore(app) : null;
+    if (!admin.apps.length) throw new Error('Firebase Admin not initialized');
+    return admin.firestore();
 };
 
 export const getAdminMessaging = () => {
-    const app = getApp();
-    return app ? admin.messaging(app) : null;
+    if (!admin.apps.length) throw new Error('Firebase Admin not initialized');
+    return admin.messaging();
 };
 
 export default admin;
-
-

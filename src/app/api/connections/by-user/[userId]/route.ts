@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { socketService } from '@/lib/socket-service';
+import { firebaseService } from '@/lib/firebase-service';
 
 // PATCH /api/connections/by-user/[userId] - Accept or Reject a connection request
 export async function PATCH(
@@ -52,8 +52,9 @@ export async function PATCH(
       }).catch(() => null);
 
       if (notification) {
-        socketService.notifyUser(targetUserId, {
+        await firebaseService.notifyUser(targetUserId, {
           type: 'CONNECTION_ACCEPTED',
+          title: 'Connection Accepted',
           message: notification.message,
           data: { notificationId: notification.id, senderId: currentUserId }
         });

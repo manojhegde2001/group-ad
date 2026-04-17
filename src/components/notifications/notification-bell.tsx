@@ -6,17 +6,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
-import { useQueryClient } from '@tanstack/react-query';
-import { messaging, ensureFirebaseAuth } from '@/lib/firebase';
-import { onMessage } from 'firebase/messaging';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from '@/hooks/use-api/use-notifications';
 import { Popover } from 'rizzui';
 import { cn } from '@/lib/utils';
-import { 
-    useNotifications, 
-    useMarkNotificationRead, 
-    useMarkAllNotificationsRead, 
-    useDeleteNotification 
-} from '@/hooks/use-api/use-notifications';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
     CONNECTION_REQUEST: '👤',
@@ -42,7 +34,7 @@ interface NotificationBellProps {
 export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: NotificationBellProps) {
     const { isAuthenticated } = useAuth();
     const [internalOpen, setInternalOpen] = useState(false);
-    const queryClient = useQueryClient();
+
 
     const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
     const setOpen = useCallback((val: boolean | ((v: boolean) => boolean)) => {
@@ -95,30 +87,8 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
         } catch { /* silent */ }
     }, []);
 
-    // FCM Foreground Listener
-    useEffect(() => {
-        if (!isAuthenticated || !messaging) return;
-
-        const unsubscribe = onMessage(messaging, (payload) => {
-            console.log('Foreground message received:', payload);
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
-            
-            // Show browser notification if needed
-            if (window.location.pathname !== '/messages') {
-                fireBrowserNotification({
-                    title: payload.notification?.title,
-                    message: payload.notification?.body,
-                    type: payload.data?.type,
-                    id: payload.data?.notificationId
-                });
-            }
-        });
-
-        // Ensure firebase auth is active to keep connection alive
-        ensureFirebaseAuth();
-
-        return () => unsubscribe();
-    }, [isAuthenticated, queryClient, fireBrowserNotification]);
+    // Firebase notifications are handled globally in FirebaseProvider (Foreground/FCM)
+    // and real-time invalidation is handled in useUnreadNotifications hook.
 
 
     if (!isAuthenticated) return null;

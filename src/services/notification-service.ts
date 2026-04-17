@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { sendPushNotification } from '@/lib/fcm-service';
+import { firebaseService } from '@/lib/firebase-service';
 
 export type NotificationType = 
     | 'CONNECTION_REQUEST'
@@ -45,34 +45,24 @@ export const notificationService = {
                 },
             });
 
-            // 2. Send FCM Push Notification
-            const user = await prisma.user.findUnique({
-                where: { id: params.userId },
-                select: { fcmTokens: true }
-            });
-
-            if (user?.fcmTokens && user.fcmTokens.length > 0) {
-                for (const token of user.fcmTokens) {
-                    try {
-                        await sendPushNotification(token, {
-                            title: params.title,
-                            body: params.message,
-                            data: {
-                                notificationId: notification.id,
-                                type: params.type,
-                                entityId: params.entityId,
-                            }
-                        });
-                    } catch (fcmError) {
-                        console.error(`Failed to send FCM to token ${token}:`, fcmError);
-                    }
+            // 2. Deliver via Firebase (FCM + Firestore real-time)
+            await firebaseService.notifyUser(params.userId, {
+                type: params.type,
+                title: params.title,
+                message: params.message,
+                data: {
+                    notificationId: notification.id,
+                    entityType: params.entityType,
+                    entityId: params.entityId,
+                    senderId: params.senderId,
                 }
-            }
+            });
 
             return notification;
         } catch (error) {
             console.error('Error in notificationService.create:', error);
-            throw error;
+            // Don't throw to prevent breaking the caller (like follow) if Firebase fails
+            return null;
         }
     }
 };

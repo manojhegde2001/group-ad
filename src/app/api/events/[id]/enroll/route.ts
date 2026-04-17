@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
 import { sendMail, enrollmentConfirmationEmail } from '@/lib/mailer';
-import { socketService } from '@/lib/socket-service';
+import { firebaseService } from '@/lib/firebase-service';
 
 export async function POST(
     request: NextRequest,
@@ -108,9 +108,10 @@ export async function POST(
             });
 
             // Emit real-time notification to admins
-            admins.forEach((admin) => {
-                socketService.notifyUser(admin.id, {
+            admins.forEach(async (admin) => {
+                await firebaseService.notifyUser(admin.id, {
                     type: 'EVENT_ENROLLMENT',
+                    title: 'New Event Enrollment',
                     message: `${user?.name || 'A user'} enrolled in "${event.title}"`,
                     data: { eventId, senderId: session.user!.id }
                 });
@@ -130,8 +131,9 @@ export async function POST(
         });
 
         // Emit real-time notification to user
-        socketService.notifyUser(session.user.id, {
+        await firebaseService.notifyUser(session.user.id, {
             type: 'EVENT_ENROLLMENT',
+            title: 'Enrollment Received',
             message: userNotification.message,
             data: { notificationId: userNotification.id, eventId }
         });
@@ -229,9 +231,10 @@ export async function DELETE(
             });
 
             // Emit real-time notification to admins
-            admins.forEach((admin) => {
-                socketService.notifyUser(admin.id, {
+            admins.forEach(async (admin) => {
+                await firebaseService.notifyUser(admin.id, {
                     type: 'EVENT_ENROLLMENT',
+                    title: 'Event Withdrawal',
                     message: `${user?.name || 'A user'} has withdrawn from "${enrollment.event.title}"`,
                     data: { eventId, senderId: session.user!.id }
                 });

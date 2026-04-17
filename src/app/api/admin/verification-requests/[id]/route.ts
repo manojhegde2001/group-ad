@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { firebaseService } from '@/lib/firebase-service';
+import { socketService } from '@/lib/socket-service';
 
 export async function PATCH(
   request: NextRequest,
@@ -62,9 +62,8 @@ export async function PATCH(
       }).catch(() => null);
 
       if (notification) {
-        await firebaseService.notifyUser(typeChangeRequest.userId, {
+        socketService.notifyUser(typeChangeRequest.userId, {
             type: 'VERIFICATION_APPROVED',
-            title: 'Business Verified!',
             message: notification.message,
             data: { notificationId: notification.id }
         });
@@ -90,9 +89,8 @@ export async function PATCH(
       }).catch(() => null);
 
       if (notification) {
-        await firebaseService.notifyUser(typeChangeRequest.userId, {
+        socketService.notifyUser(typeChangeRequest.userId, {
             type: 'VERIFICATION_REJECTED',
-            title: 'Verification Rejected',
             message: notification.message,
             data: { notificationId: notification.id }
         });

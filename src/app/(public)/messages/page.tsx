@@ -19,14 +19,14 @@ import {
 import { useFollowing } from '@/hooks/use-api/use-user';
 import { useQueryClient } from '@tanstack/react-query';
 import { Conversation, Message } from '@/services/api/messages';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, where, orderBy, limit, doc, setDoc, deleteDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { useSocket } from '@/components/providers/socket-provider';
 
 
 // Interfaces are now imported from @/services/api/messages
 
 function MessagesContent() {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const { refresh: refreshUnreadBadge } = useUnreadMessages();
   const searchParams = useSearchParams();
   const initialUserId = searchParams.get('userId');
@@ -61,57 +61,41 @@ function MessagesContent() {
 
   const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
 
-  // 1. Listen for real-time messages from Firestore
+  // 1. Socket.IO integration for real-time messages & typing
   useEffect(() => {
-    if (!selectedConvId || !user) return;
+    if (!selectedConvId || !socket || !user) return;
 
-    // We listen to the subcollection of the conversation
-    const messagesRef = collection(db, 'conversations', selectedConvId, 'messages');
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
+    // Join the conversation room
+    socket.emit('join-conversation', selectedConvId);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          const message = change.doc.data() as Message;
-          console.log('[Firestore] New message received:', message);
-          
-          setRealtimeMessages(prev => {
-            if (prev.some(m => m.id === message.id)) return prev;
-            return [...prev, message];
-          });
-          
-          queryClient.invalidateQueries({ queryKey: ['conversations'] });
-          refreshUnreadBadge();
-        }
-      });
-    });
+    const handleNewMessage = (message: Message) => {
+      console.log('[Socket] New message received:', message);
+      if (message.conversationId === selectedConvId) {
+        setRealtimeMessages(prev => {
+          if (prev.some(m => m.id === message.id)) return prev;
+          return [...prev, message];
+        });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        refreshUnreadBadge();
+      }
+    };
 
-    return () => unsubscribe();
-  }, [selectedConvId, user, queryClient, refreshUnreadBadge]);
+    const handleTyping = ({ userId, name, isTyping }: any) => {
+      if (userId !== user.id) {
+        setIsOtherTyping(isTyping);
+        setTypingUser(isTyping ? name : null);
+      }
+    };
 
-  // 2. Listen for typing status from Firestore
-  useEffect(() => {
-    if (!selectedConvId || !user) return;
+    socket.on('new_message', handleNewMessage);
+    socket.on('user-typing', handleTyping);
 
-    const typingRef = collection(db, 'conversations', selectedConvId, 'typing');
-    
-    const unsubscribe = onSnapshot(typingRef, (snapshot) => {
-      let typingOthers = false;
-      let othersName = '';
-      
-      snapshot.docs.forEach(doc => {
-        if (doc.id !== user.id) {
-          typingOthers = true;
-          othersName = doc.data().name;
-        }
-      });
-
-      setIsOtherTyping(typingOthers);
-      setTypingUser(othersName);
-    });
-
-    return () => unsubscribe();
-  }, [selectedConvId, user]);
+    return () => {
+      socket.emit('leave-conversation', selectedConvId);
+      socket.off('new_message', handleNewMessage);
+      socket.off('user-typing', handleTyping);
+    };
+  }, [selectedConvId, socket, user, queryClient, refreshUnreadBadge]);
 
   // Merge API messages with real-time socket messages
   const messages = useMemo(() => {
@@ -251,25 +235,21 @@ function MessagesContent() {
     setMessageInput('');
     sendMessageMutation.mutate({ content });
     
-    if (selectedConvId && user) {
-        deleteDoc(doc(db, 'conversations', selectedConvId, 'typing', user.id));
+    if (selectedConvId && socket && user) {
+        socket.emit('typing', { conversationId: selectedConvId, userId: user.id, name: user.name, isTyping: false });
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessageInput(e.target.value);
     
-    if (selectedConvId && user) {
-        const typingRef = doc(db, 'conversations', selectedConvId, 'typing', user.id);
-        setDoc(typingRef, { 
-            name: user.name,
-            updatedAt: serverTimestamp()
-        });
+    if (selectedConvId && socket && user) {
+        socket.emit('typing', { conversationId: selectedConvId, userId: user.id, name: user.name, isTyping: true });
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         
         typingTimeoutRef.current = setTimeout(() => {
-            deleteDoc(typingRef);
+            socket.emit('typing', { conversationId: selectedConvId, userId: user.id, name: user.name, isTyping: false });
         }, 3000);
     }
   };

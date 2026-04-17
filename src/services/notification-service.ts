@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { firebaseService } from '@/lib/firebase-service';
+import { socketService } from '@/lib/socket-service';
 
 export type NotificationType = 
     | 'CONNECTION_REQUEST'
@@ -45,10 +45,9 @@ export const notificationService = {
                 },
             });
 
-            // 2. Deliver via Firebase (FCM + Firestore real-time)
-            await firebaseService.notifyUser(params.userId, {
+            // 2. Deliver via Socket.io
+            socketService.notifyUser(params.userId, {
                 type: params.type,
-                title: params.title,
                 message: params.message,
                 data: {
                     notificationId: notification.id,

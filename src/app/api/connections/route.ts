@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { firebaseService } from '@/lib/firebase-service';
+import { socketService } from '@/lib/socket-service';
 
 // GET /api/connections?status=PENDING|ACCEPTED
 export async function GET(request: NextRequest) {
@@ -110,9 +110,8 @@ export async function POST(request: NextRequest) {
     }).catch(() => null);
 
     if (notification) {
-      await firebaseService.notifyUser(receiverId, {
+      socketService.notifyUser(receiverId, {
         type: 'CONNECTION_REQUEST',
-        title: 'New Connection Request',
         message: notification.message,
         data: { notificationId: notification.id, senderId: userId }
       });

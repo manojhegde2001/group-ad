@@ -1,46 +1,39 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useNotifications } from '@/hooks/use-api/use-notifications';
 import { useQueryClient } from '@tanstack/react-query';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
+import { useSocket } from '@/components/providers/socket-provider';
 
 export function useUnreadNotifications(pollInterval = 30_000) {
-    const { user, isAuthenticated } = useAuth();
+    const { isAuthenticated } = useAuth();
     const queryClient = useQueryClient();
+    const { socket } = useSocket();
 
-    const params = useMemo(() => ({ limit: 1 }), []);
     const { data } = useNotifications(
-        params,
+        { limit: 1 },
         { 
             enabled: isAuthenticated,
-            // Polling disabled in favor of Firestore listener
             refetchOnWindowFocus: true,
+            refetchInterval: pollInterval,
         }
     );
 
     useEffect(() => {
-        if (!isAuthenticated || !queryClient) return;
+        if (!socket || !isAuthenticated) return;
 
-        // Listen for new notifications in Firestore
-        // We assume notifications are mirrored to Firestore for real-time
-        const q = query(
-            collection(db, 'notifications'), 
-            where('userId', '==', user?.id || ''),
-            orderBy('createdAt', 'desc'),
-            limit(1)
-        );
+        const handleNotification = (payload: any) => {
+            // Any notification should trigger a refresh of the notification list
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        };
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                queryClient.invalidateQueries({ queryKey: ['notifications'] });
-            }
-        });
+        socket.on('notification', handleNotification);
 
-        return () => unsubscribe();
-    }, [isAuthenticated, user?.id, queryClient]);
+        return () => {
+            socket.off('notification', handleNotification);
+        };
+    }, [socket, isAuthenticated, queryClient]);
 
     const unreadCount = data?.unreadCount ?? 0;
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { firebaseService } from '@/lib/firebase-service';
+import { socketService } from '@/lib/socket-service';
 
 
 
@@ -121,16 +121,16 @@ export async function POST(
       }),
     ]);
 
-    // Emit via Firebase
-    // 1. Write to Firestore for real-time chat update
-    await firebaseService.emitMessage(id, message);
+    // Emit via Socket.io
+    // 1. Emit to the conversation room
+    socketService.emitMessage(id, message);
 
-    // 2. Notify other participants via FCM
+    // 2. Notify other participants
     const otherParticipants = conversation.participantIds.filter(
       (pid) => pid !== session.user.id
     );
-    otherParticipants.forEach(async (pid) => {
-      await firebaseService.notifyUser(pid, {
+    otherParticipants.forEach((pid) => {
+      socketService.notifyUser(pid, {
         type: 'MESSAGE_RECEIVED',
         message: `New message from ${session.user.name}`,
         data: { conversationId: id, messageId: message.id }

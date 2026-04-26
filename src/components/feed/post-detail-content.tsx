@@ -208,7 +208,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             <div className="flex flex-col md:flex-row w-full bg-white dark:bg-secondary-900 sm:rounded-[32px] overflow-hidden shadow-xl border border-secondary-100 dark:border-secondary-800">
                 {/* Left Panel - Media */}
                 <div
-                    className={`relative flex-[1.5] min-h-[300px] bg-secondary-50 dark:bg-secondary-800/50 flex items-center justify-center ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
+                    className={`relative flex-[1.5] min-h-[300px] md:h-full bg-secondary-50 dark:bg-secondary-800/50 flex items-center justify-center ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
                 >
                     {/* Close Button (Mobile Only) */}
                     {onClose && (
@@ -270,7 +270,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                 </div>
 
                 {/* Right panel — Details */}
-                <div className={`w-full md:w-[400px] flex flex-col bg-white dark:bg-secondary-900 border-l border-secondary-100 dark:border-secondary-800`}>
+                <div className={`w-full md:w-[400px] flex flex-col bg-white dark:bg-secondary-900 md:border-l border-secondary-100 dark:border-secondary-800 h-auto md:h-full`}>
                 {/* Desktop Close Button (Only in Modal) */}
                 {isModal && onClose && (
                     <div className="absolute top-4 right-4 z-50 hidden sm:block">
@@ -373,8 +373,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
                 </div>
 
-                {/* Scrollable body */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {/* Scrollable body - Independent scroll only on desktop */}
+                <div className="flex-1 md:overflow-y-auto overflow-visible p-5 sm:p-6 space-y-5">
                     {/* Tags */}
                     {post.tags && post.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
@@ -386,7 +386,9 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
 
                     {/* Caption */}
                     {hasImages && post.content && (
-                        <p className="text-sm text-secondary-700 dark:text-secondary-300 leading-relaxed">{post.content}</p>
+                        <p className="text-base sm:text-lg text-secondary-800 dark:text-secondary-200 leading-snug font-medium tracking-tight">
+                            {post.content}
+                        </p>
                     )}
 
                     {/* Meta */}
@@ -425,10 +427,12 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         </button>
 
                         {/* Comment count */}
-                        <button className="flex items-center gap-1.5 text-sm text-secondary-500 dark:text-secondary-400 hover:text-primary-500 transition-colors">
-                            <MessageCircle className="w-5 h-5" />
-                            <span>{totalComments}</span>
-                        </button>
+                        {post?.commentsEnabled !== false && (
+                            <button className="flex items-center gap-2 text-sm font-bold text-secondary-600 dark:text-secondary-400 hover:text-primary-500 transition-colors">
+                                <MessageCircle className="w-5 h-5" />
+                                <span>{totalComments}</span>
+                            </button>
+                        )}
 
                         {/* Save */}
                         <button
@@ -486,91 +490,101 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
 
                     {/* Comments */}
-                    <div className="space-y-4 pt-2">
-                        <p className="text-[11px] font-bold text-secondary-400 uppercase tracking-widest">Comments</p>
-                        {loadingComments ? (
-                            <div className="space-y-4">
-                                {[...Array(3)].map((_, i) => (
-                                    <div key={i} className="flex gap-3">
-                                        <Skeleton className="w-8 h-8 rounded-full shrink-0" />
-                                        <div className="flex-1 space-y-2 pt-1">
-                                            <Skeleton className="h-3 w-24 rounded" />
-                                            <Skeleton className="h-10 w-full rounded-2xl" />
+                    {post?.commentsEnabled !== false && (
+                        <div className="space-y-4 pt-2">
+                            <p className="text-[11px] font-bold text-secondary-400 uppercase tracking-widest">Comments</p>
+                            {loadingComments ? (
+                                <div className="space-y-4">
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} className="flex gap-3">
+                                            <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                                            <div className="flex-1 space-y-2 pt-1">
+                                                <Skeleton className="h-3 w-24 rounded" />
+                                                <Skeleton className="h-10 w-full rounded-2xl" />
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : comments.length === 0 ? (
-                            <p className="text-xs text-secondary-400 text-center py-4">No comments yet. Be the first!</p>
-                        ) : (
-                            comments.map((c) => (
-                                <div key={c.id} className="flex gap-2.5">
-                                    <Avatar
-                                        src={c.user.avatar ?? undefined}
-                                        name={c.user.name}
-                                        size="sm" rounded="full" color="primary"
-                                        className="w-7 h-7 shrink-0"
-                                    />
-                                    <div className="flex-1">
-                                        <div className="bg-secondary-50 dark:bg-secondary-800 rounded-2xl px-3 py-2">
-                                            <p className="text-xs font-semibold text-secondary-800 dark:text-white mb-0.5">{c.user.name}</p>
-                                            <p className="text-xs text-secondary-600 dark:text-secondary-400">{c.content}</p>
-                                        </div>
-                                        <p className="text-[10px] text-secondary-400 mt-0.5 ml-2">
-                                            {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
-                                        </p>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))
-                        )}
-                    </div>
+                            ) : comments.length === 0 ? (
+                                <p className="text-xs text-secondary-400 text-center py-4">No comments yet. Be the first!</p>
+                            ) : (
+                                comments.map((c) => (
+                                    <div key={c.id} className="flex gap-2.5">
+                                        <Avatar
+                                            src={c.user.avatar ?? undefined}
+                                            name={c.user.name}
+                                            size="sm" rounded="full" color="primary"
+                                            className="w-7 h-7 shrink-0"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="bg-secondary-50 dark:bg-secondary-800 rounded-2xl px-3 py-2">
+                                                <p className="text-xs font-semibold text-secondary-800 dark:text-white mb-0.5">{c.user.name}</p>
+                                                <p className="text-xs text-secondary-600 dark:text-secondary-400">{c.content}</p>
+                                            </div>
+                                            <p className="text-[10px] text-secondary-400 mt-0.5 ml-2">
+                                                {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Comment input - Now inside details panel */}
                 <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0 bg-white dark:bg-secondary-900">
-                    <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
-                        <Avatar
-                            src={(user?.avatar as string | null | undefined) ?? undefined}
-                            name={(user?.name as string) || '?'}
-                            size="sm" rounded="full" color="primary"
-                            className="w-8 h-8 shrink-0"
-                        />
-                        <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-4 py-2 gap-2">
-                            <input
-                                type="text"
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                placeholder={user ? 'Add a comment…' : 'Login to comment'}
-                                className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
-                                onClick={() => !user && openLogin()}
-                                readOnly={!user}
+                    {post?.commentsEnabled !== false ? (
+                        <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
+                            <Avatar
+                                src={(user?.avatar as string | null | undefined) ?? undefined}
+                                name={(user?.name as string) || '?'}
+                                size="sm" rounded="full" color="primary"
+                                className="w-8 h-8 shrink-0"
                             />
-                            {comment.trim() && (
-                                <button
-                                    type="submit"
-                                    disabled={commentMutation.isPending}
-                                    className="text-primary-600 hover:text-primary-700 transition-colors shrink-0"
-                                    aria-label="Send comment"
-                                >
-                                    {commentMutation.isPending
-                                        ? <Loader2 className="w-4 h-4 animate-spin" />
-                                        : <Send className="w-4 h-4" />
-                                    }
-                                </button>
-                            )}
+                            <div className="flex-1 flex items-center bg-secondary-100 dark:bg-secondary-800 rounded-full px-4 py-2 gap-2">
+                                <input
+                                    type="text"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder={user ? 'Add a comment…' : 'Login to comment'}
+                                    className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
+                                    onClick={() => !user && openLogin()}
+                                    readOnly={!user}
+                                />
+                                {comment.trim() && (
+                                    <button
+                                        type="submit"
+                                        disabled={commentMutation.isPending}
+                                        className="text-primary-600 hover:text-primary-700 transition-colors shrink-0"
+                                        aria-label="Send comment"
+                                    >
+                                        {commentMutation.isPending
+                                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                                            : <Send className="w-4 h-4" />
+                                        }
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    ) : (
+                        <div className="py-2 text-center">
+                            <p className="text-sm text-secondary-500 italic">Comments are disabled for this post</p>
                         </div>
-                    </form>
+                    )}
                 </div>
             </div>
         </div>
 
         {/* Related Content Feed */}
-        <div className="mt-12 w-full">
-                <div className="px-4 mb-6">
-                    <h2 className="text-xl font-bold text-secondary-900 dark:text-white">More to explore</h2>
-                    <p className="text-sm text-secondary-500">Related posts you might like</p>
+        <div className="mt-8 sm:mt-16 w-full pb-20 sm:pb-10">
+                <div className="px-5 sm:px-4 mb-8">
+                    <h2 className="text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">More to explore</h2>
+                    <p className="text-sm text-secondary-500 font-medium">Related posts you might like</p>
                 </div>
-                <FeedContainer categoryId={post.categoryId} />
+                <div className="px-2 sm:px-0">
+                    <FeedContainer categoryId={post.categoryId} />
+                </div>
             </div>
         </div>
     );

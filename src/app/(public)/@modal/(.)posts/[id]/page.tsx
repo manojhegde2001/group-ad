@@ -35,7 +35,7 @@ export default function PostModalPage({ params }: { params: Promise<{ id: string
 
       {/* Modal Container */}
       <div
-        className="relative z-10 w-full sm:max-w-6xl h-[100dvh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col md:flex-row"
+        className="relative z-10 w-full sm:max-w-6xl min-h-[100dvh] sm:h-[90vh] md:h-[85vh] sm:rounded-2xl overflow-y-auto bg-white dark:bg-secondary-900 shadow-2xl animate-slide-up sm:animate-scale-in flex flex-col scrollbar-none"
         onClick={(e) => e.stopPropagation()}
       >
         <PostDetailContent 

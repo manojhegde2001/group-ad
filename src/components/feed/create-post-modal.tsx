@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import {
     X, Image as ImageIcon, Type, Tag, Globe, Lock,
     Upload, Loader2, CheckCircle, Plus, Video, Film,
-    Tags,
+    Tags, MessageCircle, MessageCircleOff
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Modal, Button } from 'rizzui';
@@ -29,6 +29,7 @@ export function CreatePostModal() {
     const [uploading, setUploading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [commentsEnabled, setCommentsEnabled] = useState(true);
     
     // Check verification status
     const isAdmin = (user as any)?.userType === 'ADMIN';
@@ -47,6 +48,7 @@ export function CreatePostModal() {
             setVisibility(editingPost.visibility as 'PUBLIC' | 'PRIVATE');
             setMediaPreviews(editingPost.images);
             setMediaFiles([]);
+            setCommentsEnabled(editingPost.commentsEnabled !== false);
         }
     }, [editingPost, user]);
 
@@ -68,6 +70,7 @@ export function CreatePostModal() {
         setSuccess(false);
         setUploadProgress(0);
         setIsDragging(false);
+        setCommentsEnabled(true);
     };
 
     const handleClose = () => {
@@ -222,6 +225,7 @@ export function CreatePostModal() {
                 images: finalMediaUrls,
                 tags: parsedTags,
                 visibility,
+                commentsEnabled,
             };
 
             if (editingPost) {
@@ -311,6 +315,16 @@ export function CreatePostModal() {
                                 >
                                     <Lock className="w-2.5 h-2.5" />
                                     Private
+                                </button>
+                                <div className="h-4 w-px bg-secondary-100 dark:bg-secondary-800 mx-1" />
+                                <button
+                                    type="button"
+                                    onClick={() => setCommentsEnabled(!commentsEnabled)}
+                                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${commentsEnabled ? 'text-secondary-400 hover:text-primary-500' : 'bg-red-500/10 text-red-600 ring-1 ring-red-500/20'}`}
+                                    title={commentsEnabled ? "Disable Comments" : "Enable Comments"}
+                                >
+                                    {commentsEnabled ? <MessageCircle className="w-2.5 h-2.5" /> : <MessageCircleOff className="w-2.5 h-2.5" />}
+                                    {commentsEnabled ? 'Comments On' : 'Comments Off'}
                                 </button>
                             </div>
                         </div>

@@ -113,6 +113,7 @@ export type PostWithRelations = {
   images: string[];
   tags: string[];
   visibility: string;
+  commentsEnabled: boolean;
   views: number;
   likes: number;
   shares: number;

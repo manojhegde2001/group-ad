@@ -8,6 +8,7 @@ const updatePostSchema = z.object({
   images: z.array(z.string().url()).optional(),
   tags: z.array(z.string()).optional(),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional(),
+  commentsEnabled: z.boolean().optional(),
   categoryId: z.string().optional(),
 });
 

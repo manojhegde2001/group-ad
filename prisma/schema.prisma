@@ -340,6 +340,7 @@ model Post {
   tags        String[]
 
   visibility  AccountVisibility @default(PUBLIC)
+  commentsEnabled Boolean @default(true)
 
   views       Int      @default(0)
   likes       Int      @default(0)

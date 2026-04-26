@@ -9,6 +9,7 @@ const createPostSchema = z.object({
   images: z.array(z.string().url()).optional().default([]),
   tags: z.array(z.string()).optional().default([]),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional().default('PUBLIC'),
+  commentsEnabled: z.boolean().optional().default(true),
   categoryId: z.string().optional(),
   companyId: z.string().optional(),
 });
@@ -244,6 +245,7 @@ export async function POST(request: NextRequest) {
         images: validatedData.images,
         tags: validatedData.tags,
         visibility: validatedData.visibility,
+        commentsEnabled: validatedData.commentsEnabled,
         categoryId: user.categoryId, // Auto-assign from user profile
         companyId: validatedData.companyId,
         userId: user.id,

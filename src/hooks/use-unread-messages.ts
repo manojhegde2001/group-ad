@@ -12,16 +12,20 @@ export function useUnreadMessages(pollInterval = 30_000) {
     const queryClient = useQueryClient();
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const fetchUnread = useCallback(async () => {
+    const fetchUnread = useCallback(async (signal?: AbortSignal) => {
         if (!isAuthenticated) return;
         try {
-            const res = await fetch('/api/conversations/unread-count');
+            const res = await fetch('/api/conversations/unread-count', { signal });
             if (res.ok) {
                 const data = await res.json();
                 setTotalUnread(data.totalUnread || data.count || 0);
             }
-        } catch (error) {
-            console.error('Failed to fetch unread messages count:', error);
+        } catch (error: any) {
+            if (error.name === 'AbortError') return;
+            // Only log actual errors, not failed fetches during page transitions
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('Silent unread fetch error:', error.message);
+            }
         }
     }, [isAuthenticated]);
 
@@ -56,10 +60,15 @@ export function useUnreadMessages(pollInterval = 30_000) {
             return;
         }
 
-        fetchUnread();
-        intervalRef.current = setInterval(fetchUnread, pollInterval);
+        const controller = new AbortController();
+        fetchUnread(controller.signal);
+        
+        intervalRef.current = setInterval(() => {
+            fetchUnread(controller.signal);
+        }, pollInterval);
 
         return () => {
+            controller.abort();
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [isAuthenticated, fetchUnread, pollInterval]);

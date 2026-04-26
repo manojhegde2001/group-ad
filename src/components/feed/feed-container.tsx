@@ -87,12 +87,11 @@ const DEMO_POSTS: any[] = [
 
 const breakpointCols = {
   default: 5,
-  1920: 5,
   1536: 4,
   1280: 3,
-  1024: 2,
+  1024: 3,
   768: 2,
-  640: 1,
+  640: 2,
 };
 
 interface FeedContainerProps {

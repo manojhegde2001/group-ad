@@ -22,6 +22,8 @@ import { Popover } from 'rizzui';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
 import { useDeletePost, usePost, usePostComments, useLikePost, useCommentOnPost, useBookmarkPost } from '@/hooks/use-api/use-posts';
 
+import { FeedContainer } from './feed-container';
+
 interface Comment {
     id: string;
     content: string;
@@ -201,88 +203,74 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const totalComments = comments.length;
 
     return (
-        <div className="flex flex-col md:flex-row h-full w-full">
-            {/* Left Panel - Media */}
-            <div
-                className={`relative flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-0 bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
-            >
-                {/* Close Button (Mobile Only, or on direct pages) */}
-                {onClose && (
-                    <button 
-                        onClick={onClose}
-                        className="md:hidden absolute top-4 left-4 z-[110] p-2.5 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md text-white transition-all active:scale-95 shadow-lg border border-white/10"
-                        aria-label="Go back"
-                    >
-                        <ChevronLeft className="w-6 h-6" />
-                    </button>
-                )}
+        <div className="flex flex-col w-full max-w-[1200px] mx-auto">
+            {/* Main Post Section */}
+            <div className="flex flex-col md:flex-row w-full bg-white dark:bg-secondary-900 sm:rounded-[32px] overflow-hidden shadow-xl border border-secondary-100 dark:border-secondary-800">
+                {/* Left Panel - Media */}
+                <div
+                    className={`relative flex-[1.5] min-h-[300px] bg-secondary-50 dark:bg-secondary-800/50 flex items-center justify-center ${isTextPost ? `bg-gradient-to-br ${gradient}` : ''}`}
+                >
+                    {/* Close Button (Mobile Only) */}
+                    {onClose && (
+                        <button 
+                            onClick={onClose}
+                            className="md:hidden absolute top-4 left-4 z-[110] p-2 rounded-full bg-white/90 dark:bg-secondary-900/90 text-secondary-900 dark:text-white shadow-lg border border-secondary-200 dark:border-secondary-700 transition-transform active:scale-90"
+                            aria-label="Go back"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                    )}
 
-                {loadingPost ? (
-                    <div className="w-full h-full p-8 flex flex-col items-center justify-center gap-4">
-                        <Skeleton className="w-full h-full max-h-[80vh] rounded-xl" />
-                    </div>
-                ) : hasImages ? (
-                    <>
-                        {(() => {
-                            const src = post.images[currentImageIndex];
-                            const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
-                            
-                            if (isVideoItem) {
+                    {loadingPost ? (
+                        <div className="w-full aspect-[3/4] p-8 flex items-center justify-center">
+                            <Skeleton className="w-full h-full rounded-2xl" />
+                        </div>
+                    ) : hasImages ? (
+                        <div className="w-full h-full flex flex-col">
+                            {(() => {
+                                const src = post.images[currentImageIndex];
+                                const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
+                                
+                                if (isVideoItem) {
+                                    return (
+                                        <video
+                                            key={src}
+                                            src={src}
+                                            className="w-full h-auto block"
+                                            controls playsInline autoPlay loop
+                                        />
+                                    );
+                                }
                                 return (
-                                    <video
+                                    <img
                                         key={src}
                                         src={src}
-                                        className="w-full h-full object-contain"
-                                        controls playsInline autoPlay
-                                        style={{ maxHeight: '80vh' }}
+                                        alt={post.content || 'Post image'}
+                                        className="w-full h-auto block animate-in fade-in duration-500"
                                     />
                                 );
-                            }
-                            return (
-                                <img
-                                    key={src}
-                                    src={src}
-                                    alt={post.content || 'Post image'}
-                                    className="w-full h-full object-contain animate-in fade-in duration-500"
-                                    style={{ maxHeight: '80vh' }}
-                                />
-                            );
-                        })()}
-                        {post.images.length > 1 && (
-                            <>
-                                <button
-                                    onClick={prevImage}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={nextImage}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/65 text-white rounded-full flex items-center justify-center transition-colors"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                            })()}
+                            {post.images.length > 1 && (
+                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/20 backdrop-blur-md rounded-full">
                                     {post.images.map((_, i) => (
                                         <button
                                             key={i}
                                             onClick={() => setCurrentImageIndex(i)}
-                                            className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-5' : 'bg-white/50 w-1.5'}`}
+                                            className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'bg-white w-6' : 'bg-white/50 w-1.5'}`}
                                         />
                                     ))}
                                 </div>
-                            </>
-                        )}
-                    </>
-                ) : (
-                    <div className="p-8 sm:p-12 text-white">
-                        <p className="text-xl sm:text-2xl font-bold leading-relaxed">{post.content}</p>
-                    </div>
-                )}
-            </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="p-12 text-white text-center">
+                            <p className="text-2xl sm:text-3xl font-bold leading-tight">{post.content}</p>
+                        </div>
+                    )}
+                </div>
 
-            {/* Right panel — Details */}
-            <div className={`w-full md:w-[380px] lg:w-[420px] flex flex-col h-full bg-white dark:bg-secondary-900 overflow-hidden relative border-l border-secondary-100 dark:border-secondary-800 ${!isModal ? 'min-h-[600px] md:min-h-0' : ''}`}>
+                {/* Right panel — Details */}
+                <div className={`w-full md:w-[400px] flex flex-col bg-white dark:bg-secondary-900 border-l border-secondary-100 dark:border-secondary-800`}>
                 {/* Desktop Close Button (Only in Modal) */}
                 {isModal && onClose && (
                     <div className="absolute top-4 right-4 z-50 hidden sm:block">
@@ -538,8 +526,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
                 </div>
 
-                {/* Comment input */}
-                <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0">
+                {/* Comment input - Now inside details panel */}
+                <div className="px-4 py-3 border-t border-secondary-100 dark:border-secondary-800 shrink-0 bg-white dark:bg-secondary-900">
                     <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
                         <Avatar
                             src={(user?.avatar as string | null | undefined) ?? undefined}
@@ -552,7 +540,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 type="text"
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
-                                placeholder={user ? 'Add a commentΓÇª' : 'Login to comment'}
+                                placeholder={user ? 'Add a comment…' : 'Login to comment'}
                                 className="flex-1 bg-transparent outline-none text-sm text-secondary-800 dark:text-secondary-100 placeholder:text-secondary-400 min-w-0"
                                 onClick={() => !user && openLogin()}
                                 readOnly={!user}
@@ -573,6 +561,16 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+
+        {/* Related Content Feed */}
+        <div className="mt-12 w-full">
+                <div className="px-4 mb-6">
+                    <h2 className="text-xl font-bold text-secondary-900 dark:text-white">More to explore</h2>
+                    <p className="text-sm text-secondary-500">Related posts you might like</p>
+                </div>
+                <FeedContainer categoryId={post.categoryId} />
             </div>
         </div>
     );

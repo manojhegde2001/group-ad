@@ -168,9 +168,9 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     return (
         <div
             className="group relative rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer
-                shadow-[0_1px_6px_rgba(0,0,0,0.07)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.14)]
-                dark:shadow-[0_1px_6px_rgba(0,0,0,0.35)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.55)]
-                transition-all duration-300 hover:-translate-y-[3px]"
+                shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)]
+                dark:shadow-[0_1px_4px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)]
+                transition-all duration-300 hover:ring-1 hover:ring-secondary-200 dark:hover:ring-secondary-700"
             onClick={handleCardClick}
         >
             {/* ── Media ───────────────────────────────────────────────── */}
@@ -200,16 +200,13 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="relative overflow-hidden w-full" style={{ aspectRatio: 'auto' }}>
-                                            <Image
+                                        <div className="relative w-full bg-secondary-100 dark:bg-secondary-800">
+                                            <img
                                                 src={src}
                                                 alt={post.content || 'Group Ad Post'}
-                                                width={500}
-                                                height={500}
-                                                className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.05]"
+                                                className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
                                                 onDoubleClick={handleDoubleTap}
-                                                priority={priority}
-                                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                                loading="lazy"
                                             />
                                         </div>
                                     )}

@@ -37,6 +37,7 @@ import { SearchBar } from './search-bar';
 import { ActionIcon } from '../ui/action-icon';
 import { cn } from '@/lib/utils';
 import { Drawer, Popover } from 'rizzui';
+import { MobileBottomNav } from './mobile-bottom-nav';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -131,7 +132,7 @@ export function Navbar() {
   // --- Guest View (Logged Out) ---
   if (!isAuthenticated) {
     return (
-      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 h-14 md:h-20 flex items-center">
+      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 hidden md:flex h-20 items-center">
         <div className="max-w-[1440px] mx-auto w-full flex items-center justify-between px-4 md:px-8 gap-4">
           {/* Logo */}
           <Link href="/" className="shrink-0 flex items-center">
@@ -167,7 +168,7 @@ export function Navbar() {
     <>
       <nav className={cn(
           "sticky top-0 z-50 bg-white/80 dark:bg-secondary-900/80 backdrop-blur-md transition-all duration-300",
-          "h-14 md:h-20 flex items-center",
+          "hidden md:flex h-20 items-center",
           isAuthenticated ? "md:ml-0" : "" 
       )}>
         <div className="flex-1 flex items-center px-4 md:px-6 gap-2 md:gap-4 h-full">
@@ -179,7 +180,7 @@ export function Navbar() {
               </Link>
           </div>
 
-          <div className="flex-1 flex items-center">
+          <div className="flex-1 hidden md:flex items-center">
               <SearchBar className="w-full" />
           </div>
 
@@ -284,37 +285,42 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile Menu Trigger */}
-            <button
+            {/* Mobile Menu Trigger - HIDDEN (Moved to Bottom Nav) */}
+            {/* <button
               className="md:hidden p-3 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors"
               onClick={() => setMobileDrawerOpen(true)}
             >
               <Menu className="w-6 h-6 text-secondary-600 dark:text-secondary-300" />
-            </button>
+            </button> */}
           </div>
         </div>
       </nav>
 
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav onMenuClick={() => setMobileDrawerOpen(true)} />
+
       <Drawer
           isOpen={mobileDrawerOpen}
           onClose={() => setMobileDrawerOpen(false)}
-          placement="right"
-          containerClassName="md:hidden w-[85vw] max-w-sm h-full bg-white dark:bg-secondary-900 shadow-2xl flex flex-col overflow-hidden"
+          placement="bottom"
+          containerClassName="md:hidden w-full h-auto max-h-[90vh] bg-white dark:bg-secondary-900 shadow-2xl flex flex-col overflow-hidden rounded-t-[2.5rem]"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-secondary-100 dark:border-secondary-800">
-            <div className="flex items-center gap-2">
-                <Logo className="w-8 h-8" iconOnly />
-                <span className="font-bold text-xl text-secondary-900 dark:text-white">Menu</span>
+        {/* Header - Centered Handle for Drawer */}
+        <div className="flex flex-col items-center pt-3 pb-2">
+            <div className="w-12 h-1.5 bg-secondary-200 dark:bg-secondary-800 rounded-full mb-4" />
+            <div className="flex items-center justify-between w-full px-6">
+                <div className="flex items-center gap-2">
+                    <Logo className="w-8 h-8" iconOnly />
+                    <span className="font-bold text-xl text-secondary-900 dark:text-white">More Options</span>
+                </div>
+                <ActionIcon
+                    variant="flat"
+                    rounded="full"
+                    onClick={() => setMobileDrawerOpen(false)}
+                >
+                    <X className="w-5 h-5" />
+                </ActionIcon>
             </div>
-            <ActionIcon
-                variant="flat"
-                rounded="full"
-                onClick={() => setMobileDrawerOpen(false)}
-                className="hover:rotate-90 transition-transform duration-300"
-            >
-                <X className="w-5 h-5" />
-            </ActionIcon>
         </div>
 
         {/* Content */}

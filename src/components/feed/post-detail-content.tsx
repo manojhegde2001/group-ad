@@ -239,7 +239,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             <div className="flex flex-col md:flex-row w-full max-w-[1012px] xl:max-w-[1260px] mx-auto bg-white dark:bg-secondary-900 md:rounded-2xl overflow-hidden md:border border-gray-100 dark:border-secondary-800 md:shadow-[0_2px_15px_rgba(0,0,0,0.03)]">
                 
                 {/* Left Panel - Sticky Media Column */}
-                <div className="relative w-full md:w-[55%] h-auto md:h-[calc(100vh-16px)] md:sticky md:top-4 bg-gray-50 dark:bg-secondary-800/50 overflow-hidden group/carousel">
+                <div className="relative w-full md:w-[55%] h-auto md:h-[calc(100vh-88px)] md:sticky md:top-[88px] bg-gray-50 dark:bg-secondary-800/50 overflow-hidden group/carousel">
                     {/* Glass Back Button (Desktop & Mobile) */}
                     {onClose && (
                         <button 
@@ -333,7 +333,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                 </div>
 
                 {/* Right panel ΓÇö Details (Independently Scrollable on Desktop) */}
-                <div className="w-full md:w-[45%] flex flex-col bg-white dark:bg-secondary-900 h-auto md:h-[calc(100vh-16px)] md:sticky md:top-4">
+                <div className="w-full md:w-[45%] flex flex-col bg-white dark:bg-secondary-900 h-auto md:h-[calc(100vh-88px)] md:sticky md:top-[88px]">
                     
                     {/* Action Bar / Header */}
                     <div className="flex items-center justify-between p-4 md:p-8 sticky top-0 bg-white dark:bg-secondary-900 z-10">

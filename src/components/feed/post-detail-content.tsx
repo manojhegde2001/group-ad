@@ -82,6 +82,28 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     }, [postId]);
 
     const [showHeartPop, setShowHeartPop] = useState(false);
+    const touchStart = useRef<number | null>(null);
+    const touchEnd = useRef<number | null>(null);
+
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        touchEnd.current = null;
+        touchStart.current = e.targetTouches[0].clientX;
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        touchEnd.current = e.targetTouches[0].clientX;
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart.current || !touchEnd.current) return;
+        const distance = touchStart.current - touchEnd.current;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+        if (isLeftSwipe) nextImage();
+        if (isRightSwipe) prevImage();
+    };
 
     // Keyboard navigation
     useEffect(() => {
@@ -230,7 +252,13 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     )}
 
                     {hasImages ? (
-                        <div className="w-full h-[60vh] md:h-full relative" onDoubleClick={() => { handleLike(); setShowHeartPop(true); setTimeout(() => setShowHeartPop(false), 800); }}>
+                        <div 
+                            className="w-full h-auto md:h-full relative overflow-hidden" 
+                            onDoubleClick={() => { handleLike(); setShowHeartPop(true); setTimeout(() => setShowHeartPop(false), 800); }}
+                            onTouchStart={onTouchStart}
+                            onTouchMove={onTouchMove}
+                            onTouchEnd={onTouchEnd}
+                        >
                             {(() => {
                                 const src = post.images[currentImageIndex];
                                 const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
@@ -273,13 +301,13 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     {/* Carousel Navigation Arrows */}
                                     <button
                                         onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/70 hover:bg-white dark:bg-secondary-900/70 dark:hover:bg-secondary-900 backdrop-blur-md text-gray-900 dark:text-white border border-white/40 dark:border-secondary-700/50 opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 z-20 shadow-xl"
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/70 hover:bg-white dark:bg-secondary-900/70 dark:hover:bg-secondary-900 backdrop-blur-md text-gray-900 dark:text-white border border-white/40 dark:border-secondary-700/50 md:opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 z-20 shadow-xl"
                                     >
                                         <ChevronLeft className="w-6 h-6" />
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/70 hover:bg-white dark:bg-secondary-900/70 dark:hover:bg-secondary-900 backdrop-blur-md text-gray-900 dark:text-white border border-white/40 dark:border-secondary-700/50 opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 z-20 shadow-xl"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/70 hover:bg-white dark:bg-secondary-900/70 dark:hover:bg-secondary-900 backdrop-blur-md text-gray-900 dark:text-white border border-white/40 dark:border-secondary-700/50 md:opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 z-20 shadow-xl"
                                     >
                                         <ChevronRight className="w-6 h-6" />
                                     </button>

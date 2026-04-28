@@ -245,9 +245,9 @@ async function main() {
   }
 
   // ============================================================================
-  // 6. CREATE SAMPLE POSTS
+  // 6. CREATE SAMPLE POSTS (DISABLED)
   // ============================================================================
-
+/*
   const posts = [
     {
       type: PostType.TEXT,
@@ -304,6 +304,7 @@ async function main() {
     });
   }
   console.log('✅ Sample posts created');
+*/
 
   // ============================================================================
   // 7. CREATE SAMPLE EVENTS
@@ -396,7 +397,7 @@ async function main() {
   console.log(`   • 3 Companies (2 verified, 1 pending)`);
   console.log(`   • 3 Business users (2 verified, 1 pending)`);
   console.log(`   • 2 Individual users`);
-  console.log(`   • 4 Sample posts`);
+  console.log(`   • 0 Sample posts`);
   console.log(`   • 3 Sample events`);
   console.log('\n🔑 Login Credentials:');
   console.log('   Admin:');

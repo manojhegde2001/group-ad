@@ -8,7 +8,7 @@ import { useAuthModal } from '@/hooks/use-modal';
 import {
     X, Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
     ChevronLeft, ChevronRight, Loader2, Send, Link2,
-    Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban
+    Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban, Maximize2
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
@@ -70,6 +70,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const blockMutation = useBlock();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Derived State
     const liked = post?.isLikedByUser || false;
@@ -112,6 +113,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             if (e.key === 'Escape' && onClose) onClose();
             if (e.key === 'ArrowLeft') prevImage();
             if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'f' || e.key === 'F') setIsFullscreen(prev => !prev);
             if (e.key === 'l' || e.key === 'L') handleLike();
         };
         document.addEventListener('keydown', handleKey);
@@ -235,12 +237,12 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const totalComments = comments.length;
 
     return (
-        <div className="flex flex-col w-full bg-[#fcfcfc] dark:bg-black min-h-screen antialiased overflow-x-hidden px-2 pt-4 md:px-0 md:pt-4 pb-20">
+        <div className="flex flex-col w-full bg-[#fcfcfc] dark:bg-black min-h-screen antialiased overflow-x-hidden px-0 pt-0 md:px-2 md:pt-2 pb-20">
             {/* Main Post Section */}
-            <div className="flex flex-col md:flex-row w-full max-w-[1012px] xl:max-w-[1260px] mx-auto bg-white dark:bg-secondary-900 md:rounded-2xl overflow-hidden md:border border-gray-100 dark:border-secondary-800 md:shadow-[0_2px_15px_rgba(0,0,0,0.03)]">
+            <div className="flex flex-col md:flex-row w-full max-w-[1800px] mx-auto bg-white dark:bg-secondary-900 rounded-none md:rounded-2xl overflow-hidden md:border border-gray-100 dark:border-secondary-800 md:shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
                 
                 {/* Left Panel - Sticky Media Column */}
-                <div className="relative w-full md:w-[55%] h-auto md:h-[calc(100vh-88px)] md:sticky md:top-[88px] bg-gray-50 dark:bg-secondary-800/50 overflow-hidden group/carousel">
+                <div className="relative w-full md:w-[50%] h-auto md:h-[calc(100vh-80px)] md:sticky md:top-[80px] bg-secondary-100 dark:bg-black/40 overflow-hidden group/carousel">
                     {/* Glass Back Button (Desktop & Mobile) */}
                     {onClose && (
                         <button 
@@ -269,7 +271,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                         <video
                                             key={src}
                                             src={src}
-                                            className="w-full h-full object-cover block rounded-b-2xl md:rounded-none"
+                                            className="w-full h-full object-contain block"
                                             controls playsInline autoPlay loop
                                         />
                                     );
@@ -279,7 +281,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                         key={src}
                                         src={src}
                                         alt={post.content || 'Post image'}
-                                        className="w-full h-full object-cover block rounded-b-2xl md:rounded-none"
+                                        className="w-full h-full object-contain block"
                                     />
                                 );
                             })()}
@@ -325,6 +327,15 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     </div>
                                 </>
                             )}
+
+                            {/* Expand Button */}
+                            <button
+                                onClick={() => setIsFullscreen(true)}
+                                className="absolute bottom-4 right-4 z-30 p-2.5 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md text-white border border-white/20 transition-all active:scale-95 md:opacity-0 group-hover/carousel:opacity-100"
+                                aria-label="Expand media"
+                            >
+                                <Maximize2 className="w-5 h-5" />
+                            </button>
                         </div>
                     ) : (
                         <div className={cn("w-full h-[60vh] md:h-full flex items-center justify-center p-8 text-white text-center rounded-b-2xl md:rounded-none", `bg-gradient-to-br ${gradient}`)}>
@@ -334,10 +345,10 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                 </div>
 
                 {/* Right panel ΓÇö Details (Independently Scrollable on Desktop) */}
-                <div className="w-full md:w-[45%] flex flex-col bg-white dark:bg-secondary-900 h-auto md:h-[calc(100vh-88px)] md:sticky md:top-[88px]">
+                <div className="w-full md:w-[50%] flex flex-col bg-white dark:bg-secondary-900 h-auto md:h-[calc(100vh-80px)] md:sticky md:top-[80px]">
                     
                     {/* Action Bar / Header */}
-                    <div className="flex items-center justify-between p-4 md:p-8 sticky top-0 bg-white dark:bg-secondary-900 z-10">
+                    <div className="flex items-center justify-between p-6 md:p-8 sticky top-0 bg-white dark:bg-secondary-900 z-10">
                         <div className="flex items-center gap-2">
                              <Popover isOpen={shareOpen} setIsOpen={handleShareOpen} placement="bottom-start">
                                 <Popover.Trigger>
@@ -405,7 +416,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
 
                     {/* Metadata Panel (Independently Scrollable) */}
-                    <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-20 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-24 scrollbar-hide">
                         
                         {/* Title Section */}
                         <div className="mb-4">
@@ -534,7 +545,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
 
                     {/* Pinned Comment Input Row */}
-                    <div className="sticky bottom-0 p-4 md:px-8 md:py-6 bg-white dark:bg-secondary-900 border-t border-gray-100 dark:border-secondary-800 z-20">
+                    <div className="sticky bottom-0 p-6 md:px-8 md:py-6 bg-white dark:bg-secondary-900 border-t border-gray-100 dark:border-secondary-800 z-20">
                         {post.commentsEnabled !== false ? (
                             <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden">
@@ -567,7 +578,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             </div>
 
             {/* More to Explore Section */}
-            <div className="mt-12 w-full max-w-[1260px] mx-auto px-4 pb-20">
+            <div className="mt-12 w-full max-w-[1800px] mx-auto px-4 md:px-2 pb-20">
                 <div className="mb-6">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">More to explore</h2>
                     <p className="text-sm text-gray-400 mt-1">Related posts you might like</p>
@@ -577,6 +588,63 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     <FeedContainer categoryId={post.categoryId} />
                 </div>
             </div>
+
+            {/* Fullscreen Modal Overlay */}
+            <AnimatePresence>
+                {isFullscreen && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4 md:p-10"
+                    >
+                        {/* Close button */}
+                        <button 
+                            onClick={() => setIsFullscreen(false)}
+                            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50"
+                        >
+                            <X className="w-8 h-8" />
+                        </button>
+
+                        {/* Media display */}
+                        <div className="w-full h-full flex items-center justify-center relative">
+                            {post.images.length > 1 && (
+                                <>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); prevImage(); }} 
+                                        className="absolute left-0 p-4 text-white/50 hover:text-white transition-colors z-50"
+                                    >
+                                        <ChevronLeft className="w-12 h-12" />
+                                    </button>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); nextImage(); }} 
+                                        className="absolute right-0 p-4 text-white/50 hover:text-white transition-colors z-50"
+                                    >
+                                        <ChevronRight className="w-12 h-12" />
+                                    </button>
+                                </>
+                            )}
+                            
+                            {(() => {
+                                const src = post.images[currentImageIndex];
+                                const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
+                                
+                                if (isVideoItem) {
+                                    return <video src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
+                                }
+                                return <img src={src} className="max-w-full max-h-full object-contain" alt="" />;
+                            })()}
+                        </div>
+
+                        {/* Page indicator */}
+                        {post.images.length > 1 && (
+                            <div className="mt-4 text-white/50 text-sm font-medium">
+                                {currentImageIndex + 1} / {post.images.length}
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

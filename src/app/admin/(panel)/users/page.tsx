@@ -11,7 +11,7 @@ import {
   Search, User, ShieldCheck, ShieldAlert,
   Check, X, Loader2, Globe,
   ShieldQuestion, UserCog, AlertCircle, UserPlus,
-  ShieldX, ArrowRight
+  ShieldX, ArrowRight, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -49,11 +49,19 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
+  // Reset page on filter change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, typeFilter, statusFilter]);
+
   // Queries
   const { data, isLoading: usersLoading, refetch } = useAdminUsers({
+    page,
+    limit: 20,
     search: searchQuery || undefined,
     type: typeFilter !== 'ALL' ? typeFilter : undefined,
     status: statusFilter !== 'ALL' ? statusFilter : undefined
@@ -260,6 +268,63 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {data && data.pages > 1 && (
+          <div className="px-8 py-6 bg-secondary-50/30 dark:bg-secondary-800/10 border-t border-secondary-100 dark:border-secondary-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
+              Showing <span className="text-secondary-900 dark:text-white">{(page - 1) * 20 + 1}</span> to <span className="text-secondary-900 dark:text-white">{Math.min(page * 20, data.total)}</span> of <span className="text-secondary-900 dark:text-white">{data.total}</span> users
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="flex items-center gap-1.5 px-3">
+                {[...Array(data.pages)].map((_, i) => {
+                  const p = i + 1;
+                  // Show current page, first, last, and neighbors
+                  if (p === 1 || p === data.pages || Math.abs(p - page) <= 1) {
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={cn(
+                          "w-9 h-9 rounded-xl text-[10px] font-black transition-all active:scale-90",
+                          page === p 
+                            ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                            : "bg-white dark:bg-slate-800 text-secondary-400 hover:text-secondary-900 dark:hover:text-white border border-secondary-100 dark:border-secondary-700 shadow-sm"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    );
+                  }
+                  if (p === 2 || p === data.pages - 1) {
+                    return <span key={p} className="text-secondary-300">...</span>;
+                  }
+                  return null;
+                }).filter(Boolean).reduce((acc: any[], curr, i, arr) => {
+                  // Clean up multiple dots
+                  if (curr?.type === 'span' && arr[i-1]?.type === 'span') return acc;
+                  return [...acc, curr];
+                }, [])}
+              </div>
+
+              <button
+                onClick={() => setPage(p => Math.min(data.pages, p + 1))}
+                disabled={page === data.pages}
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Help Alert */}

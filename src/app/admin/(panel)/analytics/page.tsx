@@ -104,10 +104,10 @@ export default function AdminAnalyticsPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
         
         {/* Growth Trend Chart */}
-        <Card className="lg:col-span-2 p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[3rem]">
+        <Card className="lg:col-span-1 xl:col-span-2 p-5 sm:p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[2rem] sm:rounded-[3rem]">
           <div className="flex items-center justify-between mb-10">
             <div>
               <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter leading-none mb-2">Activity Trend</h3>
@@ -119,7 +119,7 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
           
-          <div className="h-[400px] w-full">
+          <div className="h-[280px] sm:h-[350px] lg:h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.trends}>
                 <defs>
@@ -149,11 +149,11 @@ export default function AdminAnalyticsPage() {
         </Card>
 
         {/* User Distribution */}
-        <Card className="p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[3rem] overflow-hidden relative">
+        <Card className="p-5 sm:p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[2rem] sm:rounded-[3rem] overflow-hidden relative">
           <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter leading-none mb-2">Audience</h3>
-          <p className="text-[10px] text-secondary-400 font-black uppercase tracking-[0.3em] mb-10">User Type Distribution</p>
+          <p className="text-[10px] text-secondary-400 font-black uppercase tracking-[0.3em] mb-6 sm:mb-10">User Type Distribution</p>
           
-          <div className="h-[320px] w-full relative">
+          <div className="h-[250px] sm:h-[300px] w-full relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -180,7 +180,7 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
 
-          <div className="mt-10 space-y-4">
+          <div className="mt-6 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 sm:gap-4">
             {userDistData.map((entry, index) => (
               <div key={entry.name} className="flex items-center justify-between p-4 bg-secondary-50/50 dark:bg-slate-800/40 rounded-2xl transition-all hover:scale-[1.02]">
                 <div className="flex items-center gap-3">

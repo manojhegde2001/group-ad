@@ -42,10 +42,10 @@ export const useUpdateUserStatus = () => {
     });
 };
 
-export const useVerificationRequests = () => {
+export const useVerificationRequests = (params?: { page?: number; limit?: number }) => {
     return useQuery({
-        queryKey: ['admin', 'verification-requests'],
-        queryFn: () => adminService.getVerificationRequests(),
+        queryKey: ['admin', 'verification-requests', params],
+        queryFn: () => adminService.getVerificationRequests(params),
     });
 };
 
@@ -66,10 +66,10 @@ export const useUpdateVerificationRequest = () => {
     });
 };
 
-export const useReports = () => {
+export const useReports = (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
     return useQuery({
-        queryKey: ['admin', 'reports'],
-        queryFn: () => adminService.getReports(),
+        queryKey: ['admin', 'reports', params],
+        queryFn: () => adminService.getReports(params),
     });
 };
 
@@ -198,10 +198,10 @@ export const useDeleteVenue = () => {
     });
 };
 
-export const useAdminEvents = () => {
+export const useAdminEvents = (params?: Record<string, any>) => {
   return useQuery({
-    queryKey: ['admin', 'events'],
-    queryFn: () => adminService.getAdminEvents(),
+    queryKey: ['admin', 'events', params],
+    queryFn: () => adminService.getAdminEvents(params),
   });
 };
 
@@ -219,6 +219,13 @@ export const useAdminSearch = (query: string) => {
     queryFn: () => adminService.getAdminSearch(query),
     enabled: query.length >= 2,
     staleTime: 300000, // 5 minutes
+  });
+};
+
+export const useAdminActivity = (params?: { page?: number; limit?: number }) => {
+  return useQuery({
+    queryKey: ['admin', 'activity', params],
+    queryFn: () => adminService.getActivity(params),
   });
 };
 

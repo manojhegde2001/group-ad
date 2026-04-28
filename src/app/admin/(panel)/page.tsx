@@ -264,6 +264,9 @@ export default function AdminDashboardPage() {
                  </div>
                  Live Feed
                </h3>
+               <Link href={getAdminHref('/activity')} className="text-[10px] text-primary hover:text-white hover:bg-primary font-black flex items-center gap-2 transition-all uppercase tracking-widest border border-primary/20 p-2 rounded-xl group/btn active:scale-95">
+                 VIEW ALL <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+               </Link>
              </div>
              {statsLoading ? (
                <div className="space-y-4">

@@ -1,12 +1,15 @@
 'use client';
 
+import { useState } from 'react';
+
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { 
   Plus, Users, Edit, Eye, AlertCircle, MapPin, 
-  Loader2, Calendar, CheckCircle2, LayoutGrid, ArrowRight
+  Loader2, Calendar, CheckCircle2, LayoutGrid, ArrowRight,
+  ChevronLeft, ChevronRight, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminEvents } from '@/hooks/use-api/use-admin';
@@ -23,7 +26,15 @@ export default function AdminEventsPage() {
     const router = useRouter();
 
     // Queries
-    const { data, isLoading, error } = useAdminEvents();
+    const [page, setPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const limit = 20;
+    const { data, isLoading, error } = useAdminEvents({
+        page,
+        limit,
+        search: searchTerm || undefined,
+        all: true
+    });
     const events = data?.events || [];
 
     if (session && (session.user as any)?.userType !== 'ADMIN') {
@@ -108,12 +119,24 @@ export default function AdminEventsPage() {
 
             {/* Event Matrix */}
             <div className="bg-white dark:bg-slate-900/50 rounded-[3rem] border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden shadow-2xl backdrop-blur-xl">
-                <div className="px-10 py-8 border-b-2 border-secondary-50 dark:border-secondary-800 flex items-center justify-between bg-secondary-50/30">
+                <div className="px-10 py-8 border-b-2 border-secondary-50 dark:border-secondary-800 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-secondary-50/30">
                     <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter leading-none">
                         Active <span className="text-primary italic">Matrix</span>
                     </h2>
-                    <div className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
-                        Records Sorted By Date
+                    
+                    <div className="flex flex-1 max-w-md gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl shadow-primary/5 ring-1 ring-secondary-100 dark:ring-secondary-800">
+                        <div className="pl-3 flex items-center text-secondary-300">
+                            <Search className="w-4 h-4" />
+                        </div>
+                        <input 
+                            placeholder="Find meeting by title..." 
+                            className="flex-1 bg-transparent border-none outline-none px-2 py-1.5 font-bold text-xs uppercase tracking-tight text-secondary-900 dark:text-white placeholder:text-secondary-300"
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setPage(1);
+                            }}
+                        />
                     </div>
                 </div>
                 
@@ -124,7 +147,15 @@ export default function AdminEventsPage() {
                         </div>
                         <div>
                             <p className="text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter mb-2">Void State</p>
-                            <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em]">Initiate your first platform gathering.</p>
+                            <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] mb-6">Initiate your first platform gathering.</p>
+                            {searchTerm && (
+                                <button 
+                                    onClick={() => setSearchTerm('')}
+                                    className="px-6 py-2 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+                                >
+                                    Clear Search
+                                </button>
+                            )}
                         </div>
                     </div>
                 ) : (
@@ -193,6 +224,61 @@ export default function AdminEventsPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {data?.pagination && data.pagination.totalPages > 1 && (
+                    <div className="px-10 py-8 bg-secondary-50/30 dark:bg-secondary-800/10 border-t-2 border-secondary-50 dark:border-secondary-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
+                            Showing <span className="text-secondary-900 dark:text-white">{(page - 1) * limit + 1}</span> to <span className="text-secondary-900 dark:text-white">{Math.min(page * limit, data.pagination.total)}</span> of <span className="text-secondary-900 dark:text-white">{data.pagination.total}</span> events
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            
+                            <div className="flex items-center gap-1.5 px-3">
+                                {[...Array(data.pagination.totalPages)].map((_, i) => {
+                                    const p = i + 1;
+                                    if (p === 1 || p === data.pagination.totalPages || Math.abs(p - page) <= 1) {
+                                        return (
+                                            <button
+                                                key={p}
+                                                onClick={() => setPage(p)}
+                                                className={cn(
+                                                    "w-9 h-9 rounded-xl text-[10px] font-black transition-all active:scale-90",
+                                                    page === p 
+                                                        ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                                                        : "bg-white dark:bg-slate-800 text-secondary-400 hover:text-secondary-900 dark:hover:text-white border border-secondary-100 dark:border-secondary-700 shadow-sm"
+                                                )}
+                                            >
+                                                {p}
+                                            </button>
+                                        );
+                                    }
+                                    if (p === 2 || p === data.pagination.totalPages - 1) {
+                                        return <span key={p} className="text-secondary-300">...</span>;
+                                    }
+                                    return null;
+                                }).filter(Boolean).reduce((acc: any[], curr, i, arr) => {
+                                    if (curr?.type === 'span' && arr[i-1]?.type === 'span') return acc;
+                                    return [...acc, curr];
+                                }, [])}
+                            </div>
+
+                            <button
+                                onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))}
+                                disabled={page === data.pagination.totalPages}
+                                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

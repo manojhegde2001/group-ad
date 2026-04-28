@@ -75,11 +75,23 @@ export const adminService = {
     updateVerificationRequest: (id: string, data: { status: string }) =>
         apiClient.patch(`/api/admin/verification-requests/${id}`, data),
         
-    getVerificationRequests: () =>
-        apiClient.get<{ requests: any[] }>('/api/admin/verification-requests'),
+    getVerificationRequests: (params?: { page?: number; limit?: number }) => {
+        const query = new URLSearchParams();
+        if (params?.page) query.append('page', params.page.toString());
+        if (params?.limit) query.append('limit', params.limit.toString());
+        const url = `/api/admin/verification-requests${query.toString() ? '?' + query.toString() : ''}`;
+        return apiClient.get<{ requests: any[]; total: number; page: number; pages: number }>(url);
+    },
 
-    getReports: () =>
-        apiClient.get<{ reports: any[] }>('/api/admin/reports'),
+    getReports: (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
+        const query = new URLSearchParams();
+        if (params?.page) query.append('page', params.page.toString());
+        if (params?.limit) query.append('limit', params.limit.toString());
+        if (params?.search) query.append('q', params.search);
+        if (params?.status) query.append('status', params.status);
+        const url = `/api/admin/reports${query.toString() ? '?' + query.toString() : ''}`;
+        return apiClient.get<{ reports: any[]; total: number; page: number; pages: number }>(url);
+    },
     
     updateReportStatus: (data: { reportId: string; status: string; adminNote?: string }) =>
         apiClient.patch(`/api/admin/reports/${data.reportId}`, data),
@@ -111,14 +123,28 @@ export const adminService = {
     deleteVenue: (id: string) =>
         apiClient.delete(`/api/admin/venues/${id}`),
 
-    getAdminEvents: () =>
-        apiClient.get<{ events: any[] }>('/api/events?all=true'),
+    getAdminEvents: (params?: Record<string, any>) => {
+        const query = new URLSearchParams();
+        query.append('all', 'true');
+        if (params?.page) query.append('page', params.page.toString());
+        if (params?.limit) query.append('limit', params.limit.toString());
+        if (params?.search) query.append('search', params.search);
+        return apiClient.get<{ events: any[]; pagination: any }>('/api/events?' + query.toString());
+    },
 
     getAdminNotifications: () =>
         apiClient.get<{ notifications: any[]; count: number }>('/api/admin/notifications'),
 
     getAdminSearch: (query: string) =>
         apiClient.get<{ results: any[] }>(`/api/admin/search?q=${encodeURIComponent(query)}`),
+
+    getActivity: (params?: { page?: number; limit?: number }) => {
+        const query = new URLSearchParams();
+        if (params?.page) query.append('page', params.page.toString());
+        if (params?.limit) query.append('limit', params.limit.toString());
+        const url = `/api/admin/activity${query.toString() ? '?' + query.toString() : ''}`;
+        return apiClient.get<{ posts: any[]; total: number; page: number; pages: number }>(url);
+    },
 
     updateUser: (id: string, data: any) =>
         apiClient.patch<AdminUser>(`/api/admin/users/${id}`, data),

@@ -14,36 +14,50 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q') || '';
     const type = searchParams.get('type');
     const status = searchParams.get('status');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const skip = (page - 1) * limit;
 
-    const users = await prisma.user.findMany({
-      where: {
-        OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { username: { contains: query, mode: 'insensitive' } },
-          { email: { contains: query, mode: 'insensitive' } },
-        ],
-        ...(type ? { userType: type as any } : {}),
-        ...(status ? { verificationStatus: status as any } : {}),
-      },
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        email: true,
-        avatar: true,
-        userType: true,
-        verificationStatus: true,
-        createdAt: true,
-        companyName: true,
-        industry: true,
-        website: true,
-        websiteLabel: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
+    const where = {
+      OR: [
+        { name: { contains: query, mode: 'insensitive' as const } },
+        { username: { contains: query, mode: 'insensitive' as const } },
+        { email: { contains: query, mode: 'insensitive' as const } },
+      ],
+      ...(type ? { userType: type as any } : {}),
+      ...(status ? { verificationStatus: status as any } : {}),
+    };
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          email: true,
+          avatar: true,
+          userType: true,
+          verificationStatus: true,
+          createdAt: true,
+          companyName: true,
+          industry: true,
+          website: true,
+          websiteLabel: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where })
+    ]);
+
+    return NextResponse.json({ 
+      users,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
     });
-
-    return NextResponse.json({ users });
   } catch (error) {
     console.error('GET /api/admin/users error:', error);
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });

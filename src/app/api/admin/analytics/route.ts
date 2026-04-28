@@ -29,16 +29,28 @@ export async function GET() {
       }),
     ]);
 
-    // 2. Aggregate counts by day
+    // 2. Aggregate counts by day using frequency maps (O(N) approach)
+    const mapByDay = (items: { createdAt: Date }[]) => {
+      return items.reduce((acc: Record<string, number>, item) => {
+        const dateStr = format(startOfDay(item.createdAt), 'yyyy-MM-dd');
+        acc[dateStr] = (acc[dateStr] || 0) + 1;
+        return acc;
+      }, {});
+    };
+
+    const userMap = mapByDay(users);
+    const postMap = mapByDay(posts);
+    const likeMap = mapByDay(likes);
+
     const days = eachDayOfInterval({ start: thirtyDaysAgo, end: today });
     const trendData = days.map((day) => {
       const dateStr = format(day, 'yyyy-MM-dd');
       return {
         date: format(day, 'MMM dd'),
         fullDate: dateStr,
-        users: users.filter((u) => format(startOfDay(u.createdAt), 'yyyy-MM-dd') === dateStr).length,
-        posts: posts.filter((p) => format(startOfDay(p.createdAt), 'yyyy-MM-dd') === dateStr).length,
-        likes: likes.filter((l) => format(startOfDay(l.createdAt), 'yyyy-MM-dd') === dateStr).length,
+        users: userMap[dateStr] || 0,
+        posts: postMap[dateStr] || 0,
+        likes: likeMap[dateStr] || 0,
       };
     });
 

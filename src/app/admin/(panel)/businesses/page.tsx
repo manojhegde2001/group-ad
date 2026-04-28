@@ -7,7 +7,8 @@ import { Card } from '@/components/ui/card';
 import { 
   Check, X, Loader2, Building2, User, Calendar, Globe, 
   MapPin, ShieldCheck, ShieldAlert, Search,
-  UserPlus, UserMinus, ShieldQuestion, ArrowRight
+  UserPlus, UserMinus, ShieldQuestion, ArrowRight,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
@@ -23,7 +24,11 @@ export default function AdminBusinessesPage() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
   
   // Queries
-  const { data: requestsData, isLoading: requestsLoading } = useVerificationRequests();
+  const [requestsPage, setRequestsPage] = useState(1);
+  const { data: requestsData, isLoading: requestsLoading } = useVerificationRequests({
+    page: requestsPage,
+    limit: 10
+  });
   const requests = requestsData?.requests || [];
 
   // Mutations
@@ -321,6 +326,31 @@ export default function AdminBusinessesPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Requests Pagination */}
+          {requestsData && requestsData.pages > 1 && (
+            <div className="mt-10 px-8 py-6 bg-secondary-50/30 dark:bg-secondary-800/10 border-t border-secondary-100 dark:border-secondary-800 rounded-b-[2.5rem] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
+                Showing <span className="text-secondary-900 dark:text-white">{(requestsPage - 1) * 10 + 1}</span> to <span className="text-secondary-900 dark:text-white">{Math.min(requestsPage * 10, requestsData.total)}</span> of <span className="text-secondary-900 dark:text-white">{requestsData.total}</span> requests
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setRequestsPage(p => Math.max(1, p - 1))}
+                  disabled={requestsPage === 1}
+                  className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setRequestsPage(p => Math.min(requestsData.pages, p + 1))}
+                  disabled={requestsPage === requestsData.pages}
+                  className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </Card>

@@ -14,39 +14,38 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = (page - 1) * limit;
 
-    const [requests, total] = await Promise.all([
-      prisma.userTypeChangeRequest.findMany({
-        where: {
-          status: 'PENDING'
-        },
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
         include: {
           user: {
             select: {
-              id: true,
               name: true,
               username: true,
-              email: true,
-              avatar: true
-            }
-          }
+              avatar: true,
+            },
+          },
+          _count: {
+            select: {
+              postLikes: true,
+              postComments: true,
+            },
+          },
         },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        skip,
-        take: limit,
       }),
-      prisma.userTypeChangeRequest.count({ where: { status: 'PENDING' } })
+      prisma.post.count(),
     ]);
 
-    return NextResponse.json({ 
-      requests,
+    return NextResponse.json({
+      posts,
       total,
       page,
-      pages: Math.ceil(total / limit)
+      pages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error('GET /api/admin/verification-requests error:', error);
-    return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
+    console.error('GET /api/admin/activity error:', error);
+    return NextResponse.json({ error: 'Failed to fetch activity' }, { status: 500 });
   }
 }

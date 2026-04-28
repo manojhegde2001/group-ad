@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ShieldAlert, Clock, CheckCircle, XCircle,
   User, FileText, CalendarDays, MessageSquare,
   Search, Loader2, Eye,
-  ShieldQuestion, ArrowRight
+  ShieldQuestion, ArrowRight, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -35,9 +35,22 @@ export default function AdminReportsPage() {
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
 
+  const [page, setPage] = useState(1);
+  const limit = 20;
+
   // Queries
-  const { data, isLoading } = useReports();
+  const { data, isLoading } = useReports({
+    page,
+    limit,
+    search: search || undefined,
+    status: filter !== 'ALL' ? filter : undefined
+  });
   const reports = data?.reports || [];
+
+  // Reset page on filter/search change
+  useEffect(() => {
+    setPage(1);
+  }, [filter, search]);
 
   // Mutations
   const updateReportMutation = useUpdateReport();
@@ -46,13 +59,6 @@ export default function AdminReportsPage() {
     const adminNote = window.prompt('Add an optional admin note:');
     updateReportMutation.mutate({ reportId, status, adminNote: adminNote || undefined });
   };
-
-  const filteredReports = reports.filter(r => {
-    const matchesFilter = filter === 'ALL' || r.status === filter;
-    const matchesSearch = r.reason.toLowerCase().includes(search.toLowerCase()) ||
-      r.reporter.name.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
 
   const pendingCount = reports.filter(r => r.status === 'PENDING').length;
 
@@ -130,7 +136,7 @@ export default function AdminReportsPage() {
                     </div>
                   </td>
                 </tr>
-              ) : filteredReports.length === 0 ? (
+              ) : reports.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-6 opacity-40">
@@ -140,7 +146,7 @@ export default function AdminReportsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredReports.map((report) => {
+                reports.map((report) => {
                   const TypeIcon = typeIcons[report.targetType] || FileText;
                   const statusInfo = statusColors[report.status] || statusColors.PENDING;
                   const StatusIcon = statusInfo.icon;
@@ -240,6 +246,61 @@ export default function AdminReportsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {data && data.pages > 1 && (
+          <div className="px-8 py-6 bg-secondary-50/30 dark:bg-secondary-800/10 border-t border-secondary-100 dark:border-secondary-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
+              Showing <span className="text-secondary-900 dark:text-white">{(page - 1) * limit + 1}</span> to <span className="text-secondary-900 dark:text-white">{Math.min(page * limit, data.total)}</span> of <span className="text-secondary-900 dark:text-white">{data.total}</span> records
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="flex items-center gap-1.5 px-3">
+                {[...Array(data.pages)].map((_, i) => {
+                  const p = i + 1;
+                  if (p === 1 || p === data.pages || Math.abs(p - page) <= 1) {
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={cn(
+                          "w-9 h-9 rounded-xl text-[10px] font-black transition-all active:scale-90",
+                          page === p 
+                            ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                            : "bg-white dark:bg-slate-800 text-secondary-400 hover:text-secondary-900 dark:hover:text-white border border-secondary-100 dark:border-secondary-700 shadow-sm"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    );
+                  }
+                  if (p === 2 || p === data.pages - 1) {
+                    return <span key={p} className="text-secondary-300">...</span>;
+                  }
+                  return null;
+                }).filter(Boolean).reduce((acc: any[], curr, i, arr) => {
+                  if (curr?.type === 'span' && arr[i-1]?.type === 'span') return acc;
+                  return [...acc, curr];
+                }, [])}
+              </div>
+
+              <button
+                onClick={() => setPage(p => Math.min(data.pages, p + 1))}
+                disabled={page === data.pages}
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Summary Section */}

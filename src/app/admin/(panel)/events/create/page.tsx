@@ -139,6 +139,11 @@ export default function CreateEventPage() {
         }
     };
 
+    const toggleUserType = (ut: string) =>
+        set('targetUserTypes', form.targetUserTypes.includes(ut)
+            ? form.targetUserTypes.filter((x) => x !== ut)
+            : [...form.targetUserTypes, ut]);
+
     const validateStep = (currentStep: number) => {
         const newErrors: Partial<Record<keyof FormData, string>> = {};
         

@@ -36,6 +36,7 @@ export function CreateEventModal() {
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const reset = () => {
@@ -92,10 +93,33 @@ export function CreateEventModal() {
         }
     };
 
+    const validate = () => {
+        const newErrors: Record<string, string> = {};
+        if (!title.trim()) newErrors.title = 'Title is required';
+        else if (title.length < 3) newErrors.title = 'Title is too short';
+        
+        if (!description.trim()) newErrors.description = 'Description is required';
+        else if (description.length < 10) newErrors.description = 'Description is too short';
+        
+        if (!categoryId) newErrors.categoryId = 'Please select a category';
+        if (!startDate) newErrors.startDate = 'Start date is required';
+        if (!endDate) newErrors.endDate = 'End date is required';
+        
+        if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+            newErrors.endDate = 'End date must be after start date';
+        }
+        
+        if (!isOnline && !venue) newErrors.venue = 'Venue is required for in-person events';
+        if (isOnline && !meetingLink) newErrors.meetingLink = 'Meeting link is required for online events';
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !description || !startDate || !endDate || !categoryId) {
-            toast.error('Please fill in all required fields');
+        if (!validate()) {
+            toast.error('Please fix the errors in the form');
             return;
         }
 
@@ -217,7 +241,11 @@ export function CreateEventModal() {
                                 <Input
                                     placeholder="Enter event name"
                                     value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
+                                    onChange={(e) => {
+                                        setTitle(e.target.value);
+                                        if (errors.title) setErrors(prev => ({ ...prev, title: '' }));
+                                    }}
+                                    error={errors.title}
                                     className="rounded-xl border-secondary-200 dark:border-secondary-700 focus:ring-primary-500"
                                 />
                             </div>
@@ -239,14 +267,20 @@ export function CreateEventModal() {
                                 <label className="text-sm font-semibold mb-1.5 block text-secondary-700 dark:text-secondary-300">Category *</label>
                                 <select
                                     value={categoryId}
-                                    onChange={(e) => setCategoryId(e.target.value)}
-                                    className="w-full h-[44px] px-4 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-white dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                    onChange={(e) => {
+                                        setCategoryId(e.target.value);
+                                        if (errors.categoryId) setErrors(prev => ({ ...prev, categoryId: '' }));
+                                    }}
+                                    className={`w-full h-[44px] px-4 rounded-xl border bg-white dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 transition-all ${
+                                        errors.categoryId ? 'border-red-500 focus:ring-red-400/20' : 'border-secondary-200 dark:border-secondary-700 focus:ring-primary-500/20'
+                                    }`}
                                 >
                                     <option value="">Select Category</option>
                                     {categories?.map((c) => (
                                         <option key={c.id} value={c.id}>{c.name}</option>
                                     ))}
                                 </select>
+                                {errors.categoryId && <p className="text-red-500 text-[10px] mt-1 ml-1 font-medium">{errors.categoryId}</p>}
                             </div>
                         </div>
 
@@ -257,7 +291,11 @@ export function CreateEventModal() {
                                 <Input
                                     type="datetime-local"
                                     value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
+                                    onChange={(e) => {
+                                        setStartDate(e.target.value);
+                                        if (errors.startDate) setErrors(prev => ({ ...prev, startDate: '' }));
+                                    }}
+                                    error={errors.startDate}
                                     className="rounded-xl border-secondary-200 dark:border-secondary-700 focus:ring-primary-500"
                                 />
                             </div>
@@ -266,7 +304,11 @@ export function CreateEventModal() {
                                 <Input
                                     type="datetime-local"
                                     value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
+                                    onChange={(e) => {
+                                        setEndDate(e.target.value);
+                                        if (errors.endDate) setErrors(prev => ({ ...prev, endDate: '' }));
+                                    }}
+                                    error={errors.endDate}
                                     className="rounded-xl border-secondary-200 dark:border-secondary-700 focus:ring-primary-500"
                                 />
                             </div>
@@ -300,7 +342,11 @@ export function CreateEventModal() {
                                         <Input
                                             placeholder="https://zoom.us/j/..."
                                             value={meetingLink}
-                                            onChange={(e) => setMeetingLink(e.target.value)}
+                                            onChange={(e) => {
+                                                setMeetingLink(e.target.value);
+                                                if (errors.meetingLink) setErrors(prev => ({ ...prev, meetingLink: '' }));
+                                            }}
+                                            error={errors.meetingLink}
                                             className="pl-10 rounded-xl border-secondary-200 dark:border-secondary-700 focus:ring-primary-500"
                                         />
                                     </div>
@@ -313,7 +359,11 @@ export function CreateEventModal() {
                                         <Input
                                             placeholder="Enter address or venue name"
                                             value={venue}
-                                            onChange={(e) => setVenue(e.target.value)}
+                                            onChange={(e) => {
+                                                setVenue(e.target.value);
+                                                if (errors.venue) setErrors(prev => ({ ...prev, venue: '' }));
+                                            }}
+                                            error={errors.venue}
                                             className="pl-10 rounded-xl border-secondary-200 dark:border-secondary-700 focus:ring-primary-500"
                                         />
                                     </div>
@@ -327,7 +377,11 @@ export function CreateEventModal() {
                             <Textarea
                                 placeholder="What is this event about? Highlights, guest speakers, agenda..."
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
+                                onChange={(e) => {
+                                    setDescription(e.target.value);
+                                    if (errors.description) setErrors(prev => ({ ...prev, description: '' }));
+                                }}
+                                error={errors.description}
                                 rows={4}
                                 className="rounded-xl border-secondary-200 dark:border-secondary-700 focus:ring-primary-500 resize-none"
                             />

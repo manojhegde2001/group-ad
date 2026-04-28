@@ -122,6 +122,14 @@ body {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Custom scrollbar */

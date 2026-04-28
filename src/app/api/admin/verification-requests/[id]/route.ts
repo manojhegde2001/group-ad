@@ -41,13 +41,22 @@ export async function PATCH(
     });
 
     if (status === 'APPROVED') {
-      // Update the user status to VERIFIED
+      // Update the user status to VERIFIED and update userType + business details
       await prisma.user.update({
         where: { id: typeChangeRequest.userId },
         data: {
           verificationStatus: 'VERIFIED',
           verifiedAt: new Date(),
-          verificationNote: reviewNote
+          verificationNote: reviewNote,
+          userType: typeChangeRequest.toType,
+          companyName: typeChangeRequest.companyName,
+          companyLogo: typeChangeRequest.companyLogo,
+          turnover: typeChangeRequest.turnover,
+          companySize: typeChangeRequest.companySize,
+          industry: typeChangeRequest.industry,
+          gstNumber: typeChangeRequest.gstNumber,
+          establishedYear: typeChangeRequest.establishedYear,
+          companyWebsite: typeChangeRequest.companyWebsite,
         }
       });
 

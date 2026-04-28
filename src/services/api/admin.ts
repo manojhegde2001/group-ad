@@ -69,8 +69,8 @@ export const adminService = {
         return apiClient.get(url);
     },
     
-    updateUserStatus: (userId: string, data: { status: string }) =>
-        apiClient.patch(`/api/admin/users/${userId}/status`, data),
+    updateUserStatus: (userId: string, data: { status: string; userType?: string; note?: string }) =>
+        apiClient.patch(`/api/admin/users/${userId}/verify`, data),
     
     updateVerificationRequest: (id: string, data: { status: string }) =>
         apiClient.patch(`/api/admin/verification-requests/${id}`, data),

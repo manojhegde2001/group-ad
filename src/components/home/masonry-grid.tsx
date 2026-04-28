@@ -7,61 +7,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
 
-const DEMO_POSTS = [
-  {
-    id: 1,
-    title: 'Modern UI Design Trends 2026',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400',
-    author: { name: 'Sarah Johnson', avatar: '' },
-    category: 'Design',
-    likes: 1234,
-    comments: 45,
-  },
-  {
-    id: 2,
-    title: 'Build Scalable Web Apps',
-    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
-    author: { name: 'Mike Chen', avatar: '' },
-    category: 'Technology',
-    likes: 892,
-    comments: 32,
-  },
-  {
-    id: 3,
-    title: 'Marketing Strategies That Work',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400',
-    author: { name: 'Emma Wilson', avatar: '' },
-    category: 'Business',
-    likes: 2156,
-    comments: 78,
-  },
-  {
-    id: 4,
-    title: 'Sustainable Living Tips',
-    image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400',
-    author: { name: 'Alex Green', avatar: '' },
-    category: 'Lifestyle',
-    likes: 567,
-    comments: 23,
-  },
-  {
-    id: 5,
-    title: 'AI & Machine Learning Basics',
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400',
-    author: { name: 'David Kim', avatar: '' },
-    category: 'Technology',
-    likes: 3421,
-    comments: 156,
-  },
-  {
-    id: 6,
-    title: 'Photography Composition Guide',
-    image: 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400',
-    author: { name: 'Lisa Brown', avatar: '' },
-    category: 'Photography',
-    likes: 789,
-    comments: 34,
-  },
+const DEMO_POSTS:any = [
 ];
 
 export function MasonryGrid() {

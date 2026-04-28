@@ -97,6 +97,7 @@ export default function CreateEventPage() {
     const router = useRouter();
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
     const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([]);
     const [form, setForm] = useState<FormData>({
         title: '',
@@ -127,11 +128,47 @@ export default function CreateEventPage() {
             .catch(() => {});
     }, []);
 
-    const set = (key: keyof FormData, val: any) => setForm((f) => ({ ...f, [key]: val }));
-    const toggleUserType = (ut: string) =>
-        set('targetUserTypes', form.targetUserTypes.includes(ut)
-            ? form.targetUserTypes.filter((x) => x !== ut)
-            : [...form.targetUserTypes, ut]);
+    const set = (key: keyof FormData, val: any) => {
+        setForm((f) => ({ ...f, [key]: val }));
+        if (errors[key]) {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next[key];
+                return next;
+            });
+        }
+    };
+
+    const validateStep = (currentStep: number) => {
+        const newErrors: Partial<Record<keyof FormData, string>> = {};
+        
+        if (currentStep === 0) {
+            if (form.title.length < 3) newErrors.title = 'Title must be at least 3 characters';
+            if (form.description.length < 10) newErrors.description = 'Description must be at least 10 characters';
+            if (!form.eventType) newErrors.eventType = 'Please select an event type';
+        }
+        
+        if (currentStep === 1) {
+            if (!form.startDate) newErrors.startDate = 'Start date is required';
+            if (!form.endDate) newErrors.endDate = 'End date is required';
+            if (form.startDate && form.endDate && new Date(form.startDate) >= new Date(form.endDate)) {
+                newErrors.endDate = 'End date must be after start date';
+            }
+            if (!form.isOnline && !form.venue) newErrors.venue = 'Venue is required for in-person events';
+            if (form.isOnline && !form.meetingLink) newErrors.meetingLink = 'Meeting link is required for online events';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleNext = () => {
+        if (validateStep(step)) {
+            setStep(s => s + 1);
+        } else {
+            toast.error('Please fix the errors before continuing');
+        }
+    };
 
     const handleSubmit = async (statusOverride: 'DRAFT' | 'PUBLISHED' = form.status) => {
         setLoading(true);
@@ -139,6 +176,8 @@ export default function CreateEventPage() {
             const payload = {
                 ...form,
                 status: statusOverride,
+                startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
+                endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
                 maxAttendees: form.maxAttendees ? parseInt(form.maxAttendees) : undefined,
                 meetingLink: form.meetingLink || undefined,
                 categoryId: form.categoryId || undefined,
@@ -209,23 +248,33 @@ export default function CreateEventPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">Event Title *</label>
-                            <input
-                                value={form.title}
-                                onChange={(e) => set('title', e.target.value)}
-                                placeholder="e.g. Q1 Business Networking Meetup"
-                                className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-                            />
+                                <input
+                                    value={form.title}
+                                    onChange={(e) => set('title', e.target.value)}
+                                    placeholder="e.g. Q1 Business Networking Meetup"
+                                    className={`w-full px-4 py-2.5 rounded-xl border bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 transition-all ${
+                                        errors.title 
+                                        ? 'border-red-500 focus:ring-red-400' 
+                                        : 'border-secondary-200 dark:border-secondary-700 focus:ring-primary-400'
+                                    }`}
+                                />
+                                {errors.title && <p className="text-red-500 text-[11px] mt-1 ml-1 font-medium">{errors.title}</p>}
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">Description *</label>
-                            <textarea
-                                value={form.description}
-                                onChange={(e) => set('description', e.target.value)}
-                                rows={5}
-                                placeholder="Describe the event, agenda, what attendees should expect..."
-                                className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
-                            />
+                                <textarea
+                                    value={form.description}
+                                    onChange={(e) => set('description', e.target.value)}
+                                    rows={5}
+                                    placeholder="Describe the event, agenda, what attendees should expect..."
+                                    className={`w-full px-4 py-2.5 rounded-xl border bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none transition-all ${
+                                        errors.description 
+                                        ? 'border-red-500 focus:ring-red-400' 
+                                        : 'border-secondary-200 dark:border-secondary-700'
+                                    }`}
+                                />
+                                {errors.description && <p className="text-red-500 text-[11px] mt-1 ml-1 font-medium">{errors.description}</p>}
                         </div>
 
                         <div>
@@ -260,18 +309,28 @@ export default function CreateEventPage() {
                                 <input
                                     type="datetime-local"
                                     value={form.startDate}
-                                    onChange={(e) => set('startDate', e.target.value + ':00Z')}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                    onChange={(e) => set('startDate', e.target.value)}
+                                    className={`w-full px-4 py-2.5 rounded-xl border bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 transition-all ${
+                                        errors.startDate 
+                                        ? 'border-red-500 focus:ring-red-400' 
+                                        : 'border-secondary-200 dark:border-secondary-700 focus:ring-primary-400'
+                                    }`}
                                 />
+                                {errors.startDate && <p className="text-red-500 text-[11px] mt-1 ml-1 font-medium">{errors.startDate}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">End Date & Time *</label>
                                 <input
                                     type="datetime-local"
                                     value={form.endDate}
-                                    onChange={(e) => set('endDate', e.target.value + ':00Z')}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                    onChange={(e) => set('endDate', e.target.value)}
+                                    className={`w-full px-4 py-2.5 rounded-xl border bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 transition-all ${
+                                        errors.endDate 
+                                        ? 'border-red-500 focus:ring-red-400' 
+                                        : 'border-secondary-200 dark:border-secondary-700 focus:ring-primary-400'
+                                    }`}
                                 />
+                                {errors.endDate && <p className="text-red-500 text-[11px] mt-1 ml-1 font-medium">{errors.endDate}</p>}
                             </div>
                         </div>
 
@@ -303,8 +362,13 @@ export default function CreateEventPage() {
                                         value={form.venue}
                                         onChange={(e) => set('venue', e.target.value)}
                                         placeholder="e.g. WeWork, Koramangala"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                        className={`w-full px-4 py-2.5 rounded-xl border bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 transition-all ${
+                                            errors.venue 
+                                            ? 'border-red-500 focus:ring-red-400' 
+                                            : 'border-secondary-200 dark:border-secondary-700 focus:ring-primary-400'
+                                        }`}
                                     />
+                                    {errors.venue && <p className="text-red-500 text-[11px] mt-1 ml-1 font-medium">{errors.venue}</p>}
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -337,8 +401,13 @@ export default function CreateEventPage() {
                                 value={form.meetingLink}
                                 onChange={(e) => set('meetingLink', e.target.value)}
                                 placeholder="https://meet.google.com/xxx or https://zoom.us/j/xxx"
-                                className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                                className={`w-full px-4 py-2.5 rounded-xl border bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 transition-all ${
+                                    errors.meetingLink 
+                                    ? 'border-red-500 focus:ring-red-400' 
+                                    : 'border-secondary-200 dark:border-secondary-700 focus:ring-primary-400'
+                                }`}
                             />
+                            {errors.meetingLink && <p className="text-red-500 text-[11px] mt-1 ml-1 font-medium">{errors.meetingLink}</p>}
                         </div>
                     </div>
                 )}
@@ -523,9 +592,8 @@ export default function CreateEventPage() {
                     {step < steps.length - 1 ? (
                         <button
                             type="button"
-                            onClick={() => setStep((s) => s + 1)}
-                            disabled={!canNext()}
-                            className="flex items-center gap-1.5 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                            onClick={handleNext}
+                            className="flex items-center gap-1.5 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-all"
                         >
                             Next <ChevronRight className="w-4 h-4" />
                         </button>

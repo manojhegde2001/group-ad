@@ -69,6 +69,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const reportMutation = useReport();
     const blockMutation = useBlock();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
 
     // Derived State
     const liked = post?.isLikedByUser || false;
@@ -492,7 +493,10 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             ) : comments.length === 0 ? (
                                 <p className="text-sm text-gray-400 py-4">No comments yet. Share your thoughts!</p>
                             ) : (
-                                <div className="space-y-6">
+                                <div className={cn(
+                                    "space-y-3 md:space-y-6 overflow-y-auto scrollbar-hide pr-1 transition-all duration-300",
+                                    !isCommentsExpanded ? "max-h-[100px] md:max-h-none" : "max-h-none"
+                                )}>
                                     {comments.map((c) => (
                                         <div key={c.id} className="flex gap-3">
                                             <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700">
@@ -503,11 +507,28 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                                     <span className="text-sm font-medium text-gray-900 dark:text-white hover:underline cursor-pointer">{c.user.name}</span>
                                                     <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
                                                 </div>
-                                                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{c.content}</p>
+                                                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{c.content}</p>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
+                            )}
+
+                            {comments.length > 3 && !isCommentsExpanded && (
+                                <button 
+                                    onClick={() => setIsCommentsExpanded(true)}
+                                    className="text-xs font-bold text-primary-600 dark:text-primary-400 mt-3 md:hidden hover:underline flex items-center gap-1"
+                                >
+                                    View all {comments.length} comments
+                                </button>
+                            )}
+                            {isCommentsExpanded && (
+                                <button 
+                                    onClick={() => setIsCommentsExpanded(false)}
+                                    className="text-xs font-bold text-gray-500 mt-3 md:hidden hover:underline"
+                                >
+                                    Show less
+                                </button>
                             )}
                         </div>
                     </div>

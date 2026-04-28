@@ -45,7 +45,7 @@ export function MasonryGrid() {
           className="flex -ml-6 w-auto"
           columnClassName="pl-6 bg-clip-padding"
         >
-          {DEMO_POSTS.map((post) => (
+          {DEMO_POSTS.map((post:any) => (
             <div key={post.id} className="mb-6">
               <Card variant="elevated" className="overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow">
                 {/* Image */}

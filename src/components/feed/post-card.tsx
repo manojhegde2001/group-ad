@@ -57,6 +57,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
 
     const handleLike = (e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         requireAuth(() => {
             if (likeMutation.isPending) return;
@@ -74,6 +75,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     };
 
     const handleSave = (e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         requireAuth(() => openSaveToBoard(post.id));
     };
@@ -95,6 +97,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     };
 
     const handleDoubleTap = (e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!liked) handleLike(e);
         setShowHeartPop(true);
@@ -248,7 +251,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                             {saved ? 'Saved' : 'Save'}
                         </button>
                     </div>
-                    <div className="flex items-center justify-between w-full pointer-events-auto" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between w-full pointer-events-auto" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
                         <div className="flex items-center gap-2">
                              <button onClick={handleLike} className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300",

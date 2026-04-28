@@ -101,7 +101,7 @@ export function TrendingCategories() {
                     href={`/explore/${cat.slug}`}
                     className="
                       relative block w-full h-48
-                      rounded-2xl overflow-hidden 
+                      rounded-[2rem] overflow-hidden 
                       group transition-all duration-700 hover:-translate-y-2
                       shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]
                       dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]
@@ -118,11 +118,11 @@ export function TrendingCategories() {
                     <div className="absolute inset-0 bg-primary-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     
                     {/* Glass Rim */}
-                    <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
+                    <div className="absolute inset-0 border border-white/10 rounded-[2rem] pointer-events-none" />
 
                     {/* Top Badge */}
                     <div className="absolute top-5 left-5 right-5 flex justify-between items-start z-10">
-                      <div className="w-12 h-12 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center text-2xl shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
+                      <div className="w-12 h-12 rounded-[1.5rem] bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center text-2xl shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
                         {cat.icon || '✨'}
                       </div>
                       <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-black text-white uppercase tracking-widest shadow-xl flex items-center gap-1.5 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500">

@@ -6,16 +6,17 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
     Heart, Share2, Bookmark, BadgeCheck,
-    Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag
+    Link2, Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag,
+    ExternalLink, User, X
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
-import { useSaveToBoard, useSharePost, useCreatePostModal } from '@/hooks/use-feed';
+import { useSaveToBoard, useSharePost, useCreatePostModal, usePostDetail } from '@/hooks/use-feed';
 import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
-import { Popover } from 'rizzui';
+import { Drawer, Popover } from 'rizzui';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PostCardProps {
@@ -32,6 +33,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
     const { open: openSaveToBoard } = useSaveToBoard();
+    const { openPost } = usePostDetail();
     const { open: openCreatePostModal } = useCreatePostModal();
     const { activePostId, source, open: openShare, close: closeShare } = useSharePost();
     const likeMutation = useLikePost();
@@ -127,7 +129,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
         <Link 
             href={`/posts/${post.id}`}
             scroll={false}
-            className="group relative rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] transition-all duration-300 block"
+            className="group relative rounded-[1.2rem] md:rounded-[2rem] overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 block border border-secondary-100/50 dark:border-secondary-800/30"
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (
@@ -174,23 +176,130 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                     )}
                 </AnimatePresence>
 
-                {/* Hover Overlays */}
-                <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-3 pointer-events-none bg-black/20">
-                    <div className="flex items-start justify-end gap-2 w-full pointer-events-auto" onClick={e => e.stopPropagation()}>
-                        <button onClick={handleSave} className={`w-9 h-9 rounded-xl flex items-center justify-center backdrop-blur-xl shadow-lg transition-all ${saved ? 'bg-[#E60023] text-white' : 'bg-black/50 text-white hover:bg-black/70'}`}>
-                            <Bookmark className={`w-4 h-4 ${saved ? 'fill-white' : ''}`} />
+                {/* Hover Overlays - Hidden on mobile */}
+                <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:flex flex-col justify-between p-4 pointer-events-none bg-black/10">
+                    <div className="flex items-start justify-end w-full pointer-events-auto" onClick={e => e.stopPropagation()}>
+                        <button 
+                            onClick={handleSave} 
+                            className={cn(
+                                "h-11 px-5 rounded-full flex items-center justify-center backdrop-blur-md shadow-xl transition-all duration-300 font-bold text-sm",
+                                saved ? 'bg-[#E60023] text-white scale-105' : 'bg-[#E60023] text-white hover:bg-[#ad081b] active:scale-95'
+                            )}
+                        >
+                            {saved ? 'Saved' : 'Save'}
                         </button>
                     </div>
-                    <div className="flex items-end justify-end w-full pointer-events-auto" onClick={e => e.stopPropagation()}>
-                        <button onClick={handleLike} className={`h-9 px-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider backdrop-blur-xl shadow-lg border ${liked ? 'bg-red-500 text-white' : 'bg-black/50 text-white hover:bg-black/70'}`}>
-                            <Heart className={`w-3.5 h-3.5 ${liked ? 'fill-white' : ''}`} />
-                        </button>
+                    <div className="flex items-center justify-between w-full pointer-events-auto" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-2">
+                             <button onClick={handleLike} className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300",
+                                liked ? 'bg-white text-red-500' : 'bg-white/80 text-secondary-900 hover:bg-white'
+                            )}>
+                                <Heart className={cn("w-5 h-5", liked && "fill-current")} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
             {post.content && (
-                <div className="px-4 pt-3 pb-4">
-                    <p className="text-[13px] font-semibold text-secondary-900 dark:text-secondary-100 leading-[1.4] line-clamp-2 tracking-tight">{post.content}</p>
+                <div className="px-2 md:px-4 py-2.5 md:py-3 flex items-start justify-between gap-1">
+                    <p className="text-[12px] md:text-[14px] font-bold text-secondary-900 dark:text-secondary-100 leading-tight line-clamp-2 tracking-tight flex-1">
+                        {post.content}
+                    </p>
+                    <div className="md:hidden shrink-0 pt-0.5">
+                        <button 
+                            onClick={e => { e.preventDefault(); e.stopPropagation(); setIsMenuOpen(true); }}
+                            className="p-1 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 active:scale-90 transition-all"
+                        >
+                            <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        <Drawer
+                            isOpen={isMenuOpen}
+                            onClose={() => setIsMenuOpen(false)}
+                            placement="bottom"
+                            containerClassName="w-full h-auto max-h-[92vh] bg-white dark:bg-secondary-900 rounded-t-[2.5rem] overflow-hidden flex flex-col"
+                        >
+                            <div className="p-6 pb-10 flex flex-col gap-4 overflow-y-auto relative">
+                                <div className="w-12 h-1.5 bg-secondary-200 dark:bg-secondary-800 rounded-full mx-auto mb-2 shrink-0" />
+                                
+                                {/* Close Button Top Right */}
+                                <button 
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="absolute top-5 right-5 p-2 rounded-full bg-secondary-100 dark:bg-secondary-800 text-secondary-500 active:scale-90 transition-all"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                                
+                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] px-2">Post Options</p>
+                                
+                                <div className="grid grid-cols-1 gap-2">
+                                    {/* View Post */}
+                                    <button 
+                                        onClick={e => { e.preventDefault(); e.stopPropagation(); openPost(post.id, post); setIsMenuOpen(false); }}
+                                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]"
+                                    >
+                                        <div className="w-9 h-9 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm">
+                                            <ExternalLink className="w-4.5 h-4.5 text-primary-500" />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="block font-bold text-secondary-900 dark:text-white">View Full Post</span>
+                                            <span className="text-[10px] text-secondary-500 uppercase font-bold tracking-wider">Open details</span>
+                                        </div>
+                                    </button>
+
+                                    {/* Save Post */}
+                                    <button 
+                                        onClick={e => { e.preventDefault(); e.stopPropagation(); requireAuth(() => { openSaveToBoard(post.id); setIsMenuOpen(false); }); }}
+                                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]"
+                                    >
+                                        <div className="w-9 h-9 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm">
+                                            <Bookmark className={cn("w-4.5 h-4.5", (post as any).isBookmarked ? "text-primary-500 fill-primary-500" : "text-secondary-600")} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="block font-bold text-secondary-900 dark:text-white">{(post as any).isBookmarked ? "Saved to Board" : "Save to Board"}</span>
+                                            <span className="text-[10px] text-secondary-500 uppercase font-bold tracking-wider">Keep for later</span>
+                                        </div>
+                                    </button>
+
+                                    {/* User Profile */}
+                                    {post.user && (
+                                        <button 
+                                            onClick={e => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${post.user.username}`); setIsMenuOpen(false); }}
+                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]"
+                                        >
+                                            <div className="w-9 h-9 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm">
+                                                <User className="w-4.5 h-4.5 text-secondary-600" />
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="block font-bold text-secondary-900 dark:text-white">Visit Profile</span>
+                                                <span className="text-[10px] text-secondary-500 uppercase font-bold tracking-wider">@{post.user.username}</span>
+                                            </div>
+                                        </button>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-2 mt-1">
+                                        <button 
+                                            onClick={e => { e.preventDefault(); e.stopPropagation(); openShare(post.id, 'feed'); setIsMenuOpen(false); }}
+                                            className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]"
+                                        >
+                                            <Share2 className="w-4 h-4 text-secondary-600" />
+                                            <span className="font-bold text-xs text-secondary-900 dark:text-white">Share</span>
+                                        </button>
+
+                                        <button 
+                                            onClick={e => { e.preventDefault(); e.stopPropagation(); handleReport(); setIsMenuOpen(false); }}
+                                            className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-[0.98]"
+                                        >
+                                            <Flag className="w-4 h-4 text-red-500" />
+                                            <span className="font-bold text-xs text-red-600">Report</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </Drawer>
+                    </div>
                 </div>
             )}
         </Link>

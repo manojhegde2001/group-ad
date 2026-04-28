@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 import { useMe } from '@/hooks/use-api/use-user';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -28,6 +29,8 @@ import {
   PlusCircle,
   User,
   Layout,
+  Sun,
+  Moon
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -89,6 +92,7 @@ export function Navbar() {
   const createPostModal = useCreatePostModal();
   const { totalUnread: unreadMessages } = useUnreadMessages();
   const { unreadCount: unreadNotifications } = useUnreadNotifications();
+  const { theme, setTheme } = useTheme();
   const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
@@ -146,11 +150,10 @@ export function Navbar() {
           </div>
 
           {/* Search Bar (Static/Small for Guests) */}
-          <div className="flex-1 hidden md:block">
+          <div className="flex-1">
             <SearchBar className="w-full" />
           </div>
 
-          {/* Auth Buttons */}
           <div className="flex items-center gap-3 shrink-0">
              {pathname !== '/auth' && (
                <>
@@ -180,7 +183,7 @@ export function Navbar() {
               </Link>
           </div>
 
-          <div className="flex-1 hidden md:flex items-center">
+          <div className="flex-1 flex items-center">
               <SearchBar className="w-full" />
           </div>
 
@@ -375,6 +378,27 @@ export function Navbar() {
                      <DrawerLink href="https://admin.groupad.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
                 )}
                 <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
+            </div>
+
+            {/* Appearance Section */}
+            <div className="space-y-1">
+                <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Appearance</p>
+                <div className="px-4">
+                    <button 
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 active:scale-[0.98] transition-all"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm text-secondary-600 dark:text-secondary-400">
+                                {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                            </div>
+                            <span className="font-bold text-secondary-900 dark:text-white">Theme</span>
+                        </div>
+                        <div className="px-3 py-1 bg-white dark:bg-secondary-900 rounded-lg text-xs font-black uppercase tracking-wider text-secondary-500 shadow-sm border border-secondary-100 dark:border-secondary-800">
+                            {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                        </div>
+                    </button>
+                </div>
             </div>
         </div>
 

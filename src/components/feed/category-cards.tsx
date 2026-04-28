@@ -28,7 +28,7 @@ export function CategoryCards() {
   return (
     <div className="w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
           {categories.map((cat: any) => {
             const bgImage = cat.banner || DEFAULT_CATEGORY_IMAGE;
 
@@ -39,8 +39,8 @@ export function CategoryCards() {
                 className="
                   group/card relative
                   w-full aspect-[3/4]
-                  overflow-hidden rounded-2xl
-                  shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.25)]
+                  overflow-hidden rounded-[2rem]
+                  shadow-sm hover:shadow-2xl
                   hover:-translate-y-3
                   transition-all duration-700 cubic-bezier(0.2, 0, 0, 1)
                   border border-secondary-100/50 dark:border-secondary-800/30

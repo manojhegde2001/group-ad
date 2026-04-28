@@ -19,7 +19,13 @@ import { toast } from 'react-hot-toast';
 import type { PostWithRelations } from '@/types';
 
 const breakpointCols = {
-    default: 5, 1536: 4, 1280: 4, 1024: 3, 768: 2, 640: 2, 0: 1,
+    default: 5,
+    1920: 5,
+    1536: 4,
+    1280: 4,
+    1024: 3,
+    768: 2,
+    480: 2,
 };
 
 export default function ProfileView({ username }: { username: string }) {
@@ -303,11 +309,11 @@ export default function ProfileView({ username }: { username: string }) {
                 ) : (
                     <Masonry
                         breakpointCols={breakpointCols}
-                        className="flex -ml-4 w-auto"
-                        columnClassName="pl-4 bg-clip-padding"
+                        className="flex -ml-2 sm:-ml-4 md:-ml-6 w-auto"
+                        columnClassName="pl-2 sm:pl-4 md:pl-6 bg-clip-padding"
                     >
                         {createdPosts.map((post: PostWithRelations) => (
-                            <div key={post.id} className="mb-4">
+                            <div key={post.id} className="mb-2 sm:mb-4 md:mb-6">
                                 <PostCard post={post} />
                             </div>
                         ))}

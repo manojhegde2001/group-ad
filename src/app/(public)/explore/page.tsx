@@ -7,7 +7,11 @@ import { SearchBar } from '@/components/layout/search-bar';
 
 export default function ExplorePage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col overflow-x-hidden pt-4 md:pt-4">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col overflow-x-hidden pt-16 md:pt-0">
+      {/* Mobile Fixed Search - Professional Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl px-4 py-3 border-b border-secondary-100 dark:border-secondary-800/50">
+          <SearchBar className="w-full" autoFocus />
+      </div>
       {/* Hero */}
       <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-900/20 border-b border-secondary-100 dark:border-secondary-900/50 px-4 sm:px-6 pt-12 pb-12 md:pt-20 md:pb-16">
         {/* Animated Background Element */}
@@ -24,18 +28,13 @@ export default function ExplorePage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-secondary-900 dark:text-white uppercase leading-none">
             Discovery <span className="text-primary-600 dark:text-primary-400 italic">Central</span>
           </h1>
-
           <p className="text-secondary-500 dark:text-secondary-400 text-xs sm:text-sm md:text-base max-w-lg mx-auto font-black uppercase tracking-[0.3em] leading-relaxed opacity-80">
             The pulse of Group Ad. Find trending communities, local hubs, and premium creators.
           </p>
-
-          <div className="max-w-md mx-auto pt-4 md:hidden">
-            <SearchBar className="w-full" />
-          </div>
         </div>
       </div>
 
-      <div className="flex-1 bg-white dark:bg-[#0a0a0f] space-y-12 py-10 pb-24">
+      <div className="flex-1 bg-white dark:bg-[#0a0a0f] space-y-16 py-10 pb-24">
         {/* Section 1: Trending */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <TrendingCategories />

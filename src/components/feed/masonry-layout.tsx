@@ -19,8 +19,8 @@ export function MasonryLayout({ children }: MasonryLayoutProps) {
   return (
     <Masonry
       breakpointCols={breakpointColumns}
-      className="flex -ml-6 w-auto"
-      columnClassName="pl-6 bg-clip-padding"
+      className="flex -ml-3 w-auto"
+      columnClassName="pl-3 bg-clip-padding"
     >
       {children}
     </Masonry>

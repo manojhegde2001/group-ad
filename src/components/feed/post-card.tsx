@@ -129,7 +129,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
         <Link 
             href={`/posts/${post.id}`}
             scroll={false}
-            className="group relative rounded-[1.2rem] md:rounded-[2rem] overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 block border border-secondary-100/50 dark:border-secondary-800/30"
+            className="group relative rounded-xl overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 block border border-secondary-100/50 dark:border-secondary-800/30"
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (
@@ -157,14 +157,14 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                             );
                         })()}
                         {post.images.length > 1 && (
-                            <div className="absolute top-3 left-3 bg-white/95 dark:bg-secondary-900/95 backdrop-blur-md text-secondary-900 dark:text-white text-[10.5px] px-2.5 py-1 rounded-xl font-black border border-secondary-200/50 shadow-lg z-20">
+                            <div className="absolute top-3 left-3 bg-white/95 dark:bg-secondary-900/95 backdrop-blur-md text-secondary-900 dark:text-white text-[10px] px-2.5 py-1 rounded-xl font-black border border-secondary-200/50 shadow-lg z-20">
                                 +{post.images.length - 1}
                             </div>
                         )}
                     </div>
                 ) : (
                         <div className={`w-full min-h-[170px] bg-gradient-to-br ${gradient} p-6 flex items-start transition-all duration-500 group-hover:brightness-105`}>
-                            <p className="text-white text-[14px] font-bold leading-relaxed line-clamp-6 tracking-tight drop-shadow-md">{post.content}</p>
+                            <p className="text-white text-[13px] md:text-[12px] font-bold md:font-semibold leading-relaxed line-clamp-6 tracking-tight drop-shadow-md">{post.content}</p>
                         </div>
                 )}
 
@@ -200,14 +200,14 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
                                             >
                                                 <Edit2 className="w-4 h-4 text-blue-500" />
-                                                <span className="text-sm font-bold text-secondary-900 dark:text-white">Edit Post</span>
+                                                <span className="text-[13px] font-bold text-secondary-900 dark:text-white">Edit Post</span>
                                             </button>
                                             <button 
                                                 onClick={handleDeletePost}
                                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left group/del"
                                             >
                                                 <Trash2 className="w-4 h-4 text-red-500" />
-                                                <span className="text-sm font-bold text-red-500">Delete Post</span>
+                                                <span className="text-[13px] font-bold text-red-500">Delete Post</span>
                                             </button>
                                         </>
                                     ) : (
@@ -216,7 +216,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left"
                                         >
                                             <Flag className="w-4 h-4 text-red-500" />
-                                            <span className="text-sm font-bold text-red-500">Report Post</span>
+                                            <span className="text-[13px] font-bold text-red-500">Report Post</span>
                                         </button>
                                     )}
                                     <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
@@ -225,14 +225,14 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
                                     >
                                         <Share2 className="w-4 h-4 text-secondary-500" />
-                                        <span className="text-sm font-bold text-secondary-900 dark:text-white">Share</span>
+                                        <span className="text-[13px] font-bold text-secondary-900 dark:text-white">Share</span>
                                     </button>
                                     <button 
                                         onClick={() => { router.push(`/posts/${post.id}`); }}
                                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
                                     >
                                         <ExternalLink className="w-4 h-4 text-secondary-500" />
-                                        <span className="text-sm font-bold text-secondary-900 dark:text-white">Expand Visual</span>
+                                        <span className="text-[13px] font-bold text-secondary-900 dark:text-white">Expand Visual</span>
                                     </button>
                                 </div>
                             </Popover.Content>
@@ -241,7 +241,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                         <button 
                             onClick={handleSave} 
                             className={cn(
-                                "h-11 px-5 rounded-full flex items-center justify-center backdrop-blur-md shadow-xl transition-all duration-300 font-bold text-sm",
+                                "h-11 px-5 rounded-full flex items-center justify-center backdrop-blur-md shadow-xl transition-all duration-300 font-bold text-xs",
                                 saved ? 'bg-[#E60023] text-white scale-105' : 'bg-[#E60023] text-white hover:bg-[#ad081b] active:scale-95'
                             )}
                         >
@@ -262,7 +262,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
             </div>
             {post.content && (
                 <div className="px-2 md:px-4 py-2.5 md:py-3 flex items-start justify-between gap-1">
-                    <p className="text-[12px] md:text-[14px] font-bold text-secondary-900 dark:text-secondary-100 leading-tight line-clamp-2 tracking-tight flex-1">
+                    <p className="text-[11px] md:text-[12px] font-bold md:font-semibold text-secondary-900 dark:text-secondary-100 leading-tight line-clamp-2 tracking-tight flex-1">
                         {post.content}
                     </p>
                     <div className="md:hidden shrink-0 pt-0.5">

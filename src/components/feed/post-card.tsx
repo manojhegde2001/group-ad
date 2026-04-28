@@ -177,8 +177,67 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                 </AnimatePresence>
 
                 {/* Hover Overlays - Hidden on mobile */}
-                <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:flex flex-col justify-between p-4 pointer-events-none bg-black/10">
-                    <div className="flex items-start justify-end w-full pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <div 
+                    className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:flex flex-col justify-between p-4 pointer-events-none bg-black/10"
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+                >
+                    <div className="flex items-start justify-between w-full pointer-events-auto">
+                        <Popover placement="bottom-end">
+                            <Popover.Trigger>
+                                <button 
+                                    onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-all active:scale-90 shadow-xl"
+                                >
+                                    <MoreHorizontal className="w-5 h-5" />
+                                </button>
+                            </Popover.Trigger>
+                            <Popover.Content className="!p-2 !rounded-[1.5rem] !bg-white/95 dark:!bg-secondary-900/95 !backdrop-blur-xl !border-secondary-100 dark:!border-secondary-800 !shadow-2xl !w-56 z-50">
+                                <div className="flex flex-col gap-1">
+                                    {user?.id === post.userId ? (
+                                        <>
+                                            <button 
+                                                onClick={() => { openCreatePostModal(post); }}
+                                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
+                                            >
+                                                <Edit2 className="w-4 h-4 text-blue-500" />
+                                                <span className="text-sm font-bold text-secondary-900 dark:text-white">Edit Post</span>
+                                            </button>
+                                            <button 
+                                                onClick={handleDeletePost}
+                                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left group/del"
+                                            >
+                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                                <span className="text-sm font-bold text-red-500">Delete Post</span>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button 
+                                            onClick={handleReport}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left"
+                                        >
+                                            <Flag className="w-4 h-4 text-red-500" />
+                                            <span className="text-sm font-bold text-red-500">Report Post</span>
+                                        </button>
+                                    )}
+                                    <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+                                    <button 
+                                        onClick={() => openShare(post.id, 'feed')}
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
+                                    >
+                                        <Share2 className="w-4 h-4 text-secondary-500" />
+                                        <span className="text-sm font-bold text-secondary-900 dark:text-white">Share</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => { router.push(`/posts/${post.id}`); }}
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
+                                    >
+                                        <ExternalLink className="w-4 h-4 text-secondary-500" />
+                                        <span className="text-sm font-bold text-secondary-900 dark:text-white">Expand Visual</span>
+                                    </button>
+                                </div>
+                            </Popover.Content>
+                        </Popover>
+
                         <button 
                             onClick={handleSave} 
                             className={cn(
@@ -272,31 +331,56 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                                 <User className="w-4.5 h-4.5 text-secondary-600" />
                                             </div>
                                             <div className="text-left">
-                                                <span className="block font-bold text-secondary-900 dark:text-white">Visit Profile</span>
+                                                <span className="block font-bold text-secondary-900 dark:text-white">{user?.id === post.userId ? "My Profile" : "Visit Profile"}</span>
                                                 <span className="text-[10px] text-secondary-500 uppercase font-bold tracking-wider">@{post.user.username}</span>
                                             </div>
                                         </button>
                                     )}
 
+                                    {/* Owner Controls (Edit/Delete) - Only for the post owner */}
+                                    {user?.id === post.userId && (
+                                        <div className="grid grid-cols-2 gap-2 mt-1">
+                                            <button 
+                                                onClick={e => { e.preventDefault(); e.stopPropagation(); openCreatePostModal(post); setIsMenuOpen(false); }}
+                                                className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-all active:scale-[0.98]"
+                                            >
+                                                <Edit2 className="w-4 h-4 text-blue-600" />
+                                                <span className="font-bold text-xs text-blue-600">Edit Post</span>
+                                            </button>
+
+                                            <button 
+                                                onClick={e => { e.preventDefault(); e.stopPropagation(); handleDeletePost(); setIsMenuOpen(false); }}
+                                                className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 transition-all active:scale-[0.98]"
+                                            >
+                                                <Trash2 className="w-4 h-4 text-red-600" />
+                                                <span className="font-bold text-xs text-red-600">Delete</span>
+                                            </button>
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-2 mt-1">
                                         <button 
                                             onClick={e => { e.preventDefault(); e.stopPropagation(); openShare(post.id, 'feed'); setIsMenuOpen(false); }}
-                                            className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]"
+                                            className={cn(
+                                                "flex items-center justify-center gap-2 p-4 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]",
+                                                user?.id === post.userId ? "col-span-2" : "col-span-1"
+                                            )}
                                         >
                                             <Share2 className="w-4 h-4 text-secondary-600" />
-                                            <span className="font-bold text-xs text-secondary-900 dark:text-white">Share</span>
+                                            <span className="font-bold text-xs text-secondary-900 dark:text-white">Share Post</span>
                                         </button>
 
-                                        <button 
-                                            onClick={e => { e.preventDefault(); e.stopPropagation(); handleReport(); setIsMenuOpen(false); }}
-                                            className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-[0.98]"
-                                        >
-                                            <Flag className="w-4 h-4 text-red-500" />
-                                            <span className="font-bold text-xs text-red-600">Report</span>
-                                        </button>
+                                        {user?.id !== post.userId && (
+                                            <button 
+                                                onClick={e => { e.preventDefault(); e.stopPropagation(); handleReport(); setIsMenuOpen(false); }}
+                                                className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-[0.98]"
+                                            >
+                                                <Flag className="w-4 h-4 text-red-500" />
+                                                <span className="font-bold text-xs text-red-600">Report</span>
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
-
                             </div>
                         </Drawer>
                     </div>

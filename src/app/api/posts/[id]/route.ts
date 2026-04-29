@@ -68,15 +68,44 @@ export async function GET(
 
     // Fetch connection status if user is logged in
     let connectionRecord = null;
+    let mutualConnections: { count: number; avatars: string[] } = { count: 0, avatars: [] };
     if (currentUserId && currentUserId !== postRaw.user.id) {
-      connectionRecord = await prisma.connection.findFirst({
-        where: {
-          OR: [
-            { requesterId: currentUserId, receiverId: postRaw.user.id },
-            { requesterId: postRaw.user.id, receiverId: currentUserId },
-          ],
-        },
-      });
+      const [connRec, myConns, theirConns] = await Promise.all([
+        prisma.connection.findFirst({
+          where: {
+            OR: [
+              { requesterId: currentUserId, receiverId: postRaw.user.id },
+              { requesterId: postRaw.user.id, receiverId: currentUserId },
+            ],
+          },
+        }),
+        prisma.connection.findMany({
+          where: { status: 'ACCEPTED', OR: [{ requesterId: currentUserId }, { receiverId: currentUserId }] },
+          select: { requesterId: true, receiverId: true }
+        }),
+        prisma.connection.findMany({
+          where: { status: 'ACCEPTED', OR: [{ requesterId: postRaw.user.id }, { receiverId: postRaw.user.id }] },
+          select: { requesterId: true, receiverId: true }
+        })
+      ]);
+
+      connectionRecord = connRec;
+
+      const myFriends = new Set(myConns.map(c => c.requesterId === currentUserId ? c.receiverId : c.requesterId));
+      const theirFriends = theirConns.map(c => c.requesterId === postRaw.user.id ? c.receiverId : c.requesterId);
+      const mutualIds = theirFriends.filter(id => myFriends.has(id));
+      
+      if (mutualIds.length > 0) {
+        const mutualUsers = await prisma.user.findMany({
+          where: { id: { in: mutualIds } },
+          select: { avatar: true },
+          take: 3
+        });
+        mutualConnections = {
+          count: mutualIds.length,
+          avatars: mutualUsers.map(u => u.avatar).filter(Boolean) as string[]
+        };
+      }
     }
 
     const post = {
@@ -89,6 +118,7 @@ export async function GET(
         ...(postRaw.user as any),
         connectionStatus: connectionRecord?.status || null,
         connectionInitiator: connectionRecord?.requesterId === currentUserId,
+        mutualConnections,
       }
     };
 

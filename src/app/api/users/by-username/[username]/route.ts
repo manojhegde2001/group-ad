@@ -49,7 +49,7 @@ export async function GET(
         }
 
         // Get counts, connection status, and block status separately
-        const [connectionCount, postCount, connectionRecord, blockRecord] = await Promise.all([
+        const [connectionCount, postCount, connectionRecord, blockRecord, mutualConnections] = await Promise.all([
             prisma.connection.count({ 
                 where: { 
                     status: 'ACCEPTED',
@@ -77,7 +77,40 @@ export async function GET(
                     },
                 })
                 : null,
+            // Mutual Connections
+            currentUserId && currentUserId !== user.id
+                ? (async () => {
+                    const [myConns, theirConns] = await Promise.all([
+                        prisma.connection.findMany({
+                            where: { status: 'ACCEPTED', OR: [{ requesterId: currentUserId }, { receiverId: currentUserId }] },
+                            select: { requesterId: true, receiverId: true }
+                        }),
+                        prisma.connection.findMany({
+                            where: { status: 'ACCEPTED', OR: [{ requesterId: user.id }, { receiverId: user.id }] },
+                            select: { requesterId: true, receiverId: true }
+                        })
+                    ]);
+                    const myFriends = new Set(myConns.map(c => c.requesterId === currentUserId ? c.receiverId : c.requesterId));
+                    const theirFriends = theirConns.map(c => c.requesterId === user.id ? c.receiverId : c.requesterId);
+                    const mutualIds = theirFriends.filter(id => myFriends.has(id));
+                    
+                    if (mutualIds.length === 0) return { count: 0, avatars: [] };
+
+                    const mutualUsers = await prisma.user.findMany({
+                        where: { id: { in: mutualIds } },
+                        select: { avatar: true },
+                        take: 3
+                    });
+
+                    return {
+                        count: mutualIds.length,
+                        avatars: mutualUsers.map(u => u.avatar).filter(Boolean) as string[]
+                    };
+                })()
+                : Promise.resolve({ count: 0, avatars: [] as string[] }),
         ]);
+
+
 
         let hasSharedAttendance = false;
         if (currentUserId && currentUserId !== user.id) {
@@ -120,6 +153,7 @@ export async function GET(
                     posts: postCount,
                     connections: connectionCount,
                 },
+                mutualConnections: mutualConnections,
             },
         });
     } catch (error) {

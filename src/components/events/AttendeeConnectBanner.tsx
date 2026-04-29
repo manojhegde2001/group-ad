@@ -31,7 +31,7 @@ export default function AttendeeConnectBanner({ eventId }: { eventId: string }) 
     const followMutation = useFollowUser();
 
     const handleConnect = (userId: string) => {
-        connectMutation.mutate(userId, {
+        connectMutation.mutate({ receiverId: userId }, {
             onSuccess: () => refetch()
         });
     };
@@ -71,7 +71,7 @@ export default function AttendeeConnectBanner({ eventId }: { eventId: string }) 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {coAttendees.map(user => {
-                        const isConnecting = connectMutation.isPending && connectMutation.variables === user.id;
+                        const isConnecting = connectMutation.isPending && connectMutation.variables?.receiverId === user.id;
                         const isFollowing = followMutation.isPending && followMutation.variables === user.id;
 
                         return (

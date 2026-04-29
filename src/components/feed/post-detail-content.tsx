@@ -468,6 +468,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     targetName={post.user.name}
                                     initialStatus={(post.user as any).connectionStatus}
                                     isInitiator={(post.user as any).connectionInitiator}
+                                    mutualConnections={(post.user as any).mutualConnections}
                                     className={cn(
                                         "rounded-full font-semibold text-sm px-4 py-1.5 transition-all active:scale-95",
                                         (post.user as any).connectionStatus === 'CONNECTED'

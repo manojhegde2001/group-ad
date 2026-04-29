@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { receiverId } = await request.json();
+    const { receiverId, note } = await request.json();
     if (!receiverId) {
       return NextResponse.json({ error: 'receiverId is required' }, { status: 400 });
     }
@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
         requesterId: userId,
         receiverId,
         status: 'PENDING',
+        note: note || null,
       },
     });
 
@@ -102,7 +103,9 @@ export async function POST(request: NextRequest) {
         userId: receiverId,
         type: 'CONNECTION_REQUEST',
         title: 'New Connection Request',
-        message: `${userName} has sent you a connection request.`,
+        message: note 
+          ? `${userName} sent a connection request with a note: "${note}"`
+          : `${userName} has sent you a connection request.`,
         senderId: userId,
         entityType: 'Connection',
         entityId: connection.id,

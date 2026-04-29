@@ -266,7 +266,11 @@ function MessagesContent() {
         <div className="pt-5 md:pt-8 px-4 md:px-6 pb-4 flex flex-col gap-4 md:gap-6 shrink-0 bg-white dark:bg-secondary-950">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">Messages</h1>
-            <button className="w-10 h-10 rounded-full bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-secondary-900 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors">
+            <button 
+              onClick={() => setActiveTab('contacts')}
+              className="w-10 h-10 rounded-full bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-secondary-900 dark:text-white hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-95 shadow-sm"
+              title="New Message"
+            >
                 <Plus className="w-5 h-5" />
             </button>
           </div>
@@ -304,7 +308,7 @@ function MessagesContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search chats..."
-              className="w-full bg-secondary-50 dark:bg-secondary-900 border-none rounded-2xl pl-11 pr-4 py-3 text-sm font-semibold outline-none ring-1 ring-secondary-200 dark:ring-secondary-800 focus:ring-2 ring-primary-500/20 transition-all placeholder:text-secondary-400"
+              className="w-full bg-secondary-50 dark:bg-secondary-900 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm font-semibold outline-none ring-1 ring-secondary-200 dark:ring-secondary-800 focus:ring-2 ring-primary-500/20 transition-all placeholder:text-secondary-400"
             />
           </div>
         </div>
@@ -341,7 +345,7 @@ function MessagesContent() {
                       key={conv.id}
                       onClick={() => { setSelectedConvId(conv.id); setShowMobileChat(true); }}
                       className={cn(
-                        'w-full flex items-center gap-4 px-4 md:px-6 py-4 md:py-5 hover:bg-secondary-50 dark:hover:bg-secondary-900 transition-all text-left relative group',
+                        'w-full flex items-center gap-3.5 px-4 md:px-6 py-3 md:py-4 hover:bg-secondary-50 dark:hover:bg-secondary-900 transition-all text-left relative group',
                         isSelected && 'bg-primary-50/30 dark:bg-primary-900/10'
                       )}
                     >
@@ -435,23 +439,24 @@ function MessagesContent() {
         ) : (
           <>
             {/* Chat Header - Instagram style */}
-            <div className="px-4 md:px-8 py-4 md:py-6 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl sticky top-0 z-20 shadow-sm shadow-secondary-900/5">
+            <div className="px-4 md:px-8 py-3 md:py-5 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl sticky top-0 z-20 shadow-sm shadow-secondary-900/5">
               <div className="flex items-center gap-3 md:gap-5">
-                <button onClick={() => { setShowMobileChat(false); }} className="md:hidden -ml-2 p-2.5 hover:bg-secondary-100 dark:hover:bg-secondary-900 rounded-full transition-colors active:scale-95">
+                <button onClick={() => { setShowMobileChat(false); }} className="md:hidden -ml-1 p-2 hover:bg-secondary-100 dark:hover:bg-secondary-900 rounded-full transition-colors active:scale-95">
                     <ArrowLeft className="w-6 h-6 text-secondary-900 dark:text-white" />
                 </button>
-                <Link href={`/profile/${otherUser?.username}`} className="flex items-center gap-3 md:gap-4 group">
+                <Link href={`/profile/${otherUser?.username}`} className="flex items-center gap-2.5 md:gap-4 group">
                     <div className="relative">
-                        <Avatar src={otherUser?.avatar ?? undefined} name={otherUser?.name || '?'} size="lg" className="w-11 h-11 md:w-14 md:h-14 border-2 border-white dark:border-secondary-900 group-hover:border-primary-200 transition-all shadow-md" />
+                        <Avatar src={otherUser?.avatar ?? undefined} name={otherUser?.name || '?'} size="md" className="w-9 h-9 md:w-14 md:h-14 border-2 border-white dark:border-secondary-900 group-hover:border-primary-200 transition-all shadow-md" />
                     </div>
                     <div>
-                        <p className="font-black text-secondary-900 dark:text-white text-base md:text-[18px] leading-tight group-hover:text-primary-600 transition-colors tracking-tight">{otherUser?.name}</p>
+                        <p className="font-black text-secondary-900 dark:text-white text-[15px] md:text-[18px] leading-tight group-hover:text-primary-600 transition-colors tracking-tight">{otherUser?.name}</p>
+                        {isOtherTyping && <p className="text-[10px] text-primary-500 font-bold animate-pulse md:hidden mt-0.5">Typing...</p>}
                     </div>
                 </Link>
               </div>
-              <div className="flex items-center gap-2">
-                <button title="More options" className="flex p-3 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
-                    <MoreHorizontal className="w-5 h-5" />
+              <div className="flex items-center gap-1">
+                <button title="More options" className="flex p-2 text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-50 dark:hover:bg-secondary-900 rounded-full transition-all">
+                    <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -525,10 +530,7 @@ function MessagesContent() {
             {/* Input - Instagram style Pill */}
             <div className="px-4 md:px-6 py-4 md:py-6 border-t border-secondary-100 dark:border-secondary-800 shrink-0 bg-white dark:bg-secondary-950">
               <form onSubmit={handleSend} className="flex items-center gap-3 max-w-5xl mx-auto w-full">
-                <div className="flex-1 flex items-center bg-secondary-50 dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-700 rounded-[2rem] px-4 md:px-6 py-2 md:py-2.5 transition-all focus-within:ring-2 ring-primary-500/20 group shadow-sm">
-                  <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors hidden sm:block">
-                    <Camera className="w-5 h-5" />
-                  </button>
+                <div className="flex-1 flex items-center bg-secondary-50 dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-700 rounded-[2rem] px-4 md:px-6 py-1.5 md:py-2 transition-all focus-within:ring-2 ring-primary-500/20 group shadow-sm">
                   <textarea
                     value={messageInput}
                     onChange={handleInputChange}
@@ -537,23 +539,8 @@ function MessagesContent() {
                     }}
                     placeholder="Message..."
                     rows={1}
-                    className="flex-1 bg-transparent outline-none text-[14px] md:text-base text-secondary-900 dark:text-secondary-100 placeholder:text-secondary-400 placeholder:font-medium resize-none max-h-32 py-2 px-2 md:px-3"
+                    className="flex-1 bg-transparent outline-none text-[14px] md:text-base text-secondary-900 dark:text-secondary-100 placeholder:text-secondary-400 placeholder:font-medium resize-none max-h-32 py-2 px-1 md:px-2"
                   />
-                  <div className="flex items-center gap-1 md:gap-2">
-                    <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors">
-                        <Smile className="w-5 h-5" />
-                    </button>
-                    {!messageInput.trim() && (
-                        <>
-                            <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors">
-                                <Mic className="w-5 h-5" />
-                            </button>
-                            <button type="button" className="p-2 text-secondary-400 hover:text-primary-500 transition-colors">
-                                <ImageIcon className="w-5 h-5" />
-                            </button>
-                        </>
-                    )}
-                  </div>
                 </div>
                 
                 {messageInput.trim() && (

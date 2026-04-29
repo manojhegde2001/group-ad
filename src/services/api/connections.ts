@@ -14,8 +14,8 @@ export interface Connection {
 }
 
 export const connectionService = {
-    sendRequest: (receiverId: string) => 
-        apiClient.post<any>('/api/connections', { receiverId }),
+    sendRequest: (receiverId: string, note?: string) => 
+        apiClient.post<any>('/api/connections', { receiverId, note }),
         
     updateRequest: (targetUserId: string, action: 'ACCEPT' | 'REJECT') => 
         apiClient.patch<any>(`/api/connections/by-user/${targetUserId}`, { action }),

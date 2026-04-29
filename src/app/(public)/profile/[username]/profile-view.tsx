@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
-import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare } from 'lucide-react';
+import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff } from 'lucide-react';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
 import { useCreatePostModal } from '@/hooks/use-feed';
@@ -172,6 +172,10 @@ export default function ProfileView({ username }: { username: string }) {
                             <div className="flex items-center justify-center md:justify-start gap-3">
                                 {isOwnProfile ? (
                                     <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700 text-[9px] font-black uppercase tracking-widest text-secondary-500">
+                                            {(profile as any).visibility === 'PUBLIC' ? <Globe className="w-3 h-3 text-emerald-500" /> : <EyeOff className="w-3 h-3 text-amber-500" />}
+                                            {(profile as any).visibility}
+                                        </div>
                                         <Link href="/settings">
                                             <Button variant="outline" rounded="pill" className="h-10 px-6 font-black uppercase tracking-widest text-[10px] border-2">Edit Profile</Button>
                                         </Link>
@@ -188,13 +192,16 @@ export default function ProfileView({ username }: { username: string }) {
                                             targetName={profile.name}
                                             initialStatus={profile.connectionStatus}
                                             isInitiator={profile.connectionInitiator}
+                                            mutualConnections={(profile as any).mutualConnections}
                                         />
-                                        <Link href={`/messages?userId=${profile.id}`}>
-                                            <Button variant="outline" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-secondary-50 transition-colors">
-                                                <MessageSquare className="w-3.5 h-3.5 mt-0.5" />
-                                                Message
-                                            </Button>
-                                        </Link>
+                                        {((profile as any).visibility === 'PUBLIC' || profile.connectionStatus === 'ACCEPTED') && (
+                                            <Link href={`/messages?userId=${profile.id}`}>
+                                                <Button variant="outline" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-secondary-50 transition-colors">
+                                                    <MessageSquare className="w-3.5 h-3.5 mt-0.5" />
+                                                    Message
+                                                </Button>
+                                            </Link>
+                                        )}
                                     </>
                                 )}
                                 <div className="flex items-center gap-2">
@@ -297,6 +304,14 @@ export default function ProfileView({ username }: { username: string }) {
                 {loadingCreated ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {[...Array(8)].map((_, i) => <div key={i} className="aspect-[4/5] bg-secondary-100 dark:bg-secondary-800 rounded-2xl animate-pulse" />)}
+                    </div>
+                ) : (profile as any).visibility === 'PRIVATE' && (profile as any).connectionStatus !== 'ACCEPTED' && !isOwnProfile ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                        <div className="w-16 h-16 bg-secondary-50 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-6">
+                            <MapPin className="w-8 h-8 text-secondary-300" />
+                        </div>
+                        <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">This Account is Private</h3>
+                        <p className="text-sm text-secondary-500 max-w-[240px]">Connect with {profile.name} to see their professional updates.</p>
                     </div>
                 ) : createdPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 text-center">

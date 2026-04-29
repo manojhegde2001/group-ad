@@ -116,6 +116,38 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Messaging is disabled due to a block' }, { status: 403 });
     }
 
+    // Fetch target user's visibility and messaging settings
+    const targetUser = await prisma.user.findUnique({
+        where: { id: participantId },
+        select: { visibility: true, messagingEnabled: true },
+    });
+
+    if (!targetUser) {
+        return NextResponse.json({ error: 'Target user not found' }, { status: 404 });
+    }
+
+    if (!targetUser.messagingEnabled) {
+        return NextResponse.json({ error: 'This user has disabled direct messaging' }, { status: 403 });
+    }
+
+    // If target user is private, check if they are connected
+    if (targetUser.visibility === 'PRIVATE') {
+        const connection = await prisma.connection.findFirst({
+            where: {
+                OR: [
+                    { requesterId: userId, receiverId: participantId, status: 'ACCEPTED' },
+                    { requesterId: participantId, receiverId: userId, status: 'ACCEPTED' },
+                ],
+            },
+        });
+
+        if (!connection) {
+            return NextResponse.json({ 
+                error: 'Messaging is restricted to connections for this private account' 
+            }, { status: 403 });
+        }
+    }
+
     // Check if conversation already exists
     const existing = await prisma.conversation.findFirst({
       where: {

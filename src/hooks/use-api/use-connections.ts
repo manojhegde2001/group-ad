@@ -21,8 +21,9 @@ export const useConnectMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (receiverId: string) => connectionService.sendRequest(receiverId),
-        onSuccess: (_, receiverId) => {
+        mutationFn: ({ receiverId, note }: { receiverId: string, note?: string }) => 
+            connectionService.sendRequest(receiverId, note),
+        onSuccess: (_, { receiverId }) => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
             queryClient.invalidateQueries({ queryKey: ['connections', 'user', receiverId] });
             toast.success('Connection request sent');

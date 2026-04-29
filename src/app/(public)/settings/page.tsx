@@ -74,6 +74,7 @@ export default function SettingsPage() {
   const [pushNotifs, setPushNotifs]             = useState(true);
   const [connectionNotifs, setConnectionNotifs] = useState(true);
   const [messageNotifs, setMessageNotifs]       = useState(true);
+  const [messagingEnabled, setMessagingEnabled] = useState(true);
 
   // Business Transition fields
   const [showBusinessForm, setShowBusinessForm] = useState(false);
@@ -113,6 +114,7 @@ export default function SettingsPage() {
     setPincode(profile.pincode ?? '');
     setExternalLink(profile.externalLink ?? '');
     setVisibility(profile.visibility ?? 'PUBLIC');
+    setMessagingEnabled(profile.messagingEnabled ?? true);
     
     if (profile.userType === 'BUSINESS') {
       setBsCompanyName(profile.companyName ?? '');
@@ -146,7 +148,7 @@ export default function SettingsPage() {
     }
     updateProfile({
       name, bio, website, websiteLabel, location, linkedin, twitter,
-      visibility, gstNumber, phone, secondaryPhone, phoneVisibility, address, pincode, externalLink,
+      visibility, messagingEnabled, gstNumber, phone, secondaryPhone, phoneVisibility, address, pincode, externalLink,
     }, {
       onError: (error: any) => {
         if (error.data?.details) {
@@ -446,12 +448,31 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between p-5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/60 border border-secondary-100 dark:border-secondary-700">
                     <div className="flex items-center gap-4">
                       <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><Globe className="w-5 h-5 text-emerald-600" /></div>
-                      <div><p className="font-bold text-secondary-900 dark:text-white">Public Profile</p><p className="text-xs text-secondary-500 font-medium">Visible to everyone</p></div>
+                      <div>
+                        <p className="font-bold text-secondary-900 dark:text-white">Account Visibility</p>
+                        <p className="text-xs text-secondary-500 font-medium">
+                          {visibility === 'PUBLIC' ? 'Everyone can see your posts and profile.' : 'Only connections can see your posts.'}
+                        </p>
+                      </div>
                     </div>
-                    <Switch checked={visibility === 'PUBLIC'} onChange={() => setVisibility(v => v === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')} />
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-secondary-400">{visibility}</span>
+                      <Switch checked={visibility === 'PUBLIC'} onChange={() => setVisibility(v => v === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC')} />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/60 border border-secondary-100 dark:border-secondary-700">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl"><Users className="w-5 h-5 text-blue-600" /></div>
+                      <div>
+                        <p className="font-bold text-secondary-900 dark:text-white">Direct Messaging</p>
+                        <p className="text-xs text-secondary-500 font-medium">Allow others to start conversations with you.</p>
+                      </div>
+                    </div>
+                    <Switch checked={messagingEnabled} onChange={() => setMessagingEnabled(!messagingEnabled)} />
                   </div>
                 </div>
-                <div className="pt-6"><Button onClick={() => updateProfile({ visibility })} isLoading={savingProfile} className="px-8 rounded-2xl font-black uppercase text-xs">Apply Settings</Button></div>
+                <div className="pt-6"><Button onClick={() => updateProfile({ visibility, messagingEnabled })} isLoading={savingProfile} className="px-8 rounded-2xl font-black uppercase text-xs">Apply Settings</Button></div>
               </SettingsCard>
             )}
 

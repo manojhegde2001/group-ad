@@ -199,10 +199,15 @@ function MessagesContent() {
   useEffect(() => {
     if (selectedConvId) {
       markConversationRead(selectedConvId);
-    } else {
-        lastReadConvId.current = null;
     }
   }, [selectedConvId, markConversationRead]);
+
+  // Scroll to top when opening mobile chat to prevent "mid-scroll" issues
+  useEffect(() => {
+    if (showMobileChat) {
+      window.scrollTo(0, 0);
+    }
+  }, [showMobileChat]);
 
   const lastHandledMessageId = useRef<string | null>(null);
 

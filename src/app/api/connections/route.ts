@@ -103,9 +103,7 @@ export async function POST(request: NextRequest) {
         userId: receiverId,
         type: 'CONNECTION_REQUEST',
         title: 'New Connection Request',
-        message: note 
-          ? `${userName} sent a connection request with a note: "${note}"`
-          : `${userName} has sent you a connection request.`,
+        message: `${userName} has sent you a connection request.`,
         senderId: userId,
         entityType: 'Connection',
         entityId: connection.id,

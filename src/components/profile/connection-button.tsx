@@ -49,8 +49,6 @@ export function ConnectionButton({
     // However, the current component is receiving 'initialStatus' as a prop.
     const [status, setStatus] = useState<ConnectionStatus>(initialStatus);
     const [localIsInitiator, setLocalIsInitiator] = useState<boolean>(isInitiator);
-    const [showNoteInput, setShowNoteInput] = useState(false);
-    const [note, setNote] = useState('');
 
     useEffect(() => {
         setStatus(initialStatus);
@@ -68,11 +66,10 @@ export function ConnectionButton({
             return;
         }
         
-        connectMutation.mutate({ receiverId: userId, note: note.trim() || undefined }, {
+        connectMutation.mutate({ receiverId: userId }, {
             onSuccess: () => {
                 setStatus('PENDING');
                 setLocalIsInitiator(true);
-                setShowNoteInput(false);
                 onStatusChange?.('PENDING');
             }
         });
@@ -120,49 +117,18 @@ export function ConnectionButton({
                     </div>
                 )}
                 
-                {showNoteInput ? (
-                    <div className="flex flex-col gap-2 w-full max-w-[200px]">
-                        <textarea
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder="Add a note (optional)..."
-                            className="text-[10px] p-2 rounded-xl bg-gray-50 dark:bg-secondary-800 border border-gray-200 dark:border-secondary-700 focus:outline-none focus:ring-1 ring-primary-500 resize-none h-16"
-                        />
-                        <div className="flex gap-2">
-                            <Button 
-                                onClick={handleConnect} 
-                                isLoading={loading}
-                                size="sm" 
-                                rounded="pill" 
-                                className="flex-1 text-[9px] font-black uppercase h-8"
-                            >
-                                Send
-                            </Button>
-                            <Button 
-                                onClick={() => setShowNoteInput(false)} 
-                                variant="outline" 
-                                size="sm" 
-                                rounded="pill" 
-                                className="text-[9px] font-black uppercase h-8"
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                ) : (
-                    <Button
-                        onClick={() => setShowNoteInput(true)}
-                        disabled={loading}
-                        variant="solid"
-                        color="primary"
-                        size={size}
-                        rounded="pill"
-                        className={cn("px-6 font-black uppercase tracking-widest text-[10px]", className)}
-                    >
-                        {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <UserPlus className="w-3.5 h-3.5 mr-2" />}
-                        Connect
-                    </Button>
-                )}
+                <Button
+                    onClick={handleConnect}
+                    disabled={loading}
+                    variant="solid"
+                    color="primary"
+                    size={size}
+                    rounded="pill"
+                    className={cn("px-6 font-black uppercase tracking-widest text-[10px]", className)}
+                >
+                    {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <UserPlus className="w-3.5 h-3.5 mr-2" />}
+                    Connect
+                </Button>
             </div>
         );
     }

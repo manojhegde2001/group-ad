@@ -11,6 +11,8 @@ export interface Connection {
     updatedAt: string;
     sender?: any;
     receiver?: any;
+    user?: any;
+    direction?: 'sent' | 'received';
 }
 
 export const connectionService = {

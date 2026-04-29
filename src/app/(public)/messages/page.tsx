@@ -432,7 +432,9 @@ function MessagesContent() {
       {/* Right: Chat View */}
       <div className={cn(
         'flex-1 flex flex-col min-w-0 h-full relative',
-        showMobileChat ? 'flex' : 'hidden md:flex'
+        showMobileChat 
+          ? 'fixed inset-0 z-[110] bg-white dark:bg-secondary-950 flex' 
+          : 'hidden md:flex'
       )}>
         {!selectedConvId ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 md:p-8 gap-4 md:gap-6 bg-[#f6f7fb] dark:bg-secondary-950/50 pb-24 md:pb-0">
@@ -450,7 +452,7 @@ function MessagesContent() {
         ) : (
           <>
             {/* Chat Header - Instagram style */}
-            <div className="px-3 md:px-8 py-2.5 md:py-5 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl sticky top-0 z-20 shadow-sm shadow-secondary-900/5">
+            <div className="px-3 md:px-8 py-2.5 md:py-5 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl sticky top-0 z-20 shadow-sm shadow-secondary-900/5 pt-[calc(10px+env(safe-area-inset-top))] md:pt-5">
               <div className="flex items-center gap-2 md:gap-5">
                 <button onClick={() => { setShowMobileChat(false); }} className="md:hidden -ml-1 p-2 hover:bg-secondary-100 dark:hover:bg-secondary-900 rounded-full transition-colors active:scale-95">
                     <ArrowLeft className="w-5 h-5 text-secondary-900 dark:text-white" />

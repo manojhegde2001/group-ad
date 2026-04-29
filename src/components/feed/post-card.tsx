@@ -131,7 +131,6 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
     return (
         <Link 
             href={`/posts/${post.id}`}
-            scroll={false}
             className="group relative rounded-xl overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 block border border-secondary-100/50 dark:border-secondary-800/30"
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
@@ -184,67 +183,11 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                     className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:flex flex-col justify-between p-4 pointer-events-none bg-black/10"
                     onClick={e => { e.preventDefault(); e.stopPropagation(); }}
                 >
-                    <div className="flex items-start justify-between w-full pointer-events-auto">
-                        <Popover placement="bottom-end">
-                            <Popover.Trigger>
-                                <button 
-                                    onClick={e => { e.preventDefault(); e.stopPropagation(); }}
-                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-all active:scale-90 shadow-xl"
-                                >
-                                    <MoreHorizontal className="w-5 h-5" />
-                                </button>
-                            </Popover.Trigger>
-                            <Popover.Content className="!p-2 !rounded-[1.5rem] !bg-white/95 dark:!bg-secondary-900/95 !backdrop-blur-xl !border-secondary-100 dark:!border-secondary-800 !shadow-2xl !w-56 z-50">
-                                <div className="flex flex-col gap-1">
-                                    {user?.id === post.userId ? (
-                                        <>
-                                            <button 
-                                                onClick={() => { openCreatePostModal(post); }}
-                                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
-                                            >
-                                                <Edit2 className="w-4 h-4 text-blue-500" />
-                                                <span className="text-[13px] font-bold text-secondary-900 dark:text-white">Edit Post</span>
-                                            </button>
-                                            <button 
-                                                onClick={handleDeletePost}
-                                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left group/del"
-                                            >
-                                                <Trash2 className="w-4 h-4 text-red-500" />
-                                                <span className="text-[13px] font-bold text-red-500">Delete Post</span>
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button 
-                                            onClick={handleReport}
-                                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left"
-                                        >
-                                            <Flag className="w-4 h-4 text-red-500" />
-                                            <span className="text-[13px] font-bold text-red-500">Report Post</span>
-                                        </button>
-                                    )}
-                                    <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
-                                    <button 
-                                        onClick={() => openShare(post.id, 'feed')}
-                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
-                                    >
-                                        <Share2 className="w-4 h-4 text-secondary-500" />
-                                        <span className="text-[13px] font-bold text-secondary-900 dark:text-white">Share</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => { router.push(`/posts/${post.id}`); }}
-                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
-                                    >
-                                        <ExternalLink className="w-4 h-4 text-secondary-500" />
-                                        <span className="text-[13px] font-bold text-secondary-900 dark:text-white">Expand Visual</span>
-                                    </button>
-                                </div>
-                            </Popover.Content>
-                        </Popover>
-
+                    <div className="flex items-start justify-end w-full pointer-events-auto">
                         <button 
                             onClick={handleSave} 
                             className={cn(
-                                "h-11 px-5 rounded-full flex items-center justify-center backdrop-blur-md shadow-xl transition-all duration-300 font-bold text-xs",
+                                "h-9 px-4 rounded-full flex items-center justify-center backdrop-blur-md shadow-xl transition-all duration-300 font-bold text-[11px] uppercase tracking-wider",
                                 saved ? 'bg-[#E60023] text-white scale-105' : 'bg-[#E60023] text-white hover:bg-[#ad081b] active:scale-95'
                             )}
                         >
@@ -263,12 +206,77 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                     </div>
                 </div>
             </div>
-            {post.content && (
-                <div className="px-2 md:px-4 py-2.5 md:py-3 flex items-start justify-between gap-1">
-                    <p className="text-[11px] md:text-[12px] font-bold md:font-semibold text-secondary-900 dark:text-secondary-100 leading-tight line-clamp-2 tracking-tight flex-1">
-                        {post.content}
-                    </p>
-                    <div className="md:hidden shrink-0 pt-0.5">
+            <div className="px-2 md:px-4 py-2.5 md:py-3 flex items-start justify-between gap-1 group/footer">
+                <div className="flex-1 min-w-0">
+                    {post.content && (
+                        <p className="text-[11px] md:text-[12px] font-bold md:font-semibold text-secondary-900 dark:text-secondary-100 leading-tight line-clamp-2 tracking-tight">
+                            {post.content}
+                        </p>
+                    )}
+                </div>
+                
+                <div className="shrink-0 pt-0.5">
+                    {/* Desktop Menu - Popover */}
+                    <div className="hidden md:block">
+                        <Popover placement="bottom-end">
+                            <Popover.Trigger>
+                                <button 
+                                    onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+                                    className="p-1.5 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-all active:scale-90"
+                                >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                            </Popover.Trigger>
+                            <Popover.Content className="!p-2 !rounded-[1.2rem] !bg-white dark:!bg-secondary-900 !border-secondary-100 dark:!border-secondary-800 !shadow-2xl !w-52 z-50">
+                                <div className="flex flex-col gap-1">
+                                    {user?.id === post.userId ? (
+                                        <>
+                                            <button 
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); openCreatePostModal(post); }}
+                                                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
+                                            >
+                                                <Edit2 className="w-4 h-4 text-blue-500" />
+                                                <span className="text-[12px] font-bold text-secondary-900 dark:text-white">Edit Post</span>
+                                            </button>
+                                            <button 
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeletePost(); }}
+                                                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left group/del"
+                                            >
+                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                                <span className="text-[12px] font-bold text-red-500">Delete Post</span>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button 
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleReport(); }}
+                                            className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left"
+                                        >
+                                            <Flag className="w-4 h-4 text-red-500" />
+                                            <span className="text-[12px] font-bold text-red-500">Report Post</span>
+                                        </button>
+                                    )}
+                                    <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
+                                    <button 
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openShare(post.id, 'feed'); }}
+                                        className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
+                                    >
+                                        <Share2 className="w-4 h-4 text-secondary-500" />
+                                        <span className="text-[12px] font-bold text-secondary-900 dark:text-white">Share</span>
+                                    </button>
+                                    <button 
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/posts/${post.id}`); }}
+                                        className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all text-left"
+                                    >
+                                        <ExternalLink className="w-4 h-4 text-secondary-500" />
+                                        <span className="text-[12px] font-bold text-secondary-900 dark:text-white">View Details</span>
+                                    </button>
+                                </div>
+                            </Popover.Content>
+                        </Popover>
+                    </div>
+
+                    {/* Mobile Menu - Drawer */}
+                    <div className="md:hidden">
                         <button 
                             onClick={e => { e.preventDefault(); e.stopPropagation(); setIsMenuOpen(true); }}
                             className="p-1 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 active:scale-90 transition-all"
@@ -298,7 +306,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                                 <div className="grid grid-cols-1 gap-2">
                                     {/* View Post */}
                                     <button 
-                                        onClick={e => { e.preventDefault(); e.stopPropagation(); openPost(post.id, post); setIsMenuOpen(false); }}
+                                        onClick={e => { e.preventDefault(); e.stopPropagation(); router.push(`/posts/${post.id}`); setIsMenuOpen(false); }}
                                         className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]"
                                     >
                                         <div className="w-9 h-9 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm">
@@ -388,7 +396,7 @@ export function PostCard({ post, onLikeChange, showActions = false, priority = f
                         </Drawer>
                     </div>
                 </div>
-            )}
+            </div>
         </Link>
     );
 }

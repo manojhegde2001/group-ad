@@ -180,9 +180,14 @@ function MessagesContent() {
     }
   }, [conversations, markReadMutation, refreshUnreadBadge]);
 
+  const lastHandledInitialUserId = useRef<string | null>(null);
+
   // Handle initial user from redirect
   useEffect(() => {
     if (initialUserId && !loadingConvs && conversations.length > 0) {
+      if (lastHandledInitialUserId.current === initialUserId) return;
+      lastHandledInitialUserId.current = initialUserId;
+
       // Check if we already have a conversation with this user
       const existing = conversations.find(c => c.participants.some(p => p.id === initialUserId));
       if (existing) {
@@ -192,8 +197,12 @@ function MessagesContent() {
         // Start a new conversation
         startConversation(initialUserId);
       }
+
+      // Clear the URL param to prevent issues with back button and re-triggers
+      // Use router.replace to keep history clean and avoid flickering on back button
+      router.replace('/messages', { scroll: false });
     }
-  }, [initialUserId, loadingConvs, conversations, startConvMutation]);
+  }, [initialUserId, loadingConvs, conversations, startConvMutation, router]);
 
   // Handle Mark Read when conversation switches
   useEffect(() => {
@@ -454,7 +463,13 @@ function MessagesContent() {
             {/* Chat Header - Instagram style */}
             <div className="px-3 md:px-8 py-2.5 md:py-5 border-b border-secondary-100 dark:border-secondary-800 flex items-center justify-between shrink-0 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl sticky top-0 z-20 shadow-sm shadow-secondary-900/5 pt-[calc(10px+env(safe-area-inset-top))] md:pt-5">
               <div className="flex items-center gap-2 md:gap-5">
-                <button onClick={() => { setShowMobileChat(false); }} className="md:hidden -ml-1 p-2 hover:bg-secondary-100 dark:hover:bg-secondary-900 rounded-full transition-colors active:scale-95">
+                <button 
+                  onClick={() => { 
+                    setShowMobileChat(false); 
+                    setSelectedConvId(null);
+                  }} 
+                  className="md:hidden -ml-1 p-2 hover:bg-secondary-100 dark:hover:bg-secondary-900 rounded-full transition-colors active:scale-95"
+                >
                     <ArrowLeft className="w-5 h-5 text-secondary-900 dark:text-white" />
                 </button>
                 <div className="flex items-center gap-2.5 md:gap-4 group">

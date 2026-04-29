@@ -16,7 +16,7 @@ import {
     useMarkMessagesRead, 
     useStartConversation 
 } from '@/hooks/use-api/use-messages';
-import { useFollowing } from '@/hooks/use-api/use-user';
+import { useConnections } from '@/hooks/use-api/use-connections';
 import { useQueryClient } from '@tanstack/react-query';
 import { Conversation, Message } from '@/services/api/messages';
 import { useSocket } from '@/components/providers/socket-provider';
@@ -50,8 +50,10 @@ function MessagesContent() {
   });
   const conversations = convsData?.conversations || [];
 
-  const { data: followingData, isLoading: loadingFollowing } = useFollowing();
-  const followingUsers = followingData?.users || [];
+  const { data: connectionsData, isLoading: loadingConnections } = useConnections();
+  const contactUsers = useMemo(() => {
+    return (connectionsData?.connections || []).map(conn => conn.user).filter(Boolean);
+  }, [connectionsData]);
 
   const messageQueryParams = useMemo(() => ({}), []);
   const { data: msgsData, isLoading: loadingMsgs } = useMessages(selectedConvId as string, messageQueryParams, {
@@ -134,12 +136,12 @@ function MessagesContent() {
   }, [conversations, searchQuery]);
 
   const filteredContacts = useMemo(() => {
-    if (!searchQuery.trim()) return followingUsers;
+    if (!searchQuery.trim()) return contactUsers;
     const q = searchQuery.toLowerCase();
-    return followingUsers.filter(u => 
+    return contactUsers.filter(u => 
       u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)
     );
-  }, [followingUsers, searchQuery]);
+  }, [contactUsers, searchQuery]);
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
   const otherUser = selectedConv?.participants[0];
 
@@ -378,7 +380,7 @@ function MessagesContent() {
           ) : (
             /* Contacts List */
             <>
-              {loadingFollowing ? (
+              {loadingConnections ? (
                 <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary-500" /></div>
               ) : filteredContacts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 md:py-20 px-6 text-center gap-4 animate-in fade-in duration-500">
@@ -386,8 +388,8 @@ function MessagesContent() {
                     <Users className="w-8 h-8 md:w-10 md:h-10 text-secondary-200" />
                   </div>
                   <div>
-                    <p className="font-black text-base md:text-lg text-secondary-900 dark:text-white">No contacts found</p>
-                    <p className="text-[10px] md:text-xs text-secondary-400 mt-1 max-w-[200px]">You haven't followed anyone yet or no results match your search.</p>
+                    <p className="font-black text-base md:text-lg text-secondary-900 dark:text-white">No connections found</p>
+                    <p className="text-[10px] md:text-xs text-secondary-400 mt-1 max-w-[200px]">You haven't connected with anyone yet. Grow your network to start messaging.</p>
                   </div>
                 </div>
               ) : (

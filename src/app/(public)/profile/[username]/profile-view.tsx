@@ -194,7 +194,7 @@ export default function ProfileView({ username }: { username: string }) {
                                             isInitiator={profile.connectionInitiator}
                                             mutualConnections={(profile as any).mutualConnections}
                                         />
-                                        {((profile as any).visibility === 'PUBLIC' || profile.connectionStatus === 'ACCEPTED') && (
+                                        {profile.messagingEnabled && ((profile as any).visibility === 'PUBLIC' || profile.connectionStatus === 'ACCEPTED') && (
                                             <Link href={`/messages?userId=${profile.id}`}>
                                                 <Button variant="outline" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-secondary-50 transition-colors">
                                                     <MessageSquare className="w-3.5 h-3.5 mt-0.5" />

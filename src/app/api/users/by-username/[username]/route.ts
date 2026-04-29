@@ -31,6 +31,8 @@ export async function GET(
                 phone: true,
                 secondaryPhone: true,
                 phoneVisibility: true,
+                visibility: true,
+                messagingEnabled: true,
             },
         });
 

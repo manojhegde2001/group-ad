@@ -28,7 +28,7 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
         toast.error('Only business accounts can join Power Teams');
         return;
     }
-    joinMutation.mutate(team.id);
+    joinMutation.mutate(team.slug);
   };
 
   const handleShare = () => {

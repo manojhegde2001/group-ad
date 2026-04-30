@@ -5,10 +5,10 @@ import { z } from 'zod';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -16,7 +16,17 @@ export async function POST(
 
     const userId = session.user.id;
 
-    // 1. Fetch user details
+    // 1. Fetch team by slug to get ID
+    const team = await prisma.powerTeam.findUnique({
+      where: { slug },
+      select: { id: true }
+    });
+
+    if (!team) {
+      return NextResponse.json({ error: 'Power Team not found' }, { status: 404 });
+    }
+
+    // 2. Fetch user details
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, userType: true },
@@ -31,7 +41,7 @@ export async function POST(
       return NextResponse.json({ error: 'Only business users can join power teams' }, { status: 403 });
     }
 
-    // 2. Check if already in a team (enforced by @unique in DB, but good to check)
+    // 3. Check if already in a team
     const existingMembership = await prisma.powerTeamMember.findUnique({
       where: { userId },
     });
@@ -40,10 +50,10 @@ export async function POST(
       return NextResponse.json({ error: 'You are already a member of a power team' }, { status: 400 });
     }
 
-    // 3. Create membership (PENDING by default)
+    // 4. Create membership (PENDING by default)
     const membership = await prisma.powerTeamMember.create({
       data: {
-        powerTeamId: id,
+        powerTeamId: team.id,
         userId: userId,
         status: 'PENDING',
       },
@@ -64,10 +74,10 @@ export async function POST(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -75,8 +85,8 @@ export async function PATCH(
 
     // Check if requester is admin of the team or platform admin
     const team = await prisma.powerTeam.findUnique({
-      where: { id },
-      select: { creatorId: true },
+      where: { slug },
+      select: { id: true, creatorId: true },
     });
 
     if (!team) {
@@ -121,10 +131,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

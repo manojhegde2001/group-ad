@@ -344,7 +344,7 @@ export function Navbar() {
             )}
 
             {/* Main Navigation */}
-            <nav className="space-y-1">
+            <nav className="space-y-1">~
                 <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Navigation</p>
                 <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
                 <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />

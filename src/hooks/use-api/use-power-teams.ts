@@ -36,9 +36,9 @@ export const useJoinPowerTeam = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (id: string) => powerTeamService.joinPowerTeam(id),
-        onSuccess: (_, id) => {
-            queryClient.invalidateQueries({ queryKey: ['power-team'] });
+        mutationFn: (slug: string) => powerTeamService.joinPowerTeam(slug),
+        onSuccess: (_, slug) => {
+            queryClient.invalidateQueries({ queryKey: ['power-team', slug] });
             queryClient.invalidateQueries({ queryKey: ['power-teams'] });
             toast.success('Join request sent successfully');
         },
@@ -52,9 +52,9 @@ export const useUpdatePowerTeamMember = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => powerTeamService.updateMember(id, data),
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: ['power-team'] });
+        mutationFn: ({ slug, data }: { slug: string; data: any }) => powerTeamService.updateMember(slug, data),
+        onSuccess: (_, { slug }) => {
+            queryClient.invalidateQueries({ queryKey: ['power-team', slug] });
             toast.success('Member updated successfully');
         },
         onError: (error: any) => {

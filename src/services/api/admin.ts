@@ -148,4 +148,12 @@ export const adminService = {
 
     updateUser: (id: string, data: any) =>
         apiClient.patch<AdminUser>(`/api/admin/users/${id}`, data),
+
+    getPowerTeams: (params?: { page?: number; limit?: number; search?: string }) => {
+        const query = new URLSearchParams();
+        if (params?.page) query.append('page', params.page.toString());
+        if (params?.limit) query.append('limit', params.limit.toString());
+        if (params?.search) query.append('search', params.search);
+        return apiClient.get<{ teams: any[]; pagination: any }>('/api/power-teams?' + query.toString());
+    },
 };

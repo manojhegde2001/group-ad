@@ -239,3 +239,10 @@ export const useUpdateAdminUser = () => {
     },
   });
 };
+
+export const useAdminPowerTeams = (params?: { page?: number; limit?: number; search?: string }) => {
+  return useQuery({
+    queryKey: ['admin', 'power-teams', params],
+    queryFn: () => adminService.getPowerTeams(params),
+  });
+};

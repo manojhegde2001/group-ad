@@ -116,6 +116,17 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum PowerTeamMemberStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PowerTeamRole {
+  ADMIN
+  MEMBER
+}
+
 // ============================================================================
 // CATEGORY MODEL
 // ============================================================================
@@ -139,6 +150,7 @@ model Category {
   users       User[]
   posts       Post[]
   events      Event[]
+  powerTeams  PowerTeam[]
 
   @@index([isActive])
 }
@@ -269,6 +281,9 @@ model User {
   postComments        PostComment[]
   bookmarks           Bookmark[]
   boards              Board[]          @relation("UserBoards")
+
+  createdPowerTeams    PowerTeam[]       @relation("CreatedPowerTeams")
+  powerTeamMemberships PowerTeamMember[]
 
   reportsSent         Report[]     @relation("ReportsSent")
   blocksSent          Block[]      @relation("BlocksSent")
@@ -765,4 +780,54 @@ model PostView {
   @@index([postId])
   @@index([viewerId])
   @@index([createdAt])
+}
+
+// ============================================================================
+// POWER TEAM MODELS
+// ============================================================================
+
+model PowerTeam {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  banner      String?
+
+  categoryId  String   @db.ObjectId
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  creatorId   String   @db.ObjectId
+  creator     User     @relation("CreatedPowerTeams", fields: [creatorId], references: [id])
+
+  visibility  AccountVisibility @default(PUBLIC)
+  isActive    Boolean           @default(true)
+
+  members     PowerTeamMember[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([creatorId])
+  @@index([isActive])
+}
+
+model PowerTeamMember {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  powerTeamId String   @db.ObjectId
+  powerTeam   PowerTeam @relation(fields: [powerTeamId], references: [id], onDelete: Cascade)
+  
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role        PowerTeamRole @default(MEMBER)
+  status      PowerTeamMemberStatus @default(PENDING)
+  
+  joinedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([powerTeamId])
 }

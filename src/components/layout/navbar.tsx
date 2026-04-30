@@ -30,7 +30,8 @@ import {
   User,
   Layout,
   Sun,
-  Moon
+  Moon,
+  Zap
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -146,6 +147,7 @@ export function Navbar() {
           {/* Guest Links */}
           <div className="hidden lg:flex items-center gap-6 font-bold text-secondary-900 dark:text-white">
              <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
+             <Link href="/power-teams" className="hover:text-primary-500 transition-colors">Power Teams</Link>
              <Link href="/about" className="hover:text-primary-500 transition-colors">About</Link>
           </div>
 
@@ -346,6 +348,7 @@ export function Navbar() {
                 <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Navigation</p>
                 <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
                 <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
+                <DrawerLink href="/power-teams" icon={Zap} label="Power Teams" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/power-teams'} />
                 <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
                 <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
                 {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (

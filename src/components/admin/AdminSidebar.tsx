@@ -48,6 +48,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/users', label: 'Users', icon: Users },
       { href: '/businesses', label: 'Businesses', icon: Building2 },
       { href: '/categories', label: 'Categories', icon: Tags },
+      { href: '/power-teams', label: 'Power Teams', icon: Activity },
       { href: '/events', label: 'Events', icon: CalendarDays },
       { href: '/venues', label: 'Venues', icon: MapPin },
     ],

@@ -11,7 +11,8 @@ import {
   Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Avatar, Button, Input, Textarea, Switch, Checkbox, Select } from 'rizzui';
+import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
+import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -153,6 +154,9 @@ export default function SettingsPage() {
       onError: (error: any) => {
         if (error.data?.details) {
           setFieldErrors(error.data.details);
+          toast.error('Please check the form for errors');
+        } else {
+          toast.error(error.message || 'Failed to update profile');
         }
       }
     });
@@ -386,18 +390,16 @@ export default function SettingsPage() {
                         <Field label="Location" error={fieldErrors.location}><div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="text" value={location} onChange={e => setLocation(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.location && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                         <Field label="Primary Phone" error={fieldErrors.phone}><div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.phone && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                         <Field label="Secondary Phone (Optional)" error={fieldErrors.secondaryPhone}><div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="tel" value={secondaryPhone} onChange={e => setSecondaryPhone(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.secondaryPhone && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
-                        <Field label="Phone Visibility">
-                          <Select
-                            value={phoneVisibility}
-                            onChange={(val: any) => setPhoneVisibility(val as string)}
-                            options={phoneVisibilityOptions}
-                            placeholder="Select visibility"
-                            className="w-full"
-                            selectClassName="rounded-2xl h-14 bg-secondary-50 dark:bg-secondary-800/50 border-none ring-0 font-bold text-sm"
-                            optionClassName="font-bold text-sm py-3"
-                            dropdownClassName="rounded-2xl border-secondary-100 dark:border-secondary-800 shadow-2xl p-2"
-                          />
-                        </Field>
+                        <Select
+                          label="Phone Visibility"
+                          value={phoneVisibility}
+                          onChange={setPhoneVisibility}
+                          options={phoneVisibilityOptions}
+                          placeholder="Select visibility"
+                          rounded="lg"
+                          size="lg"
+                          error={fieldErrors.phoneVisibility}
+                        />
                         <Field label="Bio" span2 error={fieldErrors.bio}><textarea value={bio} onChange={e => setBio(e.target.value)} className={cn(inputCls, "resize-none", fieldErrors.bio && 'ring-1 ring-red-500 border-red-500')} rows={3} maxLength={300} /><div className="flex justify-end mt-1 text-[10px] font-bold text-secondary-400">{bio.length}/300</div></Field>
                       </div>
                     </SettingsCard>
@@ -418,7 +420,9 @@ export default function SettingsPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                           <Field label="Business Name" span2 error={fieldErrors.companyName}><input type="text" value={bsCompanyName} onChange={e => setBsCompanyName(e.target.value)} className={cn(inputCls, fieldErrors.companyName && 'ring-1 ring-red-500 border-red-500')} /></Field>
                           <Field label="GST Number *" span2 error={fieldErrors.gstNumber}><input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} className={cn(inputCls, fieldErrors.gstNumber && 'ring-1 ring-red-500 border-red-500')} /></Field>
-                          <Field label="Address" span2><input type="text" value={address} onChange={e => setAddress(e.target.value)} className={inputCls} /></Field>
+                          <Field label="Address" span2 error={fieldErrors.address}><input type="text" value={address} onChange={e => setAddress(e.target.value)} className={cn(inputCls, fieldErrors.address && 'ring-1 ring-red-500 border-red-500')} /></Field>
+                          <Field label="Pincode" error={fieldErrors.pincode}><input type="text" value={pincode} onChange={e => setPincode(e.target.value)} className={cn(inputCls, fieldErrors.pincode && 'ring-1 ring-red-500 border-red-500')} /></Field>
+                          <Field label="External Profile Link" error={fieldErrors.externalLink}><input type="text" value={externalLink} onChange={e => setExternalLink(e.target.value)} className={cn(inputCls, fieldErrors.externalLink && 'ring-1 ring-red-500 border-red-500')} placeholder="E.g. Portfolio, Blog" /></Field>
                         </div>
                       </SettingsCard>
                     )}
@@ -445,7 +449,7 @@ export default function SettingsPage() {
               <SettingsCard className="p-6 sm:p-10 animate-in fade-in slide-in-from-bottom-4">
                 <div className="mb-8 pb-6 border-b border-secondary-100 dark:border-secondary-800"><h2 className="text-lg font-black text-secondary-900 dark:text-white">Privacy Controls</h2></div>
                 <div className="space-y-4 max-xl">
-                  <div className="flex items-center justify-between p-5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/60 border border-secondary-100 dark:border-secondary-700">
+                  <div className={cn("flex items-center justify-between p-5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/60 border transition-all", fieldErrors.visibility ? "border-red-500" : "border-secondary-100 dark:border-secondary-700")}>
                     <div className="flex items-center gap-4">
                       <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"><Globe className="w-5 h-5 text-emerald-600" /></div>
                       <div>
@@ -453,6 +457,7 @@ export default function SettingsPage() {
                         <p className="text-xs text-secondary-500 font-medium">
                           {visibility === 'PUBLIC' ? 'Everyone can see your posts and profile.' : 'Only connections can see your posts.'}
                         </p>
+                        {fieldErrors.visibility && <p className="text-[10px] font-bold text-red-500 mt-1">{fieldErrors.visibility}</p>}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

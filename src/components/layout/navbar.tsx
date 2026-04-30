@@ -348,12 +348,14 @@ export function Navbar() {
                 <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Navigation</p>
                 <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
                 <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
-                <DrawerLink href="/power-teams" icon={Zap} label="Power Teams" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/power-teams'} />
+                {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
+                  <>
+                    <DrawerLink href="/power-teams" icon={Zap} label="Power Teams" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/power-teams'} />
+                    <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
+                  </>
+                )}
                 <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
                 <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
-                {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
-                  <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
-                )}
                 <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
             </nav>
 

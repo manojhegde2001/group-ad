@@ -147,7 +147,6 @@ export function Navbar() {
           {/* Guest Links */}
           <div className="hidden lg:flex items-center gap-6 font-bold text-secondary-900 dark:text-white">
              <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
-             <Link href="/power-teams" className="hover:text-primary-500 transition-colors">Power Teams</Link>
              <Link href="/about" className="hover:text-primary-500 transition-colors">About</Link>
           </div>
 
@@ -350,7 +349,6 @@ export function Navbar() {
                 <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
                 {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
                   <>
-                    <DrawerLink href="/power-teams" icon={Zap} label="Power Teams" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/power-teams'} />
                     <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
                   </>
                 )}

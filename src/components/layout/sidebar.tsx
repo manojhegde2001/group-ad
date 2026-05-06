@@ -43,11 +43,10 @@ export function Sidebar() {
     { label: 'Explore', href: '/explore', icon: Compass },
     { label: 'Notifications', href: '/notifications', icon: Bell },
     { label: 'Boards', href: '/boards', icon: Library },
-    { label: 'Power Teams', href: '/power-teams', icon: Zap },
     { label: 'Events', href: '/events', icon: Calendar },
     { label: 'Messages', href: '/messages', icon: MessageSquare },
   ].filter(link => {
-    if (link.label === 'Events' || link.label === 'Power Teams') return isAdmin || isBusiness;
+    if (link.label === 'Events') return isAdmin || isBusiness;
     return true;
   });
 

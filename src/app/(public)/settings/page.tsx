@@ -8,7 +8,8 @@ import {
   User, Shield, Lock, Bell, Globe, CheckCircle,
   Save, LogOut, ChevronRight, MapPin, Link2, CreditCard,
   Building2, Briefcase, Users, Layout, Map, Compass, Trash2,
-  Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone
+  Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone,
+  Zap, Plus, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
@@ -17,14 +18,19 @@ import toast from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
 import { useAuthModal } from '@/hooks/use-modal';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
+import { PowerTeamGrid } from '@/components/power-teams/PowerTeamGrid';
+import { CreateTeamModal } from '@/components/power-teams/CreateTeamModal';
+import { usePowerTeams } from '@/hooks/use-api/use-power-teams';
+import { usePowerTeamModal } from '@/hooks/use-power-teams';
 
-type Tab = 'profile' | 'security' | 'privacy' | 'notifications' | 'analytics';
+type Tab = 'profile' | 'security' | 'privacy' | 'notifications' | 'analytics' | 'power-teams';
 
-const TABS: { key: Tab; label: string; icon: any; accent: string }[] = [
+const TABS: { key: Tab; label: string; icon: any; accent: string; businessOnly?: boolean }[] = [
   { key: 'profile', label: 'My Profile', icon: User, accent: 'text-violet-500 bg-violet-100 dark:bg-violet-900/30' },
   { key: 'security', label: 'Security', icon: Lock, accent: 'text-blue-500 bg-blue-100 dark:bg-blue-900/30' },
   { key: 'privacy', label: 'Privacy', icon: Globe, accent: 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30' },
   { key: 'notifications', label: 'Alerts', icon: Bell, accent: 'text-amber-500 bg-amber-100 dark:bg-amber-900/30' },
+  { key: 'power-teams', label: 'Power Teams', icon: Zap, accent: 'text-rose-500 bg-rose-100 dark:bg-rose-900/30', businessOnly: true },
   { key: 'analytics', label: 'Analytics', icon: BarChart3, accent: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/30' },
 ];
 
@@ -95,6 +101,16 @@ export default function SettingsPage() {
   const [bsEstablishedYear, setBsEstablishedYear] = useState('');
   const [bsCompanyWebsite, setBsCompanyWebsite]   = useState('');
   const [bsReason, setBsReason]                   = useState('');
+
+  // Power Teams state
+  const [ptCategoryId, setPtCategoryId] = useState<string | null>(null);
+  const [ptSearchQuery, setPtSearchQuery] = useState('');
+  const { open: openPtModal } = usePowerTeamModal();
+  const { data: teamsData, isLoading: teamsLoading } = usePowerTeams({
+    categoryId: ptCategoryId || undefined,
+    search: ptSearchQuery || undefined,
+  });
+  const teams = teamsData?.teams || [];
 
   const profile = profileData?.user ?? profileData;
 
@@ -230,7 +246,7 @@ export default function SettingsPage() {
               </div>
 
               <nav className="space-y-0.5">
-                {TABS.map(({ key, label, icon: Icon, accent }) => {
+                {TABS.filter(t => !t.businessOnly || profile?.userType === 'BUSINESS' || profile?.userType === 'ADMIN').map(({ key, label, icon: Icon, accent }) => {
                   const active = tab === key;
                   const [iconColor, ...bgParts] = accent.split(' ');
                   return (
@@ -513,6 +529,71 @@ export default function SettingsPage() {
                 </div>
                 
                 <AnalyticsDashboard userType={profile?.userType} />
+              </div>
+            )}
+
+            {tab === 'power-teams' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
+                <div className="bg-white dark:bg-secondary-900 p-6 sm:p-8 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
+                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                      <div>
+                        <h2 className="text-xl font-black text-secondary-900 dark:text-white tracking-tight">Power Teams</h2>
+                        <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest mt-0.5">Strategic Alliances</p>
+                      </div>
+                      {(profile?.userType === 'ADMIN' || (profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'VERIFIED')) && (
+                        <Button
+                          onClick={openPtModal}
+                          className="rounded-2xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg active:scale-95 transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5 mr-2" /> Initialize Team
+                        </Button>
+                      )}
+                   </div>
+
+                   <div className="flex flex-col lg:flex-row items-center gap-4 mb-8">
+                      <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                        <button
+                          onClick={() => setPtCategoryId(null)}
+                          className={cn(
+                            "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                            !ptCategoryId 
+                              ? "bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md" 
+                              : "bg-secondary-50 dark:bg-secondary-800/50 text-secondary-500 hover:bg-secondary-100"
+                          )}
+                        >
+                          All Hubs
+                        </button>
+                        {categories.map((cat: any) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setPtCategoryId(cat.id)}
+                            className={cn(
+                              "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                              ptCategoryId === cat.id 
+                                ? "bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md" 
+                                : "bg-secondary-50 dark:bg-secondary-800/50 text-secondary-500 hover:bg-secondary-100"
+                            )}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="relative w-full lg:w-64">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" />
+                        <input
+                          type="text"
+                          placeholder="Search teams..."
+                          value={ptSearchQuery}
+                          onChange={(e) => setPtSearchQuery(e.target.value)}
+                          className="w-full h-10 pl-10 pr-4 rounded-xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 outline-none focus:ring-2 ring-primary-500/20 text-xs font-bold transition-all"
+                        />
+                      </div>
+                   </div>
+
+                   <PowerTeamGrid teams={teams} isLoading={teamsLoading} />
+                </div>
+                <CreateTeamModal />
               </div>
             )}
           </main>

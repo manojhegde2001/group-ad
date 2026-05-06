@@ -40,6 +40,8 @@ const updateProfileSchema = z.object({
   industry: z.string().optional(),
   gstNumber: z.string().optional(),
   establishedYear: z.string().optional(),
+  companyName: z.string().min(2, 'Company name too short').max(100).optional(),
+  companyLogo: z.string().url('Invalid logo URL').optional().or(z.literal('')),
   companyWebsite: z.string().url('Invalid website URL').optional().or(z.literal('')),
 
   // Social links
@@ -233,7 +235,7 @@ export async function PATCH(request: NextRequest) {
       'name', 'username', 'bio', 'phone', 'secondaryPhone', 'location', 'website', 'websiteLabel', 'avatar',
       'address', 'pincode', 'externalLink', 'categoryId', 'turnover',
       'companySize', 'industry', 'gstNumber', 'establishedYear', 'companyWebsite',
-      'linkedin', 'twitter', 'facebook', 'instagram'
+      'linkedin', 'twitter', 'facebook', 'instagram', 'companyName', 'companyLogo'
     ];
 
     stringFields.forEach(field => {
@@ -299,6 +301,8 @@ export async function PATCH(request: NextRequest) {
         turnover: true,
         companySize: true,
         industry: true,
+        companyName: true,
+        companyLogo: true,
         linkedin: true,
         twitter: true,
         facebook: true,

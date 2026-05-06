@@ -166,6 +166,7 @@ export default function SettingsPage() {
     updateProfile({
       name, bio, website, websiteLabel, location, linkedin, twitter,
       visibility, messagingEnabled, gstNumber, phone, secondaryPhone, phoneVisibility, address, pincode, externalLink,
+      companyName: bsCompanyName,
     }, {
       onError: (error: any) => {
         if (error.data?.details) {

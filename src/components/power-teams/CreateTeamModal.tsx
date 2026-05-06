@@ -7,11 +7,13 @@ import { useAuth } from '@/hooks/use-auth';
 import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import { useCreatePowerTeam } from '@/hooks/use-api/use-power-teams';
 import { useCategories } from '@/hooks/use-api/use-categories';
+import { useProfile } from '@/hooks/use-api/use-user';
 import toast from 'react-hot-toast';
 
 export function CreateTeamModal() {
   const { isOpen, close, notifyCreated } = usePowerTeamModal();
-  const { user } = useAuth();
+  const { data: profileData } = useProfile();
+  const profile = profileData?.user ?? profileData;
   const { data: catData } = useCategories();
   const categories = catData?.categories || [];
 
@@ -25,9 +27,10 @@ export function CreateTeamModal() {
   const createMutation = useCreatePowerTeam();
 
   // Constraints Check
-  const isBusiness = (user as any)?.userType === 'BUSINESS';
-  const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
-  const isAdmin = (user as any)?.userType === 'ADMIN';
+  // Constraints Check - Use fresh profile data to avoid session staleness
+  const isBusiness = profile?.userType === 'BUSINESS';
+  const isVerified = profile?.verificationStatus === 'VERIFIED';
+  const isAdmin = profile?.userType === 'ADMIN';
   const canCreate = isAdmin || (isBusiness && isVerified);
 
   useEffect(() => {

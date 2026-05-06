@@ -7,31 +7,53 @@ import {
 import { 
   Eye, TrendingUp, Users, FileText, 
   ArrowUpRight, Award, Zap, 
-  Loader2, Target, BarChart3
+  Loader2, Target, BarChart3, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { useProfileAnalytics, usePostsAnalytics, useBusinessAnalytics } from '@/hooks/use-api/use-analytics';
 
-export default function AnalyticsDashboard({ userType }: { userType: string }) {
+export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userType?: string }) {
   const [activeView, setActiveView] = useState<'profile' | 'posts' | 'business'>('profile');
 
-  // Queries
-  const profileQuery = useProfileAnalytics();
-  const postsQuery = usePostsAnalytics();
-  const businessQuery = useBusinessAnalytics();
+  // Queries - Only fetch what is needed for the active view to avoid unnecessary errors/403s
+  const profileQuery = useProfileAnalytics({ enabled: activeView === 'profile' });
+  const postsQuery = usePostsAnalytics({ enabled: activeView === 'posts' });
+  const businessQuery = useBusinessAnalytics({ 
+    enabled: activeView === 'business' && (userType === 'BUSINESS' || userType === 'ADMIN') 
+  });
 
   const currentQuery = activeView === 'profile' ? profileQuery 
                     : activeView === 'posts' ? postsQuery 
                     : businessQuery;
 
-  const data = currentQuery.data;
+  const data = currentQuery.data as any;
   const loading = currentQuery.isLoading;
+  const isError = currentQuery.isError;
+  const error = currentQuery.error;
 
   if (loading) return (
     <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 text-secondary-500">
       <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       <p className="font-bold border-b border-primary-500 pb-1">Analyzing...</p>
+    </div>
+  );
+
+  if (isError) return (
+    <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 text-red-500 bg-white dark:bg-secondary-900 rounded-[2rem] border border-red-100 dark:border-red-900/30">
+      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl">
+        <X className="w-8 h-8 text-red-500" />
+      </div>
+      <div className="text-center">
+        <p className="font-black uppercase tracking-tight">Analysis Interrupted</p>
+        <p className="text-[10px] font-bold text-secondary-400 mt-1 uppercase">{(error as any)?.message || 'Failed to fetch data'}</p>
+      </div>
+      <button 
+        onClick={() => currentQuery.refetch()}
+        className="mt-2 px-6 py-2 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-xl text-[10px] font-black uppercase tracking-widest"
+      >
+        Retry
+      </button>
     </div>
   );
 
@@ -148,11 +170,11 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
           <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem]">
             <h4 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-widest mb-6">Recent Viewers</h4>
             <div className="space-y-4">
-              {data.recentViewers?.map((viewer: any) => (
-                <div key={viewer.id} className="flex items-center justify-between group">
+              {data.recentViewers?.map((viewer: any, index: number) => (
+                <div key={viewer.id || `viewer-${index}`} className="flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-secondary-100 dark:bg-secondary-800 overflow-hidden">
-                        {viewer.avatar ? <img src={viewer.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-black text-secondary-400 capitalize">{viewer.name[0]}</div>}
+                        {viewer.avatar ? <img src={viewer.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-black text-secondary-400 capitalize">{viewer.name?.[0] || '?'}</div>}
                     </div>
                     <div>
                         <p className="text-xs font-black text-secondary-900 dark:text-white uppercase truncate max-w-[120px]">{viewer.name}</p>
@@ -176,8 +198,8 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
           <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem]">
             <h4 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-widest mb-6">Top Performing Posts</h4>
             <div className="space-y-4">
-              {data.topPosts?.map((post: any) => (
-                <div key={post.id} className="flex items-center gap-4 group">
+              {data.topPosts?.map((post: any, index: number) => (
+                <div key={post.id || `post-${index}`} className="flex items-center gap-4 group">
                   <div className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center shrink-0">
                       <FileText className="w-5 h-5 text-primary-500" />
                   </div>
@@ -199,11 +221,11 @@ export default function AnalyticsDashboard({ userType }: { userType: string }) {
             <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem]">
                 <h4 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-widest mb-6">Industry Neighbors</h4>
                 <div className="space-y-4">
-                    {data.competitors?.map((comp: any) => (
-                        <div key={comp.name} className="flex items-center justify-between">
+                    {data.competitors?.map((comp: any, index: number) => (
+                        <div key={comp.name || `comp-${index}`} className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-white border border-secondary-100 dark:border-secondary-800 p-1">
-                                    {comp.logo ? <img src={comp.logo} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-secondary-50 flex items-center justify-center text-[10px] font-black text-secondary-300 uppercase">{comp.name[0]}</div>}
+                                    {comp.logo ? <img src={comp.logo} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-secondary-50 flex items-center justify-center text-[10px] font-black text-secondary-300 uppercase">{comp.name?.[0] || '?'}</div>}
                                 </div>
                                 <p className="text-xs font-black text-secondary-900 dark:text-white uppercase">{comp.name}</p>
                             </div>

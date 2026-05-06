@@ -16,11 +16,14 @@ export async function GET() {
       include: { company: true, category: true }
     });
 
-    if (!user || user.userType !== 'BUSINESS' || !user.companyId) {
+    if (!user || (user.userType !== 'BUSINESS' && user.userType !== 'ADMIN')) {
       return NextResponse.json({ error: 'Business account required' }, { status: 403 });
     }
 
+    // Support both direct Company relation and inline business details
     const companyId = user.companyId;
+    const companyName = user.companyId ? user.company?.name : (user.companyName || user.name);
+
     const categoryId = user.categoryId;
     const today = startOfDay(new Date());
     const thirtyDaysAgo = subDays(today, 29);
@@ -28,7 +31,7 @@ export async function GET() {
     // 1. Fetch historical data for company posts reach
     const companyViews = await prisma.postView.findMany({
       where: {
-        post: { companyId },
+        post: companyId ? { companyId } : { userId: user.id },
         createdAt: { gte: thirtyDaysAgo },
       },
       select: { createdAt: true },
@@ -67,8 +70,8 @@ export async function GET() {
     // 4. Category leaders (other companies in same category)
     const categoryCompetitors = await prisma.company.findMany({
         where: { 
-            industry: user.industry,
-            id: { not: companyId }
+            industry: user.industry || undefined,
+            id: companyId ? { not: companyId } : undefined
         },
         take: 3,
         include: {

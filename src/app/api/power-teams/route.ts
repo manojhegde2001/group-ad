@@ -29,6 +29,13 @@ export async function GET(request: NextRequest) {
     };
 
     if (categoryId) {
+      // Validate categoryId is a valid MongoDB ObjectId
+      if (!/^[0-9a-fA-F]{24}$/.test(categoryId)) {
+        return NextResponse.json({ 
+          teams: [], 
+          pagination: { total: 0, page, limit, totalPages: 0 } 
+        });
+      }
       where.categoryId = categoryId;
     }
 

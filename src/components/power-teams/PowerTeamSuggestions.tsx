@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { ShieldCheck, Zap, ArrowRight, Users } from 'lucide-react';
@@ -25,8 +26,8 @@ interface PowerTeamSuggestionsProps {
   viewedUserName: string;
 }
 
-export function PowerTeamSuggestions({ team, viewedUserName }: PowerTeamSuggestionsProps) {
-  const teammates = team.members.map((m) => m.user);
+export const PowerTeamSuggestions = memo(function PowerTeamSuggestions({ team, viewedUserName }: PowerTeamSuggestionsProps) {
+  const teammates = useMemo(() => team.members.map((m) => m.user), [team.members]);
 
   if (teammates.length === 0) return null;
 
@@ -103,4 +104,4 @@ export function PowerTeamSuggestions({ team, viewedUserName }: PowerTeamSuggesti
       </div>
     </div>
   );
-}
+});

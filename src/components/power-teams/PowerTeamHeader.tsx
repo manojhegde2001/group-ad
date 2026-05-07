@@ -1,5 +1,4 @@
-'use client';
-
+import { memo } from 'react';
 import { Building, Users, Globe, Lock, Share2, ShieldCheck, UserPlus, LogOut, Settings } from 'lucide-react';
 import { Button } from 'rizzui';
 import { Avatar } from '@/components/ui/avatar';
@@ -9,6 +8,7 @@ import { useJoinPowerTeam, useLeavePowerTeam } from '@/hooks/use-api/use-power-t
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80';
 
@@ -16,7 +16,7 @@ interface PowerTeamHeaderProps {
   team: any;
 }
 
-export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
+export const PowerTeamHeader = memo(function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
   const { user } = useAuth();
   const { openManageMembers, openEditTeam } = usePowerTeamModal();
   const joinMutation = useJoinPowerTeam();
@@ -52,10 +52,14 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
   return (
     <div className="relative">
       {/* Banner */}
-      <div className="h-64 sm:h-80 w-full relative overflow-hidden rounded-[3rem] shadow-2xl">
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
-          style={{ backgroundImage: `url('${team.banner || DEFAULT_BANNER}')` }}
+      <div className="h-64 sm:h-80 w-full relative overflow-hidden rounded-[3rem] shadow-2xl bg-secondary-100 dark:bg-secondary-800">
+        <Image
+          src={team.banner || DEFAULT_BANNER}
+          alt={`${team.name} Banner`}
+          fill
+          priority
+          className="object-cover transition-transform duration-1000 hover:scale-105"
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
@@ -83,9 +87,15 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
         <div className="flex flex-col md:flex-row items-end md:items-center justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
             {/* Logo */}
-            <div className="w-40 h-40 rounded-[2.5rem] bg-white dark:bg-secondary-900 p-2 shadow-2xl border-4 border-white dark:border-secondary-900 ring-1 ring-secondary-100 dark:ring-secondary-800">
+            <div className="relative w-40 h-40 rounded-[2.5rem] bg-white dark:bg-secondary-900 p-2 shadow-2xl border-4 border-white dark:border-secondary-900 ring-1 ring-secondary-100 dark:ring-secondary-800 overflow-hidden">
               {team.logo ? (
-                <img src={team.logo} alt={team.name} className="w-full h-full object-cover rounded-[2rem]" />
+                <Image 
+                    src={team.logo} 
+                    alt={team.name} 
+                    fill 
+                    className="object-cover rounded-[2rem] p-2" 
+                    sizes="(max-width: 768px) 160px, 160px"
+                />
               ) : (
                 <div className="w-full h-full rounded-[2rem] bg-secondary-50 dark:bg-secondary-800 flex items-center justify-center text-secondary-300">
                   <Building className="w-16 h-16" />
@@ -166,4 +176,4 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
       </div>
     </div>
   );
-}
+});

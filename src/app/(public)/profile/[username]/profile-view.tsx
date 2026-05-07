@@ -17,6 +17,7 @@ import { Popover } from 'rizzui';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import type { PostWithRelations } from '@/types';
+import { PowerTeamSuggestions } from '@/components/power-teams/PowerTeamSuggestions';
 
 const breakpointCols = {
     default: 5,
@@ -287,6 +288,14 @@ export default function ProfileView({ username }: { username: string }) {
                         </div>
                     </div>
                 </div>
+
+                {/* Power Team Suggestions: teammates of the viewed user */}
+                {!isOwnProfile && (profile as any).powerTeam && (
+                    <PowerTeamSuggestions
+                        team={(profile as any).powerTeam}
+                        viewedUserName={profile.name}
+                    />
+                )}
             </div>
 
             {/* --- Tabs --- */}

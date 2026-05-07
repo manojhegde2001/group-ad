@@ -51,7 +51,7 @@ export async function GET(
         }
 
         // Get counts, connection status, and block status separately
-        const [connectionCount, postCount, connectionRecord, blockRecord, mutualConnections] = await Promise.all([
+        const [connectionCount, postCount, connectionRecord, blockRecord, mutualConnections, powerTeamMembership] = await Promise.all([
             prisma.connection.count({ 
                 where: { 
                     status: 'ACCEPTED',
@@ -110,6 +110,42 @@ export async function GET(
                     };
                 })()
                 : Promise.resolve({ count: 0, avatars: [] as string[] }),
+            // Power Team membership with teammates
+            (async () => {
+                const membership = await prisma.powerTeamMember.findFirst({
+                    where: { userId: user.id, status: 'APPROVED' },
+                    include: {
+                        powerTeam: {
+                            select: {
+                                id: true,
+                                name: true,
+                                slug: true,
+                                logo: true,
+                                members: {
+                                    where: {
+                                        status: 'APPROVED',
+                                        userId: { not: user.id },
+                                    },
+                                    take: 5,
+                                    include: {
+                                        user: {
+                                            select: {
+                                                id: true,
+                                                name: true,
+                                                username: true,
+                                                avatar: true,
+                                                industry: true,
+                                                verificationStatus: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                });
+                return membership ?? null;
+            })(),
         ]);
 
 
@@ -156,6 +192,7 @@ export async function GET(
                     connections: connectionCount,
                 },
                 mutualConnections: mutualConnections,
+                powerTeam: powerTeamMembership?.powerTeam ?? null,
             },
         });
     } catch (error) {

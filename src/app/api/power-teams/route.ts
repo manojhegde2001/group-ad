@@ -30,7 +30,13 @@ export async function GET(request: NextRequest) {
       isActive: true,
     };
 
-    if (mine && currentUserId) {
+    if (mine) {
+      if (!currentUserId) {
+        return NextResponse.json({
+          teams: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        });
+      }
       where.members = {
         some: {
           userId: currentUserId,

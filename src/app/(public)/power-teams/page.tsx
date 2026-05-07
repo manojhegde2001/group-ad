@@ -28,11 +28,12 @@ export default function PowerTeamsPage() {
   const isAdmin = (user as any)?.userType === 'ADMIN';
 
   useEffect(() => {
-      // Redirect if user has a team and is NOT an admin
-      if (myTeam && !isAdmin) {
+      // Redirect if user has a team. Admins can still access the list by other means,
+      // but for consistency, we'll redirect them if they have an active membership.
+      if (myTeam) {
           router.replace(`/power-teams/${myTeam.slug}`);
       }
-  }, [myTeam, isAdmin, router]);
+  }, [myTeam, router]);
 
   const { data: teamsData, isLoading: isLoadingTeams } = usePowerTeams({
     categoryId: categoryId || undefined,
@@ -42,8 +43,9 @@ export default function PowerTeamsPage() {
   const isLoading = isCheckingTeam || isLoadingTeams;
   const teams = teamsData?.teams || [];
 
-  // Show loading/redirect state for non-admins who have a team
-  if ((isCheckingTeam || myTeam) && !isAdmin) {
+  // Show loading/redirect state for users who have a team
+  // We only show this if we are SURE they have a team
+  if (myTeam) {
       return (
           <div className="min-h-screen flex items-center justify-center bg-white dark:bg-secondary-950">
               <div className="flex flex-col items-center gap-6">
@@ -58,7 +60,7 @@ export default function PowerTeamsPage() {
                   <div className="text-center space-y-2">
                       <h2 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tighter">Accessing Alliance</h2>
                       <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-[0.2em]">
-                          {myTeam ? `Entering ${myTeam.name}...` : 'Verifying Membership Protocols...'}
+                          Entering {myTeam.name}...
                       </p>
                   </div>
               </div>

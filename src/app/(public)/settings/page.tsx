@@ -9,7 +9,7 @@ import {
   Save, LogOut, ChevronRight, MapPin, Link2, CreditCard,
   Building2, Briefcase, Users, Layout, Map, Compass, Trash2,
   Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone,
-  Zap, Plus, Search
+  Zap, Plus, Search, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
@@ -20,8 +20,9 @@ import { useAuthModal } from '@/hooks/use-modal';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import { PowerTeamGrid } from '@/components/power-teams/PowerTeamGrid';
 import { CreateTeamModal } from '@/components/power-teams/CreateTeamModal';
-import { usePowerTeams } from '@/hooks/use-api/use-power-teams';
+import { usePowerTeams, useMyPowerTeam } from '@/hooks/use-api/use-power-teams';
 import { usePowerTeamModal } from '@/hooks/use-power-teams';
+import Link from 'next/link';
 
 type Tab = 'profile' | 'security' | 'privacy' | 'notifications' | 'analytics' | 'power-teams';
 
@@ -106,13 +107,14 @@ export default function SettingsPage() {
   const [ptCategoryId, setPtCategoryId] = useState<string | null>(null);
   const [ptSearchQuery, setPtSearchQuery] = useState('');
   const { open: openPtModal } = usePowerTeamModal();
+  const { data: myTeam, isLoading: loadingMyTeam } = useMyPowerTeam();
   const { data: teamsData, isLoading: teamsLoading } = usePowerTeams({
     categoryId: ptCategoryId || undefined,
     search: ptSearchQuery || undefined,
   });
   const teams = teamsData?.teams || [];
-
   const profile = profileData?.user ?? profileData;
+  const isAdmin = profile?.userType === 'ADMIN';
 
   useEffect(() => {
     if (!profile) return;
@@ -535,65 +537,104 @@ export default function SettingsPage() {
 
             {tab === 'power-teams' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
-                <div className="bg-white dark:bg-secondary-900 p-6 sm:p-8 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
-                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                      <div>
-                        <h2 className="text-xl font-black text-secondary-900 dark:text-white tracking-tight">Power Teams</h2>
-                        <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest mt-0.5">Strategic Alliances</p>
+                {/* My Team Section */}
+                {myTeam && (
+                  <div className="bg-white dark:bg-secondary-900 rounded-[2rem] border-2 border-primary-500/20 overflow-hidden shadow-xl shadow-primary-500/5">
+                    <div className="relative h-24 bg-gradient-to-r from-primary-600 to-violet-600">
+                      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")' }} />
+                    </div>
+                    <div className="px-8 pb-8">
+                      <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-10 relative z-10">
+                        <div className="w-20 h-20 rounded-2xl bg-white dark:bg-secondary-800 p-1.5 shadow-2xl border border-secondary-100 dark:border-secondary-800">
+                           {myTeam.logo ? (
+                             <img src={myTeam.logo} alt={myTeam.name} className="w-full h-full object-cover rounded-xl" />
+                           ) : (
+                             <div className="w-full h-full rounded-xl bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-primary-500">
+                               <Building2 className="w-8 h-8" />
+                             </div>
+                           )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                             <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate">{myTeam.name}</h3>
+                             <span className={cn("px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest", myTeam.members?.[0]?.status === 'APPROVED' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                               {myTeam.members?.[0]?.status === 'APPROVED' ? 'Active Partner' : 'Request Pending'}
+                             </span>
+                          </div>
+                          <p className="text-xs text-secondary-500 font-medium mt-1 line-clamp-1">{myTeam.description}</p>
+                        </div>
+                        <Link href={`/power-teams/${myTeam.slug}`}>
+                          <Button className="rounded-xl bg-primary-500 text-white font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg shadow-primary-500/20 active:scale-95 transition-all">
+                             View Alliance Detail <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                          </Button>
+                        </Link>
                       </div>
-                      {(profile?.userType === 'ADMIN' || (profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'VERIFIED')) && (
-                        <Button
-                          onClick={openPtModal}
-                          className="rounded-2xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg active:scale-95 transition-all"
-                        >
-                          <Plus className="w-3.5 h-3.5 mr-2" /> Initialize Team
-                        </Button>
-                      )}
-                   </div>
+                    </div>
+                  </div>
+                )}
 
-                   <div className="flex flex-col lg:flex-row items-center gap-4 mb-8">
-                      <div className="flex flex-wrap items-center gap-1.5 flex-1">
-                        <button
-                          onClick={() => setPtCategoryId(null)}
-                          className={cn(
-                            "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                            !ptCategoryId 
-                              ? "bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md" 
-                              : "bg-secondary-50 dark:bg-secondary-800/50 text-secondary-500 hover:bg-secondary-100"
-                          )}
-                        >
-                          All Hubs
-                        </button>
-                        {categories.map((cat: any) => (
+                {/* Listing Section - Hidden for normal members who have a team, unless they are admins */}
+                {(!myTeam || isAdmin) && (
+                  <div className="bg-white dark:bg-secondary-900 p-6 sm:p-8 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                        <div>
+                          <h2 className="text-xl font-black text-secondary-900 dark:text-white tracking-tight">Explore Alliances</h2>
+                          <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest mt-0.5">Strategic Partnerships</p>
+                        </div>
+                        {(profile?.userType === 'ADMIN' || (profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'VERIFIED')) && (
+                          <Button
+                            onClick={openPtModal}
+                            className="rounded-2xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg active:scale-95 transition-all"
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-2" /> Initialize Team
+                          </Button>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row items-center gap-4 mb-8">
+                        <div className="flex flex-wrap items-center gap-1.5 flex-1">
                           <button
-                            key={cat.id}
-                            onClick={() => setPtCategoryId(cat.id)}
+                            onClick={() => setPtCategoryId(null)}
                             className={cn(
                               "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                              ptCategoryId === cat.id 
+                              !ptCategoryId 
                                 ? "bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md" 
                                 : "bg-secondary-50 dark:bg-secondary-800/50 text-secondary-500 hover:bg-secondary-100"
                             )}
                           >
-                            {cat.name}
+                            All Hubs
                           </button>
-                        ))}
-                      </div>
+                          {categories.map((cat: any) => (
+                            <button
+                              key={cat.id}
+                              onClick={() => setPtCategoryId(cat.id)}
+                              className={cn(
+                                "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                ptCategoryId === cat.id 
+                                  ? "bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md" 
+                                  : "bg-secondary-50 dark:bg-secondary-800/50 text-secondary-500 hover:bg-secondary-100"
+                              )}
+                            >
+                              {cat.name}
+                            </button>
+                          ))}
+                        </div>
 
-                      <div className="relative w-full lg:w-64">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" />
-                        <input
-                          type="text"
-                          placeholder="Search teams..."
-                          value={ptSearchQuery}
-                          onChange={(e) => setPtSearchQuery(e.target.value)}
-                          className="w-full h-10 pl-10 pr-4 rounded-xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 outline-none focus:ring-2 ring-primary-500/20 text-xs font-bold transition-all"
-                        />
-                      </div>
-                   </div>
+                        <div className="relative w-full lg:w-64">
+                          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" />
+                          <input
+                            type="text"
+                            placeholder="Search teams..."
+                            value={ptSearchQuery}
+                            onChange={(e) => setPtSearchQuery(e.target.value)}
+                            className="w-full h-10 pl-10 pr-4 rounded-xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 outline-none focus:ring-2 ring-primary-500/20 text-xs font-bold transition-all"
+                          />
+                        </div>
+                    </div>
 
-                   <PowerTeamGrid teams={teams} isLoading={teamsLoading} />
-                </div>
+                    <PowerTeamGrid teams={teams} isLoading={teamsLoading} />
+                  </div>
+                )}
                 <CreateTeamModal />
               </div>
             )}

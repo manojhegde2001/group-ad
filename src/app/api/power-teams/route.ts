@@ -76,23 +76,31 @@ export async function GET(request: NextRequest) {
               status: 'APPROVED',
             },
           },
-          // Add a separate check for pending requests for the current user
-          allMembers: {
-            select: { status: true, userId: true },
-            where: {
-              OR: [
-                { status: 'PENDING' },
-                { userId: currentUserId }
-              ]
-            }
-          }
         },
       }),
       prisma.powerTeam.count({ where }),
     ]);
 
+    // If logged in, fetch pending counts for the teams in the current page
+    let teamsWithPending = teams;
+    if (currentUserId) {
+        const teamIds = teams.map(t => t.id);
+        const pendingMembers = await prisma.powerTeamMember.findMany({
+            where: {
+                powerTeamId: { in: teamIds },
+                status: 'PENDING'
+            },
+            select: { powerTeamId: true }
+        });
+
+        teamsWithPending = teams.map(team => ({
+            ...team,
+            allMembers: pendingMembers.filter(m => m.powerTeamId === team.id)
+        }));
+    }
+
     return NextResponse.json({
-      teams,
+      teams: teamsWithPending,
       pagination: {
         total,
         page,

@@ -9,7 +9,7 @@ import {
   Save, LogOut, ChevronRight, MapPin, Link2, CreditCard,
   Building2, Briefcase, Users, Layout, Map, Compass, Trash2,
   Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone,
-  Zap, Plus, Search, ArrowRight
+  Zap, Plus, Search, ArrowRight, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
@@ -20,6 +20,7 @@ import { useAuthModal } from '@/hooks/use-modal';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import { PowerTeamGrid } from '@/components/power-teams/PowerTeamGrid';
 import { CreateTeamModal } from '@/components/power-teams/CreateTeamModal';
+import { EditTeamModal } from '@/components/power-teams/EditTeamModal';
 import { usePowerTeams, useMyPowerTeam } from '@/hooks/use-api/use-power-teams';
 import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import Link from 'next/link';
@@ -106,7 +107,7 @@ export default function SettingsPage() {
   // Power Teams state
   const [ptCategoryId, setPtCategoryId] = useState<string | null>(null);
   const [ptSearchQuery, setPtSearchQuery] = useState('');
-  const { open: openPtModal } = usePowerTeamModal();
+  const { open: openPtModal, openEditTeam } = usePowerTeamModal();
   const { data: myTeam, isLoading: loadingMyTeam } = useMyPowerTeam();
   const { data: teamsData, isLoading: teamsLoading } = usePowerTeams({
     categoryId: ptCategoryId || undefined,
@@ -537,38 +538,152 @@ export default function SettingsPage() {
 
             {tab === 'power-teams' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
-                {/* My Team Section */}
+                {/* My Team Dashboard Section */}
                 {myTeam && (
-                  <div className="bg-white dark:bg-secondary-900 rounded-[2rem] border-2 border-primary-500/20 overflow-hidden shadow-xl shadow-primary-500/5">
-                    <div className="relative h-24 bg-gradient-to-r from-primary-600 to-violet-600">
-                      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")' }} />
-                    </div>
-                    <div className="px-8 pb-8">
-                      <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-10 relative z-10">
-                        <div className="w-20 h-20 rounded-2xl bg-white dark:bg-secondary-800 p-1.5 shadow-2xl border border-secondary-100 dark:border-secondary-800">
-                           {myTeam.logo ? (
-                             <img src={myTeam.logo} alt={myTeam.name} className="w-full h-full object-cover rounded-xl" />
-                           ) : (
-                             <div className="w-full h-full rounded-xl bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-primary-500">
-                               <Building2 className="w-8 h-8" />
-                             </div>
-                           )}
+                  <div className="space-y-6">
+                    <div className="bg-white dark:bg-secondary-900 rounded-[2rem] border-2 border-primary-500/20 overflow-hidden shadow-xl shadow-primary-500/5">
+                      <div className="relative h-28 bg-gradient-to-r from-primary-600 via-indigo-600 to-violet-600">
+                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")' }} />
+                        <div className="absolute top-4 right-4">
+                           <Link href={`/power-teams/${myTeam.slug}`}>
+                             <Button size="sm" variant="outline" className="rounded-xl bg-white/10 backdrop-blur-md border-white/20 text-white font-black text-[9px] uppercase tracking-widest hover:bg-white/20 transition-all">
+                               Go to Hub <ArrowRight className="w-3 h-3 ml-1.5" />
+                             </Button>
+                           </Link>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                             <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate">{myTeam.name}</h3>
-                             <span className={cn("px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest", myTeam.members?.[0]?.status === 'APPROVED' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
-                               {myTeam.members?.[0]?.status === 'APPROVED' ? 'Active Partner' : 'Request Pending'}
-                             </span>
-                          </div>
-                          <p className="text-xs text-secondary-500 font-medium mt-1 line-clamp-1">{myTeam.description}</p>
-                        </div>
-                        <Link href={`/power-teams/${myTeam.slug}`}>
-                          <Button className="rounded-xl bg-primary-500 text-white font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg shadow-primary-500/20 active:scale-95 transition-all">
-                             View Alliance Detail <ArrowRight className="w-3.5 h-3.5 ml-2" />
-                          </Button>
-                        </Link>
                       </div>
+                      <div className="px-8 pb-8">
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-10 relative z-10">
+                          <div className="w-24 h-24 rounded-3xl bg-white dark:bg-secondary-800 p-1.5 shadow-2xl border border-secondary-100 dark:border-secondary-800">
+                            {myTeam.logo ? (
+                              <img src={myTeam.logo} alt={myTeam.name} className="w-full h-full object-cover rounded-2xl" />
+                            ) : (
+                              <div className="w-full h-full rounded-2xl bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-primary-500">
+                                <Building2 className="w-10 h-10" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 pb-2">
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate">{myTeam.name}</h3>
+                              <span className={cn("px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", myTeam.members?.[0]?.status === 'APPROVED' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                                {myTeam.members?.[0]?.status === 'APPROVED' ? 'Active Alliance' : 'Joining Alliance...'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-secondary-500 font-medium mt-1.5 line-clamp-1">{myTeam.description}</p>
+                          </div>
+                          {(myTeam.creatorId === user?.id || isAdmin) && (
+                            <div className="pb-2">
+                              <Button onClick={() => openEditTeam(myTeam)} variant="outline" className="rounded-xl font-black text-[10px] uppercase tracking-widest h-11 px-6 border-secondary-200 dark:border-secondary-800">
+                                Alliance Settings
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Stats & Members */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       {/* Partners List */}
+                       <div className="bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
+                          <div className="flex items-center justify-between mb-6">
+                             <div className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-primary-500" />
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary-900 dark:text-white">Active Partners</h4>
+                             </div>
+                             <span className="px-2 py-0.5 rounded-md bg-secondary-50 dark:bg-secondary-800 text-[9px] font-black text-secondary-500">{myTeam.members?.filter((m: any) => m.status === 'APPROVED').length || 0}</span>
+                          </div>
+                          <div className="space-y-3">
+                             {myTeam.members?.filter((m: any) => m.status === 'APPROVED').slice(0, 4).map((member: any) => (
+                               <div key={member.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors">
+                                  <div className="flex items-center gap-3">
+                                     <Avatar src={member.user?.avatar} name={member.user?.name} className="w-8 h-8 rounded-xl" />
+                                     <div>
+                                        <p className="text-[11px] font-black text-secondary-900 dark:text-white uppercase leading-none">{member.user?.name}</p>
+                                        <p className="text-[9px] text-secondary-400 font-bold mt-1">@{member.user?.username}</p>
+                                     </div>
+                                  </div>
+                                  {member.userId === myTeam.creatorId && <Shield className="w-3.5 h-3.5 text-primary-500" />}
+                               </div>
+                             ))}
+                             {myTeam.members?.filter((m: any) => m.status === 'APPROVED').length > 4 && (
+                               <button className="w-full py-2 text-[9px] font-black text-secondary-400 uppercase tracking-widest hover:text-primary-500 transition-colors">View All Partners</button>
+                             )}
+                             {myTeam.members?.filter((m: any) => m.status === 'APPROVED').length === 0 && (
+                               <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-widest text-center py-6 italic">No partners yet</p>
+                             )}
+                          </div>
+                       </div>
+
+                       {/* Action Center - Pending Requests or Join Status */}
+                       <div className="bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
+                          {myTeam.creatorId === user?.id || isAdmin ? (
+                            <>
+                              <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-2">
+                                    <Bell className="w-4 h-4 text-amber-500" />
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary-900 dark:text-white">Partner Requests</h4>
+                                </div>
+                                {myTeam.members?.filter((m: any) => m.status === 'PENDING').length > 0 && (
+                                  <span className="px-2 py-0.5 rounded-md bg-red-500 text-white text-[9px] font-black animate-pulse">
+                                    {myTeam.members?.filter((m: any) => m.status === 'PENDING').length} NEW
+                                  </span>
+                                )}
+                              </div>
+                              <div className="space-y-3">
+                                 {myTeam.members?.filter((m: any) => m.status === 'PENDING').slice(0, 3).map((req: any) => (
+                                   <div key={req.id} className="p-3 rounded-2xl bg-secondary-50 dark:bg-secondary-800/40 border border-secondary-100 dark:border-secondary-800">
+                                      <div className="flex items-center gap-3 mb-3">
+                                         <Avatar src={req.user?.avatar} name={req.user?.name} className="w-8 h-8 rounded-xl" />
+                                         <div className="flex-1 min-w-0">
+                                            <p className="text-[11px] font-black text-secondary-900 dark:text-white uppercase truncate">{req.user?.name}</p>
+                                            <p className="text-[9px] text-secondary-400 font-bold">@{req.user?.username}</p>
+                                         </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                         <Button size="sm" className="flex-1 h-8 rounded-lg bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest">Approve</Button>
+                                         <Button size="sm" variant="outline" className="flex-1 h-8 rounded-lg border-secondary-200 text-red-500 font-black text-[9px] uppercase tracking-widest">Reject</Button>
+                                      </div>
+                                   </div>
+                                 ))}
+                                 {myTeam.members?.filter((m: any) => m.status === 'PENDING').length === 0 && (
+                                   <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                                      <div className="p-3 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 text-secondary-300">
+                                         <CheckCircle className="w-6 h-6" />
+                                      </div>
+                                      <p className="text-[10px] text-secondary-400 font-black uppercase tracking-widest">Inbox Zero</p>
+                                   </div>
+                                 )}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                               <div className="flex items-center gap-2 mb-6">
+                                  <Shield className="w-4 h-4 text-primary-500" />
+                                  <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary-900 dark:text-white">Your Membership</h4>
+                               </div>
+                               <div className="p-6 rounded-3xl bg-secondary-50 dark:bg-secondary-800/40 border border-secondary-100 dark:border-secondary-800 text-center space-y-4">
+                                  <div className={cn("inline-flex p-4 rounded-2xl", myTeam.members?.[0]?.status === 'APPROVED' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500")}>
+                                     {myTeam.members?.[0]?.status === 'APPROVED' ? <CheckCircle className="w-8 h-8" /> : <Clock className="w-8 h-8" />}
+                                  </div>
+                                  <div>
+                                     <p className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+                                        {myTeam.members?.[0]?.status === 'APPROVED' ? 'Active Alliance Member' : 'Request is Under Review'}
+                                     </p>
+                                     <p className="text-xs text-secondary-500 font-medium mt-1">
+                                        {myTeam.members?.[0]?.status === 'APPROVED' ? 'You are part of this strategic alliance.' : 'The team creator will review your request soon.'}
+                                     </p>
+                                  </div>
+                                  {myTeam.members?.[0]?.status === 'APPROVED' && (
+                                    <Button variant="outline" className="w-full h-11 rounded-xl border-red-100 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all">
+                                      Leave Power Team
+                                    </Button>
+                                  )}
+                               </div>
+                            </>
+                          )}
+                       </div>
                     </div>
                   </div>
                 )}
@@ -636,6 +751,7 @@ export default function SettingsPage() {
                   </div>
                 )}
                 <CreateTeamModal />
+                <EditTeamModal />
               </div>
             )}
           </main>

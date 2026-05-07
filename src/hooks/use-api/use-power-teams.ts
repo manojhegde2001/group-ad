@@ -62,3 +62,50 @@ export const useUpdatePowerTeamMember = () => {
         },
     });
 };
+
+export const useLeavePowerTeam = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ slug, memberId }: { slug: string; memberId: string }) => powerTeamService.leavePowerTeam(slug, memberId),
+        onSuccess: (_, { slug }) => {
+            queryClient.invalidateQueries({ queryKey: ['power-team', slug] });
+            queryClient.invalidateQueries({ queryKey: ['power-teams'] });
+            toast.success('Left Power Team successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to leave team');
+        },
+    });
+};
+
+export const useDeletePowerTeam = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (slug: string) => powerTeamService.deletePowerTeam(slug),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['power-teams'] });
+            toast.success('Power Team deleted successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to delete power team');
+        },
+    });
+};
+
+export const useUpdatePowerTeam = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ slug, data }: { slug: string; data: any }) => powerTeamService.updatePowerTeam(slug, data),
+        onSuccess: (_, { slug }) => {
+            queryClient.invalidateQueries({ queryKey: ['power-team', slug] });
+            queryClient.invalidateQueries({ queryKey: ['power-teams'] });
+            toast.success('Power Team updated successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to update power team');
+        },
+    });
+};

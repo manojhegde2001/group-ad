@@ -4,7 +4,8 @@ import { Building, Users, Globe, Lock, Share2, ShieldCheck, UserPlus, LogOut, Se
 import { Button } from 'rizzui';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
-import { useJoinPowerTeam } from '@/hooks/use-api/use-power-teams';
+import { usePowerTeamModal } from '@/hooks/use-power-teams';
+import { useJoinPowerTeam, useLeavePowerTeam } from '@/hooks/use-api/use-power-teams';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -16,12 +17,16 @@ interface PowerTeamHeaderProps {
 
 export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
   const { user } = useAuth();
+  const { openManageMembers, openEditTeam } = usePowerTeamModal();
   const joinMutation = useJoinPowerTeam();
+  const leaveMutation = useLeavePowerTeam();
 
   const isMember = team.members?.some((m: any) => m.userId === user?.id && m.status === 'APPROVED');
   const isPending = team.members?.some((m: any) => m.userId === user?.id && m.status === 'PENDING');
   const isCreator = team.creatorId === user?.id;
   const isAdmin = (user as any)?.userType === 'ADMIN';
+
+  const myMembership = team.members?.find((m: any) => m.userId === user?.id);
 
   const handleJoin = () => {
     if ((user as any)?.userType !== 'BUSINESS') {
@@ -29,6 +34,13 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
         return;
     }
     joinMutation.mutate(team.slug);
+  };
+
+  const handleLeave = () => {
+    if (!confirm('Are you sure you want to leave this Power Team?')) return;
+    if (myMembership) {
+        leaveMutation.mutate({ slug: team.slug, memberId: myMembership.id });
+    }
   };
 
   const handleShare = () => {
@@ -55,7 +67,10 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
                 <Share2 className="w-5 h-5" />
             </button>
             {(isCreator || isAdmin) && (
-                <button className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all active:scale-90">
+                <button 
+                    onClick={() => openEditTeam(team)}
+                    className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all active:scale-90"
+                >
                     <Settings className="w-5 h-5" />
                 </button>
             )}
@@ -124,6 +139,8 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
             {isMember && !isCreator && (
               <Button
                 variant="outline"
+                onClick={handleLeave}
+                isLoading={leaveMutation.isPending}
                 className="h-12 px-8 rounded-2xl border-2 border-red-100 dark:border-red-900/30 text-red-500 font-black text-xs uppercase tracking-widest hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-95 transition-all"
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -132,6 +149,7 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
             )}
             {isCreator && (
               <Button
+                onClick={() => openManageMembers(team)}
                 className="h-12 px-8 rounded-2xl bg-primary-500 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary-500/20 hover:bg-primary-600 active:scale-95 transition-all"
               >
                 Manage Partners

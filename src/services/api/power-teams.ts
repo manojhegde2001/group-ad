@@ -12,5 +12,6 @@ export const powerTeamService = {
     
     joinPowerTeam: (slug: string) => apiClient.post<any>(`/api/power-teams/${slug}/members`),
     updateMember: (slug: string, data: any) => apiClient.patch<any>(`/api/power-teams/${slug}/members`, data),
+    leavePowerTeam: (slug: string, memberId: string) => apiClient.delete<any>(`/api/power-teams/${slug}/members`, { body: JSON.stringify({ memberId }) }),
     removeMember: (slug: string, memberId: string) => apiClient.delete<any>(`/api/power-teams/${slug}/members`, { body: JSON.stringify({ memberId }) }),
 };

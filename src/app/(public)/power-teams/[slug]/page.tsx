@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShieldCheck, Info, MessageSquare, ExternalLink, User, Users, Globe } from 'lucide-react';
 import { Button } from 'rizzui';
 import Link from 'next/link';
+import { ManageMembersModal } from '@/components/power-teams/ManageMembersModal';
+import { EditTeamModal } from '@/components/power-teams/EditTeamModal';
 
 export default function PowerTeamDetailPage() {
   const params = useParams();
@@ -170,6 +172,9 @@ export default function PowerTeamDetailPage() {
 
         </div>
       </div>
+      
+      <ManageMembersModal />
+      <EditTeamModal />
     </main>
   );
 }

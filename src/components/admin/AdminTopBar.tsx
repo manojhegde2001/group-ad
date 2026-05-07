@@ -95,9 +95,9 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
     <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shrink-0 transition-colors duration-300">
       {/* Brand & Breadcrumb Area */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
-        {/* Logo - Always visible */}
-
-
+        <Link href="/" className="lg:hidden shrink-0">
+          <Logo iconOnly className="w-9 h-9" />
+        </Link>
         
         {/* Mobile Page Title */}
         <div className="lg:hidden pl-8">

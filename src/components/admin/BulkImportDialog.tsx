@@ -102,7 +102,7 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'GroupAd_Bulk_Template.xlsx';
+    anchor.download = 'Vrutta_Bulk_Template.xlsx';
     anchor.click();
     window.URL.revokeObjectURL(url);
 

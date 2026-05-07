@@ -141,7 +141,7 @@ export default function AdminLoginPage() {
                       onChange={(e) => setIdentifier(e.target.value)}
                       required
                       disabled={loading}
-                      placeholder="admin@groupad.net"
+                      placeholder="admin@vrutta.com"
                       className="w-full pl-14 pr-5 py-5 bg-secondary-50 dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 rounded-3xl text-foreground placeholder-secondary-400/60 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium disabled:opacity-50"
                     />
                   </div>

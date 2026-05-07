@@ -25,7 +25,7 @@ export function BulkEventActions({ eventId, onSuccess, isEventEnded }: BulkEvent
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template');
-    XLSX.writeFile(wb, 'group_ad_bulk_template.xlsx');
+    XLSX.writeFile(wb, 'vrutta_bulk_template.xlsx');
   };
 
   const processFile = async (e: React.ChangeEvent<HTMLInputElement>, type: 'register' | 'attendance') => {

@@ -8,6 +8,7 @@ import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import { useJoinPowerTeam, useLeavePowerTeam } from '@/hooks/use-api/use-power-teams';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80';
 
@@ -67,12 +68,12 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
                 <Share2 className="w-5 h-5" />
             </button>
             {(isCreator || isAdmin) && (
-                <button 
-                    onClick={() => openEditTeam(team)}
+                <Link 
+                    href={`/power-teams/${team.slug}/settings`}
                     className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all active:scale-90"
                 >
                     <Settings className="w-5 h-5" />
-                </button>
+                </Link>
             )}
         </div>
       </div>

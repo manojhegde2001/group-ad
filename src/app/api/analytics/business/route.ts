@@ -81,6 +81,19 @@ export async function GET() {
         }
     });
 
+    // 5. Calculate Industry Rank (Market Share)
+    const categoryViewsTotal = await prisma.postView.count({
+        where: {
+            post: { categoryId }
+        }
+    });
+
+    const marketShare = categoryViewsTotal > 0 ? (companyViews.length / categoryViewsTotal) * 100 : 0;
+    let industryRank = "Top 50%";
+    if (marketShare > 20) industryRank = "Top 5%";
+    else if (marketShare > 10) industryRank = "Top 15%";
+    else if (marketShare > 5) industryRank = "Top 25%";
+
     return NextResponse.json({
       trends: trendData,
       categoryInfo: {
@@ -94,7 +107,7 @@ export async function GET() {
       })),
       summary: {
         totalReach: companyViews.length,
-        industryRank: 'Top 15%', // Mock logic for now
+        industryRank: industryRank,
       },
     });
   } catch (error) {

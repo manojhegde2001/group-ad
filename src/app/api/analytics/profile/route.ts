@@ -80,6 +80,7 @@ export async function GET() {
       summary: {
         totalViews,
         uniqueViewers: uniqueViewers.length,
+        engagement: totalViews > 0 ? ((uniqueViewers.length / totalViews) * 100).toFixed(1) : 0,
       },
     });
   } catch (error) {

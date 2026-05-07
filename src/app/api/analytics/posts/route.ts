@@ -71,11 +71,16 @@ export async function GET() {
         }
     });
 
-    // 5. Overall stats
     const totalReach = await prisma.post.aggregate({
         where: { userId },
         _sum: { views: true }
     });
+
+    const totalLikes = await prisma.postLike.count({
+        where: { post: { userId } }
+    });
+
+    const totalPosts = await prisma.post.count({ where: { userId } });
 
     return NextResponse.json({
       trends: trendData,
@@ -86,7 +91,8 @@ export async function GET() {
       })),
       summary: {
         totalReach: totalReach._sum.views || 0,
-        totalPosts: await prisma.post.count({ where: { userId } }),
+        totalPosts,
+        avgLikes: totalPosts > 0 ? (totalLikes / totalPosts).toFixed(1) : 0,
       },
     });
   } catch (error) {

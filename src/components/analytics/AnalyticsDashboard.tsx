@@ -105,20 +105,20 @@ export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userTy
           <>
             <StatCard label="Total Views" value={data.summary.totalViews} icon={Eye} color="text-blue-500" bg="bg-blue-50" />
             <StatCard label="Unique Viewers" value={data.summary.uniqueViewers} icon={Users} color="text-violet-500" bg="bg-violet-50" />
-            <StatCard label="Engagement" value="12.4%" icon={Zap} color="text-amber-500" bg="bg-amber-50" />
+            <StatCard label="Engagement" value={`${data.summary.engagement || 0}%`} icon={Zap} color="text-amber-500" bg="bg-amber-50" />
           </>
         )}
         {activeView === 'posts' && (
           <>
             <StatCard label="Total Reach" value={data.summary.totalReach} icon={TrendingUp} color="text-emerald-500" bg="bg-emerald-50" />
             <StatCard label="Posts" value={data.summary.totalPosts} icon={FileText} color="text-pink-500" bg="bg-pink-50" />
-            <StatCard label="Avg. Likes" value="42" icon={Award} color="text-orange-500" bg="bg-orange-50" />
+            <StatCard label="Avg. Likes" value={data.summary.avgLikes || 0} icon={Award} color="text-orange-500" bg="bg-orange-50" />
           </>
         )}
         {activeView === 'business' && (
           <>
             <StatCard label="Brand Reach" value={data.summary.totalReach} icon={Target} color="text-indigo-500" bg="bg-indigo-50" />
-            <StatCard label="Market Share" value="Top 15%" icon={TrendingUp} color="text-sky-500" bg="bg-sky-50" />
+            <StatCard label="Market Share" value={data.summary.industryRank} icon={TrendingUp} color="text-sky-500" bg="bg-sky-50" />
             <StatCard label="Competitors" value={data.categoryInfo.totalCompetitors} icon={Users} color="text-rose-500" bg="bg-rose-50" />
           </>
         )}

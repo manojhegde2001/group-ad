@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { PowerTeamGrid } from '@/components/power-teams/PowerTeamGrid';
 import { CreateTeamModal } from '@/components/power-teams/CreateTeamModal';
-import { usePowerTeams } from '@/hooks/use-api/use-power-teams';
+import { usePowerTeams, useMyPowerTeam } from '@/hooks/use-api/use-power-teams';
 import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import { useCategories } from '@/hooks/use-api/use-categories';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from 'rizzui';
-import { Plus, Building, Filter, Search, Zap, ShieldCheck } from 'lucide-react';
+import { Plus, Building, Filter, Search, Zap, ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function PowerTeamsPage() {
+  const router = useRouter();
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -20,16 +23,51 @@ export default function PowerTeamsPage() {
   const { data: catData } = useCategories();
   const categories = catData?.categories || [];
 
-  const { data: teamsData, isLoading } = usePowerTeams({
+  // Check if user is already in a team
+  const { data: myTeam, isLoading: isCheckingTeam } = useMyPowerTeam();
+  const isAdmin = (user as any)?.userType === 'ADMIN';
+
+  useEffect(() => {
+      // Redirect if user has a team and is NOT an admin
+      if (myTeam && !isAdmin) {
+          router.replace(`/power-teams/${myTeam.slug}`);
+      }
+  }, [myTeam, isAdmin, router]);
+
+  const { data: teamsData, isLoading: isLoadingTeams } = usePowerTeams({
     categoryId: categoryId || undefined,
     search: searchQuery || undefined,
   });
 
+  const isLoading = isCheckingTeam || isLoadingTeams;
   const teams = teamsData?.teams || [];
+
+  // Show loading/redirect state for non-admins who have a team
+  if ((isCheckingTeam || myTeam) && !isAdmin) {
+      return (
+          <div className="min-h-screen flex items-center justify-center bg-white dark:bg-secondary-950">
+              <div className="flex flex-col items-center gap-6">
+                  <div className="relative">
+                      <div className="p-6 rounded-[2rem] bg-primary-500/10 text-primary-500 animate-pulse">
+                          <Building className="w-12 h-12" />
+                      </div>
+                      <div className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-white dark:bg-secondary-900 shadow-xl border border-secondary-100 dark:border-secondary-800">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
+                      </div>
+                  </div>
+                  <div className="text-center space-y-2">
+                      <h2 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tighter">Accessing Alliance</h2>
+                      <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-[0.2em]">
+                          {myTeam ? `Entering ${myTeam.name}...` : 'Verifying Membership Protocols...'}
+                      </p>
+                  </div>
+              </div>
+          </div>
+      );
+  }
 
   const isBusiness = (user as any)?.userType === 'BUSINESS';
   const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
-  const isAdmin = (user as any)?.userType === 'ADMIN';
   const canCreate = isAdmin || (isBusiness && isVerified);
 
   return (

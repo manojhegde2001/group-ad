@@ -3,14 +3,17 @@
 import { Modal, Button, Avatar } from 'rizzui';
 import { X, Check, UserMinus, ShieldAlert, Users, Clock } from 'lucide-react';
 import { usePowerTeamModal } from '@/hooks/use-power-teams';
-import { useUpdatePowerTeamMember, useLeavePowerTeam } from '@/hooks/use-api/use-power-teams';
+import { usePowerTeam, useUpdatePowerTeamMember, useLeavePowerTeam } from '@/hooks/use-api/use-power-teams';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export function ManageMembersModal() {
-    const { manageMembersOpen, closeManageMembers, activeTeam } = usePowerTeamModal();
+    const { manageMembersOpen, closeManageMembers, activeTeam: initialTeam } = usePowerTeamModal();
     const { user } = useAuth();
+    
+    const { data: teamData } = usePowerTeam(initialTeam?.slug);
+    const activeTeam = teamData?.team || initialTeam;
     
     const updateMemberMutation = useUpdatePowerTeamMember();
     const removeMemberMutation = useLeavePowerTeam(); // Can be used by admin to remove others too
@@ -80,6 +83,7 @@ export function ManageMembersModal() {
                                         <Button
                                             size="sm"
                                             onClick={() => handleAction(req.id, 'APPROVED')}
+                                            isLoading={updateMemberMutation.isPending && (updateMemberMutation.variables as any)?.data?.memberId === req.id && (updateMemberMutation.variables as any)?.data?.status === 'APPROVED'}
                                             className="h-9 px-4 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest"
                                         >
                                             <Check className="w-3.5 h-3.5 mr-1" />
@@ -89,6 +93,7 @@ export function ManageMembersModal() {
                                             size="sm"
                                             variant="outline"
                                             onClick={() => handleAction(req.id, 'REJECTED')}
+                                            isLoading={updateMemberMutation.isPending && (updateMemberMutation.variables as any)?.data?.memberId === req.id && (updateMemberMutation.variables as any)?.data?.status === 'REJECTED'}
                                             className="h-9 px-4 rounded-xl border-secondary-200 text-red-500 font-black text-[10px] uppercase tracking-widest"
                                         >
                                             <X className="w-3.5 h-3.5 mr-1" />

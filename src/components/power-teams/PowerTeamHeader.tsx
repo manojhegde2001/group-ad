@@ -147,12 +147,17 @@ export function PowerTeamHeader({ team }: PowerTeamHeaderProps) {
                 Exit Team
               </Button>
             )}
-            {isCreator && (
+            {(isCreator || isAdmin) && (
               <Button
                 onClick={() => openManageMembers(team)}
-                className="h-12 px-8 rounded-2xl bg-primary-500 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary-500/20 hover:bg-primary-600 active:scale-95 transition-all"
+                className="group relative h-12 px-8 rounded-2xl bg-primary-500 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary-500/20 hover:bg-primary-600 active:scale-95 transition-all"
               >
                 Manage Partners
+                {team.members?.some((m: any) => m.status === 'PENDING') && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-secondary-900 animate-bounce">
+                    {team.members.filter((m: any) => m.status === 'PENDING').length}
+                  </span>
+                )}
               </Button>
             )}
           </div>

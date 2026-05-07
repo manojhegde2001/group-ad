@@ -9,6 +9,14 @@ export const usePowerTeams = (params: Record<string, any> = {}) => {
     });
 };
 
+export const useMyPowerTeam = () => {
+    return useQuery({
+        queryKey: ['power-teams', { mine: true }],
+        queryFn: () => powerTeamService.getPowerTeams({ mine: true }),
+        select: (data: any) => data?.teams?.[0] || null,
+    });
+};
+
 export const usePowerTeam = (slug: string) => {
     return useQuery({
         queryKey: ['power-team', slug],
@@ -55,6 +63,7 @@ export const useUpdatePowerTeamMember = () => {
         mutationFn: ({ slug, data }: { slug: string; data: any }) => powerTeamService.updateMember(slug, data),
         onSuccess: (_, { slug }) => {
             queryClient.invalidateQueries({ queryKey: ['power-team', slug] });
+            queryClient.invalidateQueries({ queryKey: ['power-teams'] });
             toast.success('Member updated successfully');
         },
         onError: (error: any) => {

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { Building, Users, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80';
@@ -13,8 +14,13 @@ interface PowerTeamCardProps {
 }
 
 export function PowerTeamCard({ team, className }: PowerTeamCardProps) {
+  const { user } = useAuth();
   const memberCount = team._count?.members || 0;
   const recentMembers = team.members || [];
+  
+  const pendingCount = team.allMembers?.filter((m: any) => m.status === 'PENDING').length || 0;
+  const isCreator = team.creatorId === user?.id;
+  const isAdmin = (user as any)?.userType === 'ADMIN';
 
   return (
     <Link
@@ -39,6 +45,15 @@ export function PowerTeamCard({ team, className }: PowerTeamCardProps) {
             {team.category?.name || 'General Industry'}
           </div>
         </div>
+
+        {/* Pending Badge Notification */}
+        {(isCreator || isAdmin) && pendingCount > 0 && (
+          <div className="absolute top-4 right-4 animate-pulse">
+            <div className="px-2 py-1 rounded-lg bg-red-500 text-white text-[8px] font-black uppercase tracking-tighter shadow-lg border border-red-400">
+              {pendingCount} Pending Requests
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Content Section */}
@@ -75,7 +90,7 @@ export function PowerTeamCard({ team, className }: PowerTeamCardProps) {
         <div className="mt-6 pt-4 border-t border-secondary-50 dark:border-secondary-800/50 flex items-center justify-between">
           {/* Member Stack */}
           <div className="flex -space-x-2">
-            {recentMembers.map((member: any) => (
+            {recentMembers.filter((m: any) => m.status === 'APPROVED').slice(0, 5).map((member: any) => (
               <Avatar
                 key={member.user.id}
                 src={member.user.avatar}

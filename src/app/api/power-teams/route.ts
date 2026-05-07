@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get('categoryId');
     const search = searchParams.get('search');
+    const mine = searchParams.get('mine') === 'true';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
@@ -29,7 +30,13 @@ export async function GET(request: NextRequest) {
       isActive: true,
     };
 
-    if (categoryId) {
+    if (mine && currentUserId) {
+      where.members = {
+        some: {
+          userId: currentUserId,
+        }
+      };
+    } else if (categoryId) {
       if (/^[0-9a-fA-F]{24}$/.test(categoryId)) {
         where.categoryId = categoryId;
       }
@@ -69,6 +76,16 @@ export async function GET(request: NextRequest) {
               status: 'APPROVED',
             },
           },
+          // Add a separate check for pending requests for the current user
+          allMembers: {
+            select: { status: true, userId: true },
+            where: {
+              OR: [
+                { status: 'PENDING' },
+                { userId: currentUserId }
+              ]
+            }
+          }
         },
       }),
       prisma.powerTeam.count({ where }),

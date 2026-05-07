@@ -29,7 +29,7 @@ export default function ExplorePage() {
             Discovery <span className="text-primary-600 dark:text-primary-400 italic">Central</span>
           </h1>
           <p className="text-secondary-500 dark:text-secondary-400 text-xs sm:text-sm md:text-base max-w-lg mx-auto font-black uppercase tracking-[0.3em] leading-relaxed opacity-80">
-            The pulse of Group Ad. Find trending communities, local hubs, and premium creators.
+            The pulse of Vrutta. Find trending communities, local hubs, and premium creators.
           </p>
         </div>
       </div>

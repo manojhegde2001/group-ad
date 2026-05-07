@@ -35,7 +35,7 @@ export function AuthModal() {
           <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-secondary-200 dark:bg-secondary-700 rounded-full sm:hidden" />
 
           <h2 className="text-base font-bold text-secondary-900 dark:text-white mt-1 sm:mt-0">
-            {mode === 'login' ? 'Welcome back 👋' : 'Join Group Ad'}
+            {mode === 'login' ? 'Welcome back 👋' : 'Join Vrutta'}
           </h2>
 
           <div className="flex-shrink-0 mt-1 sm:mt-0">
@@ -78,8 +78,8 @@ export function AuthModal() {
         <div className="px-5 sm:px-6 pt-3">
           <p className="text-xs text-secondary-400">
             {mode === 'login'
-              ? 'Sign in to continue to Group Ad'
-              : 'Join thousands of professionals on Group Ad'}
+              ? 'Sign in to continue to Vrutta'
+              : 'Join thousands of professionals on Vrutta'}
           </p>
         </div>
 

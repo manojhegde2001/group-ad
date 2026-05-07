@@ -2,10 +2,10 @@ import CalendarView from '@/components/events/CalendarView';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Event Calendar | Group Ad',
+    title: 'Event Calendar | Vrutta',
     description: 'Browse all upcoming events, meetings, and workshops in one place.',
     openGraph: {
-        title: 'Event Calendar | Group Ad',
+        title: 'Event Calendar | Vrutta',
         description: 'Browse all upcoming events, meetings, and workshops in one place.',
         images: [
             {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Event Calendar | Group Ad',
+        title: 'Event Calendar | Vrutta',
         description: 'Browse all upcoming events, meetings, and workshops in one place.',
         images: ['https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
     },

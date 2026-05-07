@@ -96,8 +96,8 @@ export default function ProfileView({ username }: { username: string }) {
     const handleShareProfile = () => {
         if (typeof navigator !== 'undefined' && navigator.share) {
             navigator.share({
-                title: `${profile?.name}'s Profile | Group Ad`,
-                text: `Check out ${profile?.name}'s profile on Group Ad`,
+                title: `${profile?.name}'s Profile | Vrutta`,
+                text: `Check out ${profile?.name}'s profile on Vrutta`,
                 url: window.location.href
             }).catch(() => {});
         } else {

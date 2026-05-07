@@ -56,9 +56,9 @@ export default function PrivacyPolicyPage() {
                     <Info className="w-5 h-5" />
                     <span className="text-sm font-black uppercase tracking-wider">Introduction</span>
                 </div>
-                <h2 className="text-3xl font-black text-secondary-900 dark:text-white mb-6">Welcome to Group Ad</h2>
+                <h2 className="text-3xl font-black text-secondary-900 dark:text-white mb-6">Welcome to Vrutta</h2>
                 <p className="text-lg text-secondary-600 dark:text-secondary-400 leading-relaxed">
-                    At Group Ad, we are committed to protecting your privacy and ensuring your trust. This Privacy Policy outlines how we collect, use, and protect the information of our business and individual users. By using our platform, you agree to the practices described in this policy.
+                    At Vrutta, we are committed to protecting your privacy and ensuring your trust. This Privacy Policy outlines how we collect, use, and protect the information of our business and individual users. By using our platform, you agree to the practices described in this policy.
                 </p>
             </section>
 

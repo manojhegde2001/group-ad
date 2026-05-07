@@ -16,14 +16,14 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Group Ad — Enterprise Social Networking',
-    template: '%s | Group Ad'
+    default: 'Vrutta — Enterprise Social Networking',
+    template: '%s | Vrutta'
   },
   description: 'Connect with professionals and businesses in a neat, curated environment for maximum growth and collaboration.',
-  keywords: ['enterprise social network', 'business networking', 'professional collaboration', 'group ad', 'b2b networking'],
-  authors: [{ name: 'Group Ad Team' }],
-  creator: 'Group Ad',
-  publisher: 'Group Ad',
+  keywords: ['enterprise social network', 'business networking', 'professional collaboration', 'Vrutta', 'b2b networking'],
+  authors: [{ name: 'Vrutta Team' }],
+  creator: 'Vrutta',
+  publisher: 'Vrutta',
   formatDetection: {
     email: false,
     address: false,
@@ -37,16 +37,16 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Group Ad — Enterprise Social Networking',
+    title: 'Vrutta — Enterprise Social Networking',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
     url: 'https://group-ad.vercel.app',
-    siteName: 'Group Ad',
+    siteName: 'Vrutta',
     images: [
       {
         url: 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
         width: 1200,
         height: 630,
-        alt: 'Group Ad — Business Social Networking Platform',
+        alt: 'Vrutta — Business Social Networking Platform',
       },
     ],
     locale: 'en_US',
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Group Ad — Enterprise Social Networking',
+    title: 'Vrutta — Enterprise Social Networking',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
     creator: '@groupad',
     images: ['https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],

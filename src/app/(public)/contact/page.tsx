@@ -48,7 +48,7 @@ export default function ContactPage() {
               We're here for you
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-secondary-900 dark:text-white mb-6">
-              Get in Touch with <span className="text-primary-600">Group Ad</span>
+              Get in Touch with <span className="text-primary-600">Vrutta</span>
             </h1>
             <p className="text-xl text-secondary-600 dark:text-secondary-400 max-w-2xl mx-auto font-medium">
               Have questions about our enterprise features or need technical assistance? Our team is ready to help you thrive.
@@ -158,7 +158,7 @@ export default function ContactPage() {
       <footer className="py-12 border-t border-secondary-100 dark:border-secondary-900 text-center">
         <p className="text-sm font-bold flex items-center justify-center gap-2 text-secondary-500">
             <span className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white text-xs font-black">G</span>
-            Group Ad Support • Connecting Businesses Worldwide
+            Vrutta Support • Connecting Businesses Worldwide
         </p>
       </footer>
     </div>

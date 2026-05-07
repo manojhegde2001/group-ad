@@ -142,7 +142,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
   return (
     <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-2 md:py-6">
       {/* Visually hidden H1 for SEO stability across auth states */}
-      <h1 className="sr-only">Group Ad — Discover Professional Ideas & Business Networking Feed</h1>
+      <h1 className="sr-only">Vrutta — Discover Professional Ideas & Business Networking Feed</h1>
 
       {useDemoData && (
         <p className="text-center text-xs text-secondary-400 mb-4">

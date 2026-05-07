@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       if (user.email) {
         await sendMail({
           to: user.email,
-          subject: 'Welcome to Group Ad!',
+          subject: 'Welcome to Vrutta!',
           html: welcomeEmail(user.name || user.username, user.email),
         });
       }

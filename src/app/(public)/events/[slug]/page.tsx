@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!event) return { title: 'Event Not Found' };
 
     return {
-        title: `${event.title} | Group Ad Events`,
+        title: `${event.title} | Vrutta Events`,
         description: event.description.slice(0, 160),
         openGraph: {
             title: event.title,

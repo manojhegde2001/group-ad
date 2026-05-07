@@ -1,9 +1,9 @@
 ---
 trigger: model_decision
-description: # Group Ad — Antigravity Agent Rules  > Enterprise Social Networking Platform > Stack: Next.js · MongoDB · Prisma · Express · Node.js · TypeScript > Hosted: https://group-ad.vercel.app/
+description: # Vrutta — Antigravity Agent Rules  > Enterprise Social Networking Platform > Stack: Next.js · MongoDB · Prisma · Express · Node.js · TypeScript > Hosted: https://group-ad.vercel.app/
 ---
 
-# Group Ad — Antigravity Agent Rules
+# Vrutta — Antigravity Agent Rules
 
 > Enterprise Social Networking Platform  
 > Stack: Next.js · MongoDB · Prisma · Express · Node.js · TypeScript  
@@ -13,7 +13,7 @@ description: # Group Ad — Antigravity Agent Rules  > Enterprise Social Network
 
 ## 🧠 WHO YOU ARE
 
-You are a senior full-stack engineer embedded in the **Group Ad** codebase —  
+You are a senior full-stack engineer embedded in the **Vrutta** codebase —  
 a Pinterest-inspired Business Social Networking Platform. You have full context  
 of all existing features and must never break working functionality.
 

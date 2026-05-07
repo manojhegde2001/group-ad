@@ -54,7 +54,7 @@ export default function TermsPage() {
             <section id="acceptance" className="mb-16">
                 <h2 className="text-3xl font-black text-secondary-900 dark:text-white mb-6">1. Acceptance of These Terms</h2>
                 <p className="text-lg text-secondary-600 dark:text-secondary-400 leading-relaxed">
-                    By accessing or using Group Ad (the "Service"), you agree to be bound by these Terms and Conditions. If you are using the Service on behalf of a business, you represent that you have the authority to bind that business to these terms.
+                    By accessing or using Vrutta (the "Service"), you agree to be bound by these Terms and Conditions. If you are using the Service on behalf of a business, you represent that you have the authority to bind that business to these terms.
                 </p>
             </section>
 
@@ -74,7 +74,7 @@ export default function TermsPage() {
             <section id="content" className="mb-16">
                 <h2 className="text-2xl font-black text-secondary-900 dark:text-white mb-4 border-l-4 border-primary-500 pl-4">3. Content Standards & Professional Conduct</h2>
                 <p className="text-secondary-600 dark:text-secondary-400">
-                    Group Ad is a professional networking environment. You agree not to post content that:
+                    Vrutta is a professional networking environment. You agree not to post content that:
                 </p>
                 <div className="grid md:grid-cols-2 gap-4 mt-4">
                     {[
@@ -96,7 +96,7 @@ export default function TermsPage() {
             <section id="intellectual-property" className="mb-16">
                 <h2 className="text-2xl font-black text-secondary-900 dark:text-white mb-4 border-l-4 border-primary-500 pl-4">4. Intellectual Property</h2>
                 <p className="text-secondary-600 dark:text-secondary-400">
-                    The Service and its original content (excluding User Content), features, and functionality are and will remain the exclusive property of Group Ad and its licensors. By posting content to the Service, you grant us a worldwide, non-exclusive, royalty-free license to use, display, and distribute that content within the platform.
+                    The Service and its original content (excluding User Content), features, and functionality are and will remain the exclusive property of Vrutta and its licensors. By posting content to the Service, you grant us a worldwide, non-exclusive, royalty-free license to use, display, and distribute that content within the platform.
                 </p>
             </section>
 
@@ -106,7 +106,7 @@ export default function TermsPage() {
                 </div>
                 <h2 className="text-2xl font-black m-0 mb-4 text-white">Limitation of Liability</h2>
                 <p className="m-0 text-secondary-400 leading-relaxed">
-                    Group Ad is provided on an "AS IS" and "AS AVAILABLE" basis. To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use or inability to use the Service.
+                    Vrutta is provided on an "AS IS" and "AS AVAILABLE" basis. To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use or inability to use the Service.
                 </p>
             </section>
         </article>

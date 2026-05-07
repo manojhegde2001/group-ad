@@ -243,7 +243,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                                     <ShieldCheck className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                                     <div>
                                         <p className="text-sm font-bold text-primary-900 dark:text-primary-100 leading-none">Verified Event</p>
-                                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 opacity-80">Moderated by Group Ad HQ</p>
+                                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 opacity-80">Moderated by Vrutta HQ</p>
                                     </div>
                                 </div>
                             </div>

@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     await sendMail({
       to: email,
-      subject: 'Reset your password - Group Ad',
+      subject: 'Reset your password - Vrutta',
       html: passwordResetEmail(user.name, token),
     });
 

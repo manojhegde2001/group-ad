@@ -83,7 +83,7 @@ export default function AboutPage() {
             Connecting the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-purple-600">Enterprise</span> World
           </h1>
           <p className="text-xl text-secondary-600 dark:text-secondary-400 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-            Group Ad is the premium social network designed specifically for verified businesses and industry professionals to thrive together.
+            Vrutta is the premium social network designed specifically for verified businesses and industry professionals to thrive together.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
@@ -165,7 +165,7 @@ export default function AboutPage() {
                         We believe that business growth is fueled by meaningful connections. Traditional social networks are cluttered with noise, making it difficult for professionals to find high-value opportunities.
                     </p>
                     <p>
-                        Group Ad provides a clean, verified, and professional environment where information flows securely and transparency is the standard.
+                        Vrutta provides a clean, verified, and professional environment where information flows securely and transparency is the standard.
                     </p>
                 </div>
             </motion.div>
@@ -270,7 +270,7 @@ export default function AboutPage() {
       <footer className="py-12 border-t border-secondary-100 dark:border-secondary-900 text-center">
         <p className="text-sm font-bold flex items-center justify-center gap-2 text-secondary-500">
             <span className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white text-xs">G</span>
-            Group Ad © 2026. All Rights Reserved.
+            Vrutta © 2026. All Rights Reserved.
         </p>
       </footer>
     </div>

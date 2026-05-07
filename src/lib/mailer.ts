@@ -4,7 +4,7 @@ const host = process.env.EMAIL_HOST;
 const port = parseInt(process.env.EMAIL_PORT || '587');
 const user = process.env.EMAIL_USER;
 const pass = process.env.EMAIL_PASS;
-const from = process.env.EMAIL_FROM || '"Group Ad" <no-reply@groupad.com>';
+const from = process.env.EMAIL_FROM || '"Vrutta" <no-reply@groupad.com>';
 
 let transporter: nodemailer.Transporter | null = null;
 
@@ -54,10 +54,10 @@ function baseLayout(title: string, content: string) {
                 <!-- Header -->
                 <div style="padding:40px 40px 0;text-align:center;">
                     <div style="display:inline-block;width:64px;height:64px;">
-                        <img src="${process.env.NEXT_PUBLIC_APP_URL}/auth/logo-small.svg" width="64" height="64" alt="Group Ad Logo" style="display:block;width:64px;height:64px;border:0;" />
+                        <img src="${process.env.NEXT_PUBLIC_APP_URL}/auth/logo-small.svg" width="64" height="64" alt="Vrutta Logo" style="display:block;width:64px;height:64px;border:0;" />
                     </div>
                     <div style="margin-top:12px;">
-                        <span style="font-size:18px;font-weight:800;color:${accentColor};letter-spacing:-0.5px;text-transform:uppercase;">Group Ad</span>
+                        <span style="font-size:18px;font-weight:800;color:${accentColor};letter-spacing:-0.5px;text-transform:uppercase;">Vrutta</span>
                     </div>
                 </div>
 
@@ -69,12 +69,12 @@ function baseLayout(title: string, content: string) {
                 <!-- Footer -->
                 <div style="padding:0 40px 40px;text-align:center;border-top:1px solid #f3f4f6;">
                     <p style="margin:24px 0 0;color:#6b7280;font-size:13px;line-height:1.6;">
-                        This is an automated message from Group Ad.<br/>
+                        This is an automated message from Vrutta.<br/>
                         Connect with top professionals and expand your network.
                     </p>
                     <div style="margin-top:20px;padding-top:20px;border-top:1px solid #f3f4f6;">
                         <p style="margin:0;color:#9ca3af;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">
-                        &copy; ${new Date().getFullYear()} Group Ad. All rights reserved.
+                        &copy; ${new Date().getFullYear()} Vrutta. All rights reserved.
                         </p>
                     </div>
                 </div>
@@ -92,7 +92,7 @@ export function welcomeEmail(name: string, email: string) {
     const content = `
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Welcome, ${name}!</h1>
     <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;text-align:center;">
-        We're thrilled to have you join our community. Your professional journey on Group Ad starts here.
+        We're thrilled to have you join our community. Your professional journey on Vrutta starts here.
     </p>
     <div style="text-align:center;margin:32px 0;">
         <a href="${loginUrl}" style="display:inline-block;background-color:${accentColor};color:#ffffff;padding:16px 36px;border-radius:14px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 6px -1px rgba(124, 58, 237, 0.2);transition:background-color 0.2s;">Get Started Now</a>
@@ -101,7 +101,7 @@ export function welcomeEmail(name: string, email: string) {
         Explore our groups and events to start networking today!
     </p>`;
 
-    return baseLayout('Welcome to Group Ad!', content);
+    return baseLayout('Welcome to Vrutta!', content);
 }
 
 export function passwordResetEmail(name: string, token: string) {
@@ -110,7 +110,7 @@ export function passwordResetEmail(name: string, token: string) {
     const content = `
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Reset Your Password</h1>
     <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;text-align:center;">
-        You requested to reset your password for your Group Ad account. Click the button below to set a new password.
+        You requested to reset your password for your Vrutta account. Click the button below to set a new password.
     </p>
     <div style="text-align:center;margin:32px 0;">
         <a href="${resetUrl}" style="display:inline-block;background-color:${accentColor};color:#ffffff;padding:16px 36px;border-radius:14px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 6px -1px rgba(124, 58, 237, 0.2);">Reset Password</a>
@@ -123,7 +123,7 @@ export function passwordResetEmail(name: string, token: string) {
         <a href="${resetUrl}" style="color:${accentColor};text-decoration:none;">${resetUrl}</a>
     </div>`;
 
-    return baseLayout('Reset Password - Group Ad', content);
+    return baseLayout('Reset Password - Vrutta', content);
 }
 
 export function bulkAccountCreatedEmail(name: string, username: string, email: string) {
@@ -132,7 +132,7 @@ export function bulkAccountCreatedEmail(name: string, username: string, email: s
     const content = `
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Account Ready!</h1>
     <p style="margin:0 0 32px;font-size:16px;line-height:1.6;color:#4b5563;text-align:center;">
-        Hello ${name}, your administrator has created an account for you on Group Ad.
+        Hello ${name}, your administrator has created an account for you on Vrutta.
     </p>
     
     <div style="background-color:#f9fafb;border-radius:16px;padding:24px;border:1px solid #f3f4f6;margin-bottom:32px;">
@@ -152,7 +152,7 @@ export function bulkAccountCreatedEmail(name: string, username: string, email: s
         Need help? Reply to this email or contact your administrator.
     </p>`;
 
-    return baseLayout('Account Created - Group Ad', content);
+    return baseLayout('Account Created - Vrutta', content);
 }
 
 export function enrollmentConfirmationEmail(eventTitle: string, eventDate: string) {
@@ -164,7 +164,7 @@ export function enrollmentConfirmationEmail(eventTitle: string, eventDate: strin
       <div style="background:#f5f3ff;border-radius:8px;padding:12px 16px;margin:16px 0;">
         <p style="margin:0;color:#6d28d9;font-weight:600;">📅 ${eventDate}</p>
       </div>
-      <p style="color:#6b7280;font-size:13px;">If you have any questions, reply to this email or visit Group Ad.</p>
+      <p style="color:#6b7280;font-size:13px;">If you have any questions, reply to this email or visit Vrutta.</p>
     </div>`;
 }
 
@@ -177,7 +177,7 @@ export function enrollmentApprovalEmail(eventTitle: string, eventDate: string, m
         <p style="margin:0 0 6px;color:#065f46;font-weight:600;">📅 ${eventDate}</p>
         ${meetingLink ? `<p style="margin:0;"><a href="${meetingLink}" style="color:#059669;">🔗 Join Meeting Link</a></p>` : ''}
       </div>
-      <p style="color:#6b7280;font-size:13px;">See you there! — The Group Ad Team</p>
+      <p style="color:#6b7280;font-size:13px;">See you there! — The Vrutta Team</p>
     </div>`;
 }
 
@@ -190,6 +190,6 @@ export function eventReminderEmail(eventTitle: string, eventDate: string, timeUn
         <p style="margin:0 0 6px;color:#92400e;font-weight:600;">📅 ${eventDate}</p>
         ${meetingLink ? `<p style="margin:0;"><a href="${meetingLink}" style="color:#d97706;">🔗 Join Meeting Link</a></p>` : ''}
       </div>
-      <p style="color:#6b7280;font-size:13px;">See you soon! — The Group Ad Team</p>
+      <p style="color:#6b7280;font-size:13px;">See you soon! — The Vrutta Team</p>
     </div>`;
 }

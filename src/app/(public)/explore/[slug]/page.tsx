@@ -19,9 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${category.name} Updates`,
-    description: category.description || `Explore professional updates and business networking in the ${category.name} category on Group Ad.`,
+    description: category.description || `Explore professional updates and business networking in the ${category.name} category on Vrutta.`,
     openGraph: {
-      title: `${category.name} on Group Ad`,
+      title: `${category.name} on Vrutta`,
       description: category.description || `Explore the latest from ${category.name} professionals.`,
       images: [
         {
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${category.name} | Group Ad`,
+      title: `${category.name} | Vrutta`,
       description: category.description || `Explore professional updates from ${category.name}.`,
       images: ['https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
     },

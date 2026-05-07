@@ -102,7 +102,7 @@ export default function AdminLoginPage() {
 
         {/* Footer Credit */}
         <p className="absolute bottom-12 left-16 text-secondary-400 dark:text-secondary-600 text-[10px] font-black uppercase tracking-widest animate-fade-in stagger-4">
-          Group Ad &copy; 2026 Enterprise Edition
+          Vrutta &copy; 2026 Enterprise Edition
         </p>
       </div>
 

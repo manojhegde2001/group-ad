@@ -19,13 +19,73 @@ export default function PowerTeamDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
-        <Skeleton className="h-80 w-full rounded-[3rem]" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           <div className="lg:col-span-2 space-y-4">
-              <Skeleton className="h-64 w-full rounded-3xl" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="bg-secondary-50 dark:bg-secondary-900 rounded-[3rem] p-8 sm:p-12 border border-secondary-100 dark:border-secondary-800 relative overflow-hidden">
+           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+              <Skeleton className="w-32 h-32 sm:w-40 sm:h-40 rounded-[2.5rem] shrink-0" />
+              <div className="flex-1 space-y-4 text-center md:text-left w-full">
+                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                    <Skeleton className="h-8 w-48 rounded-xl" />
+                    <Skeleton className="h-6 w-24 rounded-lg" />
+                 </div>
+                 <Skeleton className="h-4 w-3/4 mx-auto md:mx-0 rounded-lg" />
+                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-4">
+                    <Skeleton className="h-12 w-32 rounded-2xl" />
+                    <Skeleton className="h-12 w-32 rounded-2xl" />
+                 </div>
+              </div>
            </div>
-           <Skeleton className="h-64 w-full rounded-3xl" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mt-16">
+           {/* Partners Grid Skeleton */}
+           <div className="lg:col-span-2 space-y-10">
+              <div className="flex items-center justify-between mb-8">
+                 <Skeleton className="h-10 w-48 rounded-xl" />
+                 <Skeleton className="h-6 w-20 rounded-lg" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 {[1, 2, 3, 4].map(i => (
+                   <div key={i} className="p-4 rounded-3xl border border-secondary-100 dark:border-secondary-800 flex items-center gap-4">
+                      <Skeleton className="w-14 h-14 rounded-2xl shrink-0" />
+                      <div className="flex-1 space-y-2">
+                         <Skeleton className="h-4 w-24 rounded-md" />
+                         <Skeleton className="h-3 w-32 rounded-md" />
+                      </div>
+                   </div>
+                 ))}
+              </div>
+              {/* About Skeleton */}
+              <div className="p-8 sm:p-10 rounded-[3rem] bg-secondary-50/50 dark:bg-secondary-900/50 border border-secondary-100 dark:border-secondary-800">
+                 <Skeleton className="h-6 w-40 mb-4 rounded-lg" />
+                 <Skeleton className="h-4 w-full mb-2 rounded-md" />
+                 <Skeleton className="h-4 w-5/6 rounded-md" />
+              </div>
+           </div>
+
+           {/* Sidebar Skeleton */}
+           <div className="space-y-8">
+              <div className="p-8 rounded-[2.5rem] border border-secondary-100 dark:border-secondary-800 space-y-6">
+                 <Skeleton className="h-4 w-32 rounded-md mb-6" />
+                 {[1, 2, 3].map(i => (
+                   <div key={i} className="flex gap-4">
+                      <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                      <div className="space-y-2 flex-1 pt-1">
+                         <Skeleton className="h-3 w-20 rounded-md" />
+                         <Skeleton className="h-4 w-32 rounded-md" />
+                      </div>
+                   </div>
+                 ))}
+                 <div className="pt-8 border-t border-secondary-50 dark:border-secondary-800 flex items-center gap-4">
+                    <Skeleton className="w-12 h-12 rounded-2xl shrink-0" />
+                    <div className="space-y-2">
+                       <Skeleton className="h-3 w-16 rounded-md" />
+                       <Skeleton className="h-4 w-28 rounded-md" />
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
       </div>
     );

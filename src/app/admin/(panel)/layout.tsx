@@ -6,7 +6,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminTopBar from '@/components/admin/AdminTopBar';
 
 export const metadata = {
-    title: 'Admin Panel — Group Ad',
+    title: 'Admin Panel — Vrutta',
 };
 
 export default async function AdminPanelLayout({ children }: { children: React.ReactNode }) {

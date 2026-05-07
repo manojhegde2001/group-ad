@@ -19,10 +19,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${user.name} (@${username})`,
-    description: user.bio || `Connect with ${user.name} on Group Ad — Enterprise Social Networking.`,
+    description: user.bio || `Connect with ${user.name} on Vrutta — Enterprise Social Networking.`,
     openGraph: {
-      title: `${user.name} on Group Ad`,
-      description: user.bio || `Connect with ${user.name} on Group Ad.`,
+      title: `${user.name} on Vrutta`,
+      description: user.bio || `Connect with ${user.name} on Vrutta.`,
       images: [
         {
           url: user.avatar || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: `${user.name} (@${username})`,
-      description: user.bio || `Connect with ${user.name} on Group Ad.`,
+      description: user.bio || `Connect with ${user.name} on Vrutta.`,
       images: [user.avatar || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
     },
   };

@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       try {
         await sendMail({
           to: u.email,
-          subject: 'Your Account is Ready - Group Ad',
+          subject: 'Your Account is Ready - Vrutta',
           html: bulkAccountCreatedEmail(u.name, u.username, u.email),
         });
       } catch (err) {

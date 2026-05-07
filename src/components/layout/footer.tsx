@@ -53,7 +53,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-8 sm:mt-10 pt-6 border-t border-secondary-200 dark:border-secondary-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <p className="text-xs sm:text-sm text-secondary-500 dark:text-secondary-400">
-            © {new Date().getFullYear()} Group Ad. All rights reserved.
+            © {new Date().getFullYear()} Vrutta. All rights reserved.
           </p>
           <p className="text-xs text-secondary-400 dark:text-secondary-500">
             Made with ❤️ for professionals

@@ -9,16 +9,15 @@ interface LogoProps {
 }
 
 export default function Logo({ className, iconOnly = false }: LogoProps) {
-  // If iconOnly, we want a square logo (logo-small.svg)
-  // If not iconOnly, we want the full horizontal logo (logo-full.svg / logo-full-dark.svg)
-  
   return (
     <div className={cn(
-      'relative flex items-center justify-center select-none shrink-0',
+      'relative select-none shrink-0',
+      !className?.includes('w-') && (iconOnly ? 'w-10' : 'w-40'),
+      !className?.includes('h-') && 'h-10',
       className
     )}>
       {iconOnly ? (
-        <div className="relative w-10 h-10">
+        <>
           <Image
             src="/auth/logo-small.svg"
             alt="Vrutta Icon"
@@ -33,9 +32,9 @@ export default function Logo({ className, iconOnly = false }: LogoProps) {
             className="object-contain hidden dark:block"
             priority
           />
-        </div>
+        </>
       ) : (
-        <div className="relative w-40 h-10">
+        <>
           <Image
             src="/auth/logo-full.svg"
             alt="Vrutta Logo"
@@ -50,7 +49,7 @@ export default function Logo({ className, iconOnly = false }: LogoProps) {
             className="object-contain hidden dark:block"
             priority
           />
-        </div>
+        </>
       )}
     </div>
   );

@@ -37,7 +37,9 @@ export async function middleware(req: NextRequest) {
     // Production main domain: bounce /admin/* to the subdomain
     if (pathname.startsWith('/admin')) {
       const targetPath = pathname.replace('/admin', '') || '/';
-      return NextResponse.redirect(new URL(`https://admin.vrutta.net${targetPath}`, req.url));
+      // Dynamically construct the admin subdomain based on current host
+      const adminHost = host.startsWith('www.') ? host.replace('www.', 'admin.') : `admin.${host}`;
+      return NextResponse.redirect(new URL(`${req.nextUrl.protocol}//${adminHost}${targetPath}`, req.url));
     }
   }
 
@@ -56,10 +58,8 @@ export async function middleware(req: NextRequest) {
 
   // Protect entire admin context (subdomain OR localhost /admin/*)
   if (isAdminContext && (!token || token.userType !== 'ADMIN')) {
-    const loginUrl = isLocalhost
-      ? new URL('/admin/login', req.url)
-      : new URL('https://admin.vrutta.net/login', req.url);
-    return NextResponse.redirect(loginUrl);
+    const loginPath = isAdminSubdomain ? '/login' : '/admin/login';
+    return NextResponse.redirect(new URL(loginPath, req.url));
   }
 
   // Protect main-domain auth routes
@@ -69,7 +69,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/settings');
 
   if (isProtected && !token) {
-    const url = new URL('https://www.vrutta.net/', req.url);
+    const url = new URL('/', req.url);
     url.searchParams.set('auth', 'required');
     return NextResponse.redirect(url);
   }

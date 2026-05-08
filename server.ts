@@ -1,3 +1,10 @@
+import { loadEnvFile } from 'node:process';
+try {
+    loadEnvFile();
+} catch (e) {
+    // .env might not exist in some environments, ignore
+}
+
 import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';

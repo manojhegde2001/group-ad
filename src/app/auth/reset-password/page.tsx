@@ -30,12 +30,14 @@ const resetPasswordSchema = z
 
 type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 
+import { useResetPassword } from '@/hooks/use-api/use-auth';
+
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const resetPasswordMutation = useResetPassword();
 
   const {
     control,
@@ -55,32 +57,17 @@ function ResetPasswordContent() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          password: data.password,
-        }),
-      });
-
-      if (response.ok) {
+    resetPasswordMutation.mutate({
+      token,
+      password: data.password,
+    }, {
+      onSuccess: () => {
         setIsSuccess(true);
-        toast.success('Password reset successfully! 🎉');
         setTimeout(() => {
           router.push('/auth');
         }, 3000);
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || 'Something went wrong');
       }
-    } catch (error) {
-      toast.error('Failed to reset password');
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   if (!token) {
@@ -184,8 +171,8 @@ function ResetPasswordContent() {
                    <Button
                       type="submit"
                       className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary-500/25"
-                      isLoading={isLoading}
-                      disabled={isLoading}
+                      isLoading={resetPasswordMutation.isPending}
+                      disabled={resetPasswordMutation.isPending}
                    >
                       Reset Password
                    </Button>

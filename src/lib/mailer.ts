@@ -30,8 +30,9 @@ export async function sendMail({ to, subject, html }: { to: string; subject: str
     console.log('[mailer] Attempting to send email to:', to);
     const t = getTransporter();
     if (!t) {
-        console.warn('[mailer] Email not configured — skipping send to', to);
-        return;
+        const error = new Error('Email SMTP configuration is missing');
+        console.error('[mailer]', error.message);
+        throw error;
     }
     try {
         const info = await t.sendMail({ from, to, subject, html });

@@ -9,6 +9,7 @@ import { ShieldCheck, ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useForgotPassword } from '@/hooks/use-api/use-auth';
 import toast from 'react-hot-toast';
 
 const forgotPasswordSchema = z.object({
@@ -19,7 +20,7 @@ type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const forgotPasswordMutation = useForgotPassword();
 
   const {
     register,
@@ -30,26 +31,11 @@ export default function ForgotPasswordPage() {
   });
 
   const onSubmit = async (data: ForgotPasswordData) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
+    forgotPasswordMutation.mutate(data, {
+      onSuccess: () => {
         setIsSubmitted(true);
-        toast.success('Reset link sent to your email');
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.details || errorData.error || 'Something went wrong');
       }
-    } catch (error) {
-      toast.error('Failed to send reset link');
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -112,8 +98,8 @@ export default function ForgotPasswordPage() {
             <Button
               type="submit"
               className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary-500/25"
-              isLoading={isLoading}
-              disabled={isLoading}
+              isLoading={forgotPasswordMutation.isPending}
+              disabled={forgotPasswordMutation.isPending}
             >
               Send Reset Link
             </Button>

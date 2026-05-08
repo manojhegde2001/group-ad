@@ -11,7 +11,7 @@ interface LogoProps {
 export default function Logo({ className, iconOnly = false }: LogoProps) {
   return (
     <div className={cn(
-      'relative select-none shrink-0',
+      'relative flex items-center justify-center select-none shrink-0',
       !className?.includes('w-') && (iconOnly ? 'w-10' : 'w-40'),
       !className?.includes('h-') && 'h-10',
       className

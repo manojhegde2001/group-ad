@@ -57,7 +57,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // Protect entire admin context (subdomain OR localhost /admin/*)
-  if (isAdminContext && (!token || token.userType !== 'ADMIN')) {
+  // But ALLOW public assets like /auth/ logo files and other static assets
+  if (isAdminContext && !pathname.startsWith('/auth') && !pathname.includes('.') && (!token || token.userType !== 'ADMIN')) {
     const loginPath = isAdminSubdomain ? '/login' : '/admin/login';
     return NextResponse.redirect(new URL(loginPath, req.url));
   }

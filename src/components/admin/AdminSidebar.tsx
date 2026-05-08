@@ -173,7 +173,7 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
       {/* Footer links */}
       <div className="px-3 py-3 space-y-0.5">
         <Link
-          href="https://www.groupad.net"
+          href="https://www.vrutta.net"
           target="_blank"
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 transition-all"
         >
@@ -181,7 +181,7 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
           <span className="flex-1">View Live Site</span>
         </Link>
         <button
-          onClick={() => signOut({ callbackUrl: 'https://admin.groupad.net/login' })}
+          onClick={() => signOut({ callbackUrl: 'https://admin.vrutta.net/login' })}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 transition-all"
         >
           <LogOut className="w-4 h-4 shrink-0 opacity-60" />

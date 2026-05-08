@@ -30,7 +30,7 @@ export async function middleware(req: NextRequest) {
     // Production main domain: bounce /admin/* to the subdomain
     if (pathname.startsWith('/admin')) {
       const targetPath = pathname.replace('/admin', '') || '/';
-      return NextResponse.redirect(new URL(`https://admin.groupad.net${targetPath}`, req.url));
+      return NextResponse.redirect(new URL(`https://admin.vrutta.net${targetPath}`, req.url));
     }
   }
 
@@ -51,7 +51,7 @@ export async function middleware(req: NextRequest) {
   if (isAdminContext && (!token || token.userType !== 'ADMIN')) {
     const loginUrl = isLocalhost
       ? new URL('/admin/login', req.url)
-      : new URL('https://admin.groupad.net/login', req.url);
+      : new URL('https://admin.vrutta.net/login', req.url);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -62,7 +62,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/settings');
 
   if (isProtected && !token) {
-    const url = new URL('https://www.groupad.net/', req.url);
+    const url = new URL('https://www.vrutta.net/', req.url);
     url.searchParams.set('auth', 'required');
     return NextResponse.redirect(url);
   }

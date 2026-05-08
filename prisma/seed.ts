@@ -60,10 +60,10 @@ async function main() {
   const adminPassword = await bcrypt.hash('Admin@123', 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@groupad.com' },
+    where: { email: 'admin@vrutta.net' },
     update: {},
     create: {
-      email: 'admin@groupad.com',
+      email: 'admin@vrutta.net',
       password: adminPassword,
       name: 'Admin User',
       username: 'admin',
@@ -401,7 +401,7 @@ async function main() {
   console.log(`   • 3 Sample events`);
   console.log('\n🔑 Login Credentials:');
   console.log('   Admin:');
-  console.log('   • Email: admin@groupad.com');
+  console.log('   • Email: admin@vrutta.net');
   console.log('   • Password: Admin@123\n');
   console.log('   Business Users:');
   console.log('   • Email: john@techinnovations.com | Password: Password@123');

@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vrutta — Enterprise Social Networking',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
-    creator: '@groupad',
+    creator: '@vrutta',
     images: ['https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
   },
   robots: {

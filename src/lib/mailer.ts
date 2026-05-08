@@ -4,7 +4,7 @@ const host = process.env.EMAIL_HOST;
 const port = parseInt(process.env.EMAIL_PORT || '587');
 const user = process.env.EMAIL_USER;
 const pass = process.env.EMAIL_PASS;
-const from = process.env.EMAIL_FROM || '"Vrutta" <no-reply@groupad.com>';
+const from = process.env.EMAIL_FROM || '"Vrutta" <no-reply@vrutta.net>';
 
 let transporter: nodemailer.Transporter | null = null;
 

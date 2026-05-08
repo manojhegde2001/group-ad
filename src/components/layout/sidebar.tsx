@@ -51,7 +51,7 @@ export function Sidebar() {
   });
 
   if (isAdmin) {
-    navLinks.push({ label: 'Admin', href: 'https://admin.groupad.net/', icon: ShieldCheck });
+    navLinks.push({ label: 'Admin', href: 'https://admin.vrutta.net/', icon: ShieldCheck });
   }
 
   const SidebarLink = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {

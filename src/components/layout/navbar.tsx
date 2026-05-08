@@ -258,7 +258,7 @@ export function Navbar() {
 
                         {(user as any).userType === 'ADMIN' && (
                           <Link
-                            href="https://admin.groupad.net/"
+                            href="https://admin.vrutta.net/"
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/10 font-bold text-xs text-primary-600 dark:text-primary-400 transition-colors"
                           >
@@ -378,7 +378,7 @@ export function Navbar() {
                 <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Account</p>
                 <DrawerLink href={`/profile/${(user as any).username || ''}`} icon={User} label="My Profile" onClick={() => setMobileDrawerOpen(false)} active={pathname === `/profile/${(user as any).username}`} />
                 {(user as any)?.userType === 'ADMIN' && (
-                     <DrawerLink href="https://admin.groupad.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
+                     <DrawerLink href="https://admin.vrutta.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
                 )}
                 <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
             </div>

@@ -44,7 +44,13 @@ export async function middleware(req: NextRequest) {
   }
 
   // ── Auth Logic ────────────────────────────────────────────────────────────
-  const token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET })) as any;
+  // We use a more robust token retrieval that handles localhost vs production cookie names
+  let token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET })) as any;
+
+  // Fallback for localhost if the production NEXTAUTH_URL (https) is causing it to look for secure cookies only
+  if (!token && isLocalhost) {
+    token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false })) as any;
+  }
 
   // Admin login page is always public — the (panel) layout handles its own auth
   const isAdminLogin = isAdminContext && (pathname === '/login' || pathname === '/admin/login');

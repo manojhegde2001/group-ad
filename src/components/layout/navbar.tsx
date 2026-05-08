@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 import { useMe } from '@/hooks/use-api/use-user';
@@ -101,19 +101,20 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [queryStarted, setQueryStarted] = useState(false);
+
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !queryStarted) {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('auth') === 'required') {
-        openLogin();
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
-      }
-      setQueryStarted(true);
+    if (searchParams.get('auth') === 'required') {
+      openLogin();
+      // Clean up the URL to remove the auth=required param without a full reload
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete('auth');
+      const queryString = newParams.toString();
+      const newUrl = pathname + (queryString ? `?${queryString}` : '');
+      window.history.replaceState({}, '', newUrl);
     }
-  }, [openLogin, queryStarted]);
+  }, [searchParams, pathname, openLogin]);
 
   useEffect(() => { setMounted(true); }, []);
 

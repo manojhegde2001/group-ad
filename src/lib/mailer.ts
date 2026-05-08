@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { NextRequest } from 'next/server';
 
 let transporter: nodemailer.Transporter | null = null;
 
@@ -50,8 +51,37 @@ export async function sendMail({ to, subject, html }: { to: string; subject: str
 
 const accentColor = '#7c3aed';
 
+/**
+ * Centralized logic to resolve the application's base URL.
+ * Prioritizes NEXT_PUBLIC_APP_URL, then VERCEL_URL, then request headers.
+ */
+export function getAppBaseUrl(req?: Request | NextRequest) {
+    // 1. Prioritize explicit environment variable
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    // 2. Fallback to Vercel's automatic environment variable
+    if (!baseUrl && process.env.VERCEL_URL) {
+        baseUrl = `https://${process.env.VERCEL_URL}`;
+    }
+
+    // 3. Fallback to request headers if available
+    if (!baseUrl && req) {
+        const protocol = req.headers.get('x-forwarded-proto') || 'http';
+        const host = req.headers.get('host');
+        if (host) {
+            baseUrl = `${protocol}://${host}`;
+        }
+    }
+
+    // 4. Final fallback
+    baseUrl = baseUrl || 'http://localhost:3000';
+
+    // Remove trailing slash if present to prevent double slashes in paths
+    return baseUrl.replace(/\/$/, '');
+}
+
 function baseLayout(title: string, content: string, baseUrl?: string) {
-    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const finalBaseUrl = baseUrl || getAppBaseUrl();
     return `
     <!DOCTYPE html>
     <html lang="en">
@@ -99,7 +129,7 @@ function baseLayout(title: string, content: string, baseUrl?: string) {
 // ────── Email templates ──────────────────────────────────────────────────────
 
 export function welcomeEmail(name: string, email: string, baseUrl?: string) {
-    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const finalBaseUrl = baseUrl || getAppBaseUrl();
     const loginUrl = `${finalBaseUrl}/login?identifier=${encodeURIComponent(email)}`;
     
     const content = `
@@ -118,7 +148,7 @@ export function welcomeEmail(name: string, email: string, baseUrl?: string) {
 }
 
 export function passwordResetEmail(name: string, token: string, baseUrl?: string) {
-    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const finalBaseUrl = baseUrl || getAppBaseUrl();
     const resetUrl = `${finalBaseUrl}/auth/reset-password?token=${token}`;
     
     const content = `
@@ -141,7 +171,7 @@ export function passwordResetEmail(name: string, token: string, baseUrl?: string
 }
 
 export function bulkAccountCreatedEmail(name: string, username: string, email: string, baseUrl?: string) {
-    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const finalBaseUrl = baseUrl || getAppBaseUrl();
     const loginUrl = `${finalBaseUrl}/login?identifier=${encodeURIComponent(email)}`;
     
     const content = `

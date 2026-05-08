@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
-import { sendMail, enrollmentApprovalEmail } from '@/lib/mailer';
+import { sendMail, enrollmentApprovalEmail, getAppBaseUrl } from '@/lib/mailer';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -93,6 +93,7 @@ export async function PATCH(
 
         // Email to user on approval
         if (action === 'APPROVE') {
+            const baseUrl = getAppBaseUrl(request);
             const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
             if (user?.email) {
                 sendMail({
@@ -101,7 +102,8 @@ export async function PATCH(
                     html: enrollmentApprovalEmail(
                         event.title,
                         formatEventDate(event.startDate, event.endDate),
-                        event.meetingLink
+                        event.meetingLink,
+                        baseUrl
                     ),
                 });
             }

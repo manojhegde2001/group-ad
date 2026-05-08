@@ -43,7 +43,7 @@ interface PostDetailContentProps {
 }
 
 export function PostDetailContent({ postId, post: initialPost, isModal = false, onClose }: PostDetailContentProps) {
-    const { user } = useAuth();
+    const { user, loading: loadingAuth } = useAuth();
     const { openLogin } = useAuthModal();
 
     // Queries
@@ -451,7 +451,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         {/* Author Card */}
                         <div className="flex items-center justify-between py-2">
                             <Link href={`/profile/${post.user.username}`} className="flex items-center gap-3 group">
-                                <div className="w-[44px] h-[44px] rounded-full bg-gray-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-50 dark:border-secondary-700">
+                                <div className="w-[44px] h-[44px] rounded-full bg-gray-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-50 dark:border-secondary-700 relative">
                                      {post.user.avatar ? (
                                          <CloudinaryImage src={post.user.avatar} fill className="w-full h-full object-cover" alt="" />
                                      ) : (
@@ -466,7 +466,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     <span className="block text-[12px] text-gray-400 mt-0.5">{(post as any).followerCount || 0} followers</span>
                                 </div>
                             </Link>
-                            {user?.id !== post.user.id && (
+                            {!loadingAuth && user?.id !== post.user.id && (
                                 <ConnectionButton 
                                     userId={post.user.id} 
                                     targetName={post.user.name}

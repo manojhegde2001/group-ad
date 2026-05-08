@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { sendMail, bulkAccountCreatedEmail } from '@/lib/mailer';
+import { sendMail, bulkAccountCreatedEmail, getAppBaseUrl } from '@/lib/mailer';
 
 export async function POST(req: Request) {
   try {
@@ -51,6 +51,8 @@ export async function POST(req: Request) {
     await prisma.user.createMany({
       data: usersToCreate,
     });
+    
+    const baseUrl = getAppBaseUrl(req);
 
     // Send Onboarding Emails (Asynchronous)
     // Note: In production with large batches, this should be moved to a background job
@@ -59,7 +61,7 @@ export async function POST(req: Request) {
         await sendMail({
           to: u.email,
           subject: 'Your Account is Ready - Vrutta',
-          html: bulkAccountCreatedEmail(u.name, u.username, u.email),
+          html: bulkAccountCreatedEmail(u.name, u.username, u.email, baseUrl),
         });
       } catch (err) {
         console.error(`Failed to send onboarding email to ${u.email}:`, err);

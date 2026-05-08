@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
-import { sendMail, eventReminderEmail } from '@/lib/mailer';
+import { sendMail, eventReminderEmail, getAppBaseUrl } from '@/lib/mailer';
 import { addHours, isWithinInterval } from 'date-fns';
 
 export async function GET(request: NextRequest) {
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
         }
 
         const now = new Date();
+        const baseUrl = getAppBaseUrl(request);
 
         // 24-hour window: events starting between 23h55m and 24h05m from now
         const in24hStart = addHours(now, 23);
@@ -54,7 +55,8 @@ export async function GET(request: NextRequest) {
                         event.title,
                         formatEventDate(event.startDate, event.endDate),
                         timeLabel,
-                        event.meetingLink
+                        event.meetingLink,
+                        baseUrl
                     ),
                 });
                 emailsSent++;

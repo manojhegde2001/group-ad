@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
-import { sendMail, enrollmentConfirmationEmail } from '@/lib/mailer';
+import { sendMail, enrollmentConfirmationEmail, getAppBaseUrl } from '@/lib/mailer';
 import { socketService } from '@/lib/socket-service';
 
 export async function POST(
@@ -74,6 +74,8 @@ export async function POST(
             }
         }
 
+        const baseUrl = getAppBaseUrl(request);
+
         const enrollment = await prisma.eventEnrollment.create({
             data: {
                 eventId,
@@ -141,7 +143,7 @@ export async function POST(
             sendMail({
                 to: user.email,
                 subject: `[Vrutta] Enrollment received: ${event.title}`,
-                html: enrollmentConfirmationEmail(event.title, formatEventDate(event.startDate, event.endDate)),
+                html: enrollmentConfirmationEmail(event.title, formatEventDate(event.startDate, event.endDate), baseUrl),
             });
         }
 

@@ -35,7 +35,7 @@ export function ConnectionButton({
     className,
     onStatusChange,
 }: ConnectionButtonProps) {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, loading: loadingAuth } = useAuth();
     const { openLogin } = useAuthModal();
     
     // Mutations
@@ -57,6 +57,9 @@ export function ConnectionButton({
     }, [initialStatus, isInitiator]);
 
     const loading = connectMutation.isPending || updateMutation.isPending || removeMutation.isPending;
+    
+    // Don't render while auth is loading
+    if (loadingAuth) return null;
 
     // Don't render if viewing own profile
     if (isAuthenticated && user?.id === userId) return null;

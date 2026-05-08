@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendMail, passwordResetEmail } from '@/lib/mailer';
+import { sendMail, passwordResetEmail, getAppBaseUrl } from '@/lib/mailer';
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
@@ -34,9 +34,7 @@ export async function POST(req: Request) {
 
     console.log('[forgot-password] Saved reset token for', email);
 
-    const protocol = req.headers.get('x-forwarded-proto') || 'http';
-    const host = req.headers.get('host');
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+    const baseUrl = getAppBaseUrl(req);
 
     try {
       await sendMail({

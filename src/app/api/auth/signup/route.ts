@@ -3,7 +3,7 @@ import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { signupSchema } from '@/lib/validations/auth';
 import { UserType } from '@prisma/client';
-import { sendMail, welcomeEmail } from '@/lib/mailer';
+import { sendMail, welcomeEmail, getAppBaseUrl } from '@/lib/mailer';
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,9 +84,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const protocol = req.headers.get('x-forwarded-proto') || 'http';
-    const host = req.headers.get('host');
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+    const baseUrl = getAppBaseUrl(request);
 
     // Send Welcome Email (Non-blocking but awaited before response for reliability)
     try {

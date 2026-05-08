@@ -5,7 +5,8 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const { email: rawEmail } = await req.json();
+    const email = rawEmail?.toLowerCase();
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -31,11 +32,22 @@ export async function POST(req: Request) {
       },
     });
 
-    await sendMail({
-      to: email,
-      subject: 'Reset your password - Vrutta',
-      html: passwordResetEmail(user.name, token),
-    });
+    console.log('[forgot-password] Saved reset token for', email);
+
+    try {
+      await sendMail({
+        to: email,
+        subject: 'Reset your password - Vrutta',
+        html: passwordResetEmail(user.name, token),
+      });
+      console.log('[forgot-password] sendMail call completed for', email);
+    } catch (mailError: any) {
+      console.error('[forgot-password] sendMail FAILED:', mailError);
+      return NextResponse.json({ 
+        error: 'Failed to send reset email. Please try again later.',
+        details: mailError.message 
+      }, { status: 500 });
+    }
 
     return NextResponse.json({ message: 'If an account exists with this email, a reset link has been sent.' });
   } catch (error) {

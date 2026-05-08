@@ -12,18 +12,20 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = signupSchema.parse(body);
 
+    const email = validatedData.email.toLowerCase();
+
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: validatedData.email },
+          { email },
           { username: validatedData.username },
         ],
       },
     });
 
     if (existingUser) {
-      if (existingUser.email === validatedData.email) {
+      if (existingUser.email?.toLowerCase() === email) {
         return NextResponse.json(
           { error: 'Email already registered' },
           { status: 400 }
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await prisma.user.create({
       data: {
-        email: validatedData.email,
+        email: validatedData.email.toLowerCase(),
         password: hashedPassword,
         name: validatedData.name,
         username: validatedData.username,

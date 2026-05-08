@@ -12,4 +12,5 @@ export const userService = {
     getTypeChangeRequest: () => apiClient.get<any>('/api/user/type-change/request'),
     submitTypeChangeRequest: (data: any) => apiClient.post<any>('/api/user/type-change/request', data),
     followUser: (userId: string) => apiClient.post<any>(`/api/users/${userId}/follow`),
+    getSuggestions: () => apiClient.get<{ suggestions: any[] }>('/api/users/suggestions'),
 };

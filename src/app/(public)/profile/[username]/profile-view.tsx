@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import type { PostWithRelations } from '@/types';
 import { PowerTeamSuggestions } from '@/components/power-teams/PowerTeamSuggestions';
+import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 
 const breakpointCols = {
     default: 5,
@@ -296,6 +297,13 @@ export default function ProfileView({ username }: { username: string }) {
                         team={(profile as any).powerTeam}
                         viewedUserName={profile.name}
                     />
+                )}
+
+                {/* Networking Suggestions for own profile */}
+                {isOwnProfile && (
+                    <div className="mt-8">
+                        <TeammateSuggestions limit={3} />
+                    </div>
                 )}
             </div>
 

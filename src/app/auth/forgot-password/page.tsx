@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
         toast.success('Reset link sent to your email');
       } else {
         const errorData = await response.json();
-        toast.error(errorData.error || 'Something went wrong');
+        toast.error(errorData.details || errorData.error || 'Something went wrong');
       }
     } catch (error) {
       toast.error('Failed to send reset link');

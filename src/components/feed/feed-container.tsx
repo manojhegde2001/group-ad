@@ -10,6 +10,8 @@ import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
+import { useAuth } from '@/hooks/use-auth';
 
 // Demo posts used as fallback when DB is empty  
 const DEMO_POSTS: any[] = [
@@ -35,6 +37,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
   const effectiveCategoryId = initialCategoryId !== undefined ? initialCategoryId : selectedCategoryId;
   const { setOnCreated, setOnDeleted } = useCreatePostModal();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const { isAuthenticated } = useAuth();
 
   const {
     data,
@@ -163,15 +166,24 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
         columnClassName="pl-2 sm:pl-2.5 md:pl-3 bg-clip-padding"
       >
         {allPosts.map((post, i) => (
-          <div
-            key={post.id}
-            className={cn(
-              "mb-2 sm:mb-2.5 md:mb-3",
-              // Only apply animations if not in initial critical path to reduce shift during hydration
-              !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
+          <div key={`post-wrapper-${post.id}`}>
+            <div
+              key={post.id}
+              className={cn(
+                "mb-2 sm:mb-2.5 md:mb-3",
+                // Only apply animations if not in initial critical path to reduce shift during hydration
+                !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
+              )}
+            >
+              <PostCard post={post} priority={i < 4} />
+            </div>
+            
+            {/* Inject Teammate Suggestions after the 3rd post (index 2) */}
+            {i === 2 && isAuthenticated && (
+              <div className="mb-2 sm:mb-2.5 md:mb-3 animate-slide-up stagger-4">
+                <TeammateSuggestions limit={4} />
+              </div>
             )}
-          >
-            <PostCard post={post} priority={i < 4} />
           </div>
         ))}
       </Masonry>

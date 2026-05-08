@@ -132,3 +132,13 @@ export const useFollowUser = () => {
         },
     });
 };
+
+export const useSuggestions = () => {
+    return useQuery({
+        queryKey: ['users', 'suggestions'],
+        queryFn: async () => {
+            const response = await userService.getSuggestions();
+            return response.suggestions;
+        },
+    });
+};

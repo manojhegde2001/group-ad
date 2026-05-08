@@ -15,7 +15,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error('Invalid credentials');
         }
 
-        const identifierStr = credentials.identifier as string;
+        const identifierStr = (credentials.identifier as string)?.toLowerCase();
 
         const user = await prisma.user.findFirst({
           where: {

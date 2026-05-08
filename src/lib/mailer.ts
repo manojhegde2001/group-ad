@@ -9,8 +9,12 @@ const from = process.env.EMAIL_FROM || '"Vrutta" <no-reply@vrutta.net>';
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
-    if (!host || !user || !pass) return null;
+    if (!host || !user || !pass) {
+        console.warn('[mailer] Missing SMTP configuration:', { host, user: !!user, pass: !!pass });
+        return null;
+    }
     if (!transporter) {
+        console.log('[mailer] Creating transporter for', host);
         // For Brevo, port 587 with STARTTLS is secure: false
         transporter = nodemailer.createTransport({
             host,
@@ -23,15 +27,19 @@ function getTransporter() {
 }
 
 export async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
+    console.log('[mailer] Attempting to send email to:', to);
     const t = getTransporter();
     if (!t) {
         console.warn('[mailer] Email not configured — skipping send to', to);
         return;
     }
     try {
-        await t.sendMail({ from, to, subject, html });
+        const info = await t.sendMail({ from, to, subject, html });
+        console.log('[mailer] Email sent successfully:', info.messageId);
+        return info;
     } catch (err) {
         console.error('[mailer] Failed to send email:', err);
+        throw err; // Rethrow to let the API handle it
     }
 }
 

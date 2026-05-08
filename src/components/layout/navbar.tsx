@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { Suspense } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useMe } from '@/hooks/use-api/use-user';
 import { useAuthModal } from '@/hooks/use-modal';
@@ -102,21 +103,9 @@ export function Navbar() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    if (searchParams.get('auth') === 'required') {
-      openLogin();
-      // Clean up the URL to remove the auth=required param without a full reload
-      const newParams = new URLSearchParams(searchParams.toString());
-      newParams.delete('auth');
-      const queryString = newParams.toString();
-      const newUrl = pathname + (queryString ? `?${queryString}` : '');
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, [searchParams, pathname, openLogin]);
-
   useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return null;
 
   const handleLogout = async () => {
     setDropdownOpen(false);
@@ -421,7 +410,31 @@ export function Navbar() {
             </button>
         </div>
       </Drawer>
+      {/* Auth required handler - must be in Suspense because of useSearchParams */}
+      <Suspense fallback={null}>
+        <AuthRequiredHandler />
+      </Suspense>
     </>
   );
+}
+
+function AuthRequiredHandler() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { openLogin } = useAuthModal();
+
+  useEffect(() => {
+    if (searchParams.get('auth') === 'required') {
+      openLogin();
+      // Clean up the URL to remove the auth=required param without a full reload
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete('auth');
+      const queryString = newParams.toString();
+      const newUrl = pathname + (queryString ? `?${queryString}` : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams, pathname, openLogin]);
+
+  return null;
 }
 

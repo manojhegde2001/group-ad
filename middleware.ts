@@ -44,13 +44,41 @@ export async function middleware(req: NextRequest) {
   }
 
   // ── Auth Logic ────────────────────────────────────────────────────────────
-  // We use a more robust token retrieval that handles localhost vs production cookie names
-  let token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET })) as any;
+  // Robust token retrieval for NextAuth v5
+  const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+  
+  async function getRobustToken() {
+    // 1. Try default
+    let t = await getToken({ req, secret });
+    if (t) return t;
 
-  // Fallback for localhost if the production NEXTAUTH_URL (https) is causing it to look for secure cookies only
-  if (!token && isLocalhost) {
-    token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false })) as any;
+    // 2. Try explicit non-secure (common in local dev/proxies)
+    t = await getToken({ req, secret, secureCookie: false });
+    if (t) return t;
+
+    // 3. Try explicit secure
+    t = await getToken({ req, secret, secureCookie: true });
+    if (t) return t;
+
+    // 4. Try with NextAuth v5 salts
+    const salts = ["authjs.session-token", "__Secure-authjs.session-token", "next-auth.session-token", "__Secure-next-auth.session-token"];
+    for (const salt of salts) {
+      t = await getToken({ req, secret, salt, secureCookie: salt.startsWith('__Secure') });
+      if (t) return t;
+      t = await getToken({ req, secret, salt, secureCookie: !salt.startsWith('__Secure') });
+      if (t) return t;
+    }
+
+    // 5. Last resort: development fallback
+    if (process.env.NODE_ENV === 'development') {
+      t = await getToken({ req, secret: "your-secret-key-here", secureCookie: false });
+      if (t) return t;
+    }
+    
+    return null;
   }
+
+  const token = (await getRobustToken()) as any;
 
   // Admin login page is always public — the (panel) layout handles its own auth
   const isAdminLogin = isAdminContext && (pathname === '/login' || pathname === '/admin/login');

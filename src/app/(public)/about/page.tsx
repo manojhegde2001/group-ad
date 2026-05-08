@@ -40,6 +40,14 @@ const stats = [
 ];
 
 export default function AboutPage() {
+  const [mounted, setMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

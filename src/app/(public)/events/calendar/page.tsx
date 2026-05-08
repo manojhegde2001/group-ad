@@ -1,4 +1,4 @@
-import CalendarView from '@/components/events/CalendarView';
+import CalendarPageClient from '@/components/events/CalendarPageClient';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -34,9 +34,7 @@ export default function EventsCalendarPage() {
                 </p>
             </div>
 
-            <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
-                <CalendarView />
-            </div>
+            <CalendarPageClient />
         </div>
     );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
@@ -34,7 +34,13 @@ interface CalendarEvent {
 }
 
 export default function CalendarView() {
+  const [mounted, setMounted] = useState(false);
   const { isAuthenticated } = useAuth();
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmWithdrawOpen, setIsConfirmWithdrawOpen] = useState(false);
@@ -96,6 +102,8 @@ export default function CalendarView() {
       }
     });
   };
+
+  if (!mounted) return null;
 
   if (isLoading) {
     return (

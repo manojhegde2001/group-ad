@@ -62,7 +62,7 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-const Logo = dynamic(() => import('../ui/logo'), {
+const Logo = dynamic(() => import('@/components/ui/logo'), {
   ssr: false,
 });
 
@@ -181,7 +181,7 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
           <span className="flex-1">View Live Site</span>
         </Link>
         <button
-          onClick={() => signOut({ callbackUrl: 'https://admin.vrutta.net/login' })}
+          onClick={() => signOut({ callbackUrl: isAdminSubdomain ? '/login' : '/admin/login' })}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 transition-all"
         >
           <LogOut className="w-4 h-4 shrink-0 opacity-60" />

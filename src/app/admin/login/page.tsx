@@ -7,7 +7,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail, Activity, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
-const Logo = dynamic(() => import('../../../components/ui/logo'), {
+const Logo = dynamic(() => import('@/components/ui/logo'), {
   ssr: false,
 });
 
@@ -61,7 +61,7 @@ export default function AdminLoginPage() {
 
       {/* Logo Area - Absolute Top Left */}
       <div className="absolute top-8 left-8 z-50 animate-fade-in group">
-        <Logo className="w-40 sm:w-44 h-auto text-foreground transition-transform duration-500 group-hover:scale-105" />
+        <Logo className="w-40 sm:w-44 h-10 text-foreground transition-transform duration-500 group-hover:scale-105" />
       </div>
 
       {/* Left Column (Desktop Only Visuals) */}

@@ -18,6 +18,7 @@ interface AdminTopBarProps {
   userName: string;
   userEmail: string;
   userAvatar?: string;
+  isAdminSubdomain?: boolean;
 }
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -34,14 +35,14 @@ const ROUTE_LABELS: Record<string, string> = {
 
 import { formatDistanceToNow } from 'date-fns';
 
-const Logo = dynamic(() => import('../ui/logo'), {
+const Logo = dynamic(() => import('@/components/ui/logo'), {
   ssr: false,
 });
 
 
 import { useAdminNotifications, useAdminSearch } from '@/hooks/use-api/use-admin';
 
-export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) {
+export default function AdminTopBar({ userName, userAvatar, isAdminSubdomain = false }: AdminTopBarProps) {
   const pathname = usePathname();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -293,7 +294,7 @@ export default function AdminTopBar({ userName, userAvatar }: AdminTopBarProps) 
                 </Link>
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2" />
                 <button
-                  onClick={() => signOut({ callbackUrl: 'https://admin.vrutta.net/login' })}
+                  onClick={() => signOut({ callbackUrl: isAdminSubdomain ? '/login' : '/admin/login' })}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />

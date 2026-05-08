@@ -156,4 +156,10 @@ export const adminService = {
         if (params?.search) query.append('search', params.search);
         return apiClient.get<{ teams: any[]; pagination: any }>('/api/power-teams?' + query.toString());
     },
+
+    updatePowerTeam: (slug: string, data: any) =>
+        apiClient.patch(`/api/power-teams/${slug}`, data),
+
+    deletePowerTeam: (slug: string) =>
+        apiClient.delete(`/api/power-teams/${slug}`),
 };

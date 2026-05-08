@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAdminPowerTeams } from '@/hooks/use-api/use-admin';
+import { useAdminPowerTeams, useUpdatePowerTeam, useDeletePowerTeam } from '@/hooks/use-api/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function AdminPowerTeamsPage() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
@@ -26,8 +27,24 @@ export default function AdminPowerTeamsPage() {
     search: searchQuery || undefined,
   });
 
+  const updateMutation = useUpdatePowerTeam();
+  const deleteMutation = useDeletePowerTeam();
+
   const teams = data?.teams || [];
   const pagination = data?.pagination || { totalPages: 1, total: 0 };
+
+  const handleToggleStatus = (team: any) => {
+    updateMutation.mutate({ 
+      slug: team.slug, 
+      data: { isActive: !team.isActive } 
+    });
+  };
+
+  const handleDelete = (team: any) => {
+    if (window.confirm(`Are you sure you want to delete "${team.name}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(team.slug);
+    }
+  };
 
   if (authLoading) return null;
   if (!isAuthenticated || (currentUser as any)?.userType !== 'ADMIN') {
@@ -134,19 +151,37 @@ export default function AdminPowerTeamsPage() {
                        </span>
                     </td>
                     <td className="px-8 py-6 text-right">
-                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                          <Link href={`/power-teams/${team.slug}`} target="_blank">
-                             <button className="p-2.5 rounded-xl bg-secondary-50 dark:bg-secondary-800 text-secondary-400 hover:text-primary-500 border border-secondary-100 dark:border-secondary-700 transition-all active:scale-90 shadow-sm">
-                                <ExternalLink className="w-4 h-4" />
-                             </button>
-                          </Link>
-                          <button className="p-2.5 rounded-xl bg-secondary-50 dark:bg-secondary-800 text-secondary-400 hover:text-amber-500 border border-secondary-100 dark:border-secondary-700 transition-all active:scale-90 shadow-sm">
-                             <Edit className="w-4 h-4" />
-                          </button>
-                          <button className="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-400 hover:text-red-600 border border-red-100 dark:border-red-900/20 transition-all active:scale-90 shadow-sm">
-                             <Trash2 className="w-4 h-4" />
-                          </button>
-                       </div>
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                           <Link href={`/power-teams/${team.slug}`} target="_blank">
+                              <button className="p-2.5 rounded-xl bg-secondary-50 dark:bg-secondary-800 text-secondary-400 hover:text-primary-500 border border-secondary-100 dark:border-secondary-700 transition-all active:scale-90 shadow-sm">
+                                 <ExternalLink className="w-4 h-4" />
+                              </button>
+                           </Link>
+                           <button 
+                              onClick={() => handleToggleStatus(team)}
+                              disabled={updateMutation.isPending}
+                              className="p-2.5 rounded-xl bg-secondary-50 dark:bg-secondary-800 text-secondary-400 hover:text-amber-500 border border-secondary-100 dark:border-secondary-700 transition-all active:scale-90 shadow-sm disabled:opacity-50"
+                              title={team.isActive ? "Deactivate Team" : "Activate Team"}
+                           >
+                              {updateMutation.isPending && (updateMutation.variables as any)?.slug === team.slug ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Edit className="w-4 h-4" />
+                              )}
+                           </button>
+                           <button 
+                              onClick={() => handleDelete(team)}
+                              disabled={deleteMutation.isPending}
+                              className="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-400 hover:text-red-600 border border-red-100 dark:border-red-900/20 transition-all active:scale-90 shadow-sm disabled:opacity-50"
+                              title="Delete Power Team"
+                           >
+                              {deleteMutation.isPending && deleteMutation.variables === team.slug ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                           </button>
+                        </div>
                     </td>
                   </tr>
                 ))

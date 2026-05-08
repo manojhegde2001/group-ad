@@ -135,28 +135,26 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (
-                    <div className="relative overflow-hidden aspect-[4/5] bg-secondary-100 dark:bg-secondary-800">
+                    <div className="relative overflow-hidden bg-secondary-100 dark:bg-secondary-800">
                         {(() => {
                             const src = post.images[0];
                             const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                             return isVideoItem ? (
                                 <video
                                     src={src}
-                                    className="w-full h-full object-cover block"
+                                    className="w-full h-auto block"
                                     muted playsInline loop preload="metadata"
                                     onMouseEnter={e => e.currentTarget.play()}
                                     onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
                                     onDoubleClick={handleDoubleTap}
                                 />
                             ) : (
-                                <Image
+                                <img
                                     src={src}
                                     alt={post.content || ''}
-                                    fill
-                                    priority={priority}
-                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    className="w-full h-full object-cover block transition-transform duration-700 group-hover:scale-[1.03]"
+                                    className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
                                     onDoubleClick={handleDoubleTap}
+                                    loading={priority ? "eager" : "lazy"}
                                 />
                             );
                         })()}

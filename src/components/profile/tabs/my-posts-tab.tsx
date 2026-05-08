@@ -141,7 +141,7 @@ export default function MyPostsTab() {
 
             {/* Post Grid — Pinterest-style masonry using columns */}
             {filteredPosts.length > 0 && (
-                <div className="columns-2 sm:columns-3 md:columns-4 gap-3">
+                <div className="columns-2 sm:columns-3 md:columns-4 gap-4 sm:gap-6">
                     {filteredPosts.map((post: PostWithRelations) => {
                         const hasImage = post.images && post.images.length > 0;
                         const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
@@ -149,7 +149,7 @@ export default function MyPostsTab() {
                         return (
                             <div
                                 key={post.id}
-                                className="mb-3 break-inside-avoid relative group rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                                className="mb-4 sm:mb-6 break-inside-avoid relative group rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
                                 onClick={() => router.push(`/posts/${post.id}`, { scroll: false })}
                             >
                                 {/* Image / Text banner */}

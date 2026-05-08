@@ -246,3 +246,32 @@ export const useAdminPowerTeams = (params?: { page?: number; limit?: number; sea
     queryFn: () => adminService.getPowerTeams(params),
   });
 };
+
+export const useUpdatePowerTeam = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ slug, data }: { slug: string; data: any }) =>
+      adminService.updatePowerTeam(slug, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'power-teams'] });
+      toast.success('Power Team updated');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update Power Team');
+    },
+  });
+};
+
+export const useDeletePowerTeam = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (slug: string) => adminService.deletePowerTeam(slug),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'power-teams'] });
+      toast.success('Power Team deleted');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete Power Team');
+    },
+  });
+};

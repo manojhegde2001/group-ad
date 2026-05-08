@@ -152,8 +152,8 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
 
       <Masonry
         breakpointCols={breakpointCols}
-        className="flex -ml-2 sm:-ml-3 md:-ml-3 w-auto"
-        columnClassName="pl-2 sm:pl-3 md:pl-3 bg-clip-padding"
+        className="flex -ml-2 sm:-ml-4 md:-ml-6 w-auto"
+        columnClassName="pl-2 sm:pl-4 md:pl-6 bg-clip-padding"
       >
         {allPosts.map((post, i) => (
           <motion.div
@@ -165,7 +165,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
               delay: Math.min(i * 0.05, 0.5),
               ease: [0.21, 1.11, 0.81, 0.99] // subtle spring effect
             }}
-            className="mb-2 sm:mb-3 md:mb-3"
+            className="mb-2 sm:mb-4 md:mb-6"
           >
             <PostCard post={post} priority={i < 4} />
           </motion.div>

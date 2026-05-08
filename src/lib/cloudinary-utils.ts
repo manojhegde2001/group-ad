@@ -32,6 +32,7 @@ export function getOptimizedCloudinaryUrl(
     quality = 'auto',
     format = 'auto',
     enhance = false,
+    blur,
     resourceType = 'image',
   } = options;
 

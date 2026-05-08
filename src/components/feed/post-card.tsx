@@ -135,12 +135,13 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (
                     <div 
-                        className="relative overflow-hidden bg-secondary-100 dark:bg-secondary-800"
+                        className="relative w-full overflow-hidden bg-secondary-100 dark:bg-secondary-800"
                         style={{ 
                             aspectRatio: post.images[0].includes('/video/upload/') || post.images[0].match(/\.(mp4|mov|avi|webm|mkv)/i)
                                 ? '16/9' 
                                 : (post.id.charCodeAt(post.id.length - 1) % 3 === 0 ? '3/4' : 
-                                   post.id.charCodeAt(post.id.length - 1) % 3 === 1 ? '4/5' : '1/1')
+                                   post.id.charCodeAt(post.id.length - 1) % 3 === 1 ? '4/5' : '1/1'),
+                            minHeight: '200px'
                         }}
                     >
                         {(() => {

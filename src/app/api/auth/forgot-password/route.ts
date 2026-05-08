@@ -34,13 +34,17 @@ export async function POST(req: Request) {
 
     console.log('[forgot-password] Saved reset token for', email);
 
+    const protocol = req.headers.get('x-forwarded-proto') || 'http';
+    const host = req.headers.get('host');
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+
     try {
       await sendMail({
         to: email,
         subject: 'Reset your password - Vrutta',
-        html: passwordResetEmail(user.name, token),
+        html: passwordResetEmail(user.name, token, baseUrl),
       });
-      console.log('[forgot-password] sendMail call completed for', email);
+      console.log('[forgot-password] sendMail call completed for', email, 'with baseUrl:', baseUrl);
     } catch (mailError: any) {
       console.error('[forgot-password] sendMail FAILED:', mailError);
       return NextResponse.json({ 

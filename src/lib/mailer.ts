@@ -1,33 +1,34 @@
 import nodemailer from 'nodemailer';
 
-const host = process.env.EMAIL_HOST;
-const port = parseInt(process.env.EMAIL_PORT || '587');
-const user = process.env.EMAIL_USER;
-const pass = process.env.EMAIL_PASS;
-const from = process.env.EMAIL_FROM || '"Vrutta" <no-reply@vrutta.net>';
-
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
+    const host = process.env.EMAIL_HOST;
+    const port = parseInt(process.env.EMAIL_PORT || '587');
+    const user = process.env.EMAIL_USER;
+    const pass = process.env.EMAIL_PASS;
+
     if (!host || !user || !pass) {
         console.warn('[mailer] Missing SMTP configuration:', { host, user: !!user, pass: !!pass });
         return null;
     }
     if (!transporter) {
         console.log('[mailer] Creating transporter for', host);
-        // For Brevo, port 587 with STARTTLS is secure: false
         transporter = nodemailer.createTransport({
             host,
             port,
-            secure: port === 465, // Only 465 is implicit SSL/TLS
+            secure: port === 465,
             auth: { user, pass }
         });
     }
     return transporter;
 }
 
+const getFromAddress = () => process.env.EMAIL_FROM || '"Vrutta" <no-reply@vrutta.net>';
+
 export async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
     console.log('[mailer] Attempting to send email to:', to);
+    console.log('[mailer] Using APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
     const t = getTransporter();
     if (!t) {
         const error = new Error('Email SMTP configuration is missing');
@@ -35,6 +36,7 @@ export async function sendMail({ to, subject, html }: { to: string; subject: str
         throw error;
     }
     try {
+        const from = getFromAddress();
         const info = await t.sendMail({ from, to, subject, html });
         console.log('[mailer] Email sent successfully:', info.messageId);
         return info;
@@ -48,7 +50,8 @@ export async function sendMail({ to, subject, html }: { to: string; subject: str
 
 const accentColor = '#7c3aed';
 
-function baseLayout(title: string, content: string) {
+function baseLayout(title: string, content: string, baseUrl?: string) {
+    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     return `
     <!DOCTYPE html>
     <html lang="en">
@@ -62,8 +65,8 @@ function baseLayout(title: string, content: string) {
             <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);border:1px solid #f3f4f6;">
                 <!-- Header -->
                 <div style="padding:40px 40px 0;text-align:center;">
-                    <div style="display:inline-block;width:64px;height:64px;">
-                        <img src="${process.env.NEXT_PUBLIC_APP_URL}/auth/logo-small.svg" width="64" height="64" alt="Vrutta Logo" style="display:block;width:64px;height:64px;border:0;" />
+                    <div style="display:inline-block;width:180px;height:44px;">
+                        <img src="${finalBaseUrl}/auth/logo-full.svg" width="180" height="44" alt="Vrutta Logo" style="display:block;width:180px;height:44px;border:0;" />
                     </div>
                     <div style="margin-top:12px;">
                         <span style="font-size:18px;font-weight:800;color:${accentColor};letter-spacing:-0.5px;text-transform:uppercase;">Vrutta</span>
@@ -95,8 +98,9 @@ function baseLayout(title: string, content: string) {
 
 // ────── Email templates ──────────────────────────────────────────────────────
 
-export function welcomeEmail(name: string, email: string) {
-    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login?identifier=${encodeURIComponent(email)}`;
+export function welcomeEmail(name: string, email: string, baseUrl?: string) {
+    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const loginUrl = `${finalBaseUrl}/login?identifier=${encodeURIComponent(email)}`;
     
     const content = `
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Welcome, ${name}!</h1>
@@ -110,11 +114,12 @@ export function welcomeEmail(name: string, email: string) {
         Explore our groups and events to start networking today!
     </p>`;
 
-    return baseLayout('Welcome to Vrutta!', content);
+    return baseLayout('Welcome to Vrutta!', content, finalBaseUrl);
 }
 
-export function passwordResetEmail(name: string, token: string) {
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${token}`;
+export function passwordResetEmail(name: string, token: string, baseUrl?: string) {
+    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const resetUrl = `${finalBaseUrl}/auth/reset-password?token=${token}`;
     
     const content = `
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Reset Your Password</h1>
@@ -132,11 +137,12 @@ export function passwordResetEmail(name: string, token: string) {
         <a href="${resetUrl}" style="color:${accentColor};text-decoration:none;">${resetUrl}</a>
     </div>`;
 
-    return baseLayout('Reset Password - Vrutta', content);
+    return baseLayout('Reset Password - Vrutta', content, finalBaseUrl);
 }
 
-export function bulkAccountCreatedEmail(name: string, username: string, email: string) {
-    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login?identifier=${encodeURIComponent(email)}`;
+export function bulkAccountCreatedEmail(name: string, username: string, email: string, baseUrl?: string) {
+    const finalBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const loginUrl = `${finalBaseUrl}/login?identifier=${encodeURIComponent(email)}`;
     
     const content = `
     <h1 style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Account Ready!</h1>
@@ -161,44 +167,47 @@ export function bulkAccountCreatedEmail(name: string, username: string, email: s
         Need help? Reply to this email or contact your administrator.
     </p>`;
 
-    return baseLayout('Account Created - Vrutta', content);
+    return baseLayout('Account Created - Vrutta', content, finalBaseUrl);
 }
 
-export function enrollmentConfirmationEmail(eventTitle: string, eventDate: string) {
-    return `
-    <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
-      <h2 style="color:#7c3aed;margin-bottom:8px;">🎉 Enrollment Received!</h2>
-      <p style="color:#374151;">You've successfully enrolled in <strong>${eventTitle}</strong>.</p>
-      <p style="color:#374151;">Your enrollment is <strong>pending admin approval</strong>. You'll receive another email once it's approved.</p>
-      <div style="background:#f5f3ff;border-radius:8px;padding:12px 16px;margin:16px 0;">
-        <p style="margin:0;color:#6d28d9;font-weight:600;">📅 ${eventDate}</p>
+export function enrollmentConfirmationEmail(eventTitle: string, eventDate: string, baseUrl?: string) {
+    const content = `
+    <div style="text-align:center;">
+      <h2 style="color:${accentColor};margin-bottom:16px;">🎉 Enrollment Received!</h2>
+      <p style="color:#374151;font-size:16px;line-height:1.6;">You've successfully enrolled in <strong>${eventTitle}</strong>.</p>
+      <p style="color:#6b7280;font-size:15px;line-height:1.6;">Your enrollment is <strong>pending admin approval</strong>. You'll receive another email once it's approved.</p>
+      <div style="background:#f5f3ff;border-radius:12px;padding:20px;margin:24px 0;border:1px solid #ddd6fe;">
+        <p style="margin:0;color:#6d28d9;font-weight:700;font-size:16px;">📅 ${eventDate}</p>
       </div>
-      <p style="color:#6b7280;font-size:13px;">If you have any questions, reply to this email or visit Vrutta.</p>
+      <p style="color:#9ca3af;font-size:13px;">If you have any questions, reply to this email or visit Vrutta.</p>
     </div>`;
+    return baseLayout('Enrollment Received - Vrutta', content, baseUrl);
 }
 
-export function enrollmentApprovalEmail(eventTitle: string, eventDate: string, meetingLink?: string | null) {
-    return `
-    <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
-      <h2 style="color:#059669;margin-bottom:8px;">✅ Enrollment Approved!</h2>
-      <p style="color:#374151;">Great news! Your enrollment for <strong>${eventTitle}</strong> has been approved.</p>
-      <div style="background:#ecfdf5;border-radius:8px;padding:12px 16px;margin:16px 0;">
-        <p style="margin:0 0 6px;color:#065f46;font-weight:600;">📅 ${eventDate}</p>
-        ${meetingLink ? `<p style="margin:0;"><a href="${meetingLink}" style="color:#059669;">🔗 Join Meeting Link</a></p>` : ''}
+export function enrollmentApprovalEmail(eventTitle: string, eventDate: string, meetingLink?: string | null, baseUrl?: string) {
+    const content = `
+    <div style="text-align:center;">
+      <h2 style="color:#059669;margin-bottom:16px;">✅ Enrollment Approved!</h2>
+      <p style="color:#374151;font-size:16px;line-height:1.6;">Great news! Your enrollment for <strong>${eventTitle}</strong> has been approved.</p>
+      <div style="background:#ecfdf5;border-radius:12px;padding:20px;margin:24px 0;border:1px solid #a7f3d0;">
+        <p style="margin:0 0 10px;color:#065f46;font-weight:700;font-size:16px;">📅 ${eventDate}</p>
+        ${meetingLink ? `<p style="margin:12px 0 0;"><a href="${meetingLink}" style="color:#059669;font-weight:700;text-decoration:underline;">🔗 Join Meeting Link</a></p>` : ''}
       </div>
-      <p style="color:#6b7280;font-size:13px;">See you there! — The Vrutta Team</p>
+      <p style="color:#6b7280;font-size:14px;">See you there! — The Vrutta Team</p>
     </div>`;
+    return baseLayout('Enrollment Approved - Vrutta', content, baseUrl);
 }
 
-export function eventReminderEmail(eventTitle: string, eventDate: string, timeUnit: string, meetingLink?: string | null) {
-    return `
-    <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
-      <h2 style="color:#d97706;margin-bottom:8px;">⏰ Event Reminder</h2>
-      <p style="color:#374151;"><strong>${eventTitle}</strong> starts in <strong>${timeUnit}</strong>!</p>
-      <div style="background:#fffbeb;border-radius:8px;padding:12px 16px;margin:16px 0;">
-        <p style="margin:0 0 6px;color:#92400e;font-weight:600;">📅 ${eventDate}</p>
-        ${meetingLink ? `<p style="margin:0;"><a href="${meetingLink}" style="color:#d97706;">🔗 Join Meeting Link</a></p>` : ''}
+export function eventReminderEmail(eventTitle: string, eventDate: string, timeUnit: string, meetingLink?: string | null, baseUrl?: string) {
+    const content = `
+    <div style="text-align:center;">
+      <h2 style="color:#d97706;margin-bottom:16px;">⏰ Event Reminder</h2>
+      <p style="color:#374151;font-size:16px;line-height:1.6;"><strong>${eventTitle}</strong> starts in <strong>${timeUnit}</strong>!</p>
+      <div style="background:#fffbeb;border-radius:12px;padding:20px;margin:24px 0;border:1px solid #fde68a;">
+        <p style="margin:0 0 10px;color:#92400e;font-weight:700;font-size:16px;">📅 ${eventDate}</p>
+        ${meetingLink ? `<p style="margin:12px 0 0;"><a href="${meetingLink}" style="color:#d97706;font-weight:700;text-decoration:underline;">🔗 Join Meeting Link</a></p>` : ''}
       </div>
-      <p style="color:#6b7280;font-size:13px;">See you soon! — The Vrutta Team</p>
+      <p style="color:#6b7280;font-size:14px;">See you soon! — The Vrutta Team</p>
     </div>`;
+    return baseLayout('Event Reminder - Vrutta', content, baseUrl);
 }

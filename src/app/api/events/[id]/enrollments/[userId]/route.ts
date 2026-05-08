@@ -97,7 +97,7 @@ export async function PATCH(
             if (user?.email) {
                 sendMail({
                     to: user.email,
-                    subject: `Enrollment Approved: ${event.title}`,
+                    subject: `[Vrutta] Enrollment Approved: ${event.title}`,
                     html: enrollmentApprovalEmail(
                         event.title,
                         formatEventDate(event.startDate, event.endDate),

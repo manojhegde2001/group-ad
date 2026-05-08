@@ -84,13 +84,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const protocol = req.headers.get('x-forwarded-proto') || 'http';
+    const host = req.headers.get('host');
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+
     // Send Welcome Email (Non-blocking but awaited before response for reliability)
     try {
       if (user.email) {
         await sendMail({
           to: user.email,
           subject: 'Welcome to Vrutta!',
-          html: welcomeEmail(user.name || user.username, user.email),
+          html: welcomeEmail(user.name || user.username, user.email, baseUrl),
         });
       }
     } catch (mailError) {

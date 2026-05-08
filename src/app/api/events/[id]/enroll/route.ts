@@ -140,7 +140,7 @@ export async function POST(
         if (user?.email) {
             sendMail({
                 to: user.email,
-                subject: `Enrollment received: ${event.title}`,
+                subject: `[Vrutta] Enrollment received: ${event.title}`,
                 html: enrollmentConfirmationEmail(event.title, formatEventDate(event.startDate, event.endDate)),
             });
         }

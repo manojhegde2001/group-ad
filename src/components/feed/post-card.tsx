@@ -134,23 +134,14 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (
-                    <div 
-                        className="relative w-full overflow-hidden bg-secondary-100 dark:bg-secondary-800"
-                        style={{ 
-                            aspectRatio: post.images[0].includes('/video/upload/') || post.images[0].match(/\.(mp4|mov|avi|webm|mkv)/i)
-                                ? '16/9' 
-                                : (post.id.charCodeAt(post.id.length - 1) % 3 === 0 ? '3/4' : 
-                                   post.id.charCodeAt(post.id.length - 1) % 3 === 1 ? '4/5' : '1/1'),
-                            minHeight: '200px'
-                        }}
-                    >
+                    <div className="relative w-full overflow-hidden bg-secondary-100 dark:bg-secondary-800">
                         {(() => {
                             const src = post.images[0];
                             const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                              return isVideoItem ? (
                                  <CloudinaryVideo
                                      src={src}
-                                     className="absolute inset-0 w-full h-full object-cover block"
+                                     className="w-full h-auto block"
                                      muted playsInline loop 
                                      onMouseEnter={e => e.currentTarget.play()}
                                      onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
@@ -160,12 +151,12 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                  <CloudinaryImage
                                      src={src}
                                      alt={post.content || ''}
-                                     fill
+                                     width={600}
+                                     height={800}
                                      enhance={true}
-                                     className="transition-transform duration-700 group-hover:scale-[1.03]"
+                                     className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
                                      onDoubleClick={handleDoubleTap}
                                      priority={priority}
-                                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                                  />
                              );
                         })()}

@@ -70,9 +70,15 @@ export default function AdminLoginPage() {
         <div className="absolute top-[-20%] left-[-10%] w-[150%] h-[150%] bg-gradient-to-br from-primary-600/10 dark:from-primary-600/30 via-transparent to-purple-600/10 dark:to-purple-600/20 blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-primary-100/40 dark:bg-primary-900/40 rounded-full blur-[100px]" />
         
-        {/* Geometric Decor */}
-        <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] dark:opacity-10 pointer-events-none" 
-             style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+        {/* Branding Watermark */}
+        <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.08] pointer-events-none" 
+             style={{ 
+               backgroundImage: 'url(/auth/logo-with-bottom-label.svg)', 
+               backgroundPosition: 'center',
+               backgroundRepeat: 'no-repeat',
+               backgroundSize: '80%',
+               filter: 'grayscale(100%) brightness(1.5)'
+             }} />
 
         <div className="relative z-10 space-y-8 max-w-lg">
           <div className="space-y-4">

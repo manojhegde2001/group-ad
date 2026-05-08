@@ -333,11 +333,11 @@ export default function ProfileView({ username }: { username: string }) {
                 ) : (
                     <Masonry
                         breakpointCols={breakpointCols}
-                        className="flex -ml-2 sm:-ml-4 md:-ml-6 w-auto"
-                        columnClassName="pl-2 sm:pl-4 md:pl-6 bg-clip-padding"
+                        className="flex -ml-2 sm:-ml-2.5 md:-ml-3 w-auto"
+                        columnClassName="pl-2 sm:pl-2.5 md:pl-3 bg-clip-padding"
                     >
                         {createdPosts.map((post: PostWithRelations) => (
-                            <div key={post.id} className="mb-2 sm:mb-4 md:mb-6">
+                            <div key={post.id} className="mb-2 sm:mb-2.5 md:mb-3">
                                 <PostCard post={post} />
                             </div>
                         ))}

@@ -23,7 +23,14 @@ export async function middleware(req: NextRequest) {
       return NextResponse.rewrite(new URL('/admin', req.url));
     }
     // Any other path not already prefixed
-    if (!pathname.startsWith('/admin') && !pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
+    if (
+      !pathname.startsWith('/admin') && 
+      !pathname.startsWith('/api') && 
+      !pathname.startsWith('/_next') &&
+      !pathname.startsWith('/auth') &&
+      !pathname.startsWith('/uploads') &&
+      !pathname.includes('.')
+    ) {
       return NextResponse.rewrite(new URL(`/admin${pathname}`, req.url));
     }
   } else if (!isLocalhost) {

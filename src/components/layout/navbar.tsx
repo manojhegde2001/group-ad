@@ -130,7 +130,7 @@ export function Navbar() {
 
   if (!mounted) {
     return (
-      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 flex h-14 md:h-20 items-center px-4 md:px-6">
+      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 hidden md:flex h-20 items-center px-4 md:px-6">
         <div className="flex-1 flex items-center gap-4">
              <div className="w-8 h-8 md:w-28 md:h-7 bg-secondary-200 dark:bg-secondary-700 rounded-full md:rounded animate-pulse" />
              <div className="flex-1 max-w-xl h-10 bg-secondary-100 dark:bg-secondary-800 rounded-full animate-pulse hidden sm:block" />

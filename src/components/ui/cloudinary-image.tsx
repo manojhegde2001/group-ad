@@ -46,6 +46,14 @@ export function CloudinaryImage({
     );
   }
 
+  // Generate blur placeholder URL
+  const blurSrc = getOptimizedCloudinaryUrl(src, {
+    width: 40,
+    height: 40,
+    blur: 1000,
+    quality: 20,
+  });
+
   return (
     <Image
       src={optimizedSrc}
@@ -56,6 +64,8 @@ export function CloudinaryImage({
       sizes={sizes || (fill ? "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" : undefined)}
       priority={priority}
       loading={priority ? undefined : "lazy"}
+      placeholder={blurSrc ? "blur" : "empty"}
+      blurDataURL={blurSrc}
       className={cn("object-cover", className)}
       {...props}
     />

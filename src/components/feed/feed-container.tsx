@@ -48,7 +48,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
     boardId,
     search: searchQuery,
     visibility: 'PUBLIC',
-    limit: '20',
+    limit: '12',
   });
 
   const posts = data?.pages.flatMap((page: any) => page.posts) || [];
@@ -104,12 +104,19 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
 
   if (isLoading) {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-2 md:py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 sm:gap-2.5 md:gap-3">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="space-y-3">
+      <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-2 md:py-6">
+        <Masonry
+          breakpointCols={breakpointCols}
+          className="flex -ml-2 sm:-ml-2.5 md:-ml-3 w-auto"
+          columnClassName="pl-2 sm:pl-2.5 md:pl-3 bg-clip-padding"
+        >
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="mb-2 sm:mb-2.5 md:mb-3 space-y-3">
               <Skeleton
-                className={`w-full rounded-2xl ${i % 3 === 0 ? 'h-80' : i % 3 === 1 ? 'h-48' : 'h-64'}`}
+                className={cn(
+                  "w-full rounded-2xl",
+                  i % 4 === 0 ? 'h-[340px]' : i % 4 === 1 ? 'h-[210px]' : i % 4 === 2 ? 'h-[420px]' : 'h-[280px]'
+                )}
               />
               <div className="flex items-center gap-2 px-1">
                 <Skeleton className="w-6 h-6 rounded-lg" />
@@ -120,7 +127,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
               </div>
             </div>
           ))}
-        </div>
+        </Masonry>
       </div>
     );
   }
@@ -159,8 +166,9 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
           <div
             key={post.id}
             className={cn(
-              "mb-2 sm:mb-2.5 md:mb-3 animate-slide-up",
-              i < 10 ? `stagger-${(i % 4) + 1}` : "" // Only stagger the first few for visual polish without overhead
+              "mb-2 sm:mb-2.5 md:mb-3",
+              // Only apply animations if not in initial critical path to reduce shift during hydration
+              !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
             )}
           >
             <PostCard post={post} priority={i < 4} />

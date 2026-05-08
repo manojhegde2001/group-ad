@@ -9,6 +9,7 @@ interface CloudinaryOptions {
   quality?: string | number; // 'auto', 'auto:best', 'auto:good', etc.
   format?: string; // 'auto', 'webp', 'avif', etc.
   enhance?: boolean; // AI enhancement (e_enhance)
+  blur?: number; // Blur effect (e_blur:value)
   resourceType?: 'image' | 'video';
 }
 
@@ -48,6 +49,11 @@ export function getOptimizedCloudinaryUrl(
   // AI Enhancement (Images only)
   if (enhance && resourceType === 'image') {
     transformations.push('e_enhance');
+  }
+
+  // Blur (Images only)
+  if (blur && resourceType === 'image') {
+    transformations.push(`e_blur:${blur}`);
   }
 
   const transformationString = transformations.join(',');

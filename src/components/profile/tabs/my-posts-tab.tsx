@@ -14,6 +14,7 @@ import { useMyPosts, useDeletePost, useUpdatePost } from '@/hooks/use-api/use-po
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { useAuth } from '@/hooks/use-auth';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 export default function MyPostsTab() {
     const { user } = useAuth();
@@ -153,14 +154,15 @@ export default function MyPostsTab() {
                                 onClick={() => router.push(`/posts/${post.id}`, { scroll: false })}
                             >
                                 {/* Image / Text banner */}
-                                {hasImage ? (
-                                    <img
-                                        src={post.images[0]}
-                                        alt={post.content?.slice(0, 60) || 'Post'}
-                                        className="w-full h-auto object-cover block"
-                                        loading="lazy"
-                                    />
-                                ) : (
+                                 {hasImage ? (
+                                     <CloudinaryImage
+                                         src={post.images[0]}
+                                         alt={post.content?.slice(0, 60) || 'Post'}
+                                         width={400}
+                                         height={600}
+                                         className="w-full h-auto object-cover block"
+                                     />
+                                 ) : (
                                     <div className={`w-full min-h-[120px] bg-gradient-to-br ${gradient} p-4 flex items-start`}>
                                         <p className="text-white text-sm font-semibold leading-snug line-clamp-6">
                                             {post.content}

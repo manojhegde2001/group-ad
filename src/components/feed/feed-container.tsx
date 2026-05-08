@@ -9,7 +9,7 @@ import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 // Demo posts used as fallback when DB is empty  
 const DEMO_POSTS: any[] = [
@@ -156,19 +156,15 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
         columnClassName="pl-2 sm:pl-2.5 md:pl-3 bg-clip-padding"
       >
         {allPosts.map((post, i) => (
-          <motion.div
+          <div
             key={post.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: Math.min(i * 0.05, 0.5),
-              ease: [0.21, 1.11, 0.81, 0.99] // subtle spring effect
-            }}
-            className="mb-2 sm:mb-2.5 md:mb-3"
+            className={cn(
+              "mb-2 sm:mb-2.5 md:mb-3 animate-slide-up",
+              i < 10 ? `stagger-${(i % 4) + 1}` : "" // Only stagger the first few for visual polish without overhead
+            )}
           >
             <PostCard post={post} priority={i < 4} />
-          </motion.div>
+          </div>
         ))}
       </Masonry>
 

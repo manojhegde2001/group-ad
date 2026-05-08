@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Bookmark, X } from 'lucide-react';
 import { useSavedPosts, useBookmarkPost } from '@/hooks/use-api/use-posts';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 export default function SavedPostsTab() {
     const router = useRouter();
@@ -63,14 +64,15 @@ export default function SavedPostsTab() {
                             className="mb-3 break-inside-avoid relative group rounded-2xl overflow-hidden bg-white dark:bg-secondary-900 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
                             onClick={() => router.push(`/posts/${post.id}`, { scroll: false })}
                         >
-                            {hasImage ? (
-                                <img
-                                    src={post.images[0]}
-                                    alt={post.content?.slice(0, 60) || 'Post'}
-                                    className="w-full h-auto object-cover block"
-                                    loading="lazy"
-                                />
-                            ) : (
+                             {hasImage ? (
+                                 <CloudinaryImage
+                                     src={post.images[0]}
+                                     alt={post.content?.slice(0, 60) || 'Post'}
+                                     width={400}
+                                     height={600}
+                                     className="w-full h-auto object-cover block"
+                                 />
+                             ) : (
                                 <div className={`w-full min-h-[120px] bg-gradient-to-br ${gradient} p-4 flex items-start`}>
                                     <p className="text-white text-sm font-semibold leading-snug line-clamp-6">
                                         {post.content}
@@ -97,10 +99,10 @@ export default function SavedPostsTab() {
 
                             {/* Author */}
                             <div className="px-2.5 py-2 flex items-center gap-2">
-                                <div className="w-5 h-5 rounded-full overflow-hidden bg-primary-100 shrink-0">
-                                    {(post.user as any)?.avatar ? (
-                                        <img src={(post.user as any).avatar} alt={(post.user as any).name} className="w-full h-full object-cover" />
-                                    ) : (
+                                 <div className="w-5 h-5 rounded-full overflow-hidden bg-primary-100 shrink-0 relative">
+                                     {(post.user as any)?.avatar ? (
+                                         <CloudinaryImage src={(post.user as any).avatar} alt={(post.user as any).name} fill className="w-full h-full object-cover" />
+                                     ) : (
                                         <span className="w-full h-full flex items-center justify-center text-[9px] font-bold text-primary-600">
                                             {(post.user as any).name?.charAt(0)?.toUpperCase()}
                                         </span>

@@ -13,6 +13,7 @@ import {
     useAddPostToBoard, 
     useRemovePostFromBoard 
 } from '@/hooks/use-api/use-boards';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 export function SaveToBoardModal() {
   const { isOpen, postId, close } = useSaveToBoard();
@@ -134,10 +135,10 @@ export function SaveToBoardModal() {
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-secondary-100 dark:bg-secondary-800 overflow-hidden shrink-0 shadow-inner">
-                        {firstImage ? (
-                          <img src={firstImage} className="w-full h-full object-cover" alt="" />
-                        ) : (
+                       <div className="w-12 h-12 rounded-xl bg-secondary-100 dark:bg-secondary-800 overflow-hidden shrink-0 shadow-inner relative">
+                         {firstImage ? (
+                           <CloudinaryImage src={firstImage} fill className="object-cover" alt="" />
+                         ) : (
                           <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-secondary-200 dark:border-secondary-700 rounded-xl">
                              <Plus className="w-4 h-4 text-secondary-300" />
                           </div>

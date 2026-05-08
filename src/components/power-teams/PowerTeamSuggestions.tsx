@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { ShieldCheck, Zap, ArrowRight, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 interface PowerTeamMate {
   id: string;
@@ -59,9 +60,11 @@ export const PowerTeamSuggestions = memo(function PowerTeamSuggestions({ team, v
 
       {/* Team Badge */}
       <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-700/50 mb-5">
-        {team.logo ? (
-          <img src={team.logo} alt={team.name} className="w-6 h-6 rounded-lg object-cover" />
-        ) : (
+         {team.logo ? (
+           <div className="w-6 h-6 rounded-lg overflow-hidden relative">
+             <CloudinaryImage src={team.logo} alt={team.name} fill className="object-cover" />
+           </div>
+         ) : (
           <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center">
             <Users className="w-3.5 h-3.5 text-primary-500" />
           </div>

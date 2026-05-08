@@ -25,6 +25,8 @@ import { useDeletePost, usePost, usePostComments, useLikePost, useCommentOnPost,
 import { FeedContainer } from './feed-container';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
 
 interface Comment {
     id: string;
@@ -266,24 +268,26 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 const src = post.images[currentImageIndex];
                                 const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                                 
-                                if (isVideoItem) {
-                                    return (
-                                        <video
-                                            key={src}
-                                            src={src}
-                                            className="w-full h-full object-contain block"
-                                            controls playsInline autoPlay loop
-                                        />
-                                    );
-                                }
-                                return (
-                                    <img
-                                        key={src}
-                                        src={src}
-                                        alt={post.content || 'Post image'}
-                                        className="w-full h-full object-contain block"
-                                    />
-                                );
+                                 if (isVideoItem) {
+                                     return (
+                                         <CloudinaryVideo
+                                             key={src}
+                                             src={src}
+                                             className="w-full h-full object-contain block"
+                                             controls playsInline autoPlay loop
+                                         />
+                                     );
+                                 }
+                                 return (
+                                     <CloudinaryImage
+                                         key={src}
+                                         src={src}
+                                         alt={post.content || 'Post image'}
+                                         fill
+                                         enhance={true}
+                                         className="w-full h-full object-contain block"
+                                     />
+                                 );
                             })()}
 
                             <AnimatePresence>
@@ -448,9 +452,9 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         <div className="flex items-center justify-between py-2">
                             <Link href={`/profile/${post.user.username}`} className="flex items-center gap-3 group">
                                 <div className="w-[44px] h-[44px] rounded-full bg-gray-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-50 dark:border-secondary-700">
-                                    {post.user.avatar ? (
-                                        <img src={post.user.avatar} className="w-full h-full object-cover" alt="" />
-                                    ) : (
+                                     {post.user.avatar ? (
+                                         <CloudinaryImage src={post.user.avatar} fill className="w-full h-full object-cover" alt="" />
+                                     ) : (
                                         <span className="text-[14px] font-[500] text-gray-500 uppercase">{post.user.name.charAt(0)}</span>
                                     )}
                                 </div>
@@ -511,9 +515,9 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 )}>
                                     {comments.map((c) => (
                                         <div key={c.id} className="flex gap-3">
-                                            <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700">
-                                                {c.user.avatar ? <img src={c.user.avatar} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{c.user.name.charAt(0)}</span>}
-                                            </Link>
+                                             <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700 relative">
+                                                 {c.user.avatar ? <CloudinaryImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{c.user.name.charAt(0)}</span>}
+                                             </Link>
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     <span className="text-sm font-medium text-gray-900 dark:text-white hover:underline cursor-pointer">{c.user.name}</span>
@@ -549,9 +553,9 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     <div className="sticky bottom-0 p-6 md:px-8 md:py-6 bg-white dark:bg-secondary-900 border-t border-gray-100 dark:border-secondary-800 z-20">
                         {post.commentsEnabled !== false ? (
                             <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden">
-                                    {user?.avatar ? <img src={user.avatar as string} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">?</span>}
-                                </div>
+                                 <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden relative">
+                                     {user?.avatar ? <CloudinaryImage src={user.avatar as string} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">?</span>}
+                                 </div>
                                 <div className="flex-1 relative">
                                     <input
                                         type="text"
@@ -630,10 +634,10 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 const src = post.images[currentImageIndex];
                                 const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                                 
-                                if (isVideoItem) {
-                                    return <video src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
-                                }
-                                return <img src={src} className="max-w-full max-h-full object-contain" alt="" />;
+                                 if (isVideoItem) {
+                                     return <CloudinaryVideo src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
+                                 }
+                                 return <CloudinaryImage src={src} fill className="max-w-full max-h-full object-contain" alt="" />;
                             })()}
                         </div>
 

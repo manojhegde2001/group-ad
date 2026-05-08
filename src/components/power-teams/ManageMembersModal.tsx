@@ -1,6 +1,7 @@
 'use client';
 
-import { Modal, Button, Avatar } from 'rizzui';
+import { Modal, Button } from 'rizzui';
+import { Avatar } from '@/components/ui/avatar';
 import { X, Check, UserMinus, ShieldAlert, Users, Clock } from 'lucide-react';
 import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import { usePowerTeam, useUpdatePowerTeamMember, useLeavePowerTeam } from '@/hooks/use-api/use-power-teams';

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, Users, Mail, Briefcase } from 'lucide-react';
 import { BulkEventActions } from '@/components/admin/BulkEventActions';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 type Enrollment = {
     id: string;
@@ -178,12 +179,12 @@ export default function AdminEnrollmentsPage() {
                                 )}
 
                                 {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden shrink-0">
-                                    {enrollment.user.avatar
-                                        ? <img src={enrollment.user.avatar} alt={enrollment.user.name} className="w-full h-full object-cover" />
-                                        : <span className="text-white text-sm font-bold">{enrollment.user.name.charAt(0)}</span>
-                                    }
-                                </div>
+                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center overflow-hidden shrink-0 relative">
+                                     {enrollment.user.avatar
+                                         ? <CloudinaryImage src={enrollment.user.avatar} alt={enrollment.user.name} fill className="object-cover" />
+                                         : <span className="text-white text-sm font-bold">{enrollment.user.name.charAt(0)}</span>
+                                     }
+                                 </div>
 
                                 {/* User info */}
                                 <div className="flex-1 min-w-0">

@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
 import { useCategories } from '@/hooks/use-api/use-categories';
 import { useUpdateAdminUser } from '@/hooks/use-api/use-admin';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 interface UserEditModalProps {
   user: any;
@@ -119,11 +120,11 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
           {/* ── Header ── */}
           <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 border-b border-secondary-100 dark:border-secondary-800 bg-secondary-50/60 dark:bg-secondary-900/40 sm:rounded-t-2xl">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-primary-500 flex items-center justify-center text-white shadow overflow-hidden shrink-0">
-                {user?.avatar
-                  ? <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-                  : <User className="w-[18px] h-[18px]" />}
-              </div>
+               <div className="w-9 h-9 rounded-xl bg-primary-500 flex items-center justify-center text-white shadow overflow-hidden shrink-0 relative">
+                 {user?.avatar
+                   ? <CloudinaryImage src={user.avatar} alt="" fill className="object-cover" />
+                   : <User className="w-[18px] h-[18px]" />}
+               </div>
               <div>
                 <h2 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tight leading-none">
                   Edit Profile

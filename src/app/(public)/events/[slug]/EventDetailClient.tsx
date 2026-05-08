@@ -25,6 +25,7 @@ import AttendeeConnectBanner from '@/components/events/AttendeeConnectBanner';
 import { useAuth } from '@/hooks/use-auth';
 import { AttendanceTicket } from '@/components/events/attendance-ticket';
 import { QRScannerModal } from '@/components/events/qr-scanner-modal';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 export default function EventDetailClient({ slug }: { slug: string }) {
     const { user: currentUser } = useAuth();
@@ -51,15 +52,17 @@ export default function EventDetailClient({ slug }: { slug: string }) {
         <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
             {/* Hero Section */}
             <div className="relative h-[45vh] md:h-[60vh] w-full overflow-hidden">
-                {event.coverImage ? (
-                    <>
-                        <img
-                            src={event.coverImage}
-                            alt={event.title}
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-secondary-900 via-secondary-900/40 to-transparent opacity-80" />
-                    </>
+                 {event.coverImage ? (
+                     <>
+                         <CloudinaryImage
+                             src={event.coverImage}
+                             alt={event.title}
+                             fill
+                             className="object-cover"
+                             priority
+                         />
+                         <div className="absolute inset-0 bg-gradient-to-t from-secondary-900 via-secondary-900/40 to-transparent opacity-80" />
+                     </>
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary-600 to-primary-900" />
                 )}

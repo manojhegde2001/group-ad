@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminEvents } from '@/hooks/use-api/use-admin';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-secondary-100 text-secondary-600 dark:bg-secondary-800 dark:text-secondary-400',
@@ -163,10 +164,10 @@ export default function AdminEventsPage() {
                         {events.map((event: any) => (
                             <div key={event.id} className="group flex flex-col md:flex-row md:items-center gap-6 px-10 py-8 hover:bg-primary-50/30 dark:hover:bg-slate-800/50 transition-all duration-300">
                                 {/* Cover Art */}
-                                <div className="w-20 h-20 rounded-[1.5rem] overflow-hidden bg-gradient-to-br from-primary-400 to-primary-600 shrink-0 border-4 border-white dark:border-secondary-800 shadow-lg group-hover:scale-105 transition-transform">
-                                    {event.coverImage ? (
-                                        <img src={event.coverImage} alt={event.title} className="w-full h-full object-cover" />
-                                    ) : (
+                                 <div className="w-20 h-20 rounded-[1.5rem] overflow-hidden bg-gradient-to-br from-primary-400 to-primary-600 shrink-0 border-4 border-white dark:border-secondary-800 shadow-lg group-hover:scale-105 transition-transform relative">
+                                     {event.coverImage ? (
+                                         <CloudinaryImage src={event.coverImage} alt={event.title} fill className="object-cover" />
+                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-white/50">
                                             <Calendar className="w-8 h-8" />
                                         </div>

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Search, User, Menu, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { useMe } from '@/hooks/use-api/use-user';
 import { Avatar } from '@/components/ui/avatar';
 
@@ -51,7 +52,9 @@ export function MobileBottomNav({ onMenuClick, onSearchClick }: MobileBottomNavP
                                         "w-6 h-6 rounded-full overflow-hidden ring-2 transition-all",
                                         isActive ? "ring-secondary-900 dark:ring-white" : "ring-transparent"
                                     )}>
-                                        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                                        <div className="w-full h-full rounded-full overflow-hidden relative">
+                                            <CloudinaryImage src={user.avatar} alt="" fill className="object-cover" />
+                                        </div>
                                     </div>
                                 ) : (
                                     <Icon className={cn("w-6 h-6", isActive && "stroke-[2.5px]")} />

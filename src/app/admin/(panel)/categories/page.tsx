@@ -18,6 +18,7 @@ import {
   useDeleteCategory, 
   useUploadCategoryBanner 
 } from '@/hooks/use-api/use-admin';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 interface Category {
   id: string;
@@ -206,7 +207,7 @@ export default function AdminCategoriesPage() {
                   
                   {banner ? (
                     <div className="relative rounded-2xl overflow-hidden border-2 border-secondary-50 dark:border-secondary-800 bg-secondary-100 dark:bg-secondary-800 aspect-video group shadow-inner">
-                      <img src={banner} alt="Banner Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <CloudinaryImage src={banner} alt="Banner Preview" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-secondary-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
                         <Button 
                           type="button" 
@@ -304,9 +305,9 @@ export default function AdminCategoriesPage() {
                     
                     {/* Visual Banner */}
                     <div className="h-40 w-full bg-secondary-50 dark:bg-secondary-800/30 overflow-hidden relative border-b-2 border-secondary-50 dark:border-secondary-800">
-                      {cat.banner ? (
-                        <img src={cat.banner} alt={cat.name} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                      ) : (
+                       {cat.banner ? (
+                         <CloudinaryImage src={cat.banner} alt={cat.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <ImageIcon className="w-12 h-12 text-secondary-100 dark:text-secondary-800" />
                         </div>

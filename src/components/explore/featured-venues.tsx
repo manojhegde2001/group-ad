@@ -2,6 +2,7 @@
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Building2, Users } from 'lucide-react';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { useAuth } from '@/hooks/use-auth';
 import { useVenues } from '@/hooks/use-api/use-venues';
 
@@ -50,7 +51,6 @@ export function FeaturedVenues() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 sm:px-6">
         {venues.map((venue: any, idx: number) => {
           const isNearby = (user as any)?.location?.toLowerCase().includes(venue.city.toLowerCase());
-          const image = VENUE_IMAGES[idx % VENUE_IMAGES.length];
           
           return (
             <div
@@ -65,10 +65,11 @@ export function FeaturedVenues() {
             >
               {/* Image Header */}
               <div className="absolute inset-0 h-full w-full">
-                <img 
-                    src={image} 
+                <CloudinaryImage 
+                    src={venue.image} 
                     alt={venue.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 dark:opacity-40"
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 dark:opacity-40"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-secondary-950 via-secondary-900/40 to-transparent" />
               </div>

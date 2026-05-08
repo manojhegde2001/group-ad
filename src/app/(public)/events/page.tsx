@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { useCreateEvent } from '@/hooks/use-feed';
 import { Button } from '@/components/ui/button';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 import { useEvents } from '@/hooks/use-api/use-events';
 
@@ -191,9 +192,9 @@ function EventCard({ event }: { event: any }) {
         'h-36 relative overflow-hidden',
         !event.coverImage && 'bg-gradient-to-br from-primary-400 via-primary-500 to-indigo-600'
       )}>
-        {event.coverImage ? (
-          <img src={event.coverImage} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        ) : (
+         {event.coverImage ? (
+           <CloudinaryImage src={event.coverImage} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <Calendar className="w-16 h-16 text-white/30" />
           </div>
@@ -260,10 +261,10 @@ function EventCard({ event }: { event: any }) {
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-secondary-50 dark:border-secondary-800">
           {event.organizer && (
             <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900 overflow-hidden shrink-0">
-                {event.organizer.avatar ? (
-                  <img src={event.organizer.avatar} alt="" className="w-full h-full object-cover" />
-                ) : (
+               <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900 overflow-hidden shrink-0 relative">
+                 {event.organizer.avatar ? (
+                   <CloudinaryImage src={event.organizer.avatar} alt="" fill className="object-cover" />
+                 ) : (
                   <span className="flex items-center justify-center h-full text-[9px] font-bold text-primary-600">
                     {event.organizer.name?.charAt(0)}
                   </span>

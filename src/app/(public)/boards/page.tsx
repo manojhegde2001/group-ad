@@ -11,6 +11,7 @@ import {
     useUpdateBoard 
 } from '@/hooks/use-api/use-boards';
 import { Board } from '@/services/api/boards';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 export default function BoardsPage() {
   const { data: boardsData, isLoading: loading } = useBoards();
@@ -159,25 +160,25 @@ function BoardCard({
       <Link href={`/boards/${board.id}`} className="block relative group-hover:-translate-y-1 transition-transform duration-500">
         <div className="aspect-[4/3] rounded-[2.5rem] overflow-hidden bg-secondary-50 dark:bg-secondary-900/50 relative shadow-md group-hover:shadow-2xl transition-all duration-500 border border-secondary-100 dark:border-secondary-800">
           <div className="grid grid-cols-2 grid-rows-2 h-full gap-1 p-1">
-            <div className="row-span-2 relative rounded-2xl overflow-hidden bg-secondary-100 dark:bg-secondary-800">
-              {images[0] ? (
-                <img src={images[0]} className="w-full h-full object-cover" alt="" />
-              ) : (
+             <div className="row-span-2 relative rounded-2xl overflow-hidden bg-secondary-100 dark:bg-secondary-800">
+               {images[0] ? (
+                 <CloudinaryImage src={images[0]} fill className="object-cover" alt="" />
+               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                     <LayoutGrid className="w-6 h-6 text-secondary-200" />
                 </div>
               )}
             </div>
-            <div className="relative rounded-2xl overflow-hidden bg-secondary-100/60 dark:bg-secondary-800/60">
-              {images[1] ? (
-                <img src={images[1]} className="w-full h-full object-cover" alt="" />
-              ) : null}
-            </div>
-            <div className="relative rounded-2xl overflow-hidden bg-secondary-100/40 dark:bg-secondary-800/40">
-              {images[2] ? (
-                <img src={images[2]} className="w-full h-full object-cover" alt="" />
-              ) : null}
-            </div>
+             <div className="relative rounded-2xl overflow-hidden bg-secondary-100/60 dark:bg-secondary-800/60">
+               {images[1] ? (
+                 <CloudinaryImage src={images[1]} fill className="object-cover" alt="" />
+               ) : null}
+             </div>
+             <div className="relative rounded-2xl overflow-hidden bg-secondary-100/40 dark:bg-secondary-800/40">
+               {images[2] ? (
+                 <CloudinaryImage src={images[2]} fill className="object-cover" alt="" />
+               ) : null}
+             </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>

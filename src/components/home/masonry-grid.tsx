@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 const DEMO_POSTS:any = [
 ];
@@ -49,12 +50,14 @@ export function MasonryGrid() {
             <div key={post.id} className="mb-6">
               <Card variant="elevated" className="overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow">
                 {/* Image */}
-                <div className="relative overflow-hidden">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                 <div className="relative overflow-hidden">
+                   <CloudinaryImage
+                     src={post.image}
+                     alt={post.title}
+                     width={400}
+                     height={600}
+                     className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
+                   />
                   <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => toggleSave(post.id)}

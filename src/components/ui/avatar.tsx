@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { CloudinaryImage } from './cloudinary-image';
 import { cn } from '@/lib/utils';
 
 interface AvatarProps {
@@ -53,7 +53,7 @@ export function Avatar({
       )}
     >
       {src ? (
-        <Image
+        <CloudinaryImage
           src={src}
           alt={name}
           fill

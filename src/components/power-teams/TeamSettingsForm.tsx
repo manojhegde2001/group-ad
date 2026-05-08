@@ -11,6 +11,7 @@ import { useCategories } from '@/hooks/use-api/use-categories';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 interface TeamSettingsFormProps {
   team: any;
@@ -155,7 +156,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
              >
                 {logoPreview ? (
                    <>
-                    <img src={logoPreview} alt="Logo" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <CloudinaryImage src={logoPreview} alt="Logo" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                        <Upload className="w-8 h-8 text-white" />
                     </div>
@@ -181,7 +182,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
              >
                 {bannerPreview ? (
                    <>
-                    <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <CloudinaryImage src={bannerPreview} alt="Banner" fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                        <Upload className="w-10 h-10 text-white" />
                     </div>

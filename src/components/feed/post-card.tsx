@@ -17,7 +17,8 @@ import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
 import { Drawer, Popover } from 'rizzui';
-import { motion, AnimatePresence } from 'framer-motion';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
 
 interface PostCardProps {
     post: PostWithRelations;
@@ -27,9 +28,7 @@ interface PostCardProps {
 }
 
 export const PostCard = memo(function PostCard({ post, onLikeChange, showActions = false, priority = false }: PostCardProps) {
-    const [mounted, setMounted] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    useEffect(() => setMounted(true), []);
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
     const { open: openSaveToBoard } = useSaveToBoard();
@@ -126,7 +125,7 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
     ];
     const gradient = gradients[parseInt(post.id.slice(-1), 16) % gradients.length];
 
-    if (!mounted) return null;
+
 
     return (
         <Link 
@@ -139,24 +138,27 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                         {(() => {
                             const src = post.images[0];
                             const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
-                            return isVideoItem ? (
-                                <video
-                                    src={src}
-                                    className="w-full h-auto block"
-                                    muted playsInline loop preload="metadata"
-                                    onMouseEnter={e => e.currentTarget.play()}
-                                    onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                    onDoubleClick={handleDoubleTap}
-                                />
-                            ) : (
-                                <img
-                                    src={src}
-                                    alt={post.content || ''}
-                                    className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
-                                    onDoubleClick={handleDoubleTap}
-                                    loading={priority ? "eager" : "lazy"}
-                                />
-                            );
+                             return isVideoItem ? (
+                                 <CloudinaryVideo
+                                     src={src}
+                                     className="w-full h-auto block"
+                                     muted playsInline loop 
+                                     onMouseEnter={e => e.currentTarget.play()}
+                                     onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                     onDoubleClick={handleDoubleTap}
+                                 />
+                             ) : (
+                                 <CloudinaryImage
+                                     src={src}
+                                     alt={post.content || ''}
+                                     width={600}
+                                     height={800}
+                                     enhance={true}
+                                     className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
+                                     onDoubleClick={handleDoubleTap}
+                                     priority={priority}
+                                 />
+                             );
                         })()}
                         {post.images.length > 1 && (
                             <div className="absolute top-3 left-3 bg-white/95 dark:bg-secondary-900/95 backdrop-blur-md text-secondary-900 dark:text-white text-[10px] px-2.5 py-1 rounded-xl font-black border border-secondary-200/50 shadow-lg z-20">
@@ -170,13 +172,11 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                         </div>
                 )}
 
-                <AnimatePresence>
                     {showHeartPop && (
-                        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1.5, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 animate-scale-in">
                             <Heart className="w-24 h-24 text-white fill-white drop-shadow-2xl" />
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
 
                 {/* Hover Overlays - Hidden on mobile */}
                 <div 

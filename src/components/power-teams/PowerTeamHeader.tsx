@@ -7,8 +7,8 @@ import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import { useJoinPowerTeam, useLeavePowerTeam } from '@/hooks/use-api/use-power-teams';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import Link from 'next/link';
-import Image from 'next/image';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80';
 
@@ -52,15 +52,14 @@ export const PowerTeamHeader = memo(function PowerTeamHeader({ team }: PowerTeam
   return (
     <div className="relative">
       {/* Banner */}
-      <div className="h-64 sm:h-80 w-full relative overflow-hidden rounded-[3rem] shadow-2xl bg-secondary-100 dark:bg-secondary-800">
-        <Image
-          src={team.banner || DEFAULT_BANNER}
-          alt={`${team.name} Banner`}
-          fill
-          priority
-          className="object-cover transition-transform duration-1000 hover:scale-105"
-          sizes="100vw"
-        />
+       <div className="h-64 sm:h-80 w-full relative overflow-hidden rounded-[3rem] shadow-2xl bg-secondary-100 dark:bg-secondary-800">
+         <CloudinaryImage
+           src={team.banner || DEFAULT_BANNER}
+           alt={`${team.name} Banner`}
+           fill
+           priority
+           className="object-cover transition-transform duration-1000 hover:scale-105"
+         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
         {/* Top Actions */}
@@ -87,16 +86,15 @@ export const PowerTeamHeader = memo(function PowerTeamHeader({ team }: PowerTeam
         <div className="flex flex-col md:flex-row items-end md:items-center justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
             {/* Logo */}
-            <div className="relative w-40 h-40 rounded-[2.5rem] bg-white dark:bg-secondary-900 p-2 shadow-2xl border-4 border-white dark:border-secondary-900 ring-1 ring-secondary-100 dark:ring-secondary-800 overflow-hidden">
-              {team.logo ? (
-                <Image 
-                    src={team.logo} 
-                    alt={team.name} 
-                    fill 
-                    className="object-cover rounded-[2rem] p-2" 
-                    sizes="(max-width: 768px) 160px, 160px"
-                />
-              ) : (
+             <div className="relative w-40 h-40 rounded-[2.5rem] bg-white dark:bg-secondary-900 p-2 shadow-2xl border-4 border-white dark:border-secondary-900 ring-1 ring-secondary-100 dark:ring-secondary-800 overflow-hidden">
+               {team.logo ? (
+                 <CloudinaryImage 
+                     src={team.logo} 
+                     alt={team.name} 
+                     fill 
+                     className="object-cover rounded-[2rem] p-2" 
+                 />
+               ) : (
                 <div className="w-full h-full rounded-[2rem] bg-secondary-50 dark:bg-secondary-800 flex items-center justify-center text-secondary-300">
                   <Building className="w-16 h-16" />
                 </div>

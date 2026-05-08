@@ -12,6 +12,7 @@ import {
   Zap, Plus, Search, ArrowRight, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
 import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
@@ -554,10 +555,10 @@ export default function SettingsPage() {
                       </div>
                       <div className="px-8 pb-8">
                         <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-10 relative z-10">
-                          <div className="w-24 h-24 rounded-3xl bg-white dark:bg-secondary-800 p-1.5 shadow-2xl border border-secondary-100 dark:border-secondary-800">
-                            {myTeam.logo ? (
-                              <img src={myTeam.logo} alt={myTeam.name} className="w-full h-full object-cover rounded-2xl" />
-                            ) : (
+                           <div className="w-24 h-24 rounded-3xl bg-white dark:bg-secondary-800 p-1.5 shadow-2xl border border-secondary-100 dark:border-secondary-800 relative overflow-hidden">
+                             {myTeam.logo ? (
+                               <CloudinaryImage src={myTeam.logo} alt={myTeam.name} fill className="w-full h-full object-cover rounded-2xl" />
+                             ) : (
                               <div className="w-full h-full rounded-2xl bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-primary-500">
                                 <Building2 className="w-10 h-10" />
                               </div>
@@ -794,10 +795,10 @@ function AvatarUploader({ src, name, uploading, onFileChange, fileRef }: { src?:
   return (
     <div className="relative group">
       <div className="w-28 h-28 rounded-[2rem] overflow-hidden bg-white dark:bg-secondary-800 p-1.5 shadow-xl transition-transform group-hover:scale-[1.02]">
-        <div className="w-full h-full rounded-[1.6rem] overflow-hidden relative">
-          {src ? <img src={src} alt={name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-secondary-100 dark:bg-secondary-800 text-3xl font-black text-secondary-300 uppercase">{name.charAt(0)}</div>}
-          {uploading && <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-white" /></div>}
-        </div>
+         <div className="w-full h-full rounded-[1.6rem] overflow-hidden relative">
+           {src ? <CloudinaryImage src={src} alt={name} fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-secondary-100 dark:bg-secondary-800 text-3xl font-black text-secondary-300 uppercase">{name.charAt(0)}</div>}
+           {uploading && <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-white" /></div>}
+         </div>
       </div>
       <button onClick={() => fileRef.current?.click()} className="absolute -bottom-1 -right-1 p-2 bg-primary-500 text-white rounded-xl shadow-lg hover:scale-110 active:scale-90 transition-all border-4 border-white dark:border-secondary-950"><Camera className="w-4 h-4" /></button>
       <input type="file" ref={fileRef} onChange={onFileChange} accept="image/*" className="hidden" />

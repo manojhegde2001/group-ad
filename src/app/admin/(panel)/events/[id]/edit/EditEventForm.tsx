@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send, Save } from 'lucide-react';
+import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { format } from 'date-fns';
 import { Event } from '@prisma/client';
 
@@ -323,11 +324,11 @@ export default function EditEventForm({ event }: { event: any }) {
                                 className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             />
                         </div>
-                        {form.coverImage && (
-                            <div className="rounded-xl overflow-hidden aspect-video bg-secondary-100 dark:bg-secondary-800">
-                                <img src={form.coverImage} alt="Cover preview" className="w-full h-full object-cover" />
-                            </div>
-                        )}
+                         {form.coverImage && (
+                             <div className="rounded-xl overflow-hidden aspect-video bg-secondary-100 dark:bg-secondary-800 relative">
+                                 <CloudinaryImage src={form.coverImage} alt="Cover preview" fill className="object-cover" />
+                             </div>
+                         )}
                     </div>
                 )}
 

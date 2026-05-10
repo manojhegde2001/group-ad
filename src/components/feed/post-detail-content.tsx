@@ -244,7 +244,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             <div className="flex flex-col md:flex-row w-full max-w-[1800px] mx-auto bg-white dark:bg-secondary-900 rounded-none md:rounded-2xl overflow-hidden md:border border-gray-100 dark:border-secondary-800 md:shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
                 
                 {/* Left Panel - Sticky Media Column */}
-                <div className="relative w-full md:w-[50%] h-auto md:h-[calc(100vh-80px)] md:sticky md:top-[80px] bg-secondary-100 dark:bg-black/40 overflow-hidden group/carousel">
+                <div className="relative w-full md:w-[50%] min-h-[450px] h-[60vh] md:h-[calc(100vh-80px)] md:sticky md:top-[80px] bg-secondary-100 dark:bg-black/40 overflow-hidden group/carousel">
                     {/* Glass Back Button (Desktop & Mobile) */}
                     {onClose && (
                         <button 
@@ -258,7 +258,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
 
                     {hasImages ? (
                         <div 
-                            className="w-full h-auto md:h-full relative overflow-hidden" 
+                            className="w-full h-full relative overflow-hidden" 
                             onDoubleClick={() => { handleLike(); setShowHeartPop(true); setTimeout(() => setShowHeartPop(false), 800); }}
                             onTouchStart={onTouchStart}
                             onTouchMove={onTouchMove}
@@ -419,8 +419,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         </button>
                     </div>
 
-                    {/* Metadata Panel (Independently Scrollable) */}
-                    <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-24 scrollbar-hide">
+                    {/* Metadata Panel (Independently Scrollable on Desktop) */}
+                    <div className="md:flex-1 md:overflow-y-auto px-6 md:px-8 pb-24 scrollbar-hide">
                         
                         {/* Title Section */}
                         <div className="mb-4">

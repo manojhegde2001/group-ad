@@ -30,8 +30,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://group-ad.vercel.app')
+    process.env.NEXT_PUBLIC_APP_URL || 'https://www.vrutta.net'
   ),
   alternates: {
     canonical: '/',
@@ -39,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Vrutta — Enterprise Social Networking',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
-    url: 'https://group-ad.vercel.app',
+    url: 'https://www.vrutta.net',
     siteName: 'Vrutta',
     images: [
       {

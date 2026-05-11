@@ -82,7 +82,11 @@ function AuthContent() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background Gradients */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-600/10 dark:bg-primary-600/20 blur-[120px] animate-pulse pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 dark:bg-indigo-600/20 blur-[120px] animate-pulse pointer-events-none" />
+
       <div className="absolute top-8 left-8 z-50">
         <Link href="/" className="flex items-center gap-2 text-secondary-500 hover:text-primary-600 transition-colors font-medium">
           <ArrowLeft className="w-5 h-5" /> Back
@@ -133,10 +137,20 @@ function AuthContent() {
           `}
         >
           <div 
-            className={`bg-gradient-to-br from-primary-600 via-primary-500 to-indigo-600 relative -left-[100%] h-full w-[200%] transition-transform duration-700 ease-in-out text-white
+            className={`bg-gradient-to-br from-primary-600/90 via-primary-500/90 to-indigo-600/90 relative -left-[100%] h-full w-[200%] transition-transform duration-700 ease-in-out text-white
               ${isSignUp ? 'translate-x-[50%]' : 'translate-x-0'}
             `}
           >
+            {/* Background Image Layer */}
+            <div 
+              className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
+              style={{ 
+                backgroundImage: 'url(/auth/thumbnail.png)', 
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: 'cover',
+              }} 
+            />
             {/* Overlay Left */}
             <div 
               className={`absolute top-0 left-0 w-1/2 h-full flex flex-col items-center justify-center p-12 text-center transition-transform duration-700 ease-in-out pointer-events-auto

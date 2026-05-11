@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     siteName: 'Vrutta',
     images: [
       {
-        url: '/auth/logo-with-bottom-label.svg',
+        url: '/auth/thumbnail.png',
         width: 1200,
         height: 630,
         alt: 'Vrutta — Business Social Networking Platform',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     title: 'Vrutta — Enterprise Social Networking',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
     creator: '@vrutta',
-    images: ['/auth/logo-with-bottom-label.svg'],
+    images: ['/auth/thumbnail.png'],
   },
   robots: {
     index: true,

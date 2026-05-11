@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://group-ad.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.vrutta.net';
 
   // Static routes
   const routes = [

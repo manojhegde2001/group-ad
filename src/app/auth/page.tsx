@@ -82,10 +82,14 @@ function AuthContent() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated Background Gradients */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-600/10 dark:bg-primary-600/20 blur-[120px] animate-pulse pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 dark:bg-indigo-600/20 blur-[120px] animate-pulse pointer-events-none" />
+    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 flex flex-col items-center justify-center p-4 relative overflow-hidden font-jakarta">
+      {/* Animated Background Gradients - Exactly matching Admin "Proper" look */}
+      <div className="absolute top-[-20%] left-[-10%] w-[150%] h-[150%] bg-gradient-to-br from-primary-600/10 dark:from-primary-600/30 via-transparent to-purple-600/10 dark:to-purple-600/20 blur-[120px] animate-pulse pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-primary-100/40 dark:bg-primary-900/40 rounded-full blur-[100px] pointer-events-none" />
+      
+      {/* Custom Networking Graph Background Effect */}
+      <div className="absolute inset-0 opacity-[0.4] dark:opacity-[0.6] pointer-events-none transition-opacity duration-1000 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--color-primary-500),0.05),transparent_70%)]" />
+
 
       <div className="absolute top-8 left-8 z-50">
         <Link href="/" className="flex items-center gap-2 text-secondary-500 hover:text-primary-600 transition-colors font-medium">

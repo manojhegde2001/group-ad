@@ -30,8 +30,11 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || 'https://www.vrutta.net'
+    (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('group-ad.vercel.app')) 
+    ? process.env.NEXT_PUBLIC_APP_URL 
+    : 'https://www.vrutta.net'
   ),
+
   alternates: {
     canonical: '/',
   },

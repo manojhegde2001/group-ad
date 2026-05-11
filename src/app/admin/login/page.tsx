@@ -71,13 +71,7 @@ export default function AdminLoginPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-primary-100/40 dark:bg-primary-900/40 rounded-full blur-[100px]" />
         
         {/* Custom Networking Graph Background */}
-        <div className="absolute inset-0 opacity-[0.15] dark:opacity-[0.25] pointer-events-none transition-opacity duration-1000" 
-             style={{ 
-               backgroundImage: 'url(/auth/thumbnail.png)', 
-               backgroundPosition: 'center',
-               backgroundRepeat: 'no-repeat',
-               backgroundSize: 'cover',
-             }} />
+        <div className="absolute inset-0 opacity-[0.4] dark:opacity-[0.6] pointer-events-none transition-opacity duration-1000 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--color-primary-500),0.05),transparent_70%)]" />
 
         <div className="relative z-10 space-y-8 max-w-lg">
           <div className="space-y-4">

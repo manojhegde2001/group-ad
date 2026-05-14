@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { adminService, AdminStats } from '@/services/api/admin';
+import { eventService } from '@/services/api/events';
 import toast from 'react-hot-toast';
 
 export const useAdminStats = (options?: Omit<UseQueryOptions<AdminStats>, 'queryKey' | 'queryFn'>) => {
@@ -98,7 +99,7 @@ export const useAdminAnalytics = (range: string = '30d') => {
 };
 
 export const useCategories = () => {
-    return useQuery({
+    return useQuery<{ categories: any[] }>({
         queryKey: ['admin', 'categories'],
         queryFn: () => adminService.getCategories(),
     });
@@ -151,7 +152,7 @@ export const useDeleteCategory = () => {
 
 export const useUploadCategoryBanner = () => {
     return useMutation({
-        mutationFn: (formData: FormData) => adminService.uploadCategoryBanner(formData),
+        mutationFn: (formData: FormData) => adminService.uploadCategoryBanner(formData) as Promise<{ bannerUrl: string }>,
         onSuccess: () => {
             toast.success('Banner uploaded');
         },
@@ -199,7 +200,7 @@ export const useDeleteVenue = () => {
 };
 
 export const useAdminEvents = (params?: Record<string, any>) => {
-  return useQuery({
+  return useQuery<{ events: any[]; pagination: any }>({
     queryKey: ['admin', 'events', params],
     queryFn: () => adminService.getAdminEvents(params),
   });
@@ -274,4 +275,96 @@ export const useDeletePowerTeam = () => {
       toast.error(error.message || 'Failed to delete Power Team');
     },
   });
+};
+
+export const useEventEnrollments = (eventId: string) => {
+    return useQuery<{ enrollments: any[] }>({
+        queryKey: ['admin', 'events', eventId, 'enrollments'],
+        queryFn: () => eventService.getEventEnrollments(eventId),
+        enabled: !!eventId,
+    });
+};
+
+export const useUpdateEnrollmentStatus = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ eventId, enrollmentId, status }: { eventId: string; enrollmentId: string; status: string }) => 
+            eventService.updateEnrollmentStatus(eventId, enrollmentId, status),
+        onSuccess: (_, { eventId }) => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events', eventId, 'enrollments'] });
+            toast.success('Enrollment status updated');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to update status');
+        }
+    });
+};
+
+export const useBulkRegister = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ eventId, participants }: { eventId: string; participants: any[] }) => 
+            eventService.bulkRegister(eventId, participants),
+        onSuccess: (_, { eventId }) => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events', eventId, 'enrollments'] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Bulk registration failed');
+        }
+    });
+};
+
+export const useBulkAttendance = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ eventId, attendees }: { eventId: string; attendees: any[] }) => 
+            eventService.bulkAttendance(eventId, attendees),
+        onSuccess: (_, { eventId }) => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events', eventId, 'enrollments'] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Bulk attendance update failed');
+        }
+    });
+};
+
+export const useBulkImportUsers = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: any[]) => adminService.bulkImportUsers(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+            toast.success('Users imported successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Bulk import failed');
+        }
+    });
+};
+
+export const useValidateBulkUsers = () => {
+    return useMutation({
+        mutationFn: (users: any[]) => adminService.validateBulkUsers(users),
+        onError: (error: any) => {
+            toast.error(error.message || 'Validation failed');
+        }
+    });
+};
+
+export const useCreateBulkUsers = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (users: any[]) => adminService.createBulkUsers(users),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
+            toast.success('Bulk users created successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Bulk creation failed');
+        }
+    });
 };

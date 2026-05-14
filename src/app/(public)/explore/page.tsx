@@ -1,11 +1,16 @@
-'use client';
-
 import { CategoryCards } from '@/components/feed/category-cards';
 import { Compass, Layout } from 'lucide-react';
 import { TrendingCategories } from '@/components/explore/trending-categories';
 import { SearchBar } from '@/components/layout/search-bar';
+import { getCategoriesServer } from '@/services/server/category-service';
 
-export default function ExplorePage() {
+export default async function ExplorePage() {
+  // Fetch initial data on server for SEO
+  const [trendingData, allCategoriesData] = await Promise.all([
+    getCategoriesServer({ trending: true, limit: 8 }),
+    getCategoriesServer()
+  ]);
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col overflow-x-hidden pt-16 md:pt-0">
       {/* Mobile Fixed Search - Professional Header */}
@@ -37,7 +42,7 @@ export default function ExplorePage() {
       <div className="flex-1 bg-white dark:bg-[#0a0a0f] space-y-16 py-10 pb-24">
         {/* Section 1: Trending */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <TrendingCategories />
+            <TrendingCategories initialData={trendingData} />
         </div>
         {/* Section 2: All Topics */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:400ms]">
@@ -49,7 +54,7 @@ export default function ExplorePage() {
                     All Topics
                 </h2>
             </div>
-            <CategoryCards />
+            <CategoryCards initialData={allCategoriesData} />
         </div>
       </div>
     </div>

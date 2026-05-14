@@ -10,7 +10,7 @@ export const useEvents = (params: Record<string, any> = {}) => {
 };
 
 export const useEvent = (id: string) => {
-    return useQuery({
+    return useQuery<{ event: any; userEnrollment?: any }>({
         queryKey: ['event', id],
         queryFn: () => eventService.getEvent(id),
         enabled: !!id,
@@ -55,6 +55,7 @@ export const useCreateEvent = () => {
         mutationFn: (data: any) => eventService.createEvent(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['events'] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events'] });
             toast.success('Event created successfully');
         },
         onError: (error: any) => {
@@ -62,10 +63,77 @@ export const useCreateEvent = () => {
         },
     });
 };
+
+export const useUpdateEvent = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => eventService.updateEvent(id, data),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ['event', id] });
+            queryClient.invalidateQueries({ queryKey: ['events'] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events'] });
+            toast.success('Event updated successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to update event');
+        },
+    });
+};
 export const useCoAttendees = (eventId: string) => {
-    return useQuery({
+    return useQuery<{ coAttendees: any[] }>({
         queryKey: ['events', eventId, 'co-attendees'],
         queryFn: () => eventService.getCoAttendees(eventId),
         enabled: !!eventId,
+    });
+};
+
+export const useSubmitAttendance = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ eventId, data }: { eventId: string; data: any }) => 
+            eventService.submitAttendance(eventId, data),
+        onSuccess: (_, { eventId }) => {
+            queryClient.invalidateQueries({ queryKey: ['event', eventId] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events'] });
+            toast.success('Attendance recorded');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to record attendance');
+        }
+    });
+};
+
+export const useAttendanceTicket = (eventId: string, options: any = {}) => {
+    return useQuery({
+        queryKey: ['event', eventId, 'attendance-ticket'],
+        queryFn: () => eventService.getAttendanceTicket(eventId),
+        enabled: !!eventId,
+        ...options,
+    });
+};
+
+export const useCheckIn = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ eventId, token }: { eventId: string; token: string }) => 
+            eventService.checkIn(eventId, token),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
+            queryClient.invalidateQueries({ queryKey: ['admin', 'events'] });
+            queryClient.invalidateQueries({ queryKey: ['events'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Check-in failed');
+        }
+    });
+};
+
+export const useCheckInToken = (eventId: string, options: any = {}) => {
+    return useQuery<{ token: string }>({
+        queryKey: ['event', eventId, 'check-in-token'],
+        queryFn: () => eventService.getCheckInToken(eventId),
+        enabled: !!eventId,
+        ...options,
     });
 };

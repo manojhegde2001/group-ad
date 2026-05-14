@@ -30,9 +30,10 @@ const breakpointCols = {
 interface FeedContainerProps {
   categoryId?: string | null;
   boardId?: string | null;
+  initialData?: any;
 }
 
-export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedContainerProps) {
+export function FeedContainer({ categoryId: initialCategoryId, boardId, initialData }: FeedContainerProps) {
   const { selectedCategoryId, searchQuery } = useFeedFilter();
   const effectiveCategoryId = initialCategoryId !== undefined ? initialCategoryId : selectedCategoryId;
   const { setOnCreated, setOnDeleted } = useCreatePostModal();
@@ -52,6 +53,8 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId }: FeedCo
     search: searchQuery,
     visibility: 'PUBLIC',
     limit: '12',
+  }, {
+    initialData: initialData ? { pages: [initialData], pageParams: [1] } : undefined
   });
 
   const posts = data?.pages.flatMap((page: any) => page.posts) || [];

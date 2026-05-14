@@ -1,16 +1,27 @@
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { commonService } from '@/services/api/common';
+import toast from 'react-hot-toast';
 
 export const useCategories = () => {
     return useQuery({
         queryKey: ['categories'],
-        queryFn: () => apiClient.get<{ categories: any[] }>('/api/categories').then(res => res.categories),
+        queryFn: () => commonService.getCategories().then(res => res.categories),
     });
 };
 
 export const useCompanies = () => {
     return useQuery({
         queryKey: ['companies'],
-        queryFn: () => apiClient.get<{ companies: any[] }>('/api/companies').then(res => res.companies),
+        queryFn: () => commonService.getCompanies().then(res => res.companies),
+    });
+};
+
+export const useUpload = () => {
+    return useMutation({
+        mutationFn: ({ file, resourceType }: { file: File, resourceType?: 'image' | 'video' }) => 
+            commonService.uploadFile(file, resourceType),
+        onError: (error: any) => {
+            toast.error(error.message || 'Upload failed');
+        }
     });
 };

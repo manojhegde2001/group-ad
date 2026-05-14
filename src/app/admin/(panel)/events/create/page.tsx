@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send, Plus, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send, Plus, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useCategories } from '@/hooks/use-api/use-categories';
+import { useCreateEvent } from '@/hooks/use-api/use-events';
 
 const EVENT_TYPES = ['MEETUP', 'WEBINAR', 'WORKSHOP', 'CONFERENCE', 'NETWORKING'];
 
@@ -47,7 +49,7 @@ function CategoryLimitAdder({
     categories,
     onAdd,
 }: {
-    categories: { id: string; name: string; icon?: string }[];
+    categories: { id: string; name: string; icon?: string | null }[];
     onAdd: (entry: CategoryLimitEntry) => void;
 }) {
     const [selectedId, setSelectedId] = useState('');
@@ -96,9 +98,13 @@ function CategoryLimitAdder({
 export default function CreateEventPage() {
     const router = useRouter();
     const [step, setStep] = useState(0);
-    const [loading, setLoading] = useState(false);
+    
+    // Queries & Mutations
+    const { data: catData } = useCategories();
+    const createEventMutation = useCreateEvent();
+    const categories = catData?.categories || [];
+
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-    const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([]);
     const [form, setForm] = useState<FormData>({
         title: '',
         description: '',
@@ -120,13 +126,6 @@ export default function CreateEventPage() {
         status: 'PUBLISHED',
     });
 
-    // Fetch categories for the limits UI
-    useEffect(() => {
-        fetch('/api/categories')
-            .then((r) => r.json())
-            .then((data) => setCategories(data.categories || data || []))
-            .catch(() => {});
-    }, []);
 
     const set = (key: keyof FormData, val: any) => {
         setForm((f) => ({ ...f, [key]: val }));
@@ -176,42 +175,29 @@ export default function CreateEventPage() {
     };
 
     const handleSubmit = async (statusOverride: 'DRAFT' | 'PUBLISHED' = form.status) => {
-        setLoading(true);
-        try {
-            const payload = {
-                ...form,
-                status: statusOverride,
-                startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
-                endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
-                maxAttendees: form.maxAttendees ? parseInt(form.maxAttendees) : undefined,
-                meetingLink: form.meetingLink || undefined,
-                categoryId: form.categoryId || undefined,
-                coverImage: form.coverImage || undefined,
-                city: form.city || undefined,
-                state: form.state || undefined,
-            };
+        const payload = {
+            ...form,
+            status: statusOverride,
+            startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
+            endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
+            maxAttendees: form.maxAttendees ? parseInt(form.maxAttendees) : undefined,
+            meetingLink: form.meetingLink || undefined,
+            categoryId: form.categoryId || undefined,
+            coverImage: form.coverImage || undefined,
+            city: form.city || undefined,
+            state: form.state || undefined,
+        };
 
-            const res = await fetch('/api/events', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to create event');
-
-            toast.success(`Event ${statusOverride === 'DRAFT' ? 'saved as draft' : 'published'}!`);
-            router.push('/admin/events');
-        } catch (err: any) {
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
-        }
+        createEventMutation.mutate(payload, {
+            onSuccess: () => {
+                router.push('/admin/events');
+            }
+        });
     };
 
     const canNext = () => {
         if (step === 0) return form.title.length >= 3 && form.description.length >= 10 && form.eventType;
-        if (step === 1) return form.startDate && form.endDate && (form.isOnline ? true : form.venue || form.meetingLink);
+        if (step === 1) return form.startDate && form.endDate && (form.isOnline ? form.meetingLink : form.venue);
         return true;
     };
 
@@ -607,18 +593,22 @@ export default function CreateEventPage() {
                             <button
                                 type="button"
                                 onClick={() => handleSubmit('DRAFT')}
-                                disabled={loading}
+                                disabled={createEventMutation.isPending}
                                 className="px-4 py-2.5 border border-secondary-200 dark:border-secondary-700 text-secondary-700 dark:text-secondary-300 rounded-xl text-sm font-semibold hover:bg-secondary-50 dark:hover:bg-secondary-800 disabled:opacity-50 transition-all"
                             >
-                                Save Draft
+                                {createEventMutation.isPending && createEventMutation.variables?.status === 'DRAFT' ? 'Saving...' : 'Save Draft'}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSubmit('PUBLISHED')}
-                                disabled={loading}
+                                disabled={createEventMutation.isPending}
                                 className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-all"
                             >
-                                {loading ? '...' : <><Send className="w-4 h-4" /> Publish Event</>}
+                                {createEventMutation.isPending && createEventMutation.variables?.status === 'PUBLISHED' ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Publishing...</>
+                                ) : (
+                                    <><Send className="w-4 h-4" /> Publish Event</>
+                                )}
                             </button>
                         </div>
                     )}

@@ -3,7 +3,7 @@ import { powerTeamService } from '@/services/api/power-teams';
 import toast from 'react-hot-toast';
 
 export const usePowerTeams = (params: Record<string, any> = {}) => {
-    return useQuery({
+    return useQuery<{ teams: any[] }>({
         queryKey: ['power-teams', params],
         queryFn: () => powerTeamService.getPowerTeams(params),
     });
@@ -18,7 +18,7 @@ export const useMyPowerTeam = () => {
 };
 
 export const usePowerTeam = (slug: string) => {
-    return useQuery({
+    return useQuery<{ team: any }>({
         queryKey: ['power-team', slug],
         queryFn: () => powerTeamService.getPowerTeam(slug),
         enabled: !!slug,

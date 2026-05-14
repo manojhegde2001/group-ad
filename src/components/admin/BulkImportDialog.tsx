@@ -14,6 +14,8 @@ import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import toast from 'react-hot-toast';
+import { useCategories } from '@/hooks/use-api/use-categories';
+import { useValidateBulkUsers, useCreateBulkUsers } from '@/hooks/use-api/use-admin';
 
 interface BulkUserResult {
   name: string;
@@ -30,18 +32,17 @@ interface BulkUserResult {
 export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpen: boolean, onClose: () => void, onRefresh: () => void }) {
   const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Upload, 2: Preview, 3: Success
   const [data, setData] = useState<BulkUserResult[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isParsing, setIsParsing] = useState(false);
+  
+  // Queries & Mutations
+  const { data: catData } = useCategories();
+  const validateMutation = useValidateBulkUsers();
+  const createMutation = useCreateBulkUsers();
+  
+  const categories = catData?.categories || [];
+  const loading = validateMutation.isPending || createMutation.isPending || isParsing;
 
-  useEffect(() => {
-    if (isOpen) {
-      fetch('/api/categories')
-        .then(r => r.json())
-        .then(d => setCategories(d.categories || []))
-        .catch(() => {});
-    }
-  }, [isOpen]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadTemplate = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -113,7 +114,7 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setLoading(true);
+    setIsParsing(true);
     try {
       const reader = new FileReader();
       reader.onload = async (evt) => {
@@ -125,7 +126,7 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
 
         if (rawData.length === 0) {
           toast.error('The uploaded file is empty');
-          setLoading(false);
+          setIsParsing(false);
           return;
         }
 
@@ -147,25 +148,18 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
         });
 
         // Validate via API
-        const res = await fetch('/api/admin/users/bulk/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ users: mappedData })
+        validateMutation.mutate(mappedData, {
+          onSuccess: (result) => {
+            setData(result.results.map((u: any) => ({ ...u, selected: true })));
+            setStep(2);
+          }
         });
-        
-        const result = await res.json();
-        if (res.ok) {
-          setData(result.results.map((u: any) => ({ ...u, selected: true })));
-          setStep(2);
-        } else {
-          toast.error(result.error || 'Validation server error');
-        }
       };
       reader.readAsBinaryString(file);
     } catch (err) {
       toast.error('Critical: Failed to parse spreadsheet');
     } finally {
-      setLoading(false);
+      setIsParsing(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -183,26 +177,12 @@ export default function BulkImportDialog({ isOpen, onClose, onRefresh }: { isOpe
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/users/bulk/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ users: validUsers })
-      });
-
-      if (res.ok) {
+    createMutation.mutate(validUsers, {
+      onSuccess: () => {
         setStep(3);
         onRefresh();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Deployment failed');
       }
-    } catch {
-      toast.error('Network error during deployment');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (

@@ -5,6 +5,7 @@ import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
 import { Modal, Button } from 'rizzui';
 import { Loader2, CheckCircle2, Scan, X, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useCheckIn } from '@/hooks/use-api/use-events';
 
 interface QRScannerModalProps {
   eventId: string;
@@ -15,7 +16,8 @@ interface QRScannerModalProps {
 export function QRScannerModal({ eventId, eventName, onSuccess }: QRScannerModalProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const checkInMutation = useCheckIn();
+  const verifying = checkInMutation.isPending;
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
   const startScanner = () => {
@@ -54,26 +56,17 @@ export function QRScannerModal({ eventId, eventName, onSuccess }: QRScannerModal
   };
 
   const handleVerify = async (token: string) => {
-    setVerifying(true);
-    try {
-      const res = await fetch(`/api/events/${eventId}/check-in`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
-      const data = await res.json();
-      if (data.success || data.message === 'Already checked in') {
-        toast.success(data.message, { duration: 4000 });
-        if (onSuccess) onSuccess(data.attendee);
-        setModalOpen(false);
-      } else {
-        toast.error(data.error || 'Invalid ticket');
+    checkInMutation.mutate({ eventId, token }, {
+      onSuccess: (data) => {
+        if (data.success || data.message === 'Already checked in') {
+          toast.success(data.message, { duration: 4000 });
+          if (onSuccess) onSuccess(data.attendee);
+          setModalOpen(false);
+        } else {
+          toast.error(data.error || 'Invalid ticket');
+        }
       }
-    } catch (err) {
-      toast.error('Verification failed');
-    } finally {
-      setVerifying(false);
-    }
+    });
   };
 
   useEffect(() => {

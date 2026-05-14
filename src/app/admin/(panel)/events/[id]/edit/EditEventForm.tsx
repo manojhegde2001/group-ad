@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send, Save } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send, Save, Loader2 } from 'lucide-react';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { format } from 'date-fns';
+import { useUpdateEvent } from '@/hooks/use-api/use-events';
+import { useCategories } from '@/hooks/use-api/use-categories';
 import { Event } from '@prisma/client';
 
 const EVENT_TYPES = ['MEETUP', 'WEBINAR', 'WORKSHOP', 'CONFERENCE', 'NETWORKING'];
@@ -39,7 +41,9 @@ const steps = [
 export default function EditEventForm({ event }: { event: any }) {
     const router = useRouter();
     const [step, setStep] = useState(0);
-    const [loading, setLoading] = useState(false);
+    const updateEventMutation = useUpdateEvent();
+    const { data: catData } = useCategories();
+    const categories = catData?.categories || [];
 
     // Initialize form with existing event data
     const [form, setForm] = useState<FormData>({
@@ -67,41 +71,28 @@ export default function EditEventForm({ event }: { event: any }) {
             : [...form.targetUserTypes, ut]);
 
     const handleSubmit = async (statusOverride: string = form.status) => {
-        setLoading(true);
-        try {
-            const payload = {
-                ...form,
-                status: statusOverride,
-                maxAttendees: form.maxAttendees ? parseInt(form.maxAttendees) : null,
-                meetingLink: form.meetingLink || null,
-                categoryId: form.categoryId || null,
-                coverImage: form.coverImage || null,
-                startDate: new Date(form.startDate).toISOString(),
-                endDate: new Date(form.endDate).toISOString(),
-            };
+        const payload = {
+            ...form,
+            status: statusOverride as any,
+            maxAttendees: form.maxAttendees ? parseInt(form.maxAttendees) : null,
+            meetingLink: form.meetingLink || null,
+            categoryId: form.categoryId || null,
+            coverImage: form.coverImage || null,
+            startDate: new Date(form.startDate).toISOString(),
+            endDate: new Date(form.endDate).toISOString(),
+        };
 
-            const res = await fetch(`/api/events/${event.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to update event');
-
-            toast.success('Event updated successfully!');
-            router.push('/admin/events');
-            router.refresh();
-        } catch (err: any) {
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
-        }
+        updateEventMutation.mutate({ id: event.id, data: payload }, {
+            onSuccess: () => {
+                router.push('/admin/events');
+                router.refresh();
+            }
+        });
     };
 
     const canNext = () => {
         if (step === 0) return form.title.length >= 3 && form.description.length >= 10 && form.eventType;
-        if (step === 1) return form.startDate && form.endDate && (form.isOnline ? true : form.venue || form.meetingLink);
+        if (step === 1) return form.startDate && form.endDate && (form.isOnline ? form.meetingLink : form.venue);
         return true;
     };
 
@@ -160,6 +151,20 @@ export default function EditEventForm({ event }: { event: any }) {
                                 placeholder="Describe the event..."
                                 className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">Category *</label>
+                            <select
+                                value={form.categoryId}
+                                onChange={(e) => set('categoryId', e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                            >
+                                <option value="">Select a category</option>
+                                {categories.map((c: any) => (
+                                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
@@ -391,10 +396,14 @@ export default function EditEventForm({ event }: { event: any }) {
                         <button
                             type="button"
                             onClick={() => handleSubmit()}
-                            disabled={loading}
+                            disabled={updateEventMutation.isPending}
                             className="flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-all"
                         >
-                            {loading ? '...' : <><Save className="w-4 h-4" /> Save Changes</>}
+                            {updateEventMutation.isPending ? (
+                                <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                            ) : (
+                                <><Save className="w-4 h-4" /> Save Changes</>
+                            )}
                         </button>
                     )}
                 </div>

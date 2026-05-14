@@ -162,4 +162,13 @@ export const adminService = {
 
     deletePowerTeam: (slug: string) =>
         apiClient.delete(`/api/power-teams/${slug}`),
+
+    bulkImportUsers: (data: any[]) =>
+        apiClient.post('/api/admin/users/bulk-import', { users: data }),
+        
+    validateBulkUsers: (users: any[]) =>
+        apiClient.post<{ results: any[] }>('/api/admin/users/bulk/validate', { users }),
+
+    createBulkUsers: (users: any[]) =>
+        apiClient.post('/api/admin/users/bulk/create', { users }),
 };

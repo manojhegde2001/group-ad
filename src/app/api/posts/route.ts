@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { getPostsServer } from '@/services/server/post-service';
 
 const createPostSchema = z.object({
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
@@ -16,181 +17,25 @@ const createPostSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    const currentUserId = session?.user?.id ?? null;
-
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const skip = (page - 1) * limit;
+    const params = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: parseInt(searchParams.get('limit') || '20'),
+      userType: searchParams.get('userType'),
+      categoryId: searchParams.get('categoryId'),
+      boardId: searchParams.get('boardId'),
+      companyId: searchParams.get('companyId'),
+      type: searchParams.get('type'),
+      visibility: searchParams.get('visibility'),
+      userId: searchParams.get('userId'),
+      username: searchParams.get('username'),
+      search: searchParams.get('search'),
+    };
 
-    const userType = searchParams.get('userType');
-    const categoryId = searchParams.get('categoryId');
-    const boardId = searchParams.get('boardId');
-    const companyId = searchParams.get('companyId');
-    const postType = searchParams.get('type');
-    const visibility = searchParams.get('visibility') || 'PUBLIC';
-    const userId = searchParams.get('userId');
-    const username = searchParams.get('username');
-    const search = searchParams.get('search');
-
-    const where: any = {};
-
-    // Apply visibility filter only for general feed queries (not profile-specific)
-    // When fetching a specific user's posts, we show all their PUBLIC posts
-    const isUserSpecificQuery = !!(userId || username);
-    if (!isUserSpecificQuery) {
-      where.visibility = (visibility as any) || 'PUBLIC';
-    } else {
-      where.visibility = 'PUBLIC'; // Show only public posts on profile
-    }
-
-    if (currentUserId) {
-      const blocks = await prisma.block.findMany({
-        where: {
-          OR: [
-            { blockerId: currentUserId },
-            { blockedId: currentUserId },
-          ],
-        },
-        select: { blockerId: true, blockedId: true },
-      });
-
-      const blockedIds = blocks.map(b => 
-        b.blockerId === currentUserId ? b.blockedId : b.blockerId
-      );
-
-      if (blockedIds.length > 0) {
-        where.userId = { notIn: blockedIds };
-      }
-    }
-
-    if (userType) where.user = { userType: userType as any };
-    
-    if (categoryId && categoryId !== 'null' && categoryId !== 'undefined') {
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId },
-        select: { name: true, slug: true }
-      });
-
-      if (category) {
-        where.OR = [
-          { user: { categoryId: categoryId } },
-          { tags: { has: category.slug } },
-          { tags: { has: category.name.toLowerCase() } }
-        ];
-      } else {
-        where.user = { 
-          ...(where.user || {}),
-          categoryId: categoryId 
-        };
-      }
-    }
-    
-    if (boardId && boardId !== 'null' && boardId !== 'undefined') {
-      where.boardPosts = {
-        some: { boardId }
-      };
-    }
-    if (companyId && companyId !== 'null' && companyId !== 'undefined') where.companyId = companyId;
-    // 'CREATED' is a UI-only filter meaning 'posts by this user' — skip setting where.type for it
-    // Valid PostType values are: IMAGE, TEXT, VIDEO, DOCUMENT
-    if (postType && postType !== 'CREATED') where.type = postType as any;
-    
-    // Resolve username -> userId if username param is passed (e.g. from profile page)
-    let resolvedUserId = userId;
-    if (username && username !== 'null' && username !== 'undefined') {
-      const userByUsername = await prisma.user.findUnique({
-        where: { username },
-        select: { id: true },
-      });
-      if (!userByUsername) {
-        return NextResponse.json({ posts: [], pagination: { total: 0, page, limit, totalPages: 0 } });
-      }
-      resolvedUserId = userByUsername.id;
-    }
-
-    // If a specific userId is requested, ensure they are not blocked
-    if (resolvedUserId && resolvedUserId !== 'null' && resolvedUserId !== 'undefined') {
-        if (where.userId?.notIn?.includes(resolvedUserId)) {
-            return NextResponse.json({
-                posts: [],
-                pagination: { total: 0, page, limit, totalPages: 0 },
-            });
-        }
-        where.userId = resolvedUserId;
-    }
-
-    if (search) {
-      where.OR = [
-        { content: { contains: search, mode: 'insensitive' } },
-        { tags: { has: search } },
-      ];
-    }
-
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              avatar: true,
-              userType: true,
-              verificationStatus: true,
-              industry: true,
-              website: true,
-              companyWebsite: true,
-            },
-          },
-          category: {
-            select: { id: true, name: true, slug: true, icon: true },
-          },
-          company: {
-            select: { id: true, name: true, slug: true, logo: true, isVerified: true },
-          },
-          _count: {
-            select: { postLikes: true, postComments: true },
-          },
-          // Include user's like record if logged in
-          ...(currentUserId
-            ? {
-              postLikes: {
-                where: { userId: currentUserId },
-                select: { userId: true },
-                take: 1,
-              },
-            }
-            : {}),
-        },
-      }),
-      prisma.post.count({ where }),
-    ]);
-
-    const postsWithMeta = posts.map((post: any) => ({
-      ...post,
-      isLikedByUser: currentUserId
-        ? Array.isArray(post.postLikes) && post.postLikes.length > 0
-        : false,
-      postLikes: undefined, // strip from response
-    }));
-
-    return NextResponse.json({
-      posts: postsWithMeta,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+    const result = await getPostsServer(params);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Error fetching posts API:', error);
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
   }
 }

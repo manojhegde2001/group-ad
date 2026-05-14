@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCreatePostModal } from '@/hooks/use-feed';
 import { useCreatePost, useUpdatePost } from '@/hooks/use-api/use-posts';
+import { useUpload } from '@/hooks/use-api/use-common';
 import { useAuth } from '@/hooks/use-auth';
 import {
     X, Image as ImageIcon, Type, Tag, Globe, Lock,
@@ -28,7 +29,8 @@ export function CreatePostModal() {
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
     const [uploadProgress, setUploadProgress] = useState(0);
-    const [uploading, setUploading] = useState(false);
+    const uploadMutation = useUpload();
+    const uploading = uploadMutation.isPending;
     const [success, setSuccess] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [commentsEnabled, setCommentsEnabled] = useState(true);
@@ -159,7 +161,6 @@ export function CreatePostModal() {
 
     const uploadToCloudinary = async (): Promise<string[]> => {
         if (mediaFiles.length === 0) return [];
-        setUploading(true);
         setUploadProgress(0);
 
         const uploaded: string[] = [];
@@ -168,31 +169,14 @@ export function CreatePostModal() {
             for (let i = 0; i < mediaFiles.length; i++) {
                 const file = mediaFiles[i];
                 const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('resource_type', resourceType);
-
-                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                if (!res.ok) {
-                    if (res.status === 413) {
-                        throw new Error(`File too large: ${file.name}`);
-                    }
-                    let errMsg = 'Upload failed';
-                    try {
-                        const err = await res.json();
-                        errMsg = err.error || errMsg;
-                    } catch (e) {
-                        errMsg = res.statusText || errMsg;
-                    }
-                    throw new Error(errMsg);
-                }
-                const data = await res.json();
+                
+                const data = await uploadMutation.mutateAsync({ file, resourceType });
                 uploaded.push(data.url);
                 setUploadProgress(Math.round(((i + 1) / mediaFiles.length) * 100));
             }
             return uploaded;
-        } finally {
-            setUploading(false);
+        } catch (err) {
+            throw err;
         }
     };
 

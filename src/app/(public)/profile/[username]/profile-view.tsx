@@ -31,7 +31,7 @@ const breakpointCols = {
     480: 2,
 };
 
-export default function ProfileView({ username }: { username: string }) {
+export default function ProfileView({ username, initialPosts }: { username: string, initialPosts?: any }) {
     const router = useRouter();
     const { data: me } = useMe();
     const isOwnProfile = me?.username === username;
@@ -74,6 +74,8 @@ export default function ProfileView({ username }: { username: string }) {
     } = useInfinitePosts({ 
         username,
         type: 'CREATED'
+    }, {
+        initialData: initialPosts ? { pages: [initialPosts], pageParams: [1] } : undefined
     });
 
     const {

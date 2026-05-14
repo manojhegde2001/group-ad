@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import ProfileView from './profile-view';
 import { notFound } from 'next/navigation';
+import { getPostsServer } from '@/services/server/post-service';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -43,5 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProfilePage({ params }: Props) {
   const { username } = await params;
-  return <ProfileView username={username} />;
+  
+  const initialPosts = await getPostsServer({ 
+    username, 
+    type: 'CREATED',
+    limit: 12 
+  });
+
+  return <ProfileView username={username} initialPosts={initialPosts} />;
 }

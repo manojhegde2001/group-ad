@@ -7,7 +7,7 @@ import {
     Image as ImageIcon, Loader2, Save, Trash2 
 } from 'lucide-react';
 import { useUpdatePowerTeam, useDeletePowerTeam } from '@/hooks/use-api/use-power-teams';
-import { useCategories } from '@/hooks/use-api/use-categories';
+import { useCategories, useUpload } from '@/hooks/use-api/use-common';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -19,8 +19,7 @@ interface TeamSettingsFormProps {
 
 export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
   const router = useRouter();
-  const { data: catData } = useCategories();
-  const categories = catData?.categories || [];
+  const { data: categories = [] } = useCategories();
 
   const [name, setName] = useState(team.name || '');
   const [description, setDescription] = useState(team.description || '');
@@ -33,7 +32,8 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(team.banner || null);
   
-  const [uploading, setUploading] = useState(false);
+  const uploadMutation = useUpload();
+  const uploading = uploadMutation.isPending;
   const [saving, setSaving] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -66,16 +66,9 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
 
   const uploadToCloudinary = async (file: File): Promise<string | null> => {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('resource_type', 'image');
-
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json();
+      const data = await uploadMutation.mutateAsync({ file, resourceType: 'image' });
       return data.url;
     } catch (err) {
-      console.error('Cloudinary upload error:', err);
       return null;
     }
   };

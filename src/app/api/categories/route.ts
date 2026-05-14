@@ -1,44 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getCategoriesServer } from '@/services/server/category-service';
 
 // GET /api/categories - Fetch all active categories
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const activeOnly = searchParams.get('active') !== 'false';
-    const trending = searchParams.get('trending') === 'true';
+    const params = {
+      active: searchParams.get('active') !== 'false',
+      trending: searchParams.get('trending') === 'true',
+    };
 
-    const where = activeOnly ? { isActive: true } : {};
-
-    const categories = await prisma.category.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        icon: true,
-        banner: true,
-        isActive: true,
-        _count: {
-          select: {
-            users: true,
-            posts: true,
-            events: true,
-          },
-        },
-      },
-      orderBy: trending 
-        ? { posts: { _count: 'desc' as const } } 
-        : { name: 'asc' as const },
-    });
-
-    return NextResponse.json({
-      categories,
-      count: categories.length,
-    });
+    const result = await getCategoriesServer(params);
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error fetching categories API:', error);
     return NextResponse.json(
       { error: 'Failed to fetch categories' },
       { status: 500 }

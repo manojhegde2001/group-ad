@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useFeedFilter } from '@/hooks/use-feed';

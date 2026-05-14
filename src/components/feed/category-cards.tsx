@@ -18,8 +18,8 @@ function CategorySkeleton() {
   );
 }
 
-export function CategoryCards() {
-  const { data, isLoading } = useCategories();
+export function CategoryCards({ initialData }: { initialData?: any }) {
+  const { data, isLoading } = useCategories(undefined, { initialData });
   const categories = data?.categories || [];
 
   if (isLoading) return <CategorySkeleton />;

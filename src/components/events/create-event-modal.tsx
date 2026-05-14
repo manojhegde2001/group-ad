@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useCreateEvent } from '@/hooks/use-feed';
 import { useAuth } from '@/hooks/use-auth';
 import { useCreateEvent as useCreateEventApi } from '@/hooks/use-api/use-events';
-import { useCategories } from '@/hooks/use-api/use-common';
+import { useCategories, useUpload } from '@/hooks/use-api/use-common';
 import {
     X, Calendar, MapPin, Globe, Link2, Users,
     Upload, Loader2, CheckCircle, Plus, Image as ImageIcon,
@@ -33,7 +33,8 @@ export function CreateEventModal() {
     const [maxAttendees, setMaxAttendees] = useState('');
     const [coverImage, setCoverImage] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
+    const uploadMutation = useUpload();
+    const uploading = uploadMutation.isPending;
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -78,18 +79,11 @@ export function CreateEventModal() {
 
     const uploadToCloudinary = async (): Promise<string | null> => {
         if (!coverImage) return null;
-        setUploading(true);
         try {
-            const formData = new FormData();
-            formData.append('file', coverImage);
-            formData.append('resource_type', 'image');
-
-            const res = await fetch('/api/upload', { method: 'POST', body: formData });
-            if (!res.ok) throw new Error('Upload failed');
-            const data = await res.json();
+            const data = await uploadMutation.mutateAsync({ file: coverImage, resourceType: 'image' });
             return data.url;
-        } finally {
-            setUploading(false);
+        } catch (err) {
+            return null;
         }
     };
 

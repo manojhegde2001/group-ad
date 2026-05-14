@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { Upload, FileSpreadsheet, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
+import { useBulkRegister, useBulkAttendance } from '@/hooks/use-api/use-admin';
 
 interface BulkEventActionsProps {
   eventId: string;
@@ -13,10 +14,13 @@ interface BulkEventActionsProps {
 }
 
 export function BulkEventActions({ eventId, onSuccess, isEventEnded }: BulkEventActionsProps) {
-  const [loadingType, setLoadingType] = useState<'register' | 'attendance' | null>(null);
-  
   const regFileInputRef = useRef<HTMLInputElement>(null);
   const attFileInputRef = useRef<HTMLInputElement>(null);
+
+  const bulkRegisterMutation = useBulkRegister();
+  const bulkAttendanceMutation = useBulkAttendance();
+
+  const loadingType = bulkRegisterMutation.isPending ? 'register' : bulkAttendanceMutation.isPending ? 'attendance' : null;
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([
@@ -31,8 +35,6 @@ export function BulkEventActions({ eventId, onSuccess, isEventEnded }: BulkEvent
   const processFile = async (e: React.ChangeEvent<HTMLInputElement>, type: 'register' | 'attendance') => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setLoadingType(type);
 
     try {
       const data = await file.arrayBuffer();
@@ -55,31 +57,34 @@ export function BulkEventActions({ eventId, onSuccess, isEventEnded }: BulkEvent
         throw new Error('Could not find email or username columns');
       }
 
-      const endpoint = type === 'register' 
-        ? `/api/events/${eventId}/bulk-register` 
-        : `/api/events/${eventId}/bulk-attendance`;
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          type === 'register' ? { participants: payload } : { attendees: payload }
-        )
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to process bulk action');
+      if (type === 'register') {
+        bulkRegisterMutation.mutate({ eventId, participants: payload }, {
+          onSuccess: (res: any) => {
+            toast.success(res.message || 'Bulk registration completed');
+            onSuccess();
+            if (regFileInputRef.current) regFileInputRef.current.value = '';
+          },
+          onError: (err: any) => {
+            toast.error(err.message || 'Bulk registration failed');
+            if (regFileInputRef.current) regFileInputRef.current.value = '';
+          }
+        });
+      } else {
+        bulkAttendanceMutation.mutate({ eventId, attendees: payload }, {
+          onSuccess: (res: any) => {
+            toast.success(res.message || 'Bulk attendance updated');
+            onSuccess();
+            if (attFileInputRef.current) attFileInputRef.current.value = '';
+          },
+          onError: (err: any) => {
+            toast.error(err.message || 'Bulk attendance update failed');
+            if (attFileInputRef.current) attFileInputRef.current.value = '';
+          }
+        });
       }
-
-      toast.success(result.message, { duration: 5000 });
-      onSuccess();
 
     } catch (error: any) {
       toast.error(error.message);
-    } finally {
-      setLoadingType(null);
       if (type === 'register' && regFileInputRef.current) regFileInputRef.current.value = '';
       if (type === 'attendance' && attFileInputRef.current) attFileInputRef.current.value = '';
     }

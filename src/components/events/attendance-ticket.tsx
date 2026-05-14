@@ -6,6 +6,7 @@ import { Modal, Button } from 'rizzui';
 import { Loader2, CheckCircle2, Ticket, X } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import toast from 'react-hot-toast';
+import { useCheckInToken } from '@/hooks/use-api/use-events';
 
 interface AttendanceTicketProps {
   eventId: string;
@@ -14,29 +15,15 @@ interface AttendanceTicketProps {
 
 export function AttendanceTicket({ eventId, eventName }: AttendanceTicketProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  
+  const { data: ticketData, isLoading: loading, refetch } = useCheckInToken(eventId, {
+    enabled: modalOpen
+  });
 
-  const fetchToken = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/events/${eventId}/check-in/token`);
-      const data = await res.json();
-      if (data.token) {
-        setToken(data.token);
-      } else {
-        toast.error(data.error || 'Failed to generate ticket');
-      }
-    } catch (err) {
-      toast.error('Connection error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const token = ticketData?.token;
 
   const handleOpen = () => {
     setModalOpen(true);
-    if (!token) fetchToken();
   };
 
   return (
@@ -87,7 +74,7 @@ export function AttendanceTicket({ eventId, eventName }: AttendanceTicketProps) 
                 <div className="w-48 h-48 flex flex-col items-center justify-center text-secondary-400 gap-2">
                     <X className="w-10 h-10" />
                     <span className="text-[10px] font-black uppercase">Failed to load</span>
-                    <Button variant="text" size="sm" onClick={fetchToken} className="text-primary-500">Retry</Button>
+                    <Button variant="text" size="sm" onClick={() => refetch()} className="text-primary-500">Retry</Button>
                 </div>
               )}
             </div>

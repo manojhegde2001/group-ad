@@ -9,8 +9,8 @@ import { useCategories } from '@/hooks/use-api/use-categories';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80';
 
-export function TrendingCategories() {
-  const { data, isLoading } = useCategories({ trending: true, limit: 8 });
+export function TrendingCategories({ initialData }: { initialData?: any }) {
+  const { data, isLoading } = useCategories({ trending: true, limit: 8 }, { initialData });
   const categories = data?.categories || [];
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ 

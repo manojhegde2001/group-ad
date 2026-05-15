@@ -30,7 +30,7 @@ const PATHS = [
   { id: "p18", d: "m 1345.2046,1590.8209 c -0.6325,-0.1522 -1.2899,-0.171 -1.9306,-0.054 -1.5752,0.2847 -2.9008,1.3529 -3.5198,2.8367 -0.097,0.233 -0.1758,0.4733 -0.2349,0.7187 -0.6117,2.5416 0.9419,5.0953 3.4701,5.7038 0.8749,0.2106 1.7922,0.1648 2.6432,-0.1315 1.0267,-0.3583 1.8993,-1.0616 2.4704,-1.9911 0.2617,-0.426 0.4546,-0.8908 0.5716,-1.377 0.6118,-2.5417 -0.9418,-5.0953 -3.47,-5.7038 z", color: "#2d6bb5" },
 ];
 
-export function LogoLoader({ size = 48, className = "", duration = 2.5 }: LogoLoaderProps) {
+export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoaderProps) {
   const id = React.useId().replace(/:/g, '');
   const fillClipId = `fill-clip-${id}`;
 
@@ -49,31 +49,31 @@ export function LogoLoader({ size = 48, className = "", duration = 2.5 }: LogoLo
             <rect x="-0.5" y="0" width="2" height="2">
               <animate 
                 attributeName="y" 
-                values="1; -0.5; -0.5; 1" 
-                keyTimes="0; 0.48; 0.62; 1"
+                values="1; -0.2; -0.2; 1" 
+                keyTimes="0; 0.45; 0.65; 1"
                 dur={`${duration}s`} 
                 repeatCount="indefinite" 
                 calcMode="spline"
-                keySplines="0.645, 0.045, 0.355, 1; 0, 0, 1, 1; 0.645, 0.045, 0.355, 1"
+                keySplines="0.4, 0, 0.2, 1; 0, 0, 1, 1; 0.4, 0, 0.2, 1"
               />
             </rect>
             {/* Relative Wave Cap */}
-            <path d="M -0.5,0 Q -0.25,-0.1 0,0 T 0.5,0 T 1,0 T 1.5,0 L 1.5,-0.2 L -0.5,-0.2 Z">
+            <path d="M -0.5,0 Q -0.25,-0.15 0,0 T 0.5,0 T 1,0 T 1.5,0 L 1.5,-0.3 L -0.5,-0.3 Z">
               <animateTransform
                 attributeName="transform"
                 type="translate"
-                values="0 0; -0.5 0"
-                dur="1.5s"
+                values="0 0; -1 0"
+                dur="3s"
                 repeatCount="indefinite"
               />
               <animate 
                 attributeName="y" 
-                values="1; -0.5; -0.5; 1" 
-                keyTimes="0; 0.48; 0.62; 1"
+                values="1; -0.2; -0.2; 1" 
+                keyTimes="0; 0.45; 0.65; 1"
                 dur={`${duration}s`} 
                 repeatCount="indefinite" 
                 calcMode="spline"
-                keySplines="0.645, 0.045, 0.355, 1; 0, 0, 1, 1; 0.645, 0.045, 0.355, 1"
+                keySplines="0.4, 0, 0.2, 1; 0, 0, 1, 1; 0.4, 0, 0.2, 1"
               />
             </path>
           </clipPath>

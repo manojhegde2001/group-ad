@@ -173,8 +173,12 @@ export default function SettingsPage() {
       companyName: bsCompanyName,
     }, {
       onError: (error: any) => {
-        if (error.data?.details) {
-          setFieldErrors(error.data.details);
+        if (error.data?.details && Array.isArray(error.data.details)) {
+          const errors: Record<string, string> = {};
+          error.data.details.forEach((d: any) => {
+            if (d.path?.[0]) errors[d.path[0]] = d.message;
+          });
+          setFieldErrors(errors);
           toast.error('Please check the form for errors');
         } else {
           toast.error(error.message || 'Failed to update profile');
@@ -208,15 +212,40 @@ export default function SettingsPage() {
   };
 
   const handlePasswordChange = () => {
-    if (!currentPassword || !newPassword) { toast.error('Please fill all fields'); return; }
-    if (newPassword !== confirmPassword)   { toast.error("Passwords don't match");  return; }
-    if (newPassword.length < 6)            { toast.error('Min 6 characters');        return; }
-    changePassword({ currentPassword, newPassword }, {
+    setFieldErrors({});
+    if (!currentPassword || !newPassword || !confirmPassword) { 
+      toast.error('Please fill all fields'); 
+      return; 
+    }
+    if (newPassword !== confirmPassword) { 
+      toast.error("Passwords don't match"); 
+      setFieldErrors({ confirmPassword: "Passwords don't match" });
+      return; 
+    }
+    
+    changePassword({ currentPassword, newPassword, confirmPassword }, {
       onSuccess: () => {
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
+        setFieldErrors({});
+        toast.success('Password updated successfully');
       },
+      onError: (error: any) => {
+        if (error.data?.details && Array.isArray(error.data.details)) {
+          const errors: Record<string, string> = {};
+          error.data.details.forEach((d: any) => {
+            if (d.path?.[0]) {
+              // Handle multiple errors for same field by joining them
+              errors[d.path[0]] = errors[d.path[0]] ? `${errors[d.path[0]]}. ${d.message}` : d.message;
+            }
+          });
+          setFieldErrors(errors);
+          toast.error(error.message || 'Invalid input data');
+        } else {
+          toast.error(error.message || 'Failed to change password');
+        }
+      }
     });
   };
 
@@ -458,9 +487,9 @@ export default function SettingsPage() {
               <SettingsCard className="p-6 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-400">
                 <div className="mb-8 pb-6 border-b border-secondary-100 dark:border-secondary-800"><h2 className="text-lg font-black text-secondary-900 dark:text-white">Change Password</h2></div>
                 <div className="space-y-5 max-w-sm">
-                  <Field label="Current Password"><div className="relative"><input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className={cn(inputCls, 'pr-10')} /><button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400">{showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></Field>
-                  <Field label="New Password"><div className="relative"><input type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} className={cn(inputCls, 'pr-10')} /><button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400">{showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></Field>
-                  <Field label="Confirm Password"><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={inputCls} /></Field>
+                  <Field label="Current Password" error={fieldErrors.currentPassword}><div className="relative"><input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className={cn(inputCls, 'pr-10', fieldErrors.currentPassword && 'ring-1 ring-red-500 border-red-500')} /><button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400">{showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></Field>
+                  <Field label="New Password" error={fieldErrors.newPassword}><div className="relative"><input type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} className={cn(inputCls, 'pr-10', fieldErrors.newPassword && 'ring-1 ring-red-500 border-red-500')} /><button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400">{showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></Field>
+                  <Field label="Confirm Password" error={fieldErrors.confirmPassword}><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={cn(inputCls, fieldErrors.confirmPassword && 'ring-1 ring-red-500 border-red-500')} /></Field>
                 </div>
                 <div className="pt-6"><Button onClick={handlePasswordChange} isLoading={changingPassword} className="px-8 rounded-2xl font-black uppercase text-xs">Update Password</Button></div>
               </SettingsCard>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface LogoLoaderProps {
   size?: number;
@@ -32,7 +33,7 @@ const PATHS = [
 
 export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoaderProps) {
   const id = React.useId().replace(/:/g, '');
-  const fillClipId = `fill-clip-${id}`;
+  const fillMaskId = `fill-mask-${id}`;
 
   return (
     <div 
@@ -45,38 +46,41 @@ export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoad
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <clipPath id={fillClipId} clipPathUnits="objectBoundingBox">
-            <rect x="-0.5" y="0" width="2" height="2">
-              <animate 
-                attributeName="y" 
-                values="1; -0.2; -0.2; 1" 
-                keyTimes="0; 0.45; 0.65; 1"
-                dur={`${duration}s`} 
-                repeatCount="indefinite" 
-                calcMode="spline"
-                keySplines="0.4, 0, 0.2, 1; 0, 0, 1, 1; 0.4, 0, 0.2, 1"
-              />
-            </rect>
-            {/* Relative Wave Cap */}
-            <path d="M -0.5,0 Q -0.25,-0.15 0,0 T 0.5,0 T 1,0 T 1.5,0 L 1.5,-0.3 L -0.5,-0.3 Z">
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                values="0 0; -1 0"
-                dur="3s"
-                repeatCount="indefinite"
-              />
-              <animate 
-                attributeName="y" 
-                values="1; -0.2; -0.2; 1" 
-                keyTimes="0; 0.45; 0.65; 1"
-                dur={`${duration}s`} 
-                repeatCount="indefinite" 
-                calcMode="spline"
-                keySplines="0.4, 0, 0.2, 1; 0, 0, 1, 1; 0.4, 0, 0.2, 1"
-              />
-            </path>
-          </clipPath>
+          <mask id={fillMaskId} maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+            {/* Primary expanding circle */}
+            <motion.circle
+              cx="0.5"
+              cy="0.5"
+              initial={{ r: 0 }}
+              animate={{ 
+                r: [0, 0.75, 0.75, 0],
+              }}
+              transition={{
+                duration: duration,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.2, 1],
+                times: [0, 0.45, 0.65, 1]
+              }}
+              fill="white"
+            />
+            {/* Secondary ripple circle for liquid effect */}
+            <motion.circle
+              cx="0.5"
+              cy="0.5"
+              initial={{ r: 0 }}
+              animate={{ 
+                r: [0, 0.75, 0.75, 0],
+              }}
+              transition={{
+                duration: duration,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.2, 1],
+                times: [0.05, 0.5, 0.7, 1]
+              }}
+              fill="white"
+              opacity={0.5}
+            />
+          </mask>
         </defs>
 
         <g transform="translate(-1246.1218, -1559.1535)">
@@ -92,8 +96,8 @@ export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoad
             ))}
           </g>
 
-          {/* Filled Layer with Relative ClipPath */}
-          <g clipPath={`url(#${fillClipId})`}>
+          {/* Filled Layer with Radial Mask */}
+          <g mask={`url(#${fillMaskId})`}>
             {PATHS.map(p => (
               <path 
                 key={`filled-${p.id}`} 

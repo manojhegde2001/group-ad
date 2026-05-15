@@ -20,6 +20,7 @@ import { toast } from 'react-hot-toast';
 import type { PostWithRelations } from '@/types';
 import { PowerTeamSuggestions } from '@/components/power-teams/PowerTeamSuggestions';
 import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 const breakpointCols = {
     default: 5,
@@ -128,9 +129,9 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
     if (loadingProfile) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-10 h-10 animate-spin text-primary-500 mb-4" />
-                <p className="text-secondary-500 font-medium animate-pulse">Loading experience...</p>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-700">
+                <LogoLoader size={64} className="mb-4" />
+                <p className="text-secondary-500 font-medium animate-pulse uppercase tracking-widest text-xs">Loading experience...</p>
             </div>
         );
     }

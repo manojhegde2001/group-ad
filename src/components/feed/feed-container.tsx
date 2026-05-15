@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { useAuth } from '@/hooks/use-auth';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 // Demo posts used as fallback when DB is empty  
 const DEMO_POSTS: any[] = [
@@ -111,6 +112,10 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
   if (isLoading) {
     return (
       <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-2 md:py-6">
+        <div className="flex flex-col items-center justify-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
+          <LogoLoader size={64} className="mb-2" />
+          <p className="text-secondary-400 text-sm font-medium animate-pulse">Curating your feed...</p>
+        </div>
         <Masonry
           breakpointCols={breakpointCols}
           className="flex -ml-2 sm:-ml-2.5 md:-ml-3 w-auto"
@@ -195,8 +200,9 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
       <div ref={sentinelRef} className="h-4" />
 
       {isFetchingNextPage && (
-        <div className="flex justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+        <div className="flex flex-col items-center justify-center py-12 gap-2 animate-in fade-in duration-500">
+          <LogoLoader size={48} />
+          <p className="text-secondary-400 text-xs font-medium">Loading more posts</p>
         </div>
       )}
 

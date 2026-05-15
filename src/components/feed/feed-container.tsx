@@ -110,7 +110,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-2 md:py-6">
+    <div className="w-full px-2 sm:px-4 lg:px-3 xl:px-3 2xl:px-3 py-2 md:py-3">
       {/* Visually hidden H1 for SEO stability across auth states */}
       <h1 className="sr-only">Vrutta — Discover Professional Ideas & Business Networking Feed</h1>
 

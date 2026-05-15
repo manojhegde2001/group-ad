@@ -17,9 +17,9 @@ import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
 import dynamic from 'next/dynamic';
+import { Popover } from 'rizzui';
 
 const Drawer = dynamic(() => import('rizzui').then((mod) => mod.Drawer), { ssr: false });
-const Popover = dynamic(() => import('rizzui').then((mod) => mod.Popover), { ssr: false });
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
 

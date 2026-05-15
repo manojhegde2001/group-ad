@@ -54,7 +54,7 @@ export function CloudinaryImage({
       width={width}
       height={height}
       fill={fill}
-      sizes={sizes || (fill ? "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" : undefined)}
+      sizes={sizes || (fill ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1536px) 25vw, 20vw" : undefined)}
       priority={priority}
       loading={priority ? undefined : "lazy"}
       className={cn("object-cover", className)}

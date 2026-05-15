@@ -109,60 +109,19 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (isLoading) {
-    return (
-      <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-2 md:py-6">
-        <div className="flex flex-col items-center justify-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
-          <LogoLoader size={64} className="mb-2" />
-          <p className="text-secondary-400 text-sm font-medium animate-pulse">Curating your feed...</p>
-        </div>
-        <Masonry
-          breakpointCols={breakpointCols}
-          className="flex -ml-2 sm:-ml-2.5 md:-ml-3 w-auto"
-          columnClassName="pl-2 sm:pl-2.5 md:pl-3 bg-clip-padding"
-        >
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className="mb-2 sm:mb-2.5 md:mb-3 space-y-3">
-              <Skeleton
-                className={cn(
-                  "w-full rounded-2xl",
-                  i % 4 === 0 ? 'h-[340px]' : i % 4 === 1 ? 'h-[210px]' : i % 4 === 2 ? 'h-[420px]' : 'h-[280px]'
-                )}
-              />
-              <div className="flex items-center gap-2 px-1">
-                <Skeleton className="w-6 h-6 rounded-lg" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-3 w-2/3 rounded-full" />
-                  <Skeleton className="h-2 w-1/2 rounded-full" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </Masonry>
-      </div>
-    );
-  }
-
-  if (allPosts.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-        <ImageOff className="w-16 h-16 text-secondary-300 mb-4" />
-        <h3 className="text-xl font-semibold text-secondary-700 dark:text-secondary-300 mb-2">No posts found</h3>
-        <p className="text-secondary-500 max-w-sm">
-          {searchQuery
-            ? `No results for "${searchQuery}". Try a different search.`
-            : 'No posts in this category yet. Be the first to post!'}
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10 py-2 md:py-6">
       {/* Visually hidden H1 for SEO stability across auth states */}
       <h1 className="sr-only">Vrutta — Discover Professional Ideas & Business Networking Feed</h1>
 
-      {useDemoData && (
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center py-12 animate-in fade-in slide-in-from-top-4 duration-700">
+          <LogoLoader size={64} className="mb-2" />
+          <p className="text-secondary-400 text-sm font-medium animate-pulse">Curating your feed...</p>
+        </div>
+      )}
+
+      {useDemoData && !isLoading && (
         <p className="text-center text-xs text-secondary-400 mb-4">
           Showing sample posts — create posts to see real content
         </p>
@@ -173,28 +132,58 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
         className="flex -ml-2 sm:-ml-2.5 md:-ml-3 w-auto"
         columnClassName="pl-2 sm:pl-2.5 md:pl-3 bg-clip-padding"
       >
-        {allPosts.map((post, i) => (
-          <div key={`post-wrapper-${post.id}`}>
-            <div
-              key={post.id}
-              className={cn(
-                "mb-2 sm:mb-2.5 md:mb-3",
-                // Only apply animations if not in initial critical path to reduce shift during hydration
-                !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
-              )}
-            >
-              <PostCard post={post} priority={i < 4} />
-            </div>
-            
-            {/* Inject Teammate Suggestions after the 3rd post (index 2) */}
-            {i === 2 && isAuthenticated && (
-              <div className="mb-2 sm:mb-2.5 md:mb-3 animate-slide-up stagger-4">
-                <TeammateSuggestions limit={4} />
+        {isLoading ? (
+          [...Array(12)].map((_, i) => (
+            <div key={`skeleton-${i}`} className="mb-2 sm:mb-2.5 md:mb-3 space-y-3">
+              <Skeleton
+                className="w-full rounded-2xl bg-secondary-100 dark:bg-secondary-800"
+                style={{ 
+                  aspectRatio: ['4/5', '1/1', '3/4', '2/3'][i % 4],
+                  height: 'auto'
+                }}
+              />
+              <div className="flex items-center gap-2 px-1">
+                <Skeleton className="w-6 h-6 rounded-lg" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-3 w-2/3 rounded-full" />
+                  <Skeleton className="h-2 w-1/2 rounded-full" />
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          ))
+        ) : allPosts.length > 0 ? (
+          allPosts.map((post, i) => (
+            <div key={`post-wrapper-${post.id}`}>
+              <div
+                className={cn(
+                  "mb-2 sm:mb-2.5 md:mb-3",
+                  !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
+                )}
+              >
+                <PostCard post={post} priority={i < 4} />
+              </div>
+              
+              {i === 2 && isAuthenticated && (
+                <div className="mb-2 sm:mb-2.5 md:mb-3 animate-slide-up stagger-4">
+                  <TeammateSuggestions limit={4} />
+                </div>
+              )}
+            </div>
+          ))
+        ) : null}
       </Masonry>
+
+      {allPosts.length === 0 && !isLoading && (
+        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
+          <ImageOff className="w-16 h-16 text-secondary-300 mb-4" />
+          <h3 className="text-xl font-semibold text-secondary-700 dark:text-secondary-300 mb-2">No posts found</h3>
+          <p className="text-secondary-500 max-w-sm">
+            {searchQuery
+              ? `No results for "${searchQuery}". Try a different search.`
+              : 'No posts in this category yet. Be the first to post!'}
+          </p>
+        </div>
+      )}
 
       {/* Infinite scroll sentinel */}
       <div ref={sentinelRef} className="h-4" />
@@ -206,7 +195,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
         </div>
       )}
 
-      {!hasNextPage && allPosts.length > 0 && !useDemoData && (
+      {!hasNextPage && allPosts.length > 0 && !useDemoData && !isLoading && (
         <p className="text-center text-sm text-secondary-400 py-8">
           You've seen all posts ✨
         </p>

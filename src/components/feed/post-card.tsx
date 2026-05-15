@@ -16,7 +16,10 @@ import { useLikePost, useDeletePost } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { cn } from '@/lib/utils';
 import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
-import { Drawer, Popover } from 'rizzui';
+import dynamic from 'next/dynamic';
+
+const Drawer = dynamic(() => import('rizzui').then((mod) => mod.Drawer), { ssr: false });
+const Popover = dynamic(() => import('rizzui').then((mod) => mod.Popover), { ssr: false });
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
 
@@ -134,14 +137,17 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (
-                    <div className="relative w-full overflow-hidden bg-secondary-100 dark:bg-secondary-800">
+                    <div 
+                        className="relative w-full overflow-hidden bg-secondary-100 dark:bg-secondary-800 min-h-[200px]" 
+                        style={{ aspectRatio: ['4/5', '1/1', '3/4', '2/3'][parseInt(post.id.slice(-1), 16) % 4] }}
+                    >
                         {(() => {
                             const src = post.images[0];
                             const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                              return isVideoItem ? (
                                  <CloudinaryVideo
                                      src={src}
-                                     className="w-full h-auto block"
+                                     className="w-full h-full object-cover block"
                                      muted playsInline loop 
                                      onMouseEnter={e => e.currentTarget.play()}
                                      onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
@@ -151,10 +157,9 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                  <CloudinaryImage
                                      src={src}
                                      alt={post.content || ''}
-                                     width={600}
-                                     height={800}
+                                     fill
                                      enhance={true}
-                                     className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
+                                     className="w-full h-full object-cover block transition-transform duration-700 group-hover:scale-[1.03]"
                                      onDoubleClick={handleDoubleTap}
                                      priority={priority}
                                  />

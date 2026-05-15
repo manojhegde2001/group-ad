@@ -37,6 +37,8 @@
 .dark {
   --background: 10 10 15;
   --foreground: 249 250 251;
+  --color-secondary-900: 12 12 17;
+  --color-secondary-800: 20 20 28;
 }
 
 [data-theme='indigo'] {

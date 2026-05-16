@@ -8,7 +8,7 @@ import { useAuthModal } from '@/hooks/use-modal';
 import {
     X, Heart, MessageCircle, Share2, Bookmark, BadgeCheck,
     ChevronLeft, ChevronRight, Loader2, Send, Link2,
-    Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban, Maximize2
+    Twitter, Facebook, Check, Video, MoreHorizontal, Edit2, Trash2, Flag, Ban, Maximize2, ChevronDown
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
@@ -73,6 +73,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [imageStats, setImageStats] = useState<Record<string, { isLong: boolean; ratio: number }>>({});
 
     // Derived State
     const liked = post?.isLikedByUser || false;
@@ -144,6 +145,13 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const prevImage = () => {
         if (!post?.images?.length) return;
         setCurrentImageIndex((i) => (i - 1 + post.images.length) % post.images.length);
+    };
+
+    const handleImageLoad = (src: string, naturalWidth: number, naturalHeight: number) => {
+        const ratio = naturalHeight / naturalWidth;
+        if (ratio > 1.8) {
+            setImageStats(prev => ({ ...prev, [src]: { isLong: true, ratio } }));
+        }
     };
 
     const handleCommentSubmit = (e: React.FormEvent) => {
@@ -268,26 +276,58 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 const src = post.images[currentImageIndex];
                                 const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                                 
-                                 if (isVideoItem) {
-                                     return (
-                                         <CloudinaryVideo
-                                             key={src}
-                                             src={src}
-                                             className="w-full h-full object-contain block"
-                                             controls playsInline autoPlay loop
-                                         />
-                                     );
-                                 }
-                                 return (
-                                     <CloudinaryImage
-                                         key={src}
-                                         src={src}
-                                         alt={post.content || 'Post image'}
-                                         fill
-                                         enhance={true}
-                                         className="w-full h-full object-contain block"
-                                     />
-                                 );
+                                if (isVideoItem) {
+                                    return (
+                                        <CloudinaryVideo
+                                            key={src}
+                                            src={src}
+                                            className="w-full h-full object-contain block"
+                                            controls playsInline autoPlay loop
+                                        />
+                                    );
+                                }
+
+                                const stats = imageStats[src];
+                                const isLong = stats?.isLong;
+
+                                if (isLong) {
+                                    return (
+                                        <div className="w-full h-full overflow-y-auto overflow-x-hidden scroll-smooth bg-secondary-50/50 dark:bg-black/20 custom-scrollbar group/viewer">
+                                            <div 
+                                                className="relative w-full shadow-2xl" 
+                                                style={{ aspectRatio: `1 / ${stats.ratio}` }}
+                                            >
+                                                <CloudinaryImage
+                                                    src={src}
+                                                    alt={post.content || 'Post image'}
+                                                    fill
+                                                    enhance={true}
+                                                    className="w-full h-full object-top block"
+                                                    priority
+                                                />
+                                            </div>
+                                            {/* Scroll Hint */}
+                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none group-hover/viewer:opacity-0 transition-opacity duration-500">
+                                                <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 animate-bounce">
+                                                    <ChevronDown className="w-3 h-3" />
+                                                    Scroll to explore
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <CloudinaryImage
+                                        key={src}
+                                        src={src}
+                                        alt={post.content || 'Post image'}
+                                        fill
+                                        enhance={true}
+                                        className="w-full h-full object-contain block"
+                                        onLoadingComplete={(res) => handleImageLoad(src, res.naturalWidth, res.naturalHeight)}
+                                    />
+                                );
                             })()}
 
                             <AnimatePresence>
@@ -594,19 +634,19 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                 </div>
             </div>
 
-            {/* Fullscreen Modal Overlay */}
+            {/* Fullscreen Modal Overlay - Enhanced Popup */}
             <AnimatePresence>
                 {isFullscreen && (
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4 md:p-10"
+                        className="fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center"
                     >
                         {/* Close button */}
                         <button 
                             onClick={() => setIsFullscreen(false)}
-                            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50"
+                            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-[100]"
                         >
                             <X className="w-8 h-8" />
                         </button>
@@ -617,15 +657,15 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 <>
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); prevImage(); }} 
-                                        className="absolute left-0 p-4 text-white/50 hover:text-white transition-colors z-50"
+                                        className="absolute left-2 md:left-6 p-4 text-white/50 hover:text-white transition-colors z-50"
                                     >
-                                        <ChevronLeft className="w-12 h-12" />
+                                        <ChevronLeft className="w-8 h-8 md:w-12 md:h-12" />
                                     </button>
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); nextImage(); }} 
-                                        className="absolute right-0 p-4 text-white/50 hover:text-white transition-colors z-50"
+                                        className="absolute right-2 md:right-6 p-4 text-white/50 hover:text-white transition-colors z-50"
                                     >
-                                        <ChevronRight className="w-12 h-12" />
+                                        <ChevronRight className="w-8 h-8 md:w-12 md:h-12" />
                                     </button>
                                 </>
                             )}
@@ -634,16 +674,47 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 const src = post.images[currentImageIndex];
                                 const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                                 
-                                 if (isVideoItem) {
-                                     return <CloudinaryVideo src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
-                                 }
-                                 return <CloudinaryImage src={src} fill className="max-w-full max-h-full object-contain" alt="" />;
+                                if (isVideoItem) {
+                                    return <CloudinaryVideo src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
+                                }
+
+                                const stats = imageStats[src];
+                                if (stats?.isLong) {
+                                    return (
+                                        <div className="w-full h-full overflow-y-auto custom-scrollbar p-2 md:p-10 flex flex-col items-center">
+                                            <div 
+                                                className="relative w-full max-w-4xl shadow-2xl mt-4 mb-4" 
+                                                style={{ aspectRatio: `1 / ${stats.ratio}` }}
+                                            >
+                                                <CloudinaryImage 
+                                                    src={src} 
+                                                    fill 
+                                                    className="w-full h-full object-top" 
+                                                    alt="" 
+                                                    priority
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                
+                                return (
+                                    <div className="relative w-full h-full p-4 flex items-center justify-center">
+                                        <CloudinaryImage 
+                                            src={src} 
+                                            fill 
+                                            className="max-w-full max-h-full object-contain" 
+                                            alt="" 
+                                            onLoadingComplete={(res) => handleImageLoad(src, res.naturalWidth, res.naturalHeight)}
+                                        />
+                                    </div>
+                                );
                             })()}
                         </div>
 
                         {/* Page indicator */}
                         {post.images.length > 1 && (
-                            <div className="mt-4 text-white/50 text-sm font-medium">
+                            <div className="absolute bottom-6 text-white/50 text-sm font-medium bg-black/20 backdrop-blur-md px-4 py-2 rounded-full">
                                 {currentImageIndex + 1} / {post.images.length}
                             </div>
                         )}

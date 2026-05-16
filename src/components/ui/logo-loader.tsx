@@ -31,70 +31,13 @@ const PATHS = [
   { id: "p18", d: "m 1345.2046,1590.8209 c -0.6325,-0.1522 -1.2899,-0.171 -1.9306,-0.054 -1.5752,0.2847 -2.9008,1.3529 -3.5198,2.8367 -0.097,0.233 -0.1758,0.4733 -0.2349,0.7187 -0.6117,2.5416 0.9419,5.0953 3.4701,5.7038 0.8749,0.2106 1.7922,0.1648 2.6432,-0.1315 1.0267,-0.3583 1.8993,-1.0616 2.4704,-1.9911 0.2617,-0.426 0.4546,-0.8908 0.5716,-1.377 0.6118,-2.5417 -0.9418,-5.0953 -3.47,-5.7038 z", color: "#2d6bb5" },
 ];
 
-// Clockwise angular order of segments starting from ~12 o'clock.
-// The logo viewBox is 103.88 × 104.48, center ≈ (51.94, 52.24).
-// Each "segment" is a (line, dot) pair. Their clockwise order, derived from
-// the approximate angular position of their centre relative to the logo centre:
-//
-//   Segment index pairs (0-based into PATHS array):
-//   p11+p12  ≈ 11–12 o'clock  (coral / f4845f)   → clockOrder 0
-//   p13+p14  ≈  1 o'clock     (red   / ec3f65)    → clockOrder 1
-//   p15+p16  ≈  2 o'clock     (blue  / 2d6bb5)    → clockOrder 2
-//   p17+p18  ≈  3–4 o'clock   (teal  / 1280a0)    → clockOrder 3
-//   p1 +p2   ≈  5 o'clock     (blue  / 1599c8)    → clockOrder 4
-//   p3 +p4   ≈  6–7 o'clock   (teal  / 0dbdb5)    → clockOrder 5
-//   p5 +p6   ≈  8 o'clock     (green / 07c896)    → clockOrder 6
-//   p7 +p8   ≈  9 o'clock     (green / 5dc45d)    → clockOrder 7
-//   p9 +p10  ≈ 10 o'clock     (amber / fbbd23)    → clockOrder 8
-//
-// Total = 9 segments (18 paths). Animation: each segment fades in sequentially.
-
-// Map path id → clockwise order index (0–8)
-const CLOCK_ORDER: Record<string, number> = {
-  p11: 0, p12: 0,
-  p13: 1, p14: 1,
-  p15: 2, p16: 2,
-  p17: 3, p18: 3,
-  p1:  4, p2:  4,
-  p3:  5, p4:  5,
-  p5:  6, p6:  6,
-  p7:  7, p8:  7,
-  p9:  8, p10: 8,
-};
-
-const NUM_SEGMENTS = 9;
-
-export function LogoLoader({ size = 48, className = "", duration = 3 }: LogoLoaderProps) {
+export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoaderProps) {
   const id = React.useId().replace(/:/g, '');
-
-  // Each segment gets its own clipPath that we animate via a <motion.rect> that
-  // reveals from 0 → full width, staggered clockwise.
-  // We use a simple approach: animate the `clip-path` rect width per segment.
-  // The entire SVG coordinate space is 103.88 × 104.48 (the logo viewBox).
-  // We reveal each path by animating its opacity from 0 → 1, staggered.
-  // For a true "sweep" we use a conic-gradient mask on the whole group.
-
-  const segmentDuration = duration / NUM_SEGMENTS;
-
-  // Build keyframes for each segment's opacity
-  // Segment i becomes visible at t = i * (1/9), stays visible until end of cycle,
-  // then disappears at t=1 and resets.
-  const getOpacityKeyframes = (order: number) => {
-    const start = order / NUM_SEGMENTS;          // when it appears
-    const holdEnd = 0.85;                        // all segments visible until here
-    const fadeEnd = 1.0;                         // then they all fade out together
-
-    // We build a 5-stop keyframe array:
-    // [0, start-ε, start, holdEnd, fadeEnd]
-    const eps = 0.001;
-    const times = [0, Math.max(0, start - eps), start, holdEnd, fadeEnd];
-    const values = [0, 0, 1, 1, 0];
-    return { opacity: values, times };
-  };
+  const fillMaskId = `fill-mask-${id}`;
 
   return (
-    <div
-      className={cn("relative flex items-center justify-center select-none shrink-0", className)}
+    <div 
+      className={cn("relative flex items-center justify-center select-none shrink-0", className)} 
       style={{ width: size, height: size }}
     >
       <svg
@@ -102,11 +45,49 @@ export function LogoLoader({ size = 48, className = "", duration = 3 }: LogoLoad
         className="w-full h-full"
         xmlns="http://www.w3.org/2000/svg"
       >
+        <defs>
+          <mask id={fillMaskId} maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+            {/* Primary expanding circle */}
+            <motion.circle
+              cx="0.5"
+              cy="0.5"
+              initial={{ r: 0 }}
+              animate={{ 
+                r: [0, 0.75, 0.75, 0],
+              }}
+              transition={{
+                duration: duration,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.2, 1],
+                times: [0, 0.45, 0.65, 1]
+              }}
+              fill="white"
+            />
+            {/* Secondary ripple circle for liquid effect */}
+            <motion.circle
+              cx="0.5"
+              cy="0.5"
+              initial={{ r: 0 }}
+              animate={{ 
+                r: [0, 0.75, 0.75, 0],
+              }}
+              transition={{
+                duration: duration,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.2, 1],
+                times: [0.05, 0.5, 0.7, 1]
+              }}
+              fill="white"
+              opacity={0.5}
+            />
+          </mask>
+        </defs>
+
         <g transform="translate(-1246.1218, -1559.1535)">
-          {/* Outline Layer — always visible */}
-          <g
-            fill="none"
-            stroke="currentColor"
+          {/* Outline Layer */}
+          <g 
+            fill="none" 
+            stroke="currentColor" 
             strokeWidth="1.2"
             className="text-secondary-200 dark:text-secondary-800 transition-colors duration-300"
           >
@@ -115,29 +96,18 @@ export function LogoLoader({ size = 48, className = "", duration = 3 }: LogoLoad
             ))}
           </g>
 
-          {/* Filled Layer — each path animates in clockwise order */}
-          {PATHS.map(p => {
-            const order = CLOCK_ORDER[p.id] ?? 0;
-            const { opacity, times } = getOpacityKeyframes(order);
-            return (
-              <motion.path
-                key={`filled-${p.id}`}
-                d={p.d}
-                fill={p.color}
+          {/* Filled Layer with Radial Mask */}
+          <g mask={`url(#${fillMaskId})`}>
+            {PATHS.map(p => (
+              <path 
+                key={`filled-${p.id}`} 
+                d={p.d} 
+                fill={p.color} 
                 stroke="none"
                 fillRule="evenodd"
-                initial={{ opacity: 0 }}
-                animate={{ opacity }}
-                transition={{
-                  duration,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  times,
-                  repeatDelay: 0,
-                }}
               />
-            );
-          })}
+            ))}
+          </g>
         </g>
       </svg>
     </div>

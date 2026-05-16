@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -22,6 +23,8 @@ export function LayoutContent({
   modal?: React.ReactNode;
 }) {
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
+  const isMessagesPage = pathname?.startsWith('/messages');
   
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -34,7 +37,7 @@ export function LayoutContent({
         <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
           {children}
         </main>
-        <Footer />
+        {!isMessagesPage && <Footer />}
       </div>
       <AuthModal />
       <CreatePostModal />

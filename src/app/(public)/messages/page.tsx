@@ -213,7 +213,7 @@ function MessagesContent() {
 
   // Scroll to top when opening mobile chat to prevent "mid-scroll" issues
   useEffect(() => {
-    if (showMobileChat) {
+    if (showMobileChat && window.innerWidth < 768) {
       window.scrollTo(0, 0);
     }
   }, [showMobileChat]);
@@ -243,9 +243,9 @@ function MessagesContent() {
     lastConvIdRef.current = selectedConvId;
     
     messagesEndRef.current?.scrollIntoView({ 
-      behavior: isNewConv ? 'auto' : 'smooth' 
+      behavior: 'auto' 
     });
-  }, [messages, selectedConvId, isOtherTyping]);
+  }, [messages, selectedConvId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -442,7 +442,7 @@ function MessagesContent() {
       <div className={cn(
         'flex-1 flex flex-col min-w-0 h-full relative',
         showMobileChat 
-          ? 'fixed inset-0 z-[110] bg-white dark:bg-secondary-950 flex' 
+          ? 'fixed inset-0 md:relative z-[110] md:z-0 bg-white dark:bg-secondary-950 flex' 
           : 'hidden md:flex'
       )}>
         {!selectedConvId ? (
@@ -556,7 +556,7 @@ function MessagesContent() {
                   const showAvatar = !isMine && (idx === 0 || messages[idx - 1].senderId !== msg.senderId);
                   
                   return (
-                    <div key={msg.id} className={cn('flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-500', isMine ? 'items-end' : 'items-start', idx > 0 && messages[idx-1].senderId === msg.senderId ? 'mt-1' : 'mt-6')}>
+                    <div key={msg.id} className={cn('flex flex-col animate-in fade-in duration-300', isMine ? 'items-end' : 'items-start', idx > 0 && messages[idx-1].senderId === msg.senderId ? 'mt-1' : 'mt-6')}>
                       <div className={cn('flex max-w-[90%] sm:max-w-[70%]', isMine ? 'flex-row-reverse' : 'flex-row')}>
                         {!isMine && (
                           <div className="w-8 md:w-12 shrink-0 self-end mb-1">
@@ -643,7 +643,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <div className="h-screen bg-white dark:bg-secondary-950">
+    <div className="h-full bg-white dark:bg-secondary-950">
       <Suspense fallback={
         <div className="flex h-full items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary-500" />

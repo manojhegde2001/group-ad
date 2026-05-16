@@ -22,8 +22,8 @@ export const useEnrollEvent = () => {
 
     return useMutation({
         mutationFn: (id: string) => eventService.enrollEvent(id),
-        onSuccess: (_, id) => {
-            queryClient.invalidateQueries({ queryKey: ['event', id] });
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['event'] });
             queryClient.invalidateQueries({ queryKey: ['events'] });
             toast.success('Enrolled successfully');
         },
@@ -38,8 +38,8 @@ export const useUnenrollEvent = () => {
 
     return useMutation({
         mutationFn: (id: string) => eventService.unenrollEvent(id),
-        onSuccess: (_, id) => {
-            queryClient.invalidateQueries({ queryKey: ['event', id] });
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['event'] });
             queryClient.invalidateQueries({ queryKey: ['events'] });
             toast.success('Withdrawn successfully');
         },

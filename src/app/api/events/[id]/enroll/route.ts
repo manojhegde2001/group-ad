@@ -15,16 +15,24 @@ export async function POST(
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const { id: eventId } = await params;
+        const { id: idOrSlug } = await params;
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
 
-        const event = await prisma.event.findUnique({
-            where: { id: eventId },
+        const event = await prisma.event.findFirst({
+            where: {
+                OR: [
+                    ...(isObjectId ? [{ id: idOrSlug }] : []),
+                    { slug: idOrSlug },
+                ],
+            },
             include: { organizer: { select: { id: true } } },
         });
 
         if (!event || event.status !== 'PUBLISHED') {
             return NextResponse.json({ error: 'Event not found' }, { status: 404 });
         }
+
+        const eventId = event.id;
 
         // Check if already enrolled
         const existing = await prisma.eventEnrollment.findUnique({
@@ -171,16 +179,27 @@ export async function DELETE(
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const { id: eventId } = await params;
+        const { id: idOrSlug } = await params;
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
 
-        const enrollment = await prisma.eventEnrollment.findUnique({
-            where: { eventId_userId: { eventId, userId: session.user.id } },
-            include: { event: { select: { title: true, organizerId: true } } }
+        const enrollment = await prisma.eventEnrollment.findFirst({
+            where: {
+                userId: session.user.id,
+                event: {
+                    OR: [
+                        ...(isObjectId ? [{ id: idOrSlug }] : []),
+                        { slug: idOrSlug },
+                    ],
+                }
+            },
+            include: { event: { select: { id: true, title: true, organizerId: true } } }
         });
 
         if (!enrollment) {
             return NextResponse.json({ error: 'Enrollment not found' }, { status: 404 });
         }
+
+        const eventId = enrollment.event.id;
 
         // Decrement attendee count if was approved
         if (enrollment.status === 'APPROVED') {

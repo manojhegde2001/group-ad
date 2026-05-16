@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, useAnimationFrame } from 'framer-motion';
 
 interface LogoLoaderProps {
   size?: number;
@@ -31,13 +31,52 @@ const PATHS = [
   { id: "p18", d: "m 1345.2046,1590.8209 c -0.6325,-0.1522 -1.2899,-0.171 -1.9306,-0.054 -1.5752,0.2847 -2.9008,1.3529 -3.5198,2.8367 -0.097,0.233 -0.1758,0.4733 -0.2349,0.7187 -0.6117,2.5416 0.9419,5.0953 3.4701,5.7038 0.8749,0.2106 1.7922,0.1648 2.6432,-0.1315 1.0267,-0.3583 1.8993,-1.0616 2.4704,-1.9911 0.2617,-0.426 0.4546,-0.8908 0.5716,-1.377 0.6118,-2.5417 -0.9418,-5.0953 -3.47,-5.7038 z", color: "#2d6bb5" },
 ];
 
-export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoaderProps) {
+// Builds an SVG arc path for a clockwise sweep starting from 12 o'clock.
+// All coordinates are in normalised [0,1] space (objectBoundingBox).
+function describeArc(cx: number, cy: number, r: number, angleDeg: number): string {
+  if (angleDeg <= 0) return '';
+  if (angleDeg >= 360) {
+    // Full circle
+    return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.0001} ${cy - r} Z`;
+  }
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  const x = cx + r * Math.cos(rad);
+  const y = cy + r * Math.sin(rad);
+  const largeArc = angleDeg > 180 ? 1 : 0;
+  // Pie slice from centre
+  return `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${largeArc} 1 ${x} ${y} Z`;
+}
+
+// Animated arc mask rendered via a <path> element driven by useAnimationFrame.
+function ArcMaskPath({ id, duration }: { id: string; duration: number }) {
+  const pathRef = React.useRef<SVGPathElement>(null);
+  const startRef = React.useRef<number | null>(null);
+
+  useAnimationFrame((t) => {
+    if (startRef.current === null) startRef.current = t;
+    const elapsed = (t - startRef.current) % (duration * 1000);
+    const progress = elapsed / (duration * 1000); // 0 → 1
+
+    // Eased sweep: ease-in-out over the full cycle
+    const eased = progress < 0.5
+      ? 2 * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+    const angle = eased * 360;
+    const d = describeArc(0.5, 0.5, 0.75, angle);
+    if (pathRef.current) pathRef.current.setAttribute('d', d);
+  });
+
+  return <path ref={pathRef} id={id} fill="white" />;
+}
+
+export function LogoLoader({ size = 48, className = "", duration = 1 }: LogoLoaderProps) {
   const id = React.useId().replace(/:/g, '');
   const fillMaskId = `fill-mask-${id}`;
 
   return (
-    <div 
-      className={cn("relative flex items-center justify-center select-none shrink-0", className)} 
+    <div
+      className={cn("relative flex items-center justify-center select-none shrink-0", className)}
       style={{ width: size, height: size }}
     >
       <svg
@@ -47,47 +86,15 @@ export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoad
       >
         <defs>
           <mask id={fillMaskId} maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
-            {/* Primary expanding circle */}
-            <motion.circle
-              cx="0.5"
-              cy="0.5"
-              initial={{ r: 0 }}
-              animate={{ 
-                r: [0, 0.75, 0.75, 0],
-              }}
-              transition={{
-                duration: duration,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.2, 1],
-                times: [0, 0.45, 0.65, 1]
-              }}
-              fill="white"
-            />
-            {/* Secondary ripple circle for liquid effect */}
-            <motion.circle
-              cx="0.5"
-              cy="0.5"
-              initial={{ r: 0 }}
-              animate={{ 
-                r: [0, 0.75, 0.75, 0],
-              }}
-              transition={{
-                duration: duration,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.2, 1],
-                times: [0.05, 0.5, 0.7, 1]
-              }}
-              fill="white"
-              opacity={0.5}
-            />
+            <ArcMaskPath id={`arc-${id}`} duration={duration} />
           </mask>
         </defs>
 
         <g transform="translate(-1246.1218, -1559.1535)">
           {/* Outline Layer */}
-          <g 
-            fill="none" 
-            stroke="currentColor" 
+          <g
+            fill="none"
+            stroke="currentColor"
             strokeWidth="1.2"
             className="text-secondary-200 dark:text-secondary-800 transition-colors duration-300"
           >
@@ -96,13 +103,13 @@ export function LogoLoader({ size = 48, className = "", duration = 4 }: LogoLoad
             ))}
           </g>
 
-          {/* Filled Layer with Radial Mask */}
+          {/* Filled Layer with Clockwise Arc Mask */}
           <g mask={`url(#${fillMaskId})`}>
             {PATHS.map(p => (
-              <path 
-                key={`filled-${p.id}`} 
-                d={p.d} 
-                fill={p.color} 
+              <path
+                key={`filled-${p.id}`}
+                d={p.d}
+                fill={p.color}
                 stroke="none"
                 fillRule="evenodd"
               />

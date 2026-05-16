@@ -32,6 +32,7 @@ interface PostCardProps {
 
 export const PostCard = memo(function PostCard({ post, onLikeChange, showActions = false, priority = false }: PostCardProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isLong, setIsLong] = useState(false);
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
     const { open: openSaveToBoard } = useSaveToBoard();
@@ -159,9 +160,17 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                      alt={post.content || ''}
                                      fill
                                      enhance={true}
-                                     className="w-full h-full object-cover block transition-transform duration-700 group-hover:scale-[1.03]"
+                                     className={cn(
+                                         "w-full h-full object-cover block transition-transform duration-700 group-hover:scale-[1.03]",
+                                         isLong && "object-top"
+                                     )}
                                      onDoubleClick={handleDoubleTap}
                                      priority={priority}
+                                     onLoadingComplete={(res) => {
+                                         if (res.naturalHeight / res.naturalWidth > 1.8) {
+                                             setIsLong(true);
+                                         }
+                                     }}
                                  />
                              );
                         })()}

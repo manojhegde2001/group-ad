@@ -93,7 +93,7 @@ export default function AdminTopBar({ userName, userAvatar, isAdminSubdomain = f
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shrink-0 transition-colors duration-300">
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 h-16 bg-background/80 backdrop-blur-md border-b border-secondary-100 dark:border-secondary-800 shrink-0 transition-colors duration-300">
       {/* Brand & Breadcrumb Area */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
         <Link href="/" className="lg:hidden shrink-0">
@@ -130,7 +130,7 @@ export default function AdminTopBar({ userName, userAvatar, isAdminSubdomain = f
               />
             </div>
           </Popover.Trigger>
-          <Popover.Content className="p-3 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800">
+          <Popover.Content className="p-3 w-80 bg-background rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800">
              <div className="space-y-3">
                 {searching ? (
                   <div className="flex items-center justify-center py-4">
@@ -196,7 +196,7 @@ export default function AdminTopBar({ userName, userAvatar, isAdminSubdomain = f
               </ActionIcon>
             </div>
           </Popover.Trigger>
-          <Popover.Content className="z-[100] p-0 w-[320px] sm:w-[380px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5">
+          <Popover.Content className="z-[100] p-0 w-[320px] sm:w-[380px] bg-background border border-secondary-100 dark:border-secondary-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
               <h3 className="font-black text-xs uppercase tracking-widest text-slate-900 dark:text-white">Live Alert Center</h3>
               <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded-full">
@@ -271,7 +271,7 @@ export default function AdminTopBar({ userName, userAvatar, isAdminSubdomain = f
               </div>
             </button>
           </Popover.Trigger>
-          <Popover.Content className="p-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800">
+          <Popover.Content className="p-2 w-56 bg-background rounded-2xl shadow-2xl border border-secondary-100 dark:border-secondary-800">
              <div className="px-3 py-2 mb-1">
                 <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                    Admin Account

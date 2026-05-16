@@ -86,9 +86,9 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+    <div className="flex flex-col h-full bg-background border-r border-secondary-100 dark:border-secondary-800">
       {/* Brand */}
-      <div className="px-5 py-6 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/30 dark:bg-slate-900/40">
+      <div className="px-5 py-6 border-b border-secondary-50 dark:border-secondary-800/60 bg-secondary-50/30 dark:bg-secondary-900/40">
         <Link href={getHref('/')} className="flex items-center gap-3 transition-opacity hover:opacity-80 group/logo">
           <Logo className="w-32 h-9" />
           <div className="flex flex-col ml-0.5">
@@ -196,7 +196,7 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
     <>
       {/* Mobile toggle */}
       <button
-        className="fixed top-4 left-4 z-[40] p-2 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 lg:hidden"
+        className="fixed top-4 left-4 z-[40] p-2 bg-background rounded-xl shadow-md border border-secondary-200 dark:border-secondary-800 lg:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >

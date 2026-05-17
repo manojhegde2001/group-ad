@@ -32,7 +32,8 @@ import {
   Layout,
   Sun,
   Moon,
-  Zap
+  Zap,
+  Bot
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -43,6 +44,7 @@ import { ActionIcon } from '../ui/action-icon';
 import { cn } from '@/lib/utils';
 import { Drawer, Popover } from 'rizzui';
 import { MobileBottomNav } from './mobile-bottom-nav';
+import { useChatbot } from '@/hooks/use-chatbot';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -102,6 +104,7 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const chatbot = useChatbot();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -268,6 +271,13 @@ export function Navbar() {
                         >
                           <Settings className="w-4 h-4" /> Account Settings
                         </Link>
+
+                        <button
+                          onClick={() => { setDropdownOpen(false); chatbot.open(); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/10 font-bold text-xs text-primary-600 dark:text-primary-400 transition-colors"
+                        >
+                          <Bot className="w-4 h-4" /> AI Assistant
+                        </button>
                       </div>
 
                       <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
@@ -376,6 +386,12 @@ export function Navbar() {
                      <DrawerLink href="https://admin.vrutta.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
                 )}
                 <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
+                <button
+                    onClick={() => { setMobileDrawerOpen(false); chatbot.open(); }}
+                    className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-primary-600 dark:text-primary-400 font-bold hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-colors"
+                >
+                    <Bot className="w-5 h-5" /> AI Assistant
+                </button>
             </div>
 
             {/* Appearance Section */}

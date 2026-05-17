@@ -12,6 +12,7 @@ const AuthModal = dynamic(() => import('@/components/layout/auth-modal').then(mo
 const CreatePostModal = dynamic(() => import('@/components/feed/create-post-modal').then(mod => mod.CreatePostModal), { ssr: false });
 const CreateEventModal = dynamic(() => import('@/components/events/create-event-modal').then(mod => mod.CreateEventModal), { ssr: false });
 const SaveToBoardModal = dynamic(() => import('@/components/boards/save-to-board-modal').then(mod => mod.SaveToBoardModal), { ssr: false });
+const ChatbotDrawer = dynamic(() => import('@/components/chatbot').then(mod => mod.ChatbotDrawer), { ssr: false });
 
 import { Analytics } from '@vercel/analytics/react';
 
@@ -43,6 +44,7 @@ export function LayoutContent({
       <CreatePostModal />
       <CreateEventModal />
       <SaveToBoardModal />
+      <ChatbotDrawer />
       {modal}
       <Analytics />
     </div>

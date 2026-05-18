@@ -23,8 +23,8 @@ import { generateContent, GeminiServiceError } from '@/services/ai/gemini';
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Maximum number of history turns sent to the model (keeps context window small) */
-const MAX_HISTORY_TURNS = 20;
+/** Maximum number of history turns sent to the model (keeps context window small and saves tokens) */
+const MAX_HISTORY_TURNS = 8;
 
 /** Maximum characters per message (safety guard) */
 const MAX_MESSAGE_LENGTH = 4000;

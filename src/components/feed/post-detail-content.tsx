@@ -486,16 +486,11 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                         
                                         <div className="flex items-center gap-3 relative z-10">
                                             <div className="w-10 h-10 rounded-xl bg-white dark:bg-secondary-800 flex items-center justify-center shadow-md border border-secondary-100 dark:border-secondary-700 group-hover:scale-110 transition-transform duration-300">
-                                                <Globe className="w-5 h-5 text-primary-500" />
+                                                <Link2 className="w-5 h-5 text-primary-500" />
                                             </div>
-                                            <div className="text-left">
-                                                <span className="block font-bold text-xs md:text-sm text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-1 font-sans">
-                                                    {post.user.websiteLabel || 'Visit Website'}
-                                                </span>
-                                                <span className="block text-[9px] text-secondary-500 dark:text-secondary-400 uppercase tracking-widest font-black leading-none mt-1">
-                                                    {post.user.website.replace(/^https?:\/\/(www\.)?/, '')}
-                                                </span>
-                                            </div>
+                                            <span className="block font-bold text-xs md:text-sm text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-1 font-sans">
+                                                {post.user.websiteLabel || 'Visit Website'}
+                                            </span>
                                         </div>
                                         <div className="w-8 h-8 rounded-full bg-white dark:bg-secondary-800 flex items-center justify-center shadow-md border border-secondary-100 dark:border-secondary-700 text-secondary-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all duration-300 relative z-10">
                                             <ArrowUpRight className="w-4.5 h-4.5" />

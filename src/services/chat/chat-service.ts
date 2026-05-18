@@ -116,8 +116,8 @@ export async function processChatTurn(
         );
       }
       
-      // Pass through specific auth, access, or model not found errors to aid in diagnostics
-      if (err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 404) {
+      // Pass through specific client, auth, access, or model not found errors to aid in diagnostics
+      if (err.statusCode === 400 || err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 404) {
         throw new ChatServiceError(err.message, err.statusCode);
       }
 

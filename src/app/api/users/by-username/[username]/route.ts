@@ -33,6 +33,7 @@ export async function GET(
                 phoneVisibility: true,
                 visibility: true,
                 messagingEnabled: true,
+                companyName: true,
             },
         });
 
@@ -136,6 +137,7 @@ export async function GET(
                                                 avatar: true,
                                                 industry: true,
                                                 verificationStatus: true,
+                                                companyName: true,
                                             },
                                         },
                                     },

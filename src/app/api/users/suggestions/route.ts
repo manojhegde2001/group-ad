@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
                 avatar: true,
                 industry: true,
                 verificationStatus: true,
+                companyName: true,
                 _count: {
                     select: { followers: true }
                 }
@@ -102,6 +103,7 @@ export async function GET(request: NextRequest) {
                 avatar: true,
                 industry: true,
                 verificationStatus: true,
+                companyName: true,
                 _count: {
                     select: { followers: true }
                 }
@@ -139,6 +141,7 @@ export async function GET(request: NextRequest) {
                         avatar: true,
                         industry: true,
                         verificationStatus: true,
+                        companyName: true,
                         _count: {
                             select: { followers: true }
                         }

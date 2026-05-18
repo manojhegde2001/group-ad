@@ -144,6 +144,7 @@ export async function getPostsServer(params: GetPostsParams) {
               industry: true,
               website: true,
               companyWebsite: true,
+              companyName: true,
             },
           },
           category: {

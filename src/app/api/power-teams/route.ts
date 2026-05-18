@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
             take: 5,
             include: {
               user: {
-                select: { id: true, avatar: true, name: true },
+                select: { id: true, avatar: true, name: true, companyName: true },
               },
             },
             where: {

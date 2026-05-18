@@ -102,8 +102,8 @@ export default function ProfileView({ username, initialPosts }: { username: stri
     const handleShareProfile = () => {
         if (typeof navigator !== 'undefined' && navigator.share) {
             navigator.share({
-                title: `${profile?.name}'s Profile | Vrutta`,
-                text: `Check out ${profile?.name}'s profile on Vrutta`,
+                title: `${profile?.companyName || profile?.name}'s Profile | Vrutta`,
+                text: `Check out ${profile?.companyName || profile?.name}'s profile on Vrutta`,
                 url: window.location.href
             }).catch(() => {});
         } else {
@@ -122,7 +122,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
     const handleBlock = () => {
         if (!me) { toast.error('Please login to block'); return; }
-        if (profile && window.confirm(`Are you sure you want to block ${profile.name}?`)) {
+        if (profile && window.confirm(`Are you sure you want to block ${profile.companyName || profile.name}?`)) {
             blockMutation.mutate(profile.id);
         }
     };
@@ -161,9 +161,9 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                         <div className="absolute -inset-1 bg-gradient-to-tr from-primary-500 to-violet-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
                          <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-[2.2rem] overflow-hidden border-4 border-white dark:border-secondary-900 shadow-2xl bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center">
                              {profile.avatar ? (
-                                 <CloudinaryImage src={profile.avatar} alt={profile.name} fill className="w-full h-full object-cover" />
+                                 <CloudinaryImage src={profile.avatar} alt={profile.companyName || profile.name} fill className="w-full h-full object-cover" />
                              ) : (
-                                 <span className="text-4xl font-black text-secondary-400 uppercase">{profile.name.charAt(0)}</span>
+                                 <span className="text-4xl font-black text-secondary-400 uppercase">{(profile.companyName || profile.name).charAt(0)}</span>
                              )}
                          </div>
                     </div>
@@ -172,7 +172,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                     <div className="flex-1 text-center md:text-left pt-2">
                         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
                             <h1 className="text-3xl md:text-4xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter flex items-center justify-center md:justify-start gap-2">
-                                {profile.name}
+                                {profile.companyName || profile.name}
                                 {profile.verificationStatus === 'VERIFIED' && <BadgeCheck className="w-8 h-8 text-primary-500" />}
                             </h1>
                             <div className="flex items-center justify-center md:justify-start gap-3">
@@ -195,7 +195,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                     <>
                                         <ConnectionButton 
                                             userId={profile.id} 
-                                            targetName={profile.name}
+                                            targetName={profile.companyName || profile.name}
                                             initialStatus={profile.connectionStatus}
                                             isInitiator={profile.connectionInitiator}
                                             mutualConnections={(profile as any).mutualConnections}
@@ -298,7 +298,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                 {!isOwnProfile && (profile as any).powerTeam && (
                     <PowerTeamSuggestions
                         team={(profile as any).powerTeam}
-                        viewedUserName={profile.name}
+                        viewedUserName={profile.companyName || profile.name}
                     />
                 )}
 
@@ -332,7 +332,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                             <MapPin className="w-8 h-8 text-secondary-300" />
                         </div>
                         <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">This Account is Private</h3>
-                        <p className="text-sm text-secondary-500 max-w-[240px]">Connect with {profile.name} to see their professional updates.</p>
+                        <p className="text-sm text-secondary-500 max-w-[240px]">Connect with {profile.companyName || profile.name} to see their professional updates.</p>
                     </div>
                 ) : createdPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 text-center">

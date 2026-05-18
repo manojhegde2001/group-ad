@@ -138,6 +138,7 @@ export type PostWithRelations = {
     phoneVisibility: 'PRIMARY' | 'SECONDARY' | 'BOTH' | 'NONE';
     connectionStatus?: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED' | null;
     connectionInitiator?: boolean;
+    companyName?: string | null;
   };
   category: {
     id: string;

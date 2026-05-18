@@ -81,7 +81,7 @@ export const TeammateSuggestions = memo(function TeammateSuggestions({ className
                         <Link href={`/profile/${user.username}`} className="relative shrink-0">
                             <Avatar
                                 src={user.avatar}
-                                name={user.name}
+                                name={user.companyName || user.name}
                                 rounded="xl"
                                 className="w-10 h-10 ring-2 ring-transparent group-hover:ring-primary-500/20 transition-all"
                             />
@@ -95,7 +95,7 @@ export const TeammateSuggestions = memo(function TeammateSuggestions({ className
                         <div className="flex-1 min-w-0">
                             <Link href={`/profile/${user.username}`}>
                                 <p className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate group-hover:text-primary-500 transition-colors">
-                                    {user.name}
+                                    {user.companyName || user.name}
                                 </p>
                             </Link>
                             <p className="text-[9px] font-bold text-secondary-400 uppercase tracking-widest truncate mt-0.5">

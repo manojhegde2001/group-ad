@@ -93,7 +93,7 @@ export function PowerTeamCard({ team, className }: PowerTeamCardProps) {
               <Avatar
                 key={member.user.id}
                 src={member.user.avatar}
-                name={member.user.name}
+                name={member.user.companyName || member.user.name}
                 className="w-7 h-7 ring-2 ring-white dark:ring-secondary-900 shadow-sm rounded-lg"
               />
             ))}

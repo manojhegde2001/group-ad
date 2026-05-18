@@ -32,7 +32,7 @@ interface Comment {
     id: string;
     content: string;
     createdAt: string;
-    user: { id: string; name: string; username: string; avatar: string | null };
+    user: { id: string; name: string; username: string; avatar: string | null; companyName?: string | null };
 }
 
 interface PostDetailContentProps {
@@ -209,7 +209,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
 
     const handleBlock = () => {
         requireAuth(() => {
-            if (post && window.confirm(`Are you sure you want to block ${post.user.name}?`)) {
+            if (post && window.confirm(`Are you sure you want to block ${post.user.companyName || post.user.name}?`)) {
                 blockMutation.mutate(post.user.id);
             }
         });
@@ -495,12 +495,12 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                      {post.user.avatar ? (
                                          <CloudinaryImage src={post.user.avatar} fill className="w-full h-full object-cover" alt="" />
                                      ) : (
-                                        <span className="text-[14px] font-[500] text-gray-500 uppercase">{post.user.name.charAt(0)}</span>
+                                        <span className="text-[14px] font-[500] text-gray-500 uppercase">{(post.user.companyName || post.user.name).charAt(0)}</span>
                                     )}
                                 </div>
                                 <div className="min-w-0">
                                     <div className="inline-flex items-center gap-1">
-                                        <span className="font-semibold text-[14px] text-gray-900 dark:text-white truncate group-hover:underline">{post.user.name}</span>
+                                        <span className="font-semibold text-[14px] text-gray-900 dark:text-white truncate group-hover:underline">{post.user.companyName || post.user.name}</span>
                                         {post.user.verificationStatus === 'VERIFIED' && <BadgeCheck className="w-4 h-4 text-primary-500 shrink-0" />}
                                     </div>
                                     <span className="block text-[12px] text-gray-400 mt-0.5">{(post as any).followerCount || 0} followers</span>
@@ -509,7 +509,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             {!loadingAuth && user?.id !== post.user.id && (
                                 <ConnectionButton 
                                     userId={post.user.id} 
-                                    targetName={post.user.name}
+                                    targetName={post.user.companyName || post.user.name}
                                     initialStatus={(post.user as any).connectionStatus}
                                     isInitiator={(post.user as any).connectionInitiator}
                                     mutualConnections={(post.user as any).mutualConnections}
@@ -556,11 +556,11 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     {comments.map((c) => (
                                         <div key={c.id} className="flex gap-3">
                                              <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700 relative">
-                                                 {c.user.avatar ? <CloudinaryImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{c.user.name.charAt(0)}</span>}
+                                                 {c.user.avatar ? <CloudinaryImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
                                              </Link>
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-0.5">
-                                                    <span className="text-sm font-medium text-gray-900 dark:text-white hover:underline cursor-pointer">{c.user.name}</span>
+                                                    <span className="text-sm font-medium text-gray-900 dark:text-white hover:underline cursor-pointer">{c.user.companyName || c.user.name}</span>
                                                     <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
                                                 </div>
                                                 <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{c.content}</p>

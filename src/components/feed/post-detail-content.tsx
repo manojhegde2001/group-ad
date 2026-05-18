@@ -489,9 +489,11 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                                 <Globe className="w-5 h-5 text-primary-500" />
                                             </div>
                                             <div className="text-left">
-                                                <span className="block text-[10px] text-primary-500 uppercase tracking-widest font-black leading-none mb-1">Official Website</span>
                                                 <span className="block font-bold text-xs md:text-sm text-secondary-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-1 font-sans">
-                                                    {post.user.websiteLabel || post.user.website.replace(/^https?:\/\/(www\.)?/, '')}
+                                                    {post.user.websiteLabel || 'Visit Website'}
+                                                </span>
+                                                <span className="block text-[9px] text-secondary-500 dark:text-secondary-400 uppercase tracking-widest font-black leading-none mt-1">
+                                                    {post.user.website.replace(/^https?:\/\/(www\.)?/, '')}
                                                 </span>
                                             </div>
                                         </div>

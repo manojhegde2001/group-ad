@@ -27,7 +27,7 @@ function loadEnv() {
 loadEnv();
 
 const apiKey = process.env.GEMINI_API_KEY;
-const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite';
+const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 console.log('Testing with API Key:', apiKey ? `${apiKey.substring(0, 15)}...` : 'undefined');
 console.log('Model Name:', modelName);

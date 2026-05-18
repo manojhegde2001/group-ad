@@ -1,10 +1,15 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import Google from 'next-auth/providers/google';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     Credentials({
       credentials: {
         identifier: { label: 'Email or Phone', type: 'text' },
@@ -65,16 +70,94 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: '/',
   },
   callbacks: {
-    async jwt({ token, user, trigger }: any) {
+    async signIn({ user, account }: any) {
+      if (account?.provider === 'google') {
+        if (!user.email) {
+          return false;
+        }
+
+        const email = user.email.toLowerCase();
+
+        // Check if user already exists
+        const existingUser = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!existingUser) {
+          // Generate unique username from name or email prefix
+          let baseUsername = (user.name || email.split('@')[0])
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '');
+
+          if (!baseUsername) {
+            baseUsername = 'user';
+          }
+
+          let username = baseUsername;
+          let isUnique = false;
+          let suffix = 0;
+
+          while (!isUnique) {
+            const potentialUser = await prisma.user.findUnique({
+              where: { username },
+            });
+
+            if (!potentialUser) {
+              isUnique = true;
+            } else {
+              suffix++;
+              username = `${baseUsername}${suffix}`;
+            }
+          }
+
+          // Generate secure random hashed password
+          const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-8);
+          const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+          // Create the new user
+          await prisma.user.create({
+            data: {
+              email,
+              password: hashedPassword,
+              name: user.name || username,
+              username,
+              avatar: user.image || null,
+              userType: 'INDIVIDUAL',
+              isProfileCompleted: false,
+              onboardingStep: 'ACCOUNT_CREATED',
+            },
+          });
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account, trigger }: any) {
       // On initial sign-in, persist user fields into the token
       if (user) {
-        token.id = user.id;
-        token.username = (user as any).username;
-        token.avatar = (user as any).avatar;
-        token.location = (user as any).location;
-        token.userType = (user as any).userType;
-        token.colorTheme = (user as any).colorTheme;
-        token.fontFamily = (user as any).fontFamily;
+        if (account?.provider === 'google') {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email!.toLowerCase() },
+            include: { category: true },
+          });
+
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.username = dbUser.username;
+            token.avatar = dbUser.avatar;
+            token.location = dbUser.location;
+            token.userType = dbUser.userType;
+            token.colorTheme = dbUser.category?.colorTheme || null;
+            token.fontFamily = dbUser.category?.fontFamily || null;
+          }
+        } else {
+          token.id = user.id;
+          token.username = (user as any).username;
+          token.avatar = (user as any).avatar;
+          token.location = (user as any).location;
+          token.userType = (user as any).userType;
+          token.colorTheme = (user as any).colorTheme;
+          token.fontFamily = (user as any).fontFamily;
+        }
       }
       // On manual update() call (e.g. after avatar upload) re-fetch from DB
       if (trigger === 'update' && token.id) {

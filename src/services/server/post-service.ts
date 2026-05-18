@@ -145,6 +145,7 @@ export async function getPostsServer(params: GetPostsParams) {
               website: true,
               companyWebsite: true,
               companyName: true,
+              websiteLabel: true,
             },
           },
           category: {

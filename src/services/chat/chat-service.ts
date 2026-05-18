@@ -115,6 +115,12 @@ export async function processChatTurn(
           429
         );
       }
+      
+      // Pass through specific auth, access, or model not found errors to aid in diagnostics
+      if (err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 404) {
+        throw new ChatServiceError(err.message, err.statusCode);
+      }
+
       // 5xx — Gemini service-side failure
       throw new ChatServiceError(
         'The AI service is temporarily unavailable. Please try again.',

@@ -56,21 +56,21 @@ const accentColor = '#7c3aed';
  * Prioritizes NEXT_PUBLIC_APP_URL, then VERCEL_URL, then request headers.
  */
 export function getAppBaseUrl(req?: Request | NextRequest) {
-    // 1. Prioritize explicit environment variable
-    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-    // 2. Fallback to Vercel's automatic environment variable
-    if (!baseUrl && process.env.VERCEL_URL) {
-        baseUrl = `https://${process.env.VERCEL_URL}`;
+    // 1. First, check request headers if req is provided to support dynamic/custom domains (e.g. vrutta.net)
+    if (req) {
+        const protocol = req.headers.get('x-forwarded-proto') || 'http';
+        const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+        if (host) {
+            return `${protocol}://${host}`.replace(/\/$/, '');
+        }
     }
 
-    // 3. Fallback to request headers if available
-    if (!baseUrl && req) {
-        const protocol = req.headers.get('x-forwarded-proto') || 'http';
-        const host = req.headers.get('host');
-        if (host) {
-            baseUrl = `${protocol}://${host}`;
-        }
+    // 2. Fallback to explicit environment variable
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    // 3. Fallback to Vercel's automatic environment variable
+    if (!baseUrl && process.env.VERCEL_URL) {
+        baseUrl = `https://${process.env.VERCEL_URL}`;
     }
 
     // 4. Final fallback

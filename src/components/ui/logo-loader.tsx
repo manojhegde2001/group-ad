@@ -1,17 +1,354 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useId, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface LogoLoaderProps {
   size?: number;
   className?: string;
   /**
-   * Speed multiplier. Default 1 = full cycle ≈ 3.7 s.
+   * Speed multiplier. Default 1 = full cycle ≈ 2.3 s.
    * Set > 1 to slow down, < 1 to speed up.
    */
   duration?: number;
   /** Loop continuously (default: true). Set false for a one-shot intro. */
+  loop?: boolean;
+}
+
+const TOTAL_DURATION = 2.3; // last fill ends at 1.6s + 0.7s = 2.3s
+
+const PATH_LENGTHS = [
+  124.6778793334961,
+  124.69855499267578,
+  124.85465240478516,
+  124.89142608642578,
+  124.74617004394531,
+  124.65925598144531,
+  124.77250671386719,
+  124.90057373046875,
+  124.83098602294922,
+];
+
+const PATH_COLORS = [
+  'rgb(255, 51, 75)',
+  'rgb(45, 107, 181)',
+  'rgb(18, 128, 160)',
+  'rgb(21, 153, 200)',
+  'rgb(13, 189, 181)',
+  'rgb(7, 200, 150)',
+  'rgb(93, 196, 93)',
+  'rgb(251, 189, 35)',
+  'rgb(244, 132, 95)',
+];
+
+const STROKE_DUR = 1.0;
+const STROKE_STAGGER = 0.12;
+const FILL_BASE = 0.8;
+const FILL_STAGGER = 0.1;
+const FILL_DUR = 0.7;
+
+function buildStyles(uid: string, duration: number): string {
+  let css = '';
+
+  // Keyframes
+  PATH_LENGTHS.forEach((len, idx) => {
+    const n = idx + 1;
+    const color = PATH_COLORS[idx];
+
+    css += `
+      @keyframes animate-svg-stroke-${uid}-${n} {
+        0% { stroke-dashoffset: ${len}px; stroke-dasharray: ${len}px; }
+        100% { stroke-dashoffset: 0; stroke-dasharray: ${len}px; }
+      }
+      @keyframes animate-svg-fill-${uid}-${n} {
+        0% { fill: transparent; }
+        100% { fill: ${color}; }
+      }
+    `;
+  });
+
+  // Base classes and root styles
+  css += `
+    .arista-loader-root-${uid} {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+
+    .arista-svg-wrapper-${uid} {
+      width: var(--loader-size, 160px);
+      height: var(--loader-size, 160px);
+    }
+
+    /* Default (pre-animation): paths start invisible */
+    ${Array.from({ length: 9 }, (_, i) => `.svg-elem-${uid}-${i + 1}`).join(',\n    ')} {
+      fill: transparent;
+    }
+  `;
+
+  // Animation rules
+  PATH_LENGTHS.forEach((_, idx) => {
+    const n = idx + 1;
+    const strokeDelay = (idx * STROKE_STAGGER * duration).toFixed(3);
+    const strokeDur = (STROKE_DUR * duration).toFixed(3);
+    const fillDelay = ((FILL_BASE + idx * FILL_STAGGER) * duration).toFixed(3);
+    const fillDur = (FILL_DUR * duration).toFixed(3);
+
+    css += `
+      .arista-animating-${uid} .svg-elem-${uid}-${n} {
+        animation:
+          animate-svg-stroke-${uid}-${n} ${strokeDur}s cubic-bezier(0.47, 0, 0.745, 0.715) ${strokeDelay}s both,
+          animate-svg-fill-${uid}-${n}   ${fillDur}s cubic-bezier(0.47, 0, 0.745, 0.715) ${fillDelay}s both;
+      }
+    `;
+  });
+
+  return css;
+}
+
+export function LogoLoader({
+  size = 48,
+  className = '',
+  duration = 1,
+  loop = true,
+}: LogoLoaderProps) {
+  const uid = useId().replace(/:/g, '');
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const restart = () => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    // Remove class → browser drops all animations instantly
+    el.classList.remove(`arista-animating-${uid}`);
+
+    // Force reflow so the browser registers the removal
+    void (el as HTMLElement).offsetWidth;
+
+    // Re-add class → all animations restart from 0s
+    el.classList.add(`arista-animating-${uid}`);
+
+    if (loop) {
+      // Schedule next restart right when the last fill finishes (2.3s × duration)
+      timerRef.current = setTimeout(restart, TOTAL_DURATION * duration * 1000);
+    }
+  };
+
+  useEffect(() => {
+    restart();
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duration, loop]);
+
+  const styleContent = useMemo(
+    () => buildStyles(uid, duration),
+    [uid, duration]
+  );
+
+  return (
+    <div
+      className={cn('relative flex items-center justify-center select-none shrink-0', className)}
+      style={{
+        width: size,
+        height: size,
+      }}
+    >
+      <style dangerouslySetInnerHTML={{ __html: styleContent }} />
+      <div
+        className={`arista-svg-wrapper-${uid}`}
+        ref={wrapperRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          '--loader-size': `${size}px`,
+        } as React.CSSProperties}
+      >
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 131.19841 132.46527"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g transform="translate(-529.28543,-355.42132)">
+            {/* Path1 — rgb(255, 51, 75) */}
+            <path
+              id="Path1"
+              className={`svg-elem-${uid}-1`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(255, 51, 75)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 623.77599,367.72094 c -0.87488,-0.0303 -1.77024,0.15162 -2.60957,0.57184 -0.67183,0.33641 -1.26762,0.8091 -1.74912,1.38771 -1.18381,1.42224 -1.56886,3.34901 -1.02238,5.11573 0.0856,0.27745 0.19343,0.54742 0.32211,0.80748 1.33315,2.6928 4.59126,3.78567 7.27712,2.44094 0.92953,-0.46541 1.70746,-1.18824 2.24156,-2.08265 0.64416,-1.07904 0.89773,-2.34722 0.71747,-3.59038 -0.0828,-0.56975 -0.25459,-1.12249 -0.50964,-1.63788 -0.91649,-1.85131 -2.74283,-2.94616 -4.66755,-3.01279 z m 13.98943,12.95128 c -4.22053,1.69889 -8.66904,2.59417 -13.12635,2.68804 -3.33207,0.0691 -6.66943,-0.30748 -9.92022,-1.13222 -1.3387,-0.33964 -2.6626,-0.75497 -3.96552,-1.24607 -2.16064,2.82457 -4.62833,5.39401 -7.3539,7.66126 0.5394,0.26029 1.08453,0.51063 1.63527,0.751 3.48313,1.51909 7.1067,2.59741 10.79125,3.23384 3.43625,0.59359 6.92536,0.80262 10.40251,0.62524 4.92522,-0.25094 9.82613,-1.27636 14.51893,-3.08074 0.56014,-0.21536 1.11538,-0.44078 1.66485,-0.67642 z"
+            />
+
+            {/* Path2 — rgb(45, 107, 181) */}
+            <path
+              id="Path2"
+              className={`svg-elem-${uid}-2`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(45, 107, 181)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 647.57356,396.68969 c -0.37293,-0.0105 -0.74707,0.0179 -1.11637,0.0851 -1.81576,0.3279 -3.34372,1.55804 -4.05731,3.26694 -0.11143,0.26835 -0.20288,0.54515 -0.27093,0.82777 -0.70521,2.92718 1.08559,5.86837 3.99995,6.56919 1.00859,0.24254 2.06627,0.1899 3.04728,-0.15135 1.18356,-0.41265 2.18906,-1.22261 2.8474,-2.29312 0.30167,-0.49063 0.5244,-1.0263 0.65922,-1.58626 0.70522,-2.92729 -1.08594,-5.86793 -4.00038,-6.56874 v -0.003 c -0.36452,-0.0876 -0.73594,-0.13689 -1.10886,-0.14738 z m -14.97696,3.1681 c -3.4605,0.77418 -6.99228,1.15451 -10.52783,1.1362 0.24558,0.54775 0.50184,1.09146 0.76911,1.63127 1.6899,3.41342 3.76999,6.5796 6.17928,9.44562 2.24697,2.67265 4.78035,5.08428 7.55202,7.19179 3.92603,2.98533 8.32959,5.36067 13.07252,7.0038 0.56595,0.19602 1.13481,0.38097 1.70588,0.55464 l 2.09771,-9.77127 c -4.31428,-1.41924 -8.2886,-3.60231 -11.75626,-6.40637 -2.59211,-2.09622 -4.90121,-4.53961 -6.85838,-7.27031 -0.80597,-1.1243 -1.55249,-2.29767 -2.23405,-3.51537 z"
+            />
+
+            {/* Path3 — rgb(18, 128, 160) */}
+            <path
+              id="Path3"
+              className={`svg-elem-${uid}-3`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(18, 128, 160)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 628.43251,422.52034 c -0.16292,0.57896 -0.31547,1.16183 -0.4567,1.74863 -0.89392,3.71068 -1.33094,7.48307 -1.32419,11.23752 0.0111,3.5014 0.39865,6.98725 1.16799,10.39341 1.08979,4.82485 2.93528,9.48916 5.50903,13.81082 0.30722,0.51573 0.62336,1.02479 0.94868,1.5267 l 7.8609,-6.14692 c -2.38948,-3.87319 -4.0296,-8.11305 -4.88509,-12.50299 -0.63956,-3.28168 -0.84016,-6.64716 -0.58775,-10.006 0.10357,-1.3832 0.28462,-2.76504 0.54317,-4.13973 -3.14114,-1.63853 -6.08489,-3.62609 -8.77604,-5.92144 z m 18.76598,11.77803 c -0.89376,-0.0189 -1.7928,0.18383 -2.61265,0.60979 -0.25752,0.13359 -0.50387,0.28723 -0.73689,0.46022 -2.41347,1.79205 -2.9278,5.20528 -1.14858,7.62374 0.61573,0.83685 1.45783,1.47851 2.42689,1.84924 1.16895,0.44675 2.45685,0.47408 3.64561,0.0772 0.54478,-0.18185 1.05746,-0.44917 1.51923,-0.79202 2.41356,-1.79183 2.92788,-5.20529 1.14858,-7.62376 v -5.3e-4 c -0.44512,-0.60499 -1.01081,-1.11046 -1.66087,-1.48477 -0.79914,-0.45999 -1.68756,-0.70038 -2.58132,-0.71922 z"
+            />
+
+            {/* Path4 — rgb(21, 153, 200) */}
+            <path
+              id="Path4"
+              className={`svg-elem-${uid}-4`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(21, 153, 200)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 619.51349,443.15009 c -0.49533,0.3393 -0.98512,0.68874 -1.46893,1.04795 -3.05943,2.27141 -5.80963,4.88483 -8.20859,7.77112 -2.23741,2.69177 -4.16941,5.62072 -5.76231,8.7317 -2.25636,4.40667 -3.83216,9.17786 -4.63181,14.15588 -0.0956,0.59405 -0.17973,1.18929 -0.2524,1.78437 l 9.94581,0.35344 c 0.65347,-4.51492 2.1147,-8.8274 4.27175,-12.7492 1.61263,-2.93154 3.61415,-5.64466 5.95778,-8.06013 0.96513,-0.99462 1.98797,-1.93884 3.06582,-2.82703 -1.35212,-3.28466 -2.32957,-6.70967 -2.91712,-10.2081 z m 3.00272,19.80331 c -2.74973,0.11256 -5.02717,2.29961 -5.20368,5.11618 -0.0657,1.03976 0.1677,2.07571 0.67114,2.98544 0.60753,1.09722 1.57456,1.94919 2.73753,2.41137 0.53299,0.21192 1.0962,0.33763 1.66881,0.37241 2.99226,0.18185 5.57107,-2.1061 5.75965,-5.11045 v -5.2e-4 c 0.0469,-0.75134 -0.0608,-1.50418 -0.31902,-2.21062 -0.63255,-1.73735 -2.10145,-3.03112 -3.90022,-3.43593 -0.28238,-0.0623 -0.56928,-0.10514 -0.85823,-0.12267 -0.18703,-0.0113 -0.37267,-0.0128 -0.55598,-0.005 z"
+            />
+
+            {/* Path5 — rgb(13, 189, 181) */}
+            <path
+              id="Path5"
+              className={`svg-elem-${uid}-5`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(13, 189, 181)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 592.02309,453.08461 c -1.87842,0.11251 -3.74257,0.33766 -5.5836,0.67157 -3.4342,0.62251 -6.78703,1.62439 -9.99699,2.98455 -4.5468,1.92657 -8.80687,4.57199 -12.60567,7.87703 -0.45341,0.39457 -0.89873,0.79656 -1.33523,1.20635 l 7.37683,6.6892 c 3.39048,-3.04385 7.26942,-5.41178 11.42975,-7.03028 3.11006,-1.20986 6.37735,-2.00061 9.71591,-2.34255 1.37474,-0.14015 2.76172,-0.2052 4.15438,-0.19149 1.06965,-3.39373 2.51517,-6.65387 4.30618,-9.71833 -0.59592,-0.0598 -1.19393,-0.10829 -1.79369,-0.14339 -1.89679,-0.11524 -3.78946,-0.11515 -5.66787,-0.003 z m -6.37917,16.15558 c -1.38907,0.0374 -2.76522,0.6065 -3.79918,1.69878 -0.71554,0.75598 -1.20091,1.70171 -1.39833,2.72466 -0.23831,1.23439 -0.0454,2.51244 0.54848,3.61773 0.27162,0.50641 0.62188,0.96604 1.03738,1.3621 2.17131,2.07066 5.60775,1.97806 7.67557,-0.2065 0.51745,-0.54659 0.91658,-1.19465 1.1724,-1.90306 0.62871,-1.74185 0.33447,-3.68307 -0.78145,-5.15414 -0.17513,-0.23092 -0.36841,-0.44736 -0.57804,-0.6473 -1.08562,-1.03531 -2.48778,-1.52969 -3.87683,-1.49227 z"
+            />
+
+            {/* Path6 — rgb(7, 200, 150) */}
+            <path
+              id="Path6"
+              className={`svg-elem-${uid}-6`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(7, 200, 150)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 543.1739,433.78388 c -0.59933,0.0161 -1.19743,0.0323 -1.79369,0.0645 l 1.35641,9.89437 c 4.54115,-0.14823 9.0229,0.53647 13.23975,1.97852 3.15225,1.07812 6.15659,2.57897 8.92784,4.47065 1.14112,0.77912 2.24245,1.62432 3.29835,2.5336 2.99089,-1.91479 6.18331,-3.48406 9.51471,-4.68068 -0.41771,-0.42981 -0.84399,-0.8527 -1.27919,-1.26768 -2.75246,-2.6245 -5.78735,-4.8831 -9.02976,-6.74657 -3.02391,-1.73803 -6.22856,-3.13236 -9.55354,-4.15957 -4.70963,-1.45473 -9.66044,-2.17274 -14.68088,-2.08706 z m 10.27278,16.43665 c -0.18344,0.003 -0.36843,0.0139 -0.55466,0.0353 -1.03131,0.11907 -2.00771,0.53129 -2.81386,1.18915 -0.97239,0.79363 -1.64257,1.89976 -1.89694,3.13059 -0.11664,0.56434 -0.14349,1.14293 -0.0803,1.7151 0.3342,2.9903 3.02065,5.13682 6.00058,4.79408 h 0.002 c 0.74552,-0.0852 1.46571,-0.32542 2.11492,-0.70422 1.59614,-0.93138 2.61386,-2.6112 2.70266,-4.4605 0.0145,-0.29022 2.6e-4,-0.58151 -0.0278,-0.87013 -0.31323,-2.80361 -2.69437,-4.86494 -5.44592,-4.82937 z"
+            />
+
+            {/* Path7 — rgb(93, 196, 93) */}
+            <path
+              id="Path7"
+              className={`svg-elem-${uid}-7`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(93, 196, 93)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 545.70889,395.67572 -5.29898,8.47049 c 3.56688,2.8158 6.55433,6.23347 8.85458,10.06117 1.71979,2.86153 3.0552,5.95214 3.96244,9.19235 0.37349,1.33414 0.67427,2.69381 0.89927,4.07309 3.51275,0.46012 6.95816,1.31534 10.27145,2.5464 -0.0444,-0.59969 -0.0989,-1.19916 -0.16635,-1.7985 -0.42344,-3.79074 -1.29749,-7.48247 -2.58308,-11.00497 -1.19892,-3.28536 -2.75605,-6.42354 -4.64021,-9.35739 -2.66878,-4.15571 -5.99352,-7.90149 -9.88667,-11.07513 -0.46477,-0.37879 -0.93556,-0.74807 -1.41245,-1.10751 z m -4.6177,19.11982 c -1.25177,-0.0173 -2.47219,0.39803 -3.455,1.179 -0.45033,0.35772 -0.8417,0.78466 -1.15917,1.26504 -1.65933,2.51094 -0.97985,5.8921 1.51747,7.55182 0.62487,0.41508 1.32859,0.69606 2.0677,0.82424 1.81653,0.31489 3.67049,-0.31801 4.92261,-1.68024 0.19665,-0.21387 0.37576,-0.44281 0.53612,-0.68525 1.65942,-2.51095 0.98047,-5.89223 -1.51703,-7.55183 -0.86412,-0.57448 -1.87515,-0.88757 -2.9127,-0.90278 z"
+            />
+
+            {/* Path8 — rgb(251, 189, 35) */}
+            <path
+              id="Path8"
+              className={`svg-elem-${uid}-8`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(251, 189, 35)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 573.4614,369.16732 -9.47455,3.08251 c 0.92364,4.46309 1.01867,9.01421 0.32609,13.43665 -0.5177,3.30609 -1.4758,6.54033 -2.85711,9.61286 -0.56876,1.26503 -1.20905,2.50276 -1.92032,3.70686 2.39084,2.61955 4.47745,5.49936 6.22208,8.58213 0.35026,-0.48844 0.69147,-0.98457 1.02415,-1.48786 2.10351,-3.18298 3.79975,-6.58101 5.07262,-10.11456 1.18731,-3.29527 2.00633,-6.70854 2.44454,-10.17633 0.62051,-4.91192 0.47702,-9.93243 -0.46685,-14.88038 -0.11305,-0.59073 -0.23625,-1.17806 -0.37065,-1.76188 z m -19.16973,10.37224 c -0.57346,-0.0161 -1.14584,0.0601 -1.69617,0.22371 -2.87644,0.85664 -4.52216,3.8902 -3.67562,6.77568 0.21176,0.72178 0.5704,1.39158 1.05327,1.96661 1.18705,1.41385 3.00934,2.12446 4.83876,1.88675 0.28724,-0.0368 0.5712,-0.0967 0.84896,-0.18002 2.87653,-0.85676 4.52216,-3.89021 3.67563,-6.7757 -0.29279,-0.99864 -0.86473,-1.89163 -1.64808,-2.57287 -0.94532,-0.82162 -2.14548,-1.28927 -3.39675,-1.32416 z"
+            />
+
+            {/* Path9 — rgb(244, 132, 95) */}
+            <path
+              id="Path9"
+              className={`svg-elem-${uid}-9`}
+              fillRule="evenodd"
+              style={{
+                stroke: 'rgb(244, 132, 95)',
+                strokeWidth: 0.10583,
+                strokeLinecap: 'square',
+                strokeLinejoin: 'round',
+                strokeMiterlimit: 1,
+                strokeOpacity: 1,
+                paintOrder: 'fill markers',
+              }}
+              d="m 586.80838,360.94481 c -2.11568,-0.02 -4.14096,1.20999 -5.04131,3.28107 -0.3003,0.69067 -0.4549,1.43643 -0.45404,2.18943 0,1.85125 0.94006,3.57217 2.49086,4.57037 0.24345,0.15617 0.49904,0.29359 0.76425,0.40946 2.74759,1.19835 5.94852,-0.0678 7.14916,-2.82923 0.41558,-0.95557 0.54972,-2.01014 0.38697,-3.03838 -0.19656,-1.24062 -0.81428,-2.37374 -1.74867,-3.20781 -0.42813,-0.38225 -0.91417,-0.69388 -1.43981,-0.92308 -0.68694,-0.29961 -1.40219,-0.44517 -2.10741,-0.45183 z m 15.62692,2.03456 c -2.15168,4.022 -4.99313,7.57667 -8.35466,10.52446 -2.51269,2.20368 -5.31582,4.06821 -8.33921,5.53536 -1.24504,0.60419 -2.52744,1.14083 -3.84198,1.60612 0.15011,3.55347 -0.0981,7.11046 -0.7391,10.60256 0.58064,-0.14973 1.15935,-0.30967 1.73589,-0.48139 3.64646,-1.08594 7.11874,-2.59963 10.35441,-4.4905 3.01768,-1.7635 5.82954,-3.85521 8.3851,-6.23429 3.61974,-3.36977 6.72543,-7.31595 9.17229,-11.72331 0.29203,-0.52609 0.57354,-1.05703 0.84456,-1.59155 z"
+            />
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   ORIGINAL 18-PATH VRUTTA LOADER (COMMENTED FOR USER REFERENCE)
+   ============================================================================
+
+'use client';
+
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+interface LogoLoaderProps {
+  size?: number;
+  className?: string;
+  duration?: number;
   loop?: boolean;
 }
 
@@ -59,22 +396,6 @@ const PATHS: {
   { id: "p12", d: "m 1258.6619,1581.8793 c 0.1837,0.6267 0.4948,1.2082 0.9137,1.7075 1.0297,1.2276 2.6106,1.8447 4.1976,1.6383 0.2492,-0.032 0.4955,-0.084 0.7365,-0.1564 2.4953,-0.7439 3.9229,-3.3778 3.1885,-5.8832 -0.254,-0.8671 -0.7503,-1.6422 -1.4299,-2.2337 -0.82,-0.7134 -1.8609,-1.1195 -2.9463,-1.1498 -0.4975,-0.014 -0.9942,0.052 -1.4716,0.194 -2.4953,0.7438 -3.9229,3.3779 -3.1885,5.8833 z", color: "#fbbd23", strokeDash: 124.83, index: 18 },
 ];
 
-// ---------------------------------------------------------------------------
-// Absolute timing constants (seconds, before the duration multiplier):
-//
-//   Stroke draw: starts at index × 0.12 s, lasts 1.0 s
-//   Fill in:     starts at 0.8 + index × 0.1 s, lasts 0.7 s
-//   Last path fill ends at: 0.8 + 18×0.1 + 0.7 = 3.3 s
-//
-// For LOOPING we use a single unified keyframe per path.
-//   CYCLE_TOTAL = last-fill-end + hold-pause = 3.3 + 0.5 = 3.8 s
-//
-// The keyframe encodes: blank → stroke draws → fill floods → hold fully
-// drawn → snap back to blank at 100% so the next iteration starts clean.
-//
-// For ONE-SHOT we keep two separate animations + fill-mode:both (works
-// fine for a single play and preserves the eased feel).
-// ---------------------------------------------------------------------------
 const N              = PATHS.length;   // 18
 const STROKE_DUR     = 1.0;
 const STROKE_STAGGER = 0.12;
@@ -107,17 +428,17 @@ function buildStyles(uid: string, durationMul: number, loop: boolean): string {
       const c = (v: number) => Math.min(v, 99.5);
 
       css += `
-        @keyframes ll${uid}-anim-${n} {
-          0%            { stroke-dashoffset:${strokeDash}px; stroke-dasharray:${strokeDash}px; fill:transparent; }
-          ${c(sStart)}% { stroke-dashoffset:${strokeDash}px; stroke-dasharray:${strokeDash}px; fill:transparent; }
-          ${c(sEnd)}%   { stroke-dashoffset:0px;             stroke-dasharray:${strokeDash}px; fill:transparent; }
-          ${c(fStart)}% { stroke-dashoffset:0px;             stroke-dasharray:${strokeDash}px; fill:transparent; }
-          ${c(fEnd)}%   { stroke-dashoffset:0px;             stroke-dasharray:${strokeDash}px; fill:${color}; }
-          99.5%         { stroke-dashoffset:0px;             stroke-dasharray:${strokeDash}px; fill:${color}; }
-          100%          { stroke-dashoffset:${strokeDash}px; stroke-dasharray:${strokeDash}px; fill:transparent; }
+        @keyframes ll\${uid}-anim-\${n} {
+          0%            { stroke-dashoffset:\${strokeDash}px; stroke-dasharray:\${strokeDash}px; fill:transparent; }
+          \${c(sStart)}% { stroke-dashoffset:\${strokeDash}px; stroke-dasharray:\${strokeDash}px; fill:transparent; }
+          \${c(sEnd)}%   { stroke-dashoffset:0px;             stroke-dasharray:\${strokeDash}px; fill:transparent; }
+          \${c(fStart)}% { stroke-dashoffset:0px;             stroke-dasharray:\${strokeDash}px; fill:transparent; }
+          \${c(fEnd)}%   { stroke-dashoffset:0px;             stroke-dasharray:\${strokeDash}px; fill:\${color}; }
+          99.5%         { stroke-dashoffset:0px;             stroke-dasharray:\${strokeDash}px; fill:\${color}; }
+          100%          { stroke-dashoffset:\${strokeDash}px; stroke-dasharray:\${strokeDash}px; fill:transparent; }
         }
-        .ll${uid}-p${n} {
-          animation: ll${uid}-anim-${n} ${cycle.toFixed(3)}s linear 0s infinite;
+        .ll\${uid}-p\${n} {
+          animation: ll\${uid}-anim-\${n} \${cycle.toFixed(3)}s linear 0s infinite;
         }
       `;
     } else {
@@ -128,18 +449,18 @@ function buildStyles(uid: string, durationMul: number, loop: boolean): string {
       const fillDurS    = (FILL_DUR * durationMul).toFixed(3);
 
       css += `
-        @keyframes ll${uid}-stroke-${n} {
-          0%   { stroke-dashoffset:${strokeDash}px; stroke-dasharray:${strokeDash}px; }
-          100% { stroke-dashoffset:0px;             stroke-dasharray:${strokeDash}px; }
+        @keyframes ll\${uid}-stroke-\${n} {
+          0%   { stroke-dashoffset:\${strokeDash}px; stroke-dasharray:\${strokeDash}px; }
+          100% { stroke-dashoffset:0px;             stroke-dasharray:\${strokeDash}px; }
         }
-        @keyframes ll${uid}-fill-${n} {
+        @keyframes ll\${uid}-fill-\${n} {
           0%   { fill:transparent; }
-          100% { fill:${color}; }
+          100% { fill:\${color}; }
         }
-        .ll${uid}-p${n} {
+        .ll\${uid}-p\${n} {
           animation:
-            ll${uid}-stroke-${n} ${strokeDurS}s ${EASE} ${strokeDelay}s 1 both,
-            ll${uid}-fill-${n}   ${fillDurS}s   ${EASE} ${fillDelay}s   1 both;
+            ll\${uid}-stroke-\${n} \${strokeDurS}s \${EASE} \${strokeDelay}s 1 both,
+            ll\${uid}-fill-\${n}   \${fillDurS}s   \${EASE} \${fillDelay}s   1 both;
         }
       `;
     }
@@ -154,7 +475,6 @@ export function LogoLoader({
   duration  = 1,
   loop      = true,
 }: LogoLoaderProps) {
-  // Stable per-instance uid so multiple loaders never share keyframe names.
   const uid = React.useId().replace(/:/g, '');
 
   const styleContent = React.useMemo(
@@ -191,9 +511,8 @@ export function LogoLoader({
                 strokeLinejoin="round"
                 strokeMiterlimit={1}
                 fillRule="evenodd"
-                className={`ll${uid}-p${n}`}
+                className={`ll\${uid}-p\${n}`}
                 style={{
-                  // Baseline state before first animation tick.
                   strokeDasharray:  p.strokeDash,
                   strokeDashoffset: p.strokeDash,
                 }}
@@ -205,3 +524,4 @@ export function LogoLoader({
     </div>
   );
 }
+   ============================================================================ */

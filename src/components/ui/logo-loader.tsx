@@ -7,15 +7,16 @@ interface LogoLoaderProps {
   size?: number;
   className?: string;
   /**
-   * Speed multiplier. Default 1 = full cycle ≈ 2.3 s.
-   * Set > 1 to slow down, < 1 to speed up.
+   * Speed multiplier. 
+   * Default 1 = fluid continuous cascade cycle.
    */
   duration?: number;
-  /** Loop continuously (default: true). Set false for a one-shot intro. */
+  /** Loop continuously (default: true). Set false for a single progressive loop. */
   loop?: boolean;
 }
 
-const TOTAL_DURATION = 2.3; // last fill ends at 1.6s + 0.7s = 2.3s
+// 3 seconds gives each of the 4 steps breathing room to sequence beautifully across all 9 paths
+const TOTAL_DURATION = 3.0; 
 
 const PATH_LENGTHS = [
   124.6778793334961,
@@ -41,33 +42,57 @@ const PATH_COLORS = [
   'rgb(244, 132, 95)',
 ];
 
-const STROKE_DUR = 1.0;
-const STROKE_STAGGER = 0.12;
-const FILL_BASE = 0.8;
-const FILL_STAGGER = 0.1;
-const FILL_DUR = 0.7;
+const STROKE_STAGGER = 0.06; // Cascading staggered offset for a wave pattern
 
 function buildStyles(uid: string, duration: number): string {
   let css = '';
 
-  // Keyframes
   PATH_LENGTHS.forEach((len, idx) => {
     const n = idx + 1;
     const color = PATH_COLORS[idx];
 
     css += `
-      @keyframes animate-svg-stroke-${uid}-${n} {
-        0% { stroke-dashoffset: ${len}px; stroke-dasharray: ${len}px; }
-        100% { stroke-dashoffset: 0; stroke-dasharray: ${len}px; }
-      }
-      @keyframes animate-svg-fill-${uid}-${n} {
-        0% { fill: transparent; }
-        100% { fill: ${color}; }
+      @keyframes cascade-loader-${uid}-${n} {
+        /* ========================================================
+           PHASE 1 & 2: FILLING BORDERS & COLORS (0% -> 50%)
+           ======================================================== */
+        0% {
+          stroke-dashoffset: ${len}px;
+          stroke-dasharray: ${len}px;
+          fill: transparent;
+        }
+        /* Step 1: Border finishes drawing */
+        18% {
+          stroke-dashoffset: 0;
+          stroke-dasharray: ${len}px;
+          fill: transparent;
+        }
+        /* Step 2: Color fills completely in */
+        35%, 50% {
+          stroke-dashoffset: 0;
+          stroke-dasharray: ${len}px;
+          fill: ${color};
+        }
+
+        /* ========================================================
+           PHASE 3 & 4: REMOVING COLORS & BORDERS (50% -> 100%)
+           ======================================================== */
+        /* Step 3: Color drops back out first (First-In, First-Out) */
+        68% {
+          stroke-dashoffset: 0;
+          stroke-dasharray: ${len}px;
+          fill: transparent;
+        }
+        /* Step 4: Border retracts forward out of view to leave canvas clean */
+        85%, 100% {
+          stroke-dashoffset: -${len}px;
+          stroke-dasharray: ${len}px;
+          fill: transparent;
+        }
       }
     `;
   });
 
-  // Base classes and root styles
   css += `
     .arista-loader-root-${uid} {
       display: flex;
@@ -75,7 +100,6 @@ function buildStyles(uid: string, duration: number): string {
       justify-content: center;
       width: 100%;
       height: 100%;
-      background: transparent;
     }
 
     .arista-svg-wrapper-${uid} {
@@ -83,25 +107,21 @@ function buildStyles(uid: string, duration: number): string {
       height: var(--loader-size, 160px);
     }
 
-    /* Default (pre-animation): paths start invisible */
     ${Array.from({ length: 9 }, (_, i) => `.svg-elem-${uid}-${i + 1}`).join(',\n    ')} {
       fill: transparent;
+      transform-origin: center;
     }
   `;
 
-  // Animation rules
   PATH_LENGTHS.forEach((_, idx) => {
     const n = idx + 1;
-    const strokeDelay = (idx * STROKE_STAGGER * duration).toFixed(3);
-    const strokeDur = (STROKE_DUR * duration).toFixed(3);
-    const fillDelay = ((FILL_BASE + idx * FILL_STAGGER) * duration).toFixed(3);
-    const fillDur = (FILL_DUR * duration).toFixed(3);
+    const totalDur = (TOTAL_DURATION * duration).toFixed(3);
+    const delay = (idx * STROKE_STAGGER * duration).toFixed(3);
 
     css += `
       .arista-animating-${uid} .svg-elem-${uid}-${n} {
-        animation:
-          animate-svg-stroke-${uid}-${n} ${strokeDur}s cubic-bezier(0.47, 0, 0.745, 0.715) ${strokeDelay}s both,
-          animate-svg-fill-${uid}-${n}   ${fillDur}s cubic-bezier(0.47, 0, 0.745, 0.715) ${fillDelay}s both;
+        /* Linear-inflected custom cubic bezier handles multi-stage velocity transitions crisply */
+        animation: cascade-loader-${uid}-${n} ${totalDur}s cubic-bezier(0.2, 0.8, 0.2, 1) ${delay}s infinite both;
       }
     `;
   });
@@ -123,18 +143,14 @@ export function LogoLoader({
     const el = wrapperRef.current;
     if (!el) return;
 
-    // Remove class → browser drops all animations instantly
     el.classList.remove(`arista-animating-${uid}`);
-
-    // Force reflow so the browser registers the removal
     void (el as HTMLElement).offsetWidth;
-
-    // Re-add class → all animations restart from 0s
     el.classList.add(`arista-animating-${uid}`);
 
-    if (loop) {
-      // Schedule next restart right when the last fill finishes (2.3s × duration)
-      timerRef.current = setTimeout(restart, TOTAL_DURATION * duration * 1000);
+    if (!loop) {
+      timerRef.current = setTimeout(() => {
+        if (el) el.classList.remove(`arista-animating-${uid}`);
+      }, TOTAL_DURATION * duration * 1000);
     }
   };
 
@@ -143,7 +159,6 @@ export function LogoLoader({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration, loop]);
 
   const styleContent = useMemo(
@@ -175,6 +190,7 @@ export function LogoLoader({
           viewBox="0 0 131.19841 132.46527"
           version="1.1"
           xmlns="http://www.w3.org/2000/svg"
+          style={{ overflow: 'visible' }}
         >
           <g transform="translate(-529.28543,-355.42132)">
             {/* Path1 — rgb(255, 51, 75) */}
@@ -184,8 +200,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(255, 51, 75)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -201,8 +217,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(45, 107, 181)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -218,8 +234,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(18, 128, 160)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -235,8 +251,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(21, 153, 200)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -252,8 +268,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(13, 189, 181)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -269,8 +285,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(7, 200, 150)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -286,8 +302,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(93, 196, 93)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -303,8 +319,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(251, 189, 35)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,
@@ -320,8 +336,8 @@ export function LogoLoader({
               fillRule="evenodd"
               style={{
                 stroke: 'rgb(244, 132, 95)',
-                strokeWidth: 0.10583,
-                strokeLinecap: 'square',
+                strokeWidth: 0.8,
+                strokeLinecap: 'round',
                 strokeLinejoin: 'round',
                 strokeMiterlimit: 1,
                 strokeOpacity: 1,

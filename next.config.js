@@ -20,6 +20,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**',
       },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
     ],
   },
   serverExternalPackages: ['@prisma/client', 'bcryptjs'],

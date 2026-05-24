@@ -302,7 +302,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                                     src={src}
                                                     alt={post.content || 'Post image'}
                                                     fill
-                                                    enhance={true}
                                                     className="w-full h-full object-top block"
                                                     priority
                                                 />
@@ -324,7 +323,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                         src={src}
                                         alt={post.content || 'Post image'}
                                         fill
-                                        enhance={true}
                                         className="w-full h-full object-contain block"
                                         onLoadingComplete={(res) => handleImageLoad(src, res.naturalWidth, res.naturalHeight)}
                                     />

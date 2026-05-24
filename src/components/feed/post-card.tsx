@@ -159,7 +159,6 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                      src={src}
                                      alt={post.content || ''}
                                      fill
-                                     enhance={true}
                                      className={cn(
                                          "w-full h-full object-cover block transition-transform duration-700 group-hover:scale-[1.03]",
                                          isLong && "object-top"

@@ -38,8 +38,14 @@ export function getOptimizedCloudinaryUrl(
 
   const transformations: string[] = [];
 
+  const isSvg = url.toLowerCase().includes('.svg');
+  const isGif = url.toLowerCase().includes('.gif');
+
+  // If it's an SVG, returning it directly preserves its vector nature and avoids Cloudinary rasterizing it
+  if (isSvg) return url;
+
   // Automatic format and quality are core requirements
-  if (format) transformations.push(`f_${format}`);
+  if (format && !isGif) transformations.push(`f_${format}`);
   if (quality) transformations.push(`q_${quality}`);
 
   // Scaling/Cropping

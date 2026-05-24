@@ -58,6 +58,7 @@ export function CloudinaryImage({
       priority={priority}
       loading={priority ? undefined : "lazy"}
       className={cn("object-cover", className)}
+      unoptimized={true}
       {...props}
     />
   );

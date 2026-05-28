@@ -79,23 +79,23 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
           { label: 'Total Members', value: data.summary?.totalUsers || 0, icon: Users, color: 'from-blue-500 to-blue-600', shadow: 'shadow-blue-500/10' },
           { label: 'Published Posts', value: data.summary?.totalPosts || 0, icon: FileText, color: 'from-emerald-500 to-emerald-600', shadow: 'shadow-emerald-500/10' },
           { label: 'Active Events', value: data.summary?.totalEvents || 0, icon: CalendarDays, color: 'from-amber-500 to-amber-600', shadow: 'shadow-amber-500/10' },
           { label: 'Total Enrollments', value: data.summary?.totalEnrollments || 0, icon: Award, color: 'from-violet-500 to-violet-600', shadow: 'shadow-violet-500/10' },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[2.5rem] relative overflow-hidden group hover:-translate-y-1 transition-all duration-500", stat.shadow)}>
+          <Card key={stat.label} className={cn("p-5 md:p-6 lg:p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[1.5rem] md:rounded-[2rem] lg:rounded-[2.5rem] relative overflow-hidden group hover:-translate-y-1 transition-all duration-500", stat.shadow)}>
             <div className="relative z-10 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] mb-2">{stat.label}</p>
-                <p className="text-4xl font-black text-secondary-900 dark:text-white tracking-tighter">
+                <p className="text-[9px] md:text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] mb-1 md:mb-2">{stat.label}</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-secondary-900 dark:text-white tracking-tighter">
                   {stat.value.toLocaleString()}
                 </p>
               </div>
-              <div className={cn("w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white transform group-hover:rotate-12 transition-transform duration-500", stat.color)}>
-                <stat.icon className="w-6 h-6" />
+              <div className={cn("w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br flex items-center justify-center text-white transform group-hover:rotate-12 transition-transform duration-500 shrink-0", stat.color)}>
+                <stat.icon className="w-5 h-5 md:w-6 h-6" />
               </div>
             </div>
             {/* Background Decorative Element */}
@@ -104,10 +104,10 @@ export default function AdminAnalyticsPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
         
         {/* Growth Trend Chart */}
-        <Card className="lg:col-span-1 xl:col-span-2 p-5 sm:p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[2rem] sm:rounded-[3rem]">
+        <Card className="xl:col-span-2 p-5 sm:p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[2rem] sm:rounded-[3rem]">
           <div className="flex items-center justify-between mb-10">
             <div>
               <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter leading-none mb-2">Activity Trend</h3>
@@ -180,7 +180,7 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
 
-          <div className="mt-6 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 sm:gap-4">
+          <div className="mt-6 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-3 sm:gap-4">
             {userDistData.map((entry, index) => (
               <div key={entry.name} className="flex items-center justify-between p-4 bg-secondary-50/50 dark:bg-slate-800/40 rounded-2xl transition-all hover:scale-[1.02]">
                 <div className="flex items-center gap-3">
@@ -195,7 +195,7 @@ export default function AdminAnalyticsPage() {
 
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         
         {/* Top Events */}
         <Card className="p-8 border-none bg-white dark:bg-slate-900 shadow-xl rounded-[3rem]">

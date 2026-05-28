@@ -80,7 +80,7 @@ export const adminService = {
         if (params?.page) query.append('page', params.page.toString());
         if (params?.limit) query.append('limit', params.limit.toString());
         const url = `/api/admin/verification-requests${query.toString() ? '?' + query.toString() : ''}`;
-        return apiClient.get<{ requests: any[]; total: number; page: number; pages: number }>(url);
+        return apiClient.get<{ requests: any[]; total: number; page: number; pages: number; stats?: { avgResponseTime: number; successRate: number } }>(url);
     },
 
     getReports: (params?: { page?: number; limit?: number; search?: string; status?: string }) => {

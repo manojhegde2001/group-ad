@@ -26,10 +26,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { AttendanceTicket } from '@/components/events/attendance-ticket';
 import { QRScannerModal } from '@/components/events/qr-scanner-modal';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { useState } from 'react';
+import ShareInviteModal from '@/components/events/ShareInviteModal';
+import AttendeesManager from '@/components/events/AttendeesManager';
+import { downloadICSFile } from '@/lib/calendar-export';
 
 export default function EventDetailClient({ slug }: { slug: string }) {
     const { user: currentUser } = useAuth();
     const { data, isLoading, error, refetch } = useEvent(slug);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     if (isLoading) {
         return (
@@ -98,6 +103,9 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                     <div className="lg:col-span-2 space-y-12">
                         {isPast && isEnrolled && (
                             <AttendeeConnectBanner eventId={event.id} />
+                        )}
+                        {(currentUser?.id === event.organizerId || (currentUser as any)?.userType === 'ADMIN') && (
+                            <AttendeesManager eventId={event.id} />
                         )}
                         <section>
                             <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4 flex items-center gap-2">
@@ -203,8 +211,9 @@ export default function EventDetailClient({ slug }: { slug: string }) {
 
                                     <EnrollmentButton
                                         eventId={event.id}
-                                        isEnrolledInitial={!!isEnrolled}
+                                        enrollmentStatus={userEnrollment?.status || null}
                                         isPast={isPast}
+                                        isFull={event.maxAttendees !== null && event.currentAttendees >= event.maxAttendees}
                                     />
 
                                     <div className="pt-4 flex flex-col gap-3">
@@ -225,13 +234,25 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                                     </div>
 
                                     <div className="mt-6 flex items-center justify-center gap-8 border-t border-secondary-50 dark:border-secondary-800 pt-6">
-                                        <button className="flex flex-col items-center gap-1 group">
+                                        <button 
+                                            onClick={() => setIsShareModalOpen(true)}
+                                            className="flex flex-col items-center gap-1 group"
+                                        >
                                             <div className="w-10 h-10 rounded-full border border-secondary-100 dark:border-secondary-800 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-all font-semibold">
                                                 <Share2 className="w-4 h-4 text-secondary-400 group-hover:text-primary-500" />
                                             </div>
                                             <span className="text-[10px] font-bold text-secondary-400 group-hover:text-secondary-900 dark:group-hover:text-white uppercase tracking-tighter transition-colors">Share</span>
                                         </button>
-                                        <button className="flex flex-col items-center gap-1 group">
+                                        <button 
+                                            onClick={() => downloadICSFile({
+                                                title: event.title,
+                                                description: event.description,
+                                                startDate: new Date(event.startDate),
+                                                endDate: new Date(event.endDate),
+                                                location: event.isOnline ? (event.meetingLink || 'Online platform') : (event.venue || 'TBA')
+                                            })}
+                                            className="flex flex-col items-center gap-1 group"
+                                        >
                                             <div className="w-10 h-10 rounded-full border border-secondary-100 dark:border-secondary-800 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-all font-semibold">
                                                 <ExternalLink className="w-4 h-4 text-secondary-400 group-hover:text-primary-500" />
                                             </div>
@@ -255,6 +276,13 @@ export default function EventDetailClient({ slug }: { slug: string }) {
 
                 </div>
             </div>
+            <ShareInviteModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                eventId={event.id}
+                eventName={event.title}
+                eventSlug={event.slug}
+            />
         </div>
     );
 }

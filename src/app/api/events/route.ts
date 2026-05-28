@@ -91,8 +91,28 @@ export async function GET(request: NextRequest) {
             prisma.event.count({ where }),
         ]);
 
+        let userEnrollmentsMap: Record<string, string> = {};
+        if (session?.user?.id && events.length > 0) {
+            const enrollments = await prisma.eventEnrollment.findMany({
+                where: {
+                    userId: session.user.id,
+                    eventId: { in: events.map(e => e.id) },
+                },
+                select: { eventId: true, status: true },
+            });
+            enrollments.forEach((en) => {
+                userEnrollmentsMap[en.eventId] = en.status;
+            });
+        }
+
+        const eventsWithEnrollment = events.map((event) => ({
+            ...event,
+            isEnrolled: !!userEnrollmentsMap[event.id],
+            enrollmentStatus: userEnrollmentsMap[event.id] || null,
+        }));
+
         return NextResponse.json({
-            events,
+            events: eventsWithEnrollment,
             pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
         });
     } catch (error) {

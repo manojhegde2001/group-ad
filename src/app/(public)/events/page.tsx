@@ -12,22 +12,45 @@ import { useCreateEvent } from '@/hooks/use-feed';
 import { Button } from '@/components/ui/button';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
-import { useEvents } from '@/hooks/use-api/use-events';
+import { useEvents, useMyEvents } from '@/hooks/use-api/use-events';
 
 export default function EventsPage() {
   const [search, setSearch] = useState('');
-  const [upcoming, setUpcoming] = useState(true);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'all' | 'my' | 'attended'>('upcoming');
   const [searchInput, setSearchInput] = useState('');
   const { user } = useAuth();
   const { open: openCreateEvent } = useCreateEvent();
 
-  const { data, isLoading } = useEvents({
+  const { data, isLoading: loadingEvents } = useEvents({
     search,
-    upcoming: upcoming ? 'true' : '',
+    upcoming: activeTab === 'upcoming' ? 'true' : '',
     status: 'PUBLISHED',
   });
 
-  const events: any[] = data?.events || [];
+  const { data: myData, isLoading: loadingMy } = useMyEvents();
+
+  const isLoading = activeTab === 'my' || activeTab === 'attended' ? loadingMy : loadingEvents;
+
+  let events: any[] = [];
+  if (activeTab === 'my') {
+    events = (myData?.enrollments || []).map((en: any) => ({
+      ...en.event,
+      enrollmentStatus: en.status,
+      isEnrolled: true,
+      attended: en.attended,
+    })).filter((e: any) => e.title.toLowerCase().includes(search.toLowerCase()));
+  } else if (activeTab === 'attended') {
+    events = (myData?.enrollments || [])
+      .filter((en: any) => en.attended)
+      .map((en: any) => ({
+        ...en.event,
+        enrollmentStatus: en.status,
+        isEnrolled: true,
+        attended: en.attended,
+      })).filter((e: any) => e.title.toLowerCase().includes(search.toLowerCase()));
+  } else {
+    events = data?.events || [];
+  }
 
   if (user && user.userType !== 'ADMIN' && user.userType !== 'BUSINESS') {
     return (
@@ -97,10 +120,10 @@ export default function EventsPage() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto scrollbar-none">
           <Filter className="w-4 h-4 text-secondary-400 shrink-0" />
           <button
-            onClick={() => setUpcoming(true)}
+            onClick={() => setActiveTab('upcoming')}
             className={cn(
               'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-              upcoming
+              activeTab === 'upcoming'
                 ? 'bg-primary-500 text-white shadow-sm'
                 : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
             )}
@@ -108,16 +131,42 @@ export default function EventsPage() {
             Upcoming
           </button>
           <button
-            onClick={() => setUpcoming(false)}
+            onClick={() => setActiveTab('all')}
             className={cn(
               'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-              !upcoming
+              activeTab === 'all'
                 ? 'bg-primary-500 text-white shadow-sm'
                 : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
             )}
           >
             All Events
           </button>
+          {user && (
+            <>
+              <button
+                onClick={() => setActiveTab('my')}
+                className={cn(
+                  'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
+                  activeTab === 'my'
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
+                )}
+              >
+                My Registrations
+              </button>
+              <button
+                onClick={() => setActiveTab('attended')}
+                className={cn(
+                  'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
+                  activeTab === 'attended'
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
+                )}
+              >
+                Attended History
+              </button>
+            </>
+          )}
           <Link
             href="/events/calendar"
             className="ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-secondary-100 dark:bg-secondary-800 text-xs font-bold text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 transition-all whitespace-nowrap"
@@ -126,7 +175,7 @@ export default function EventsPage() {
             Calendar View
           </Link>
 
-          {(user?.userType === 'ADMIN' || (user?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
+          {user?.userType === 'ADMIN' && (
             <Button
               onClick={openCreateEvent}
               variant="solid"
@@ -202,15 +251,30 @@ function EventCard({ event }: { event: any }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex gap-2">
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
           {event.isOnline && (
-            <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
               <Video className="w-2.5 h-2.5" /> Online
             </span>
           )}
           {ended && (
-            <span className="inline-flex items-center bg-secondary-700/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center bg-secondary-700/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
               Ended
+            </span>
+          )}
+          {event.enrollmentStatus === 'APPROVED' && !event.attended && (
+            <span className="inline-flex items-center bg-green-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Approved
+            </span>
+          )}
+          {event.enrollmentStatus === 'PENDING' && (
+            <span className="inline-flex items-center bg-amber-500/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Waitlist
+            </span>
+          )}
+          {event.attended && (
+            <span className="inline-flex items-center bg-indigo-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              ✓ Attended
             </span>
           )}
         </div>

@@ -25,4 +25,6 @@ export const eventService = {
     getCoAttendees: (eventId: string) => apiClient.get<{ coAttendees: any[] }>(`/api/events/${eventId}/co-attendees`),
     checkIn: (eventId: string, token: string) => apiClient.post<any>(`/api/events/${eventId}/check-in`, { token }),
     getCheckInToken: (eventId: string) => apiClient.get<{ token: string }>(`/api/events/${eventId}/check-in/token`),
+    inviteConnections: (eventId: string, userIds: string[]) => apiClient.post<any>(`/api/events/${eventId}/invite`, { userIds }),
+    getMyEvents: () => apiClient.get<{ enrollments: any[] }>('/api/events/my'),
 };

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
-import { sendMail, enrollmentConfirmationEmail, getAppBaseUrl } from '@/lib/mailer';
+import { sendMail, enrollmentConfirmationEmail, enrollmentApprovalEmail, getAppBaseUrl } from '@/lib/mailer';
 import { socketService } from '@/lib/socket-service';
 
 export async function POST(
@@ -41,6 +41,31 @@ export async function POST(
 
         if (existing) {
             return NextResponse.json({ error: 'Already enrolled' }, { status: 409 });
+        }
+
+        // Check targeted restrictions
+        if (event.targetUserTypes && event.targetUserTypes.length > 0) {
+            const userDb = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { userType: true }
+            });
+            if (userDb && !event.targetUserTypes.includes(userDb.userType)) {
+                return NextResponse.json({
+                    error: `This event is restricted. It is only open to: ${event.targetUserTypes.join(', ')}`
+                }, { status: 403 });
+            }
+        }
+
+        if (event.targetCategoryIds && event.targetCategoryIds.length > 0) {
+            const userDb = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { categoryId: true }
+            });
+            if (userDb && (!userDb.categoryId || !event.targetCategoryIds.includes(userDb.categoryId))) {
+                return NextResponse.json({
+                    error: `This event is restricted to specific professional categories.`
+                }, { status: 403 });
+            }
         }
 
         // Check overall capacity
@@ -84,13 +109,23 @@ export async function POST(
 
         const baseUrl = getAppBaseUrl(request);
 
+        const enrollmentStatus = isFull ? 'PENDING' : 'APPROVED';
+
         const enrollment = await prisma.eventEnrollment.create({
             data: {
                 eventId,
                 userId: session.user.id,
-                status: 'PENDING',
+                status: enrollmentStatus,
+                approvedAt: enrollmentStatus === 'APPROVED' ? new Date() : null,
             },
         });
+
+        if (enrollmentStatus === 'APPROVED') {
+            await prisma.event.update({
+                where: { id: eventId },
+                data: { currentAttendees: { increment: 1 } },
+            });
+        }
 
         // In-app notification to admin about new enrollment
         const user = await prisma.user.findUnique({
@@ -181,6 +216,7 @@ export async function DELETE(
 
         const { id: idOrSlug } = await params;
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
+        const baseUrl = getAppBaseUrl(request);
 
         const enrollment = await prisma.eventEnrollment.findFirst({
             where: {
@@ -192,7 +228,7 @@ export async function DELETE(
                     ],
                 }
             },
-            include: { event: { select: { id: true, title: true, organizerId: true } } }
+            include: { event: { select: { id: true, title: true, organizerId: true, startDate: true, endDate: true, meetingLink: true } } }
         });
 
         if (!enrollment) {
@@ -201,12 +237,67 @@ export async function DELETE(
 
         const eventId = enrollment.event.id;
 
-        // Decrement attendee count if was approved
+        // Waitlist promotion logic: if the user who is withdrawing was approved, promote the next waitlisted user
+        let promotedUser = null;
         if (enrollment.status === 'APPROVED') {
-            await prisma.event.update({
-                where: { id: eventId },
-                data: { currentAttendees: { decrement: 1 } },
+            const nextInLine = await prisma.eventEnrollment.findFirst({
+                where: { eventId, status: 'PENDING' },
+                orderBy: { createdAt: 'asc' },
+                include: { user: { select: { id: true, name: true, email: true } } }
             });
+
+            if (nextInLine) {
+                // Promote waitlisted attendee to APPROVED
+                await prisma.eventEnrollment.update({
+                    where: { id: nextInLine.id },
+                    data: {
+                        status: 'APPROVED',
+                        approvedAt: new Date(),
+                        approvedBy: session.user.id
+                    }
+                });
+
+                promotedUser = nextInLine;
+
+                // Notify promoted user in-app
+                await prisma.notification.create({
+                    data: {
+                        userId: nextInLine.userId,
+                        type: 'EVENT_APPROVED' as any,
+                        title: 'Spot Reserved from Waitlist!',
+                        message: `Congratulations! A spot opened up, and you have been promoted from the waitlist for "${enrollment.event.title}".`,
+                        entityType: 'event',
+                        entityId: eventId,
+                    }
+                });
+
+                // Emit real-time notification
+                socketService.notifyUser(nextInLine.userId, {
+                    type: 'EVENT_APPROVED',
+                    message: `Congratulations! A spot opened up, and you have been promoted from the waitlist for "${enrollment.event.title}".`,
+                    data: { eventId }
+                });
+
+                // Email confirmation to promoted user
+                if (nextInLine.user.email) {
+                    sendMail({
+                        to: nextInLine.user.email,
+                        subject: `[Vrutta] Spot Secured: ${enrollment.event.title}`,
+                        html: enrollmentApprovalEmail(
+                            enrollment.event.title,
+                            formatEventDate(enrollment.event.startDate || new Date(), enrollment.event.endDate || new Date()),
+                            enrollment.event.meetingLink || '',
+                            baseUrl
+                        ),
+                    });
+                }
+            } else {
+                // No waitlist: Decrement attendee count
+                await prisma.event.update({
+                    where: { id: eventId },
+                    data: { currentAttendees: { decrement: 1 } },
+                });
+            }
         }
 
         await prisma.eventEnrollment.delete({

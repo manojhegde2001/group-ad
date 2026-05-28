@@ -17,19 +17,22 @@ export async function GET(
             select: { userType: true },
         });
 
-        if (!dbUser || dbUser.userType !== 'ADMIN') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-        }
-
         const { id: eventId } = await params;
 
         const event = await prisma.event.findUnique({
             where: { id: eventId },
-            select: { id: true, title: true, endDate: true },
+            select: { id: true, title: true, endDate: true, organizerId: true },
         });
 
         if (!event) {
             return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        }
+
+        const isOrganizer = event.organizerId === session.user.id;
+        const isAdmin = dbUser?.userType === 'ADMIN';
+
+        if (!isOrganizer && !isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized: Organizer or Admin access required' }, { status: 403 });
         }
 
         const enrollments = await prisma.eventEnrollment.findMany({

@@ -63,7 +63,22 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        return NextResponse.json({ message: 'Reminders sent', emailsSent });
+        // Auto-expiry: Transition past events to COMPLETED
+        const expiredResult = await prisma.event.updateMany({
+            where: {
+                status: 'PUBLISHED',
+                endDate: { lt: now },
+            },
+            data: {
+                status: 'COMPLETED',
+            },
+        });
+
+        return NextResponse.json({ 
+            message: 'Reminders sent and past events expired', 
+            emailsSent,
+            expiredCount: expiredResult.count
+        });
     } catch (error) {
         console.error('Error sending reminders:', error);
         return NextResponse.json({ error: 'Failed to send reminders' }, { status: 500 });

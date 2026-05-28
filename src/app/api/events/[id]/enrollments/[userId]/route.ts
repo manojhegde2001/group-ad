@@ -20,18 +20,30 @@ export async function PATCH(
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const adminUser = await prisma.user.findUnique({
+        const dbUser = await prisma.user.findUnique({
             where: { id: session.user.id },
             select: { userType: true },
         });
 
-        if (!adminUser || adminUser.userType !== 'ADMIN') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-        }
-
         const { id: eventId, userId } = await params;
         const body = await request.json();
         const { action, adminNote } = schema.parse(body);
+
+        const event = await prisma.event.findUnique({
+            where: { id: eventId },
+            select: { id: true, title: true, startDate: true, endDate: true, meetingLink: true, maxAttendees: true, currentAttendees: true, organizerId: true },
+        });
+
+        if (!event) {
+            return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        }
+
+        const isOrganizer = event.organizerId === session.user.id;
+        const isAdmin = dbUser?.userType === 'ADMIN';
+
+        if (!isOrganizer && !isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized: Organizer or Admin access required' }, { status: 403 });
+        }
 
         const enrollment = await prisma.eventEnrollment.findUnique({
             where: { eventId_userId: { eventId, userId } },
@@ -39,15 +51,6 @@ export async function PATCH(
 
         if (!enrollment) {
             return NextResponse.json({ error: 'Enrollment not found' }, { status: 404 });
-        }
-
-        const event = await prisma.event.findUnique({
-            where: { id: eventId },
-            select: { title: true, startDate: true, endDate: true, meetingLink: true, maxAttendees: true, currentAttendees: true },
-        });
-
-        if (!event) {
-            return NextResponse.json({ error: 'Event not found' }, { status: 404 });
         }
 
         const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';

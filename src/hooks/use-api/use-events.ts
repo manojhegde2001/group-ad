@@ -137,3 +137,23 @@ export const useCheckInToken = (eventId: string, options: any = {}) => {
         ...options,
     });
 };
+
+export const useInviteConnections = () => {
+    return useMutation({
+        mutationFn: ({ eventId, userIds }: { eventId: string; userIds: string[] }) => 
+            eventService.inviteConnections(eventId, userIds),
+        onSuccess: () => {
+            toast.success('Invitations sent successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to send invitations');
+        }
+    });
+};
+
+export const useMyEvents = () => {
+    return useQuery<{ enrollments: any[] }>({
+        queryKey: ['events', 'my'],
+        queryFn: () => eventService.getMyEvents(),
+    });
+};

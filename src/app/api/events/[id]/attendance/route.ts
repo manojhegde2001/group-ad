@@ -17,15 +17,6 @@ export async function POST(
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const dbUser = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: { userType: true },
-        });
-
-        if (!dbUser || dbUser.userType !== 'ADMIN') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-        }
-
         const { id: eventId } = await params;
         const body = await request.json();
         const { attendedUserIds } = attendanceSchema.parse(body);
@@ -37,6 +28,18 @@ export async function POST(
 
         if (!event) {
             return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        }
+
+        const dbUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { userType: true },
+        });
+
+        const isOrganizer = event.organizerId === session.user.id;
+        const isAdmin = dbUser?.userType === 'ADMIN';
+
+        if (!isOrganizer && !isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized: Organizer or Admin access required' }, { status: 403 });
         }
 
         // Fetch current enrollments to see who is newly attended

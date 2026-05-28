@@ -171,12 +171,12 @@ export default function AdminDashboardPage() {
           <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Management Commands</h2>
           <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800 mx-4" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
           {adminLinks.map(({ href, label, icon: Icon, desc, danger, accent }) => (
             <Link
               key={href}
               href={getAdminHref(href)}
-              className={`group p-6 rounded-[2.25rem] border transition-all duration-500 hover:-translate-y-1 shadow-sm hover:shadow-xl flex flex-col items-center text-center gap-4 ${
+              className={`group p-5 sm:p-6 rounded-[2.25rem] border transition-all duration-500 hover:-translate-y-1 shadow-sm hover:shadow-xl flex flex-col items-center text-center gap-4 ${
                 accent
                   ? 'bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/30 hover:bg-primary/10 hover:border-primary/40'
                   : danger
@@ -205,7 +205,7 @@ export default function AdminDashboardPage() {
       {/* Activity Feed Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Recent Activity */}
-        <div className="xl:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="xl:col-span-2 grid grid-cols-1 2xl:grid-cols-2 gap-8">
            {/* Recent Users */}
            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[3rem] p-8 shadow-sm">
              <div className="flex items-center justify-between mb-8">
@@ -286,7 +286,7 @@ export default function AdminDashboardPage() {
                      <Avatar src={post.user.avatar} name={post.user.name} className="w-11 h-11 shrink-0 rounded-2xl shadow-sm border-2 border-transparent group-hover:border-primary/20 transition-all duration-500" />
                      <div className="flex-1 min-w-0">
                        <p className="text-sm text-slate-700 dark:text-slate-300 font-bold truncate leading-tight italic tracking-tight mb-1 opacity-90 transition-opacity group-hover:opacity-100">" {post.content} "</p>
-                       <p className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">Post by <span className="text-slate-600 dark:text-slate-400 underline decoration-primary/30">{post.user.name}</span></p>
+                       <p className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest truncate">Post by <span className="text-slate-600 dark:text-slate-400 underline decoration-primary/30">{post.user.name}</span></p>
                      </div>
                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800/40 px-2 py-1 rounded-xl shrink-0 group-hover:text-primary transition-colors">
                        <ArrowUpRight className="w-3.5 h-3.5" /> {post._count.postLikes}
@@ -312,7 +312,7 @@ export default function AdminDashboardPage() {
                  <p className="text-base font-black text-amber-900 dark:text-amber-200 uppercase tracking-tighter leading-tight">
                    {(stats?.stats?.pendingUpgradeRequests ?? 0)} Businesses
                  </p>
-                 <p className="text-[10px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-widest mt-1 opacity-70">Awaiting Verification</p>
+                 <p className="text-[10px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-widest mt-1 opacity-70 truncate">Awaiting Verification</p>
                </div>
                <Link href={getAdminHref('/businesses')} className="h-12 w-12 flex items-center justify-center bg-amber-600 dark:bg-amber-500 text-white rounded-[1.25rem] hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20 active:scale-90">
                  <ArrowRight className="w-6 h-6" />
@@ -329,7 +329,7 @@ export default function AdminDashboardPage() {
                  <p className="text-base font-black text-red-900 dark:text-red-200 uppercase tracking-tighter leading-tight">
                    {(stats?.stats?.pendingReports ?? 0)} Active Reports
                  </p>
-                 <p className="text-[10px] text-red-600 dark:text-red-400 font-black uppercase tracking-widest mt-1 opacity-70">Moderation Required</p>
+                 <p className="text-[10px] text-red-600 dark:text-red-400 font-black uppercase tracking-widest mt-1 opacity-70 truncate">Moderation Required</p>
                </div>
                <Link href={getAdminHref('/reports')} className="h-12 w-12 flex items-center justify-center bg-red-600 dark:bg-red-500 text-white rounded-[1.25rem] hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 active:scale-90">
                  <ArrowRight className="w-6 h-6" />

@@ -4,18 +4,22 @@ import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
 import { sendMail, enrollmentConfirmationEmail, enrollmentApprovalEmail, getAppBaseUrl } from '@/lib/mailer';
 import { socketService } from '@/lib/socket-service';
+import { logger } from '@/lib/logger';
 
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    let idOrSlug = '';
     try {
         const session = await auth();
         if (!session?.user?.id) {
+            logger.warn('Enrollment rejected: unauthenticated request');
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const { id: idOrSlug } = await params;
+        const resolvedParams = await params;
+        idOrSlug = resolvedParams.id;
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
 
         const event = await prisma.event.findFirst({
@@ -29,6 +33,7 @@ export async function POST(
         });
 
         if (!event || event.status !== 'PUBLISHED') {
+            logger.warn('Enrollment rejected: event not found or not published', { idOrSlug });
             return NextResponse.json({ error: 'Event not found' }, { status: 404 });
         }
 
@@ -40,6 +45,7 @@ export async function POST(
         });
 
         if (existing) {
+            logger.warn('Enrollment rejected: already enrolled', { eventId, userId: session.user.id });
             return NextResponse.json({ error: 'Already enrolled' }, { status: 409 });
         }
 
@@ -50,6 +56,12 @@ export async function POST(
                 select: { userType: true }
             });
             if (userDb && !event.targetUserTypes.includes(userDb.userType)) {
+                logger.warn('Enrollment rejected: userType target mismatch', {
+                    eventId,
+                    userId: session.user.id,
+                    userType: userDb.userType,
+                    allowed: event.targetUserTypes
+                });
                 return NextResponse.json({
                     error: `This event is restricted. It is only open to: ${event.targetUserTypes.join(', ')}`
                 }, { status: 403 });
@@ -62,6 +74,12 @@ export async function POST(
                 select: { categoryId: true }
             });
             if (userDb && (!userDb.categoryId || !event.targetCategoryIds.includes(userDb.categoryId))) {
+                logger.warn('Enrollment rejected: professional category restriction', {
+                    eventId,
+                    userId: session.user.id,
+                    categoryId: userDb.categoryId,
+                    allowed: event.targetCategoryIds
+                });
                 return NextResponse.json({
                     error: `This event is restricted to specific professional categories.`
                 }, { status: 403 });
@@ -95,6 +113,13 @@ export async function POST(
                     });
 
                     if (categoryEnrollmentCount >= limitEntry.limit) {
+                        logger.warn('Enrollment rejected: category-specific spot limit reached', {
+                            eventId,
+                            userId: session.user.id,
+                            categoryId: userCategoryId,
+                            limit: limitEntry.limit,
+                            currentCount: categoryEnrollmentCount
+                        });
                         return NextResponse.json(
                             {
                                 error: `The spot limit for "${limitEntry.categoryName}" participants has been reached for this event.`,
@@ -187,8 +212,17 @@ export async function POST(
                 to: user.email,
                 subject: `[Vrutta] Enrollment received: ${event.title}`,
                 html: enrollmentConfirmationEmail(event.title, formatEventDate(event.startDate, event.endDate), baseUrl),
+            }).catch(mailErr => {
+                logger.error('Failed to send enrollment email notification', mailErr, { eventId, userId: session.user.id });
             });
         }
+
+        logger.info(isFull ? 'User added to waitlist successfully' : 'User enrolled successfully', {
+            eventId,
+            userId: session.user.id,
+            status: enrollmentStatus,
+            enrollmentId: enrollment.id
+        });
 
         return NextResponse.json(
             {
@@ -199,7 +233,7 @@ export async function POST(
             { status: 201 }
         );
     } catch (error) {
-        console.error('Error enrolling:', error);
+        logger.error('Error enrolling user in event', error, { idOrSlug });
         return NextResponse.json({ error: 'Failed to enroll' }, { status: 500 });
     }
 }
@@ -208,13 +242,16 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    let idOrSlug = '';
     try {
         const session = await auth();
         if (!session?.user?.id) {
+            logger.warn('Enrollment withdrawal rejected: unauthenticated request');
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const { id: idOrSlug } = await params;
+        const resolvedParams = await params;
+        idOrSlug = resolvedParams.id;
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
         const baseUrl = getAppBaseUrl(request);
 
@@ -232,6 +269,7 @@ export async function DELETE(
         });
 
         if (!enrollment) {
+            logger.warn('Enrollment withdrawal rejected: enrollment record not found', { idOrSlug, userId: session.user.id });
             return NextResponse.json({ error: 'Enrollment not found' }, { status: 404 });
         }
 
@@ -289,8 +327,17 @@ export async function DELETE(
                             enrollment.event.meetingLink || '',
                             baseUrl
                         ),
+                    }).catch(mailErr => {
+                        logger.error('Failed to send waitlist promotion email notification', mailErr, { eventId, userId: nextInLine.userId });
                     });
                 }
+
+                logger.info('Waitlist promotion triggered during withdrawal', {
+                    eventId,
+                    withdrawnUserId: session.user.id,
+                    promotedUserId: nextInLine.userId,
+                    promotedEnrollmentId: nextInLine.id
+                });
             } else {
                 // No waitlist: Decrement attendee count
                 await prisma.event.update({
@@ -350,9 +397,15 @@ export async function DELETE(
             });
         }
 
+        logger.info('User withdrew from event successfully', {
+            eventId,
+            userId: session.user.id,
+            enrollmentId: enrollment.id
+        });
+
         return NextResponse.json({ message: 'Enrollment cancelled' });
     } catch (error) {
-        console.error('Error cancelling enrollment:', error);
+        logger.error('Error cancelling/withdrawing enrollment', error, { idOrSlug });
         return NextResponse.json({ error: 'Failed to cancel enrollment' }, { status: 500 });
     }
 }

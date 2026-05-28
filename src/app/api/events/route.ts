@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/event-utils';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const createEventSchema = z.object({
     title: z.string().min(3).max(200),
@@ -111,20 +112,30 @@ export async function GET(request: NextRequest) {
             enrollmentStatus: userEnrollmentsMap[event.id] || null,
         }));
 
+        logger.debug('Fetched events list successfully', {
+            userId: session?.user?.id,
+            count: events.length,
+            totalCount: total,
+            page,
+            searchQuery: search || undefined
+        });
+
         return NextResponse.json({
             events: eventsWithEnrollment,
             pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
         });
     } catch (error) {
-        console.error('Error fetching events:', error);
+        logger.error('Error fetching events list', error);
         return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
     }
 }
 
 export async function POST(request: NextRequest) {
+    let session: any = null;
     try {
-        const session = await auth();
+        session = await auth();
         if (!session?.user?.id) {
+            logger.warn('Event creation rejected: unauthenticated request');
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
 
@@ -134,6 +145,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!dbUser || dbUser.userType !== 'ADMIN') {
+            logger.warn('Event creation rejected: admin access required', { userId: session.user.id, userType: dbUser?.userType });
             return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
@@ -173,12 +185,21 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        logger.info('Event created successfully', {
+            eventId: event.id,
+            title: event.title,
+            organizerId: event.organizerId,
+            status: event.status,
+            maxAttendees: event.maxAttendees
+        });
+
         return NextResponse.json({ message: 'Event created', event }, { status: 201 });
     } catch (error: any) {
-        console.error('Error creating event:', error);
         if (error.name === 'ZodError') {
+            logger.warn('Event creation input validation failed', { errors: error.errors });
             return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
         }
+        logger.error('Error creating event', error, { userId: session?.user?.id });
         return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
     }
 }

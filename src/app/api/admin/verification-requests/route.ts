@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id || (session.user as any).userType !== 'ADMIN') {
+      logger.warn('Unauthorized verification requests retrieval attempt', { userId: session?.user?.id });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -70,6 +72,14 @@ export async function GET(request: NextRequest) {
 
     const successRate = totalReviewedCount > 0 ? (approvedCount / totalReviewedCount) * 100 : 98.2;
 
+    logger.info('Admin retrieved verification requests and analytics successfully', {
+      adminUserId: session.user.id,
+      requestsCount: requests.length,
+      totalPending: total,
+      avgResponseTimeHours: parseFloat(avgResponseTimeHours.toFixed(1)),
+      successRate: parseFloat(successRate.toFixed(1))
+    });
+
     return NextResponse.json({ 
       requests,
       total,
@@ -81,7 +91,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('GET /api/admin/verification-requests error:', error);
+    logger.error('GET /api/admin/verification-requests failed', error);
     return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
   }
 }

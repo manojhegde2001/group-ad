@@ -9,6 +9,7 @@ import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from '@/hooks/use-api/use-notifications';
 import { Popover } from 'rizzui';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
     CONNECTION_REQUEST: '👤',
@@ -33,6 +34,7 @@ interface NotificationBellProps {
 
 export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: NotificationBellProps) {
     const { isAuthenticated } = useAuth();
+    const router = useRouter();
     const [internalOpen, setInternalOpen] = useState(false);
 
 
@@ -155,11 +157,21 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                         key={notif.id}
                                         role="button"
                                         tabIndex={0}
-                                        onClick={() => !notif.isRead && markReadMutation.mutate(notif.id)}
+                                        onClick={() => {
+                                            !notif.isRead && markReadMutation.mutate(notif.id);
+                                            if (notif.type === 'MEETING_INVITE') {
+                                                router.push('/events');
+                                                setOpen(false);
+                                            }
+                                        }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
                                                 !notif.isRead && markReadMutation.mutate(notif.id);
+                                                if (notif.type === 'MEETING_INVITE') {
+                                                    router.push('/events');
+                                                    setOpen(false);
+                                                }
                                             }
                                         }}
                                         className={cn(

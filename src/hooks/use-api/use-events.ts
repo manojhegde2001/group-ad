@@ -2,10 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventService } from '@/services/api/events';
 import toast from 'react-hot-toast';
 
-export const useEvents = (params: Record<string, any> = {}) => {
-    return useQuery({
+export const useEvents = (params: Record<string, any> = {}, options: any = {}) => {
+    return useQuery<{ events: any[] }>({
         queryKey: ['events', params],
         queryFn: () => eventService.getEvents(params),
+        ...options,
     });
 };
 
@@ -151,9 +152,10 @@ export const useInviteConnections = () => {
     });
 };
 
-export const useMyEvents = () => {
+export const useMyEvents = (options: any = {}) => {
     return useQuery<{ enrollments: any[] }>({
         queryKey: ['events', 'my'],
         queryFn: () => eventService.getMyEvents(),
+        ...options,
     });
 };

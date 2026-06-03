@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { notificationService } from '@/services/notification-service';
+import { sendMail, meetingInviteEmail, getAppBaseUrl } from '@/lib/mailer';
+import { format } from 'date-fns';
 
 const createMeetingSchema = z.object({
     receiverId: z.string().min(1, 'Receiver is required'),
@@ -27,14 +29,20 @@ export async function GET(request: NextRequest) {
         }
 
         const userId = session.user.id;
+        const take = Number(request.nextUrl.searchParams.get('take')) || 50;
+        const skip = Number(request.nextUrl.searchParams.get('skip')) || 0;
+
+        const whereClause = dbUser.userType === 'ADMIN' ? {} : {
+            OR: [
+                { requesterId: userId },
+                { receiverId: userId },
+            ],
+        };
 
         const meetings = await prisma.meeting.findMany({
-            where: {
-                OR: [
-                    { requesterId: userId },
-                    { receiverId: userId },
-                ],
-            },
+            where: whereClause,
+            take,
+            skip,
             orderBy: { proposedTime: 'asc' },
         });
 
@@ -89,6 +97,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'You cannot request a meeting with yourself' }, { status: 400 });
         }
 
+        // Server-side: proposed time must be in the future
+        if (new Date(data.proposedTime) <= new Date()) {
+            return NextResponse.json({ error: 'Proposed meeting time must be in the future' }, { status: 400 });
+        }
+
         // Validate receiver exists and is BUSINESS
         const receiver = await prisma.user.findUnique({
             where: { id: data.receiverId },
@@ -138,6 +151,32 @@ export async function POST(request: NextRequest) {
             entityId: meeting.id,
             senderId: session.user.id,
         });
+
+        // Fetch receiver's email
+        const receiverWithEmail = await prisma.user.findUnique({
+            where: { id: data.receiverId },
+            select: { email: true },
+        });
+
+        if (receiverWithEmail?.email) {
+            const baseUrl = getAppBaseUrl(request);
+            const eventsUrl = `${baseUrl}/events`;
+            const formattedDate = format(new Date(data.proposedTime), 'EEEE, MMMM do, yyyy h:mm a');
+            
+            sendMail({
+                to: receiverWithEmail.email,
+                subject: `[Vrutta] New 1:1 Meeting Request from ${requesterName}`,
+                html: meetingInviteEmail(
+                    requesterName,
+                    formattedDate,
+                    data.agenda,
+                    eventsUrl,
+                    baseUrl
+                ),
+            }).catch(mailErr => {
+                console.error('Failed to send meeting invite email', mailErr);
+            });
+        }
 
         return NextResponse.json({ message: 'Meeting request sent', meeting }, { status: 201 });
     } catch (error: any) {

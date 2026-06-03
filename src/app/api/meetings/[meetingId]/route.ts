@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { notificationService } from '@/services/notification-service';
+import { sendMail, meetingAcceptedEmail, getAppBaseUrl } from '@/lib/mailer';
+import { format } from 'date-fns';
 
 const updateMeetingSchema = z.object({
     status: z.enum(['ACCEPTED', 'REJECTED', 'CANCELLED']),
@@ -65,13 +67,47 @@ export async function PATCH(
         });
         const userName = dbUser?.companyName || dbUser?.name || 'Someone';
 
-        // Notify the requester on accept
         if (status === 'ACCEPTED') {
             await notificationService.create({
                 userId: meeting.requesterId,
                 type: 'MEETING_INVITE',
                 title: 'Meeting Request Accepted',
                 message: `${userName} has accepted your 1:1 meeting request.`,
+                entityType: 'meeting',
+                entityId: meeting.id,
+                senderId: userId,
+            });
+
+            const requester = await prisma.user.findUnique({
+                where: { id: meeting.requesterId },
+                select: { email: true },
+            });
+
+            if (requester?.email) {
+                const baseUrl = getAppBaseUrl(request);
+                const eventsUrl = `${baseUrl}/events`;
+                const formattedDate = format(new Date(meeting.proposedTime), 'EEEE, MMMM do, yyyy h:mm a');
+                
+                sendMail({
+                    to: requester.email,
+                    subject: `[Vrutta] Meeting Accepted by ${userName}`,
+                    html: meetingAcceptedEmail(
+                        userName,
+                        formattedDate,
+                        meeting.agenda,
+                        eventsUrl,
+                        baseUrl
+                    ),
+                }).catch(mailErr => {
+                    console.error('Failed to send meeting accepted email', mailErr);
+                });
+            }
+        } else if (status === 'REJECTED') {
+            await notificationService.create({
+                userId: meeting.requesterId,
+                type: 'MEETING_INVITE',
+                title: 'Meeting Request Declined',
+                message: `${userName} has declined your 1:1 meeting request.`,
                 entityType: 'meeting',
                 entityId: meeting.id,
                 senderId: userId,

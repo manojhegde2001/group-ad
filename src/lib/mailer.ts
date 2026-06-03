@@ -285,3 +285,65 @@ export function eventReminderEmail(eventTitle: string, eventDate: string, timeUn
     </div>`;
     return baseLayout('Event Reminder - Vrutta', content, baseUrl);
 }
+
+export function meetingInviteEmail(
+    requesterName: string,
+    proposedDate: string,
+    agenda: string | null | undefined,
+    eventsUrl: string,
+    baseUrl?: string
+) {
+    const content = `
+    <div style="text-align:center;">
+      <h2 style="color:${accentColor};margin-bottom:16px;">📹 New 1:1 Meeting Request</h2>
+      <p class="text-body" style="color:#374151;font-size:16px;line-height:1.6;">
+        <strong>${requesterName}</strong> has requested a 1:1 meeting with you on Vrutta.
+      </p>
+      <div class="details-box" style="background:#f5f3ff;border-radius:12px;padding:20px;margin:24px 0;border:1px solid #ddd6fe;text-align:left;">
+        <p style="margin:0 0 8px;color:#6d28d9;font-weight:700;font-size:15px;">📅 Proposed Time</p>
+        <p style="margin:0;color:#374151;font-size:15px;">${proposedDate}</p>
+        ${agenda ? `
+        <p style="margin:16px 0 8px;color:#6d28d9;font-weight:700;font-size:15px;">📝 Agenda</p>
+        <p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">${agenda}</p>` : ''}
+      </div>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${eventsUrl}" style="display:inline-block;background-color:${accentColor};color:#ffffff;padding:16px 36px;border-radius:14px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 6px -1px rgba(124, 58, 237, 0.2);">
+          View &amp; Respond
+        </a>
+      </div>
+      <p class="text-footer" style="color:#9ca3af;font-size:13px;">
+        Open the Events page on Vrutta and switch to the <strong>1:1 Meetings</strong> tab to accept or decline.
+      </p>
+    </div>`;
+    return baseLayout('New Meeting Request - Vrutta', content, baseUrl);
+}
+
+export function meetingAcceptedEmail(
+    receiverName: string,
+    proposedDate: string,
+    agenda: string | null | undefined,
+    eventsUrl: string,
+    baseUrl?: string
+) {
+    const content = `
+    <div style="text-align:center;">
+      <h2 style="color:#059669;margin-bottom:16px;">✅ Meeting Request Accepted!</h2>
+      <p class="text-body" style="color:#374151;font-size:16px;line-height:1.6;">
+        <strong>${receiverName}</strong> has accepted your 1:1 meeting request.
+      </p>
+      <div class="details-box" style="background:#ecfdf5;border-radius:12px;padding:20px;margin:24px 0;border:1px solid #a7f3d0;text-align:left;">
+        <p style="margin:0 0 8px;color:#065f46;font-weight:700;font-size:15px;">📅 Confirmed Time</p>
+        <p style="margin:0;color:#374151;font-size:15px;">${proposedDate}</p>
+        ${agenda ? `
+        <p style="margin:16px 0 8px;color:#065f46;font-weight:700;font-size:15px;">📝 Agenda</p>
+        <p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">${agenda}</p>` : ''}
+      </div>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${eventsUrl}" style="display:inline-block;background-color:#059669;color:#ffffff;padding:16px 36px;border-radius:14px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 6px -1px rgba(5, 150, 105, 0.2);">
+          View My Meetings
+        </a>
+      </div>
+      <p class="text-footer" style="color:#9ca3af;font-size:13px;">See you there! — The Vrutta Team</p>
+    </div>`;
+    return baseLayout('Meeting Accepted - Vrutta', content, baseUrl);
+}

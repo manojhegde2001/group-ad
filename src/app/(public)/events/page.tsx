@@ -28,9 +28,13 @@ export default function EventsPage() {
     search,
     upcoming: activeTab === 'upcoming' ? 'true' : '',
     status: 'PUBLISHED',
+  }, {
+    enabled: activeTab !== 'meetings'
   });
 
-  const { data: myData, isLoading: loadingMy } = useMyEvents();
+  const { data: myData, isLoading: loadingMy } = useMyEvents({
+    enabled: activeTab !== 'meetings'
+  });
 
   const isLoading = activeTab === 'my' || activeTab === 'attended' ? loadingMy : loadingEvents;
 

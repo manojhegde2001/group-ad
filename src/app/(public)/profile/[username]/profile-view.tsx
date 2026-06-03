@@ -22,6 +22,7 @@ import { PowerTeamSuggestions } from '@/components/power-teams/PowerTeamSuggesti
 import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { LogoLoader } from '@/components/ui/logo-loader';
 import RequestMeetingModal from '@/components/meetings/RequestMeetingModal';
+import { useMeetings } from '@/hooks/use-api/use-meetings';
 
 const breakpointCols = {
     default: 5,
@@ -57,6 +58,17 @@ export default function ProfileView({ username, initialPosts }: { username: stri
     const profile = profileData?.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+
+    // Fetch meetings to detect an existing request/accepted state with this profile
+    const isBothBusiness = (me as any)?.userType === 'BUSINESS' && profile?.userType === 'BUSINESS';
+    const { data: meetingsData } = useMeetings();
+    const existingMeeting = isBothBusiness && profile
+        ? (meetingsData?.meetings || []).find(
+            (m: any) =>
+                (m.requesterId === me?.id && m.receiverId === profile.id) ||
+                (m.receiverId === me?.id && m.requesterId === profile.id)
+          ) ?? null
+        : null;
 
     // Refresh logic when a post is created
     const { setOnCreated } = useCreatePostModal();
@@ -213,15 +225,33 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                         )}
                                         {/* 1:1 Meeting request button — Business to Business only */}
                                         {(me as any)?.userType === 'BUSINESS' && profile.userType === 'BUSINESS' && (
-                                            <Button
-                                                variant="outline"
-                                                rounded="pill"
-                                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 border-primary-200 dark:border-primary-800 text-primary-600 dark:text-primary-400 transition-colors"
-                                                onClick={() => setIsMeetingModalOpen(true)}
-                                            >
-                                                <CalendarRange className="w-3.5 h-3.5" />
-                                                Request Meeting
-                                            </Button>
+                                            existingMeeting ? (
+                                                // Show status badge instead of button when a meeting already exists
+                                                <span className={[
+                                                    'h-10 px-5 rounded-full border-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-2',
+                                                    existingMeeting.status === 'ACCEPTED'
+                                                        ? 'border-green-200 dark:border-green-900/30 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/10'
+                                                        : existingMeeting.status === 'PENDING'
+                                                        ? 'border-amber-200 dark:border-amber-900/30 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10'
+                                                        : 'border-secondary-200 dark:border-secondary-700 text-secondary-400'
+                                                ].join(' ')}>
+                                                    <CalendarRange className="w-3.5 h-3.5" />
+                                                    {existingMeeting.status === 'ACCEPTED' && 'Meeting Confirmed'}
+                                                    {existingMeeting.status === 'PENDING' && 'Request Pending'}
+                                                    {existingMeeting.status === 'REJECTED' && 'Request Declined'}
+                                                    {existingMeeting.status === 'CANCELLED' && 'Request Cancelled'}
+                                                </span>
+                                            ) : (
+                                                <Button
+                                                    variant="outline"
+                                                    rounded="pill"
+                                                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 border-primary-200 dark:border-primary-800 text-primary-600 dark:text-primary-400 transition-colors"
+                                                    onClick={() => setIsMeetingModalOpen(true)}
+                                                >
+                                                    <CalendarRange className="w-3.5 h-3.5" />
+                                                    Request Meeting
+                                                </Button>
+                                            )
                                         )}
                                     </>
                                 )}

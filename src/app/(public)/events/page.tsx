@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Calendar, MapPin, Users, Search, Globe, Clock, Filter, ChevronRight, Video, Plus } from 'lucide-react';
+import { Calendar, MapPin, Users, Search, Globe, Clock, Filter, ChevronRight, Video, Plus, CalendarRange } from 'lucide-react';
 import { format, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,13 +13,16 @@ import { Button } from '@/components/ui/button';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 
 import { useEvents, useMyEvents } from '@/hooks/use-api/use-events';
+import { useUnreadMeetings } from '@/hooks/use-unread-meetings';
+import EventsMeetingsTab from '@/components/meetings/EventsMeetingsTab';
 
 export default function EventsPage() {
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'all' | 'my' | 'attended'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'all' | 'my' | 'attended' | 'meetings'>('upcoming');
   const [searchInput, setSearchInput] = useState('');
   const { user } = useAuth();
   const { open: openCreateEvent } = useCreateEvent();
+  const { pendingCount: pendingMeetings } = useUnreadMeetings();
 
   const { data, isLoading: loadingEvents } = useEvents({
     search,
@@ -72,6 +75,9 @@ export default function EventsPage() {
     );
   }
 
+  const isBusiness = (user as any)?.userType === 'BUSINESS';
+  const isAdmin = (user as any)?.userType === 'ADMIN';
+
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
       {/* Hero */}
@@ -114,6 +120,7 @@ export default function EventsPage() {
           </div>
         </div>
       </div>
+
 
       {/* Filters */}
       <div className="sticky top-16 md:top-0 z-30 bg-white/90 dark:bg-secondary-900/90 backdrop-blur-xl border-b border-secondary-100 dark:border-secondary-800">
@@ -165,6 +172,27 @@ export default function EventsPage() {
               >
                 Attended History
               </button>
+              {/* 1:1 Meetings tab — BUSINESS + ADMIN only */}
+              <button
+                onClick={() => setActiveTab('meetings')}
+                className={cn(
+                  'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
+                  activeTab === 'meetings'
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
+                )}
+              >
+                <CalendarRange className="w-3.5 h-3.5" />
+                1:1 Meetings
+                {pendingMeetings > 0 && (
+                  <span className={cn(
+                    'min-w-[16px] h-4 rounded-full text-[9px] font-black flex items-center justify-center px-1',
+                    activeTab === 'meetings' ? 'bg-white/30 text-white' : 'bg-primary-500 text-white'
+                  )}>
+                    {pendingMeetings}
+                  </span>
+                )}
+              </button>
             </>
           )}
           <Link
@@ -191,7 +219,11 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Events Grid */}
+      {/* Meetings Tab Content */}
+      {activeTab === 'meetings' && <EventsMeetingsTab />}
+
+      {/* Events Grid — hidden when meetings tab active */}
+      {activeTab !== 'meetings' && (
       <div className="max-w-6xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -223,6 +255,7 @@ export default function EventsPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

@@ -127,6 +127,13 @@ enum PowerTeamRole {
   MEMBER
 }
 
+enum MeetingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
 // ============================================================================
 // CATEGORY MODEL
 // ============================================================================
@@ -830,4 +837,34 @@ model PowerTeamMember {
   updatedAt   DateTime @updatedAt
 
   @@index([powerTeamId])
+}
+
+// ============================================================================
+// MEETING MODEL (1:1 Business Meetings)
+// ============================================================================
+
+model Meeting {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+
+  requesterId  String        @db.ObjectId
+  // Business user who sent the request
+
+  receiverId   String        @db.ObjectId
+  // Business user who received the request
+
+  status       MeetingStatus @default(PENDING)
+
+  proposedTime DateTime
+  // Date + time proposed by the requester
+
+  agenda       String?
+  // Optional note/agenda (max 250 chars)
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([requesterId])
+  @@index([receiverId])
+  @@index([status])
+  @@index([proposedTime])
 }

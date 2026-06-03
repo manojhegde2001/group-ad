@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
-import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff } from 'lucide-react';
+import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff, CalendarRange } from 'lucide-react';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
@@ -21,6 +21,7 @@ import type { PostWithRelations } from '@/types';
 import { PowerTeamSuggestions } from '@/components/power-teams/PowerTeamSuggestions';
 import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { LogoLoader } from '@/components/ui/logo-loader';
+import RequestMeetingModal from '@/components/meetings/RequestMeetingModal';
 
 const breakpointCols = {
     default: 5,
@@ -55,6 +56,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
     const profile = profileData?.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
 
     // Refresh logic when a post is created
     const { setOnCreated } = useCreatePostModal();
@@ -152,6 +154,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
     }
 
     return (
+        <>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             {/* --- Profile Header --- */}
             <div className="relative mb-12">
@@ -207,6 +210,18 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                                     Message
                                                 </Button>
                                             </Link>
+                                        )}
+                                        {/* 1:1 Meeting request button — Business to Business only */}
+                                        {(me as any)?.userType === 'BUSINESS' && profile.userType === 'BUSINESS' && (
+                                            <Button
+                                                variant="outline"
+                                                rounded="pill"
+                                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 border-primary-200 dark:border-primary-800 text-primary-600 dark:text-primary-400 transition-colors"
+                                                onClick={() => setIsMeetingModalOpen(true)}
+                                            >
+                                                <CalendarRange className="w-3.5 h-3.5" />
+                                                Request Meeting
+                                            </Button>
                                         )}
                                     </>
                                 )}
@@ -372,6 +387,22 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                 )}
             </div>
         </div>
+
+        {/* 1:1 Meeting Request Modal */}
+        {profile && isMeetingModalOpen && (
+            <RequestMeetingModal
+                isOpen={isMeetingModalOpen}
+                onClose={() => setIsMeetingModalOpen(false)}
+                receiver={{
+                    id: profile.id,
+                    name: profile.name,
+                    companyName: profile.companyName,
+                    avatar: profile.avatar,
+                    industry: (profile as any).industry,
+                }}
+            />
+        )}
+        </>
     );
 }
 

@@ -93,7 +93,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
-      <body className={plusJakarta.className}>
+      <body suppressHydrationWarning className={plusJakarta.className}>
         <NextAuthProvider>
           <QueryProvider>
             <ThemeProvider

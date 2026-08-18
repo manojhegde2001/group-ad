@@ -33,7 +33,7 @@ const TABS: { key: Tab; label: string; icon: any; accent: string; businessOnly?:
   { key: 'security', label: 'Security', icon: Lock, accent: 'text-blue-500 bg-blue-100 dark:bg-blue-900/30' },
   { key: 'privacy', label: 'Privacy', icon: Globe, accent: 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30' },
   { key: 'notifications', label: 'Alerts', icon: Bell, accent: 'text-amber-500 bg-amber-100 dark:bg-amber-900/30' },
-  { key: 'power-teams', label: 'Power Teams', icon: Zap, accent: 'text-rose-500 bg-rose-100 dark:bg-rose-900/30', businessOnly: true },
+  // { key: 'power-teams', label: 'Power Teams', icon: Zap, accent: 'text-rose-500 bg-rose-100 dark:bg-rose-900/30', businessOnly: true },
   { key: 'analytics', label: 'Analytics', icon: BarChart3, accent: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/30' },
 ];
 
@@ -566,9 +566,9 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {tab === 'power-teams' && (
+            {/* Power Teams Settings Section (Disabled/Commented for future use) */}
+            {/* {tab === 'power-teams' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
-                {/* My Team Dashboard Section */}
                 {myTeam && (
                   <div className="space-y-6">
                     <div className="bg-white dark:bg-secondary-900 rounded-[2rem] border-2 border-primary-500/20 overflow-hidden shadow-xl shadow-primary-500/5">
@@ -613,9 +613,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    {/* Quick Stats & Members */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       {/* Partners List */}
                        <div className="bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
                           <div className="flex items-center justify-between mb-6">
                              <div className="flex items-center gap-2">
@@ -646,7 +644,6 @@ export default function SettingsPage() {
                           </div>
                        </div>
 
-                       {/* Action Center - Pending Requests or Join Status */}
                        <div className="bg-white dark:bg-secondary-900 p-6 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
                           {myTeam.creatorId === user?.id || isAdmin ? (
                             <>
@@ -718,7 +715,6 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {/* Listing Section - Hidden for normal members who have a team, unless they are admins */}
                 {(!myTeam || isAdmin) && (
                   <div className="bg-white dark:bg-secondary-900 p-6 sm:p-8 rounded-[2rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
@@ -783,7 +779,7 @@ export default function SettingsPage() {
                 <CreateTeamModal />
                 <EditTeamModal />
               </div>
-            )}
+            )} */}
           </main>
         </div>
       </div>

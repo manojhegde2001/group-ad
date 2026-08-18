@@ -33,7 +33,7 @@ const SUGGESTED_PROMPTS = [
   'How can I find businesses to connect with?',
   'Tell me about Vrutta Events',
   'How do I create an engaging post?',
-  'What is a Power Team?',
+  // 'What is a Power Team?',
 ] as const;
 
 // ---------------------------------------------------------------------------

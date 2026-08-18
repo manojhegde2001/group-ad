@@ -150,8 +150,16 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                      src={src}
                                      className="w-full h-full object-cover block"
                                      muted playsInline loop 
-                                     onMouseEnter={e => e.currentTarget.play()}
-                                     onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                     onMouseEnter={e => {
+                                         const playPromise = e.currentTarget.play();
+                                         if (playPromise !== undefined) {
+                                             playPromise.catch(() => {});
+                                         }
+                                     }}
+                                     onMouseLeave={e => { 
+                                         e.currentTarget.pause(); 
+                                         e.currentTarget.currentTime = 0; 
+                                     }}
                                      onDoubleClick={handleDoubleTap}
                                  />
                              ) : (

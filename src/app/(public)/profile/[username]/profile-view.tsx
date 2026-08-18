@@ -223,10 +223,9 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                                 </Button>
                                             </Link>
                                         )}
-                                        {/* 1:1 Meeting request button — Business to Business only */}
-                                        {(me as any)?.userType === 'BUSINESS' && profile.userType === 'BUSINESS' && (
+                                        {/* 1:1 Meeting request button — Business to Business only (Disabled/Commented for future use) */}
+                                        {/* {(me as any)?.userType === 'BUSINESS' && profile.userType === 'BUSINESS' && (
                                             existingMeeting ? (
-                                                // Show status badge instead of button when a meeting already exists
                                                 <span className={[
                                                     'h-10 px-5 rounded-full border-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-2',
                                                     existingMeeting.status === 'ACCEPTED'
@@ -252,7 +251,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                                     Request Meeting
                                                 </Button>
                                             )
-                                        )}
+                                        )} */}
                                     </>
                                 )}
                                 <div className="flex items-center gap-2">
@@ -339,13 +338,13 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                     </div>
                 </div>
 
-                {/* Power Team Suggestions: teammates of the viewed user */}
-                {!isOwnProfile && (profile as any).powerTeam && (
+                {/* Power Team Suggestions: teammates of the viewed user (Disabled/Commented for future use) */}
+                {/* {!isOwnProfile && (profile as any).powerTeam && (
                     <PowerTeamSuggestions
                         team={(profile as any).powerTeam}
                         viewedUserName={profile.companyName || profile.name}
                     />
-                )}
+                )} */}
 
                 {/* Networking Suggestions for own profile */}
                 {isOwnProfile && (
@@ -418,8 +417,8 @@ export default function ProfileView({ username, initialPosts }: { username: stri
             </div>
         </div>
 
-        {/* 1:1 Meeting Request Modal */}
-        {profile && isMeetingModalOpen && (
+        {/* 1:1 Meeting Request Modal (Disabled/Commented for future use) */}
+        {/* {profile && isMeetingModalOpen && (
             <RequestMeetingModal
                 isOpen={isMeetingModalOpen}
                 onClose={() => setIsMeetingModalOpen(false)}
@@ -431,7 +430,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                     industry: (profile as any).industry,
                 }}
             />
-        )}
+        )} */}
         </>
     );
 }

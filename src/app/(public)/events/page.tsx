@@ -176,8 +176,8 @@ export default function EventsPage() {
               >
                 Attended History
               </button>
-              {/* 1:1 Meetings tab — BUSINESS + ADMIN only */}
-              <button
+              {/* 1:1 Meetings tab — BUSINESS + ADMIN only (Disabled/Commented for future use) */}
+              {/* <button
                 onClick={() => setActiveTab('meetings')}
                 className={cn(
                   'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
@@ -196,7 +196,7 @@ export default function EventsPage() {
                     {pendingMeetings}
                   </span>
                 )}
-              </button>
+              </button> */}
             </>
           )}
           <Link
@@ -223,11 +223,10 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Meetings Tab Content */}
-      {activeTab === 'meetings' && <EventsMeetingsTab />}
+      {/* Meetings Tab Content (Disabled/Commented for future use) */}
+      {/* {activeTab === 'meetings' && <EventsMeetingsTab />} */}
 
-      {/* Events Grid — hidden when meetings tab active */}
-      {activeTab !== 'meetings' && (
+      {/* Events Grid */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -259,7 +258,6 @@ export default function EventsPage() {
           </div>
         )}
       </div>
-      )}
     </div>
   );
 }

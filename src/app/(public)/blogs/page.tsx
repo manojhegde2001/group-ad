@@ -51,7 +51,7 @@ export default function BlogsPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="group flex flex-col bg-white dark:bg-secondary-900 rounded-[2rem] border border-secondary-200 dark:border-secondary-800 overflow-hidden shadow-sm hover:shadow-md transition-all hover:border-primary-200 dark:hover:border-primary-800"
+              className="group relative flex flex-col bg-white dark:bg-secondary-900 rounded-[2rem] border border-secondary-200 dark:border-secondary-800 overflow-hidden shadow-sm hover:shadow-md transition-all hover:border-primary-200 dark:hover:border-primary-800"
             >
               {/* Card Image */}
               <div className="h-48 relative overflow-hidden bg-secondary-100 dark:bg-secondary-800">

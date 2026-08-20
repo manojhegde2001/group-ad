@@ -15,7 +15,6 @@ export interface User {
   companyName?: string;
   turnover?: string;
   companySize?: string;
-  industry?: string;
   gstNumber?: string;
   secondaryPhone?: string;
   phoneVisibility?: 'PRIMARY' | 'SECONDARY' | 'BOTH' | 'NONE';
@@ -89,7 +88,6 @@ export type ProfileUser = Prisma.UserGetPayload<{
     };
     turnover: true;
     companySize: true;
-    industry: true;
     linkedin: true;
     twitter: true;
     facebook: true;
@@ -130,7 +128,6 @@ export type PostWithRelations = {
     userType: string;
     verificationStatus: string;
     bio: string | null;
-    industry: string | null;
     website: string | null;
     websiteLabel: string | null;
     companyWebsite: string | null;

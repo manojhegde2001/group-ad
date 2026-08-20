@@ -10,7 +10,6 @@ export interface AdminUser {
     verificationStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
     createdAt: string;
     companyName?: string;
-    industry?: string;
     website?: string;
     websiteLabel?: string;
 }

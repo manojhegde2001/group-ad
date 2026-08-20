@@ -35,7 +35,6 @@ interface MeetingPerson {
     username: string;
     avatar: string | null;
     companyName: string | null;
-    industry: string | null;
 }
 
 interface MeetingCardProps {
@@ -81,10 +80,10 @@ export default function MeetingCard({
                     >
                         {displayName}
                     </Link>
-                    {otherParty.industry && (
-                        <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-widest mt-0.5 truncate">
-                            {otherParty.industry}
-                        </p>
+                    {otherParty.companyName && (
+                        <span className="px-2 py-0.5 rounded-md bg-secondary-100 dark:bg-secondary-800 text-secondary-500 font-bold text-[10px] uppercase tracking-widest">
+                            {otherParty.companyName}
+                        </span>
                     )}
                 </div>
                 <span className={cn(

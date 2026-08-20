@@ -427,7 +427,6 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                     name: profile.name,
                     companyName: profile.companyName,
                     avatar: profile.avatar,
-                    industry: (profile as any).industry,
                 }}
             />
         )} */}

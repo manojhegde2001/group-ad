@@ -37,10 +37,9 @@ const updateProfileSchema = z.object({
   // Business fields (for BUSINESS users)
   turnover: z.string().optional(),
   companySize: z.string().optional(),
-  industry: z.string().optional(),
   gstNumber: z.string().optional(),
   establishedYear: z.string().optional(),
-  companyName: z.string().min(2, 'Company name too short').max(100).optional(),
+  companyName: z.string().min(2, 'Company name too short').max(100).optional().or(z.literal('')),
   companyLogo: z.string().url('Invalid logo URL').optional().or(z.literal('')),
   companyWebsite: z.string().url('Invalid website URL').optional().or(z.literal('')),
 
@@ -138,7 +137,6 @@ export async function GET(request: NextRequest) {
             name: true,
             slug: true,
             logo: true,
-            industry: true,
             gstNumber: true,
             website: true,
             description: true,
@@ -153,7 +151,6 @@ export async function GET(request: NextRequest) {
         companyLogo: true,
         turnover: true,
         companySize: true,
-        industry: true,
         gstNumber: true,
         establishedYear: true,
         companyWebsite: true,
@@ -234,7 +231,7 @@ export async function PATCH(request: NextRequest) {
     const stringFields = [
       'name', 'username', 'bio', 'phone', 'secondaryPhone', 'location', 'website', 'websiteLabel', 'avatar',
       'address', 'pincode', 'externalLink', 'categoryId', 'turnover',
-      'companySize', 'industry', 'gstNumber', 'establishedYear', 'companyWebsite',
+      'companySize', 'gstNumber', 'establishedYear', 'companyWebsite',
       'linkedin', 'twitter', 'facebook', 'instagram', 'companyName', 'companyLogo'
     ];
 
@@ -300,7 +297,6 @@ export async function PATCH(request: NextRequest) {
         interests: true,
         turnover: true,
         companySize: true,
-        industry: true,
         companyName: true,
         companyLogo: true,
         linkedin: true,
@@ -319,14 +315,8 @@ export async function PATCH(request: NextRequest) {
     console.error('Error updating profile:', error);
 
     if (error.name === 'ZodError') {
-      const fieldErrors: Record<string, string> = {};
-      (error as z.ZodError).errors.forEach((err) => {
-        if (err.path && err.path.length > 0) {
-          fieldErrors[err.path[0]] = err.message;
-        }
-      });
       return NextResponse.json(
-        { error: 'Invalid input data', details: fieldErrors },
+        { error: 'Invalid input data', details: (error as z.ZodError).errors },
         { status: 400 }
       );
     }

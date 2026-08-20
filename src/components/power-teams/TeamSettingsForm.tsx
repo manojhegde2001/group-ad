@@ -206,7 +206,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
            />
 
            <div className="space-y-1.5">
-             <label className="block text-sm font-bold text-secondary-900 dark:text-secondary-300">Target Industry *</label>
+             <label className="block text-sm font-bold text-secondary-900 dark:text-secondary-300">Target Category *</label>
              <select
                value={categoryId}
                onChange={(e) => setCategoryId(e.target.value)}

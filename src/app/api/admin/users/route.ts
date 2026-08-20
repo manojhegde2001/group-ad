@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
           verificationStatus: true,
           createdAt: true,
           companyName: true,
-          industry: true,
           website: true,
           websiteLabel: true,
         },

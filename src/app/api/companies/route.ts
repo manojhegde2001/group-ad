@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
         name: true,
         slug: true,
         logo: true,
-        industry: true,
         location: true,
         isVerified: true,
         _count: {

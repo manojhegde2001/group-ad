@@ -20,6 +20,8 @@ export function MobileBottomNav({ onMenuClick, onSearchClick }: MobileBottomNavP
     const { data: meUser } = useMe();
     const user = meUser || authUser;
 
+    // Hide bottom nav on marketing pages
+    if (pathname === '/about' || pathname === '/how-it-works') return null;
     if (!isAuthenticated) return null;
 
     const navItems = [

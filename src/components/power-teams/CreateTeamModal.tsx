@@ -106,13 +106,13 @@ export function CreateTeamModal() {
 
           {/* Category Selection */}
           <div className="space-y-1.5">
-            <label className="block text-sm font-bold text-secondary-900 dark:text-secondary-300">Target Industry *</label>
+            <label className="block text-sm font-bold text-secondary-900 dark:text-secondary-300">Target Category *</label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               className="w-full h-11 px-4 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-transparent text-sm font-bold focus:ring-2 ring-primary-500/20 outline-none transition-all"
             >
-              <option value="" disabled className="dark:bg-secondary-900">Select an industry focus</option>
+              <option value="" disabled className="dark:bg-secondary-900">Select a category focus</option>
               {categories.map((cat: any) => (
                 <option key={cat.id} value={cat.id} className="dark:bg-secondary-900">{cat.name}</option>
               ))}

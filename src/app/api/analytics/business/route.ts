@@ -70,7 +70,7 @@ export async function GET() {
     // 4. Category leaders (other companies in same category)
     const categoryCompetitors = await prisma.company.findMany({
         where: { 
-            industry: user.industry || undefined,
+            users: { some: { categoryId: user.categoryId } },
             id: companyId ? { not: companyId } : undefined
         },
         take: 3,
@@ -97,7 +97,7 @@ export async function GET() {
     return NextResponse.json({
       trends: trendData,
       categoryInfo: {
-          name: user.category?.name || 'Your Industry',
+          name: user.category?.name || 'Your Category',
           totalCompetitors: categoryCompetitors.length,
       },
       competitors: categoryCompetitors.map(c => ({
@@ -107,7 +107,7 @@ export async function GET() {
       })),
       summary: {
         totalReach: companyViews.length,
-        industryRank: industryRank,
+        categoryRank: industryRank,
       },
     });
   } catch (error) {

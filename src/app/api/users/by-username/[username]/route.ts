@@ -135,7 +135,6 @@ export async function GET(
                                                 name: true,
                                                 username: true,
                                                 avatar: true,
-                                                industry: true,
                                                 verificationStatus: true,
                                                 companyName: true,
                                             },

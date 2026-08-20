@@ -99,7 +99,7 @@ export const TeammateSuggestions = memo(function TeammateSuggestions({ className
                                 </p>
                             </Link>
                             <p className="text-[9px] font-bold text-secondary-400 uppercase tracking-widest truncate mt-0.5">
-                                {user.industry || 'Professional Partner'}
+                                {user.companyName ? 'Business Partner' : 'Professional Partner'}
                             </p>
                             {user.suggestionReason && (
                                 <p className="text-[8px] font-medium text-primary-400 dark:text-primary-600 uppercase tracking-tight mt-0.5">

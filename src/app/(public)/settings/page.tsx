@@ -98,7 +98,6 @@ export default function SettingsPage() {
   // Business form fields
   const [bsCompanyName, setBsCompanyName]         = useState('');
   const [bsCategoryId, setBsCategoryId]           = useState('');
-  const [bsIndustry, setBsIndustry]               = useState('');
   const [bsTurnover, setBsTurnover]               = useState('');
   const [bsCompanySize, setBsCompanySize]         = useState('');
   const [bsEstablishedYear, setBsEstablishedYear] = useState('');
@@ -140,7 +139,6 @@ export default function SettingsPage() {
     if (profile.userType === 'BUSINESS') {
       setBsCompanyName(profile.companyName ?? '');
       setBsCategoryId(profile.categoryId ?? '');
-      setBsIndustry(profile.industry ?? '');
       setBsTurnover(profile.turnover ?? '');
       setBsCompanySize(profile.companySize ?? '');
       setBsEstablishedYear(profile.establishedYear ?? '');
@@ -196,7 +194,6 @@ export default function SettingsPage() {
     submitTypeChange.mutate({
       companyName: bsCompanyName,
       categoryId: bsCategoryId,
-      industry: bsIndustry,
       gstNumber, 
       turnover: bsTurnover,
       companySize: bsCompanySize,
@@ -321,8 +318,8 @@ export default function SettingsPage() {
                 <div>
                   <p className="text-[9px] font-black text-secondary-400 uppercase tracking-widest">Account Type</p>
                   <p className="text-xs font-black text-secondary-900 dark:text-white uppercase flex items-center gap-1">
-                    {profile?.userType === 'BUSINESS' ? (profile?.verificationStatus === 'VERIFIED' ? 'Verified Business' : 'Unverified Business') : (profile?.userType ?? 'INDIVIDUAL')}
-                    {profile?.verificationStatus === 'VERIFIED' && <CheckCircle className="w-3 h-3 text-primary-500" />}
+                    {profile?.userType === 'BUSINESS' ? 'Business' : 'Individual'}
+                    {profile?.userType === 'BUSINESS' && <CheckCircle className="w-3 h-3 text-primary-500" />}
                   </p>
                 </div>
               </div>
@@ -350,9 +347,9 @@ export default function SettingsPage() {
                         <div className="flex flex-wrap items-center gap-2 mt-1 sm:mt-0">
                           <h2 className="text-xl font-black text-secondary-900 dark:text-white tracking-tight truncate">{user?.name as string}</h2>
                           {profile?.userType === 'BUSINESS' && (
-                            <span className={cn("inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border", profile?.verificationStatus === 'VERIFIED' ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800" : "text-amber-600 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800")}>
-                               {profile?.verificationStatus === 'VERIFIED' ? <CheckCircle className="w-2.5 h-2.5" /> : <Shield className="w-2.5 h-2.5" />}
-                               {profile?.verificationStatus === 'VERIFIED' ? 'Verified Business' : 'Unverified Business'}
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800">
+                               <CheckCircle className="w-2.5 h-2.5" />
+                               Business
                             </span>
                           )}
                         </div>
@@ -368,36 +365,43 @@ export default function SettingsPage() {
                   </div>
                 </SettingsCard>
 
-                {profile?.userType === 'INDIVIDUAL' && !showBusinessForm && (
+                {/* Convert to Business CTA — shown to INDIVIDUAL users with no active pending request */}
+                {profile?.userType === 'INDIVIDUAL' && !pendingRequest && !showBusinessForm && (
                   <div className="p-6 border-2 border-dashed border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shrink-0"><Shield className="w-8 h-8" /></div>
+                    <div className="w-16 h-16 rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shrink-0"><Building2 className="w-8 h-8" /></div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Switch to Business</h3>
-                      <p className="text-sm text-secondary-500 font-medium mt-1">Unlock professional features and verified badge.</p>
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Convert to Business</h3>
+                      <p className="text-sm text-secondary-500 font-medium mt-1">Unlock professional features — events, verified badge, and business profile.</p>
                     </div>
                     <Button variant="outline" onClick={() => setShowBusinessForm(true)} rounded="pill" className="font-black uppercase tracking-widest text-xs h-11 px-8">Get Started</Button>
                   </div>
                 )}
 
-                {profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'UNVERIFIED' && !showBusinessForm && (
-                  <div className="p-6 border-2 border-dashed border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shrink-0"><CheckCircle className="w-8 h-8" /></div>
+                {/* Pending — user is still INDIVIDUAL, request is under admin review */}
+                {profile?.userType === 'INDIVIDUAL' && pendingRequest?.status === 'PENDING' && !showBusinessForm && (
+                  <div className="p-6 border-2 border-dashed border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-white shadow-lg shrink-0"><Clock className="w-8 h-8" /></div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Get Verified</h3>
-                      <p className="text-sm text-secondary-500 font-medium mt-1">Submit your business details for official verification.</p>
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Business Conversion Pending</h3>
+                      <p className="text-sm text-secondary-500 font-medium mt-1">Your request is under review. We&apos;ll notify you once a decision is made.</p>
                     </div>
-                    <Button variant="outline" onClick={() => setShowBusinessForm(true)} rounded="pill" className="font-black uppercase tracking-widest text-xs h-11 px-8">Verify Now</Button>
+                    <div className="px-6 py-2 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-amber-200 dark:border-amber-800">Under Review</div>
                   </div>
                 )}
 
-                {profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'PENDING' && (
-                  <div className="p-6 border-2 border-dashed border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-white shadow-lg shrink-0"><Shield className="w-8 h-8" /></div>
+                {/* Rejected — user is still INDIVIDUAL, can reapply */}
+                {profile?.userType === 'INDIVIDUAL' && pendingRequest?.status === 'REJECTED' && !showBusinessForm && (
+                  <div className="p-6 border-2 border-dashed border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl bg-red-500 flex items-center justify-center text-white shadow-lg shrink-0"><X className="w-8 h-8" /></div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Verification Pending</h3>
-                      <p className="text-sm text-secondary-500 font-medium mt-1">Our team is reviewing your business details. We'll notify you soon.</p>
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Request Rejected</h3>
+                      <p className="text-sm text-secondary-500 font-medium mt-1">
+                        Your Business conversion request was not approved.
+                        {pendingRequest?.reviewNote && <span className="block mt-1 text-red-500">Reason: {pendingRequest.reviewNote}</span>}
+                      </p>
+                      <p className="text-xs text-secondary-400 font-medium mt-2">You can submit a new request below.</p>
                     </div>
-                    <div className="px-6 py-2 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-amber-200 dark:border-amber-800">Under Review</div>
+                    <Button variant="outline" onClick={() => setShowBusinessForm(true)} rounded="pill" className="font-black uppercase tracking-widest text-xs h-11 px-8">Reapply</Button>
                   </div>
                 )}
 
@@ -405,8 +409,8 @@ export default function SettingsPage() {
                   <SettingsCard className="p-6 sm:p-8 border-2 border-indigo-500/20 animate-in slide-in-from-bottom-4">
                     <div className="flex items-center justify-between mb-8">
                        <div>
-                         <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Business Verification</h3>
-                         <p className="text-xs text-secondary-400 font-bold uppercase tracking-wider mt-1">Complete your professional identity</p>
+                         <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Convert to Business</h3>
+                         <p className="text-xs text-secondary-400 font-bold uppercase tracking-wider mt-1">Tell us about your business</p>
                        </div>
                        <button onClick={() => setShowBusinessForm(false)} className="p-2 hover:bg-secondary-50 dark:hover:bg-secondary-800 rounded-xl transition-colors"><X className="w-5 h-5 text-secondary-400" /></button>
                     </div>
@@ -418,9 +422,8 @@ export default function SettingsPage() {
                           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       </Field>
-                      <Field label="Industry"><input type="text" value={bsIndustry} onChange={e => setBsIndustry(e.target.value)} className={inputCls} placeholder="E.g. Technology" /></Field>
                       <Field label="GST Number"><input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} className={inputCls} placeholder="22AAAAA0000A1Z5" /></Field>
-                      <Field label="Reason for Switch" span2><textarea value={bsReason} onChange={e => setBsReason(e.target.value)} className={cn(inputCls, "resize-none")} rows={3} placeholder="Tell us why you want to switch..." /></Field>
+                      <Field label="Reason for converting (optional)" span2><textarea value={bsReason} onChange={e => setBsReason(e.target.value)} className={cn(inputCls, "resize-none")} rows={3} placeholder="Tell us why you want to become a Business account..." /></Field>
                     </div>
                     <div className="flex gap-3">
                       <Button onClick={handleBusinessRequest} isLoading={submittingRequest} className="flex-1 rounded-2xl h-14 font-black uppercase text-xs tracking-widest">Submit Request</Button>

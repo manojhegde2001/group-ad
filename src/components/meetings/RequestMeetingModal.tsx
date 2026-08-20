@@ -12,7 +12,6 @@ interface ReceiverInfo {
     name: string;
     companyName?: string | null;
     avatar?: string | null;
-    industry?: string | null;
 }
 
 interface Props {
@@ -96,10 +95,10 @@ export default function RequestMeetingModal({ isOpen, onClose, receiver }: Props
                         <p className="font-black text-secondary-900 dark:text-white text-sm uppercase tracking-tight leading-none">
                             {displayName}
                         </p>
-                        {receiver.industry && (
-                            <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-widest mt-1">
-                                {receiver.industry}
-                            </p>
+                        {receiver.companyName && (
+                            <span className="px-2 py-0.5 rounded-md bg-secondary-100 dark:bg-secondary-800 text-secondary-500 font-bold">
+                                {receiver.companyName}
+                            </span>
                         )}
                     </div>
                 </div>

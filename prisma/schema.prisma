@@ -190,7 +190,6 @@ model Company {
   slug        String   @unique
   logo        String?
 
-  industry    String?
   gstNumber   String?
   website     String?
 
@@ -258,7 +257,6 @@ model User {
   companyLogo     String?
   turnover        String?
   companySize     String?
-  industry        String?
   gstNumber       String?
   establishedYear String?
   companyWebsite  String?
@@ -328,9 +326,9 @@ model UserTypeChangeRequest {
   companyId       String?  @db.ObjectId
   companyName     String?
   companyLogo     String?
+  categoryId      String?  @db.ObjectId
   turnover        String?
   companySize     String?
-  industry        String?
   gstNumber       String?
   establishedYear String?
   companyWebsite  String?

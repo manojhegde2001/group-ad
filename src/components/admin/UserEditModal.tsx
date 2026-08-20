@@ -32,7 +32,6 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
     categoryId: '',
     verificationStatus: '',
     companyName: '',
-    industry: '',
     website: '',
     websiteLabel: '',
   });
@@ -48,7 +47,6 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
         categoryId: user.categoryId || 'NONE',
         verificationStatus: user.verificationStatus || 'UNVERIFIED',
         companyName: user.companyName || '',
-        industry: user.industry || '',
         website: user.website || '',
         websiteLabel: user.websiteLabel || '',
       });
@@ -204,8 +202,6 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input label="Organization" placeholder="ACME Corp"
                   value={form.companyName} onChange={e => f('companyName', e.target.value)} />
-                <Input label="Industry" placeholder="Technology"
-                  value={form.industry} onChange={e => f('industry', e.target.value)} />
               </div>
             </Section>
 

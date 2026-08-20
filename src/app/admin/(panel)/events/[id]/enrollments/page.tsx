@@ -19,7 +19,7 @@ type Enrollment = {
     attendedAt: string | null;
     user: {
         id: string; name: string; username: string; avatar?: string;
-        email: string; userType: string; industry?: string; companyName?: string;
+        email: string; userType: string; companyName?: string;
     };
 };
 
@@ -176,7 +176,7 @@ export default function AdminEnrollmentsPage() {
                                     {enrollment.user.companyName && (
                                         <p className="text-xs text-secondary-400 flex items-center gap-1">
                                             <Briefcase className="w-3 h-3" />
-                                            {enrollment.user.companyName} {enrollment.user.industry ? `· ${enrollment.user.industry}` : ''}
+                                            {enrollment.user.companyName}
                                         </p>
                                     )}
                                 </div>

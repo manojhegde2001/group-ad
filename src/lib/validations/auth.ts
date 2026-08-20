@@ -26,15 +26,11 @@ export const signupSchema = z.object({
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
-  userType: userTypeEnum.optional().default('INDIVIDUAL'),
-  categoryId: z.string().optional(), // REQUIRED FOR BUSINESS
-  companyId: z.string().optional(), // For business users selecting existing company
-}).refine((data) => data.userType !== 'BUSINESS' || !!data.categoryId, {
-  message: 'Please select a category',
-  path: ['categoryId'],
+  companyId: z.string().optional(), // retained for linking to existing companies
 });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
+
 
 // ============================================================================
 // 2. LOGIN SCHEMA
@@ -69,7 +65,6 @@ export const updateProfileSchema = z.object({
   // Business fields
   turnover: z.string().optional(),
   companySize: z.string().optional(),
-  industry: z.string().optional(),
 
   // Social links
   linkedin: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
@@ -112,7 +107,6 @@ export const createCompanySchema = z.object({
     .min(3, 'Slug must be at least 3 characters')
     .max(50, 'Slug must be at most 50 characters')
     .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
-  industry: z.string().optional(),
   gstNumber: z
     .string()
     .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GST number format')
@@ -139,7 +133,6 @@ export const upgradeToBusinessSchema = z.object({
   // Business details
   turnover: z.string().optional(),
   companySize: z.string().optional(),
-  industry: z.string().optional(),
   gstNumber: z
     .string()
     .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GST number format')

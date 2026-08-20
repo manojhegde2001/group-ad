@@ -261,7 +261,7 @@ export default function AdminBusinessesPage() {
                             {req.companyName}
                           </h4>
                           <span className="px-4 py-1 bg-indigo-500 text-white text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-indigo-500/20">
-                            {req.industry || 'VERIFY'}
+                            {req.companySize || 'BUSINESS'}
                           </span>
                        </div>
                        

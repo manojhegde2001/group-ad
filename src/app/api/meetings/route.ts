@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
                 avatar: true,
                 userType: true,
                 companyName: true,
-                industry: true,
             },
         });
         const userMap = Object.fromEntries(users.map(u => [u.id, u]));

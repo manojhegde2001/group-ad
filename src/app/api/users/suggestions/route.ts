@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
                 name: true,
                 username: true,
                 avatar: true,
-                industry: true,
                 verificationStatus: true,
                 companyName: true,
                 _count: {
@@ -101,7 +100,6 @@ export async function GET(request: NextRequest) {
                 name: true,
                 username: true,
                 avatar: true,
-                industry: true,
                 verificationStatus: true,
                 companyName: true,
                 _count: {
@@ -122,24 +120,19 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        // Fallback: If still low on suggestions, get users from same industry
+        // Fallback: If still low on suggestions, get users from same category
         if (allSuggestionsMap.size < 3) {
-            const myProfile = await prisma.user.findUnique({ where: { id: userId }, select: { industry: true, categoryId: true } });
+            const myProfile = await prisma.user.findUnique({ where: { id: userId }, select: { categoryId: true } });
             if (myProfile) {
-                const industrySuggestions = await prisma.user.findMany({
+                const categorySuggestions = await prisma.user.findMany({
                     where: {
-                        id: { notIn: Array.from(connectedIds) },
-                        OR: [
-                            { industry: myProfile.industry },
-                            { categoryId: myProfile.categoryId }
-                        ]
+                        categoryId: myProfile.categoryId,
                     },
                     select: {
                         id: true,
                         name: true,
                         username: true,
                         avatar: true,
-                        industry: true,
                         verificationStatus: true,
                         companyName: true,
                         _count: {
@@ -148,9 +141,9 @@ export async function GET(request: NextRequest) {
                     },
                     take: 5
                 });
-                industrySuggestions.forEach(u => {
+                categorySuggestions.forEach(u => {
                     if (!allSuggestionsMap.has(u.id)) {
-                        allSuggestionsMap.set(u.id, { ...u, suggestionReason: 'Similar Industry' });
+                        allSuggestionsMap.set(u.id, { ...u, suggestionReason: 'Similar Category' });
                     }
                 });
             }

@@ -12,7 +12,7 @@ interface PowerTeamMate {
   name: string;
   username: string;
   avatar: string | null;
-  industry: string | null;
+  companyName: string | null;
   verificationStatus: string;
 }
 
@@ -99,7 +99,7 @@ export const PowerTeamSuggestions = memo(function PowerTeamSuggestions({ team, v
                 {teammate.name}
               </p>
               <p className="text-[9px] font-bold text-secondary-400 uppercase tracking-widest truncate mt-0.5">
-                {teammate.industry || 'Business Partner'}
+                {teammate.companyName ? 'Business Partner' : 'Professional Partner'}
               </p>
             </div>
           </Link>

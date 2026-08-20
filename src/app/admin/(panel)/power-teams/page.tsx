@@ -90,7 +90,7 @@ export default function AdminPowerTeamsPage() {
               <tr className="bg-secondary-50/50 dark:bg-secondary-800/20 border-b border-secondary-100 dark:border-secondary-800">
                 <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Team Info</th>
                 <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Creator</th>
-                <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Industry</th>
+                <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Category</th>
                 <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Members</th>
                 <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Status</th>
                 <th className="px-8 py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Actions</th>

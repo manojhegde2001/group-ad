@@ -41,19 +41,20 @@ export async function PATCH(
     });
 
     if (status === 'APPROVED') {
-      // Update the user status to VERIFIED and update userType + business details
+      // Apply all business details from the request to the user,
+      // including the categoryId that was stored with the conversion request.
       await prisma.user.update({
         where: { id: typeChangeRequest.userId },
         data: {
+          userType: typeChangeRequest.toType,
           verificationStatus: 'VERIFIED',
           verifiedAt: new Date(),
           verificationNote: reviewNote,
-          userType: typeChangeRequest.toType,
+          categoryId: typeChangeRequest.categoryId ?? undefined,
           companyName: typeChangeRequest.companyName,
           companyLogo: typeChangeRequest.companyLogo,
           turnover: typeChangeRequest.turnover,
           companySize: typeChangeRequest.companySize,
-          industry: typeChangeRequest.industry,
           gstNumber: typeChangeRequest.gstNumber,
           establishedYear: typeChangeRequest.establishedYear,
           companyWebsite: typeChangeRequest.companyWebsite,
@@ -78,11 +79,13 @@ export async function PATCH(
         });
       }
     } else {
-      // If REJECTED, update user verification status
+      // REJECTED: revert the user to INDIVIDUAL and clear verificationStatus
+      // so they remain on the platform as an Individual and can reapply.
       await prisma.user.update({
         where: { id: typeChangeRequest.userId },
         data: {
-          verificationStatus: 'REJECTED',
+          userType: 'INDIVIDUAL',
+          verificationStatus: 'UNVERIFIED',
           verificationNote: reviewNote
         }
       });

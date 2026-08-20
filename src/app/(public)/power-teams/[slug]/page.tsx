@@ -155,7 +155,7 @@ export default function PowerTeamDetailPage() {
                             )}
                         </div>
                         <p className="text-[10px] text-secondary-400 font-black uppercase tracking-widest truncate mt-0.5">
-                            {member.user.industry || 'Business Partner'}
+                            {member.user.companyName ? 'Business Partner' : 'Professional Partner'}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                            <button className="p-1.5 rounded-lg bg-secondary-50 dark:bg-secondary-800 text-secondary-400 hover:text-primary-500 transition-colors">
@@ -180,7 +180,7 @@ export default function PowerTeamDetailPage() {
             <div className="p-8 sm:p-10 rounded-[3rem] bg-secondary-50 dark:bg-secondary-800/40 border border-secondary-100 dark:border-secondary-800/50">
                <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-4">Mission Statement</h3>
                <p className="text-secondary-600 dark:text-secondary-400 leading-relaxed font-medium">
-                  {team.description || "This power team is dedicated to fostering high-level strategic partnerships within its industry. Our members collaborate to share specialized knowledge, referral opportunities, and professional growth."}
+                  {team.description || "This power team is dedicated to fostering high-level strategic partnerships. Our members collaborate to share specialized knowledge, referral opportunities, and professional growth."}
                </p>
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function PowerTeamDetailPage() {
                         <Users className="w-5 h-5" />
                      </div>
                      <div>
-                        <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">Industry Target</p>
+                        <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">Category Target</p>
                         <p className="text-sm font-bold text-secondary-900 dark:text-white mt-1">{team.category?.name}</p>
                      </div>
                   </div>

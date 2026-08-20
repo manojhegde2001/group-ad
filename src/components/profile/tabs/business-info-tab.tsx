@@ -12,7 +12,6 @@ import { useUpdateProfile } from '@/hooks/use-api/use-user';
 
 const businessInfoSchema = z.object({
   companyName: z.string().min(2, 'Company name is required').optional(),
-  industry: z.string().optional(),
   companySize: z.string().optional(),
   turnover: z.string().optional(),
   gstNumber: z.string().optional(),
@@ -37,7 +36,6 @@ export default function BusinessInfoTab({ user }: BusinessInfoTabProps) {
   } = useForm<BusinessInfoFormData>({
     resolver: zodResolver(businessInfoSchema),
     defaultValues: {
-      industry: user.industry || '',
       companySize: user.companySize || '',
       turnover: user.turnover || '',
     },
@@ -62,13 +60,6 @@ export default function BusinessInfoTab({ user }: BusinessInfoTabProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label="Industry"
-          placeholder="e.g., Technology, Healthcare"
-          {...register('industry')}
-          error={errors.industry?.message}
-        />
-
         <Controller
           name="companySize"
           control={control}

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { signupSchema } from '@/lib/validations/auth';
-import { UserType } from '@prisma/client';
 import { sendMail, welcomeEmail, getAppBaseUrl } from '@/lib/mailer';
 import { logger } from '@/lib/logger';
 
@@ -60,14 +59,14 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hash(validatedData.password, 10);
 
-    // Create user
+    // Create user — always INDIVIDUAL; Business conversion handled via Settings
     const user = await prisma.user.create({
       data: {
         email: validatedData.email.toLowerCase(),
         password: hashedPassword,
         name: validatedData.name,
         username: validatedData.username,
-        userType: validatedData.userType || UserType.INDIVIDUAL,
+        userType: 'INDIVIDUAL',
         companyId: validatedData.companyId || undefined,
       },
       select: {

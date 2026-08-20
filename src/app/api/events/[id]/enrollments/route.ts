@@ -42,7 +42,7 @@ export async function GET(
                 user: {
                     select: {
                         id: true, name: true, username: true, avatar: true,
-                        email: true, userType: true, industry: true, companyName: true,
+                        email: true, userType: true, companyName: true,
                     },
                 },
             },

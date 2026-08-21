@@ -6,15 +6,14 @@ import Logo from '../ui/logo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, ArrowRight } from 'lucide-react';
 
-type FooterLink = {
+export type FooterLink = {
   label: string;
   href: string;
   isPricing?: boolean;
 };
 
-const footerLinks: Record<string, FooterLink[]> = {
+export const footerLinks: Record<string, FooterLink[]> = {
   Product: [
-    { label: 'Features', href: '/features' },
     { label: 'Pricing', href: '#', isPricing: true },
   ],
   Company: [
@@ -42,7 +41,7 @@ export function Footer() {
             <div className="col-span-2 sm:col-span-1">
               <Logo className="w-24 h-7 mb-3" />
               <p className="text-sm text-secondary-600 dark:text-secondary-400 leading-relaxed max-w-xs">
-                Business-focused social networking platform for professionals and enterprises.
+                Business-focused collaboration platform for professionals and enterprises.
               </p>
             </div>
 
@@ -126,7 +125,7 @@ export function Footer() {
                 </h3>
                 
                 <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400 leading-relaxed mb-8">
-                  We don't do massive paywalls here. We believe in building real business connections. Vrutta is completely free to join and start growing your network.
+                  We don't do massive paywalls here. We believe in building real business connections. Vrutta is completely free to join and start growing your connections.
                 </p>
 
                 <Link

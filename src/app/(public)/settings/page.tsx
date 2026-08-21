@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
-import { Avatar, Button, Input, Textarea, Switch, Checkbox } from 'rizzui';
+import { Avatar, Button, Input, Textarea, Switch, Checkbox, Select as RizzSelect } from 'rizzui';
 import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
@@ -417,10 +417,16 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
                       <Field label="Business Name *" span2><input type="text" value={bsCompanyName} onChange={e => setBsCompanyName(e.target.value)} className={inputCls} placeholder="Global Enterprises Inc." /></Field>
                       <Field label="Business Category *">
-                        <select value={bsCategoryId} onChange={e => setBsCategoryId(e.target.value)} className={cn(inputCls, "appearance-none")}>
-                          <option value="">Select Category</option>
-                          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
+                        <RizzSelect
+                          options={categories.map(c => ({ label: c.name, value: c.id }))}
+                          value={categories.find(c => c.id === bsCategoryId) ? { label: categories.find(c => c.id === bsCategoryId)?.name, value: bsCategoryId } : null}
+                          onChange={(selected: any) => setBsCategoryId(selected?.value || selected)}
+                          placeholder="Select Category"
+                          searchable={true}
+                          selectClassName="w-full bg-white dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 rounded-2xl px-4 py-3 text-sm font-bold text-secondary-900 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                          dropdownClassName="p-2 z-[9999]"
+                          optionClassName="hover:bg-primary-50 dark:hover:bg-primary-900/20 py-2 rounded-lg"
+                        />
                       </Field>
                       <Field label="GST Number"><input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} className={inputCls} placeholder="22AAAAA0000A1Z5" /></Field>
                       <Field label="Reason for converting (optional)" span2><textarea value={bsReason} onChange={e => setBsReason(e.target.value)} className={cn(inputCls, "resize-none")} rows={3} placeholder="Tell us why you want to become a Business account..." /></Field>

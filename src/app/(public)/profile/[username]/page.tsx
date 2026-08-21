@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${user.name} (@${username})`,
-    description: user.bio || `Connect with ${user.name} on Vrutta — Enterprise Social Networking.`,
+    description: user.bio || `Connect with ${user.name} on Vrutta — Enterprise Professional Ecosystem.`,
     openGraph: {
       title: `${user.name} on Vrutta`,
       description: user.bio || `Connect with ${user.name} on Vrutta.`,

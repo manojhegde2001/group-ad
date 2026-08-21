@@ -64,7 +64,7 @@ export const TeammateSuggestions = memo(function TeammateSuggestions({ className
                             Alliance Discovery
                         </h3>
                         <p className="text-[9px] font-black text-primary-500 uppercase tracking-widest mt-0.5 leading-none">
-                            Expand your network
+                            Expand your connections
                         </p>
                     </div>
                 </div>

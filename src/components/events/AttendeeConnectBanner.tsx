@@ -66,7 +66,7 @@ export default function AttendeeConnectBanner({ eventId }: { eventId: string }) 
                     Connect with Co-Attendees
                 </h2>
                 <p className="text-sm text-secondary-600 dark:text-secondary-400 mb-6 max-w-lg">
-                    We saw you at the event! Here are some people who also attended. Connect with them to grow your network and unlock mutual contact numbers.
+                    We saw you at the event! Here are some people who also attended. Connect with them to grow your connections and unlock mutual contact numbers.
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

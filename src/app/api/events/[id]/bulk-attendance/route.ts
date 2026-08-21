@@ -99,7 +99,7 @@ export async function POST(
         actorId: session.user.id,
         type: 'MEETING_INVITE' as const,
         title: `You attended ${event.title}!`,
-        message: 'Connect with fellow attendees to grow your network.',
+        message: 'Connect with fellow attendees to grow your connections.',
         entityType: 'event',
         entityId: id,
         read: false,

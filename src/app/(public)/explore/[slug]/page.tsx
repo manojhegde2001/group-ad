@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${category.name} Updates`,
-    description: category.description || `Explore professional updates and business networking in the ${category.name} category on Vrutta.`,
+    description: category.description || `Explore professional updates and professional connections in the ${category.name} category on Vrutta.`,
     openGraph: {
       title: `${category.name} on Vrutta`,
       description: category.description || `Explore the latest from ${category.name} professionals.`,

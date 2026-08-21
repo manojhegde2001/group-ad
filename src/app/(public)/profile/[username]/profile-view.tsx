@@ -145,7 +145,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-700">
                 <LogoLoader size={64} className="mb-4" />
-                <p className="text-secondary-500 font-medium animate-pulse uppercase tracking-widest text-xs">Loading experience...</p>
+                <p className="text-secondary-500 font-medium animate-pulse uppercase tracking-widest text-xs">Loading...</p>
             </div>
         );
     }
@@ -190,22 +190,30 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                 {profile.companyName || profile.name}
                                 {profile.verificationStatus === 'VERIFIED' && <BadgeCheck className="w-8 h-8 text-primary-500" />}
                             </h1>
-                            <div className="flex items-center justify-center md:justify-start gap-3">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                                 {isOwnProfile ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-100 dark:border-secondary-700 text-[9px] font-black uppercase tracking-widest text-secondary-500">
-                                            {(profile as any).visibility === 'PUBLIC' ? <Globe className="w-3 h-3 text-emerald-500" /> : <EyeOff className="w-3 h-3 text-amber-500" />}
+                                    <>
+                                        {/* Visibility Badge */}
+                                        <div className="flex items-center gap-1.5 h-10 px-4 rounded-full bg-secondary-100/50 dark:bg-secondary-800/50 text-[10px] font-black uppercase tracking-widest text-secondary-600 dark:text-secondary-300">
+                                            {(profile as any).visibility === 'PUBLIC' ? <Globe className="w-3.5 h-3.5 text-emerald-500" /> : <EyeOff className="w-3.5 h-3.5 text-amber-500" />}
                                             {(profile as any).visibility}
                                         </div>
-                                        <Link href="/settings">
-                                            <Button variant="outline" rounded="pill" className="h-10 px-6 font-black uppercase tracking-widest text-[10px] border-2">Edit Profile</Button>
+                                        
+                                        {/* Share Icon */}
+                                        <ActionIcon onClick={handleShareProfile} className="h-10 w-10 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-700 dark:text-secondary-300 transition-colors">
+                                            <Share2 className="w-4 h-4" />
+                                        </ActionIcon>
+
+                                        {/* My Boards */}
+                                        <Link href="/boards" className="flex items-center justify-center h-10 px-5 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-900 dark:text-white font-black uppercase tracking-widest text-[10px] transition-colors gap-2">
+                                            <Settings className="w-3.5 h-3.5" /> My Boards
                                         </Link>
-                                        <Link href="/boards">
-                                            <Button variant="flat" color="primary" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px]">
-                                                <Settings className="w-3.5 h-3.5 mr-1.5" />My Boards
-                                            </Button>
+
+                                        {/* Edit Profile (Primary) */}
+                                        <Link href="/settings" className="flex items-center justify-center h-10 px-6 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 shadow-lg shadow-secondary-900/20 dark:shadow-white/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95">
+                                            Edit Profile
                                         </Link>
-                                    </div>
+                                    </>
                                 ) : (
                                     <>
                                         <ConnectionButton 
@@ -215,57 +223,25 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                             isInitiator={profile.connectionInitiator}
                                             mutualConnections={(profile as any).mutualConnections}
                                         />
+                                        
                                         {profile.messagingEnabled && ((profile as any).visibility === 'PUBLIC' || profile.connectionStatus === 'ACCEPTED') && (
-                                            <Link href={`/messages?userId=${profile.id}`}>
-                                                <Button variant="outline" rounded="pill" className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-secondary-50 transition-colors">
-                                                    <MessageSquare className="w-3.5 h-3.5 mt-0.5" />
-                                                    Message
-                                                </Button>
+                                            <Link href={`/messages?userId=${profile.id}`} className="flex items-center justify-center h-10 px-5 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-900 dark:text-white font-black uppercase tracking-widest text-[10px] transition-colors gap-2">
+                                                <MessageSquare className="w-3.5 h-3.5 mt-0.5" />
+                                                Message
                                             </Link>
                                         )}
-                                        {/* 1:1 Meeting request button — Business to Business only (Disabled/Commented for future use) */}
-                                        {/* {(me as any)?.userType === 'BUSINESS' && profile.userType === 'BUSINESS' && (
-                                            existingMeeting ? (
-                                                <span className={[
-                                                    'h-10 px-5 rounded-full border-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-2',
-                                                    existingMeeting.status === 'ACCEPTED'
-                                                        ? 'border-green-200 dark:border-green-900/30 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/10'
-                                                        : existingMeeting.status === 'PENDING'
-                                                        ? 'border-amber-200 dark:border-amber-900/30 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10'
-                                                        : 'border-secondary-200 dark:border-secondary-700 text-secondary-400'
-                                                ].join(' ')}>
-                                                    <CalendarRange className="w-3.5 h-3.5" />
-                                                    {existingMeeting.status === 'ACCEPTED' && 'Meeting Confirmed'}
-                                                    {existingMeeting.status === 'PENDING' && 'Request Pending'}
-                                                    {existingMeeting.status === 'REJECTED' && 'Request Declined'}
-                                                    {existingMeeting.status === 'CANCELLED' && 'Request Cancelled'}
-                                                </span>
-                                            ) : (
-                                                <Button
-                                                    variant="outline"
-                                                    rounded="pill"
-                                                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 flex items-center gap-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 border-primary-200 dark:border-primary-800 text-primary-600 dark:text-primary-400 transition-colors"
-                                                    onClick={() => setIsMeetingModalOpen(true)}
-                                                >
-                                                    <CalendarRange className="w-3.5 h-3.5" />
-                                                    Request Meeting
-                                                </Button>
-                                            )
-                                        )} */}
-                                    </>
-                                )}
-                                <div className="flex items-center gap-2">
-                                    <ActionIcon variant="outline" rounded="full" onClick={handleShareProfile} className="h-10 w-10 border-2">
-                                        <Share2 className="w-4 h-4" />
-                                    </ActionIcon>
-                                    {!isOwnProfile && (
+
+                                        <ActionIcon onClick={handleShareProfile} className="h-10 w-10 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-700 dark:text-secondary-300 transition-colors">
+                                            <Share2 className="w-4 h-4" />
+                                        </ActionIcon>
+
                                         <Popover 
                                             isOpen={isMenuOpen} 
                                             setIsOpen={setIsMenuOpen}
                                             placement="bottom-end"
                                         >
                                             <Popover.Trigger>
-                                                <ActionIcon variant="outline" rounded="full" className="h-10 w-10 border-2">
+                                                <ActionIcon className="h-10 w-10 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-700 dark:text-secondary-300 transition-colors">
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </ActionIcon>
                                             </Popover.Trigger>
@@ -286,8 +262,8 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                                 </div>
                                             </Popover.Content>
                                         </Popover>
-                                    )}
-                                </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -346,7 +322,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                     />
                 )} */}
 
-                {/* Networking Suggestions for own profile */}
+                {/* Connection Suggestions for own profile */}
                 {isOwnProfile && (
                     <div className="mt-8">
                         <TeammateSuggestions limit={3} />

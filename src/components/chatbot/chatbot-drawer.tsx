@@ -156,7 +156,7 @@ function EmptyState({ onPromptClick }: EmptyStateProps) {
         Vrutta AI Assistant
       </h3>
       <p className="text-sm text-secondary-500 dark:text-secondary-400 mb-8 max-w-[260px]">
-        Ask me anything about the platform, networking tips, or how to grow your
+        Ask me anything about the platform, connection tips, or how to grow your
         presence.
       </p>
 

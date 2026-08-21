@@ -81,7 +81,7 @@ export function ConnectionButton({
 
     const handleAction = (action: 'ACCEPT' | 'REJECT' | 'REMOVE') => {
         if (action === 'REMOVE') {
-            if (window.confirm(`Are you sure you want to remove ${targetName} from your network?`)) {
+            if (window.confirm(`Are you sure you want to remove ${targetName} from your connections?`)) {
                 removeMutation.mutate(userId, {
                     onSuccess: () => {
                         setStatus(null);
@@ -124,11 +124,7 @@ export function ConnectionButton({
                 <Button
                     onClick={handleConnect}
                     disabled={loading}
-                    variant="solid"
-                    color="primary"
-                    size={size}
-                    rounded="pill"
-                    className={cn("px-6 font-black uppercase tracking-widest text-[10px]", className)}
+                    className={cn("flex items-center justify-center h-10 px-6 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 shadow-lg shadow-secondary-900/20 dark:shadow-white/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95", className)}
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <UserPlus className="w-3.5 h-3.5 mr-2" />}
                     Connect
@@ -143,11 +139,7 @@ export function ConnectionButton({
             <Button
                 onClick={() => handleAction('REMOVE')}
                 disabled={loading}
-                variant="outline"
-                color="secondary"
-                size={size}
-                rounded="pill"
-                className={cn("px-5 font-black uppercase tracking-widest text-[10px] border-2 group hover:border-red-500 hover:text-red-500 transition-all", className)}
+                className={cn("flex items-center justify-center h-10 px-5 rounded-full border-2 border-secondary-200 dark:border-secondary-700 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 text-secondary-900 dark:text-white hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900/50 font-black uppercase tracking-widest text-[10px] group transition-colors", className)}
             >
                 {loading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
@@ -170,11 +162,7 @@ export function ConnectionButton({
                 <Button
                     onClick={() => handleAction('ACCEPT')}
                     disabled={loading}
-                    variant="solid"
-                    color="primary"
-                    size={size}
-                    rounded="pill"
-                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px]"
+                    className="flex items-center justify-center h-10 px-5 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 font-black uppercase tracking-widest text-[10px] transition-colors"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Check className="w-3.5 h-3.5 mr-2" />}
                     Accept
@@ -182,11 +170,7 @@ export function ConnectionButton({
                 <Button
                     onClick={() => handleAction('REJECT')}
                     disabled={loading}
-                    variant="outline"
-                    color="secondary"
-                    size={size}
-                    rounded="pill"
-                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                    className="flex items-center justify-center h-10 px-5 rounded-full border-2 border-secondary-200 dark:border-secondary-700 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 text-secondary-900 dark:text-white hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900/50 font-black uppercase tracking-widest text-[10px] transition-colors"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <X className="w-3.5 h-3.5 mr-2" />}
                     Reject
@@ -201,11 +185,7 @@ export function ConnectionButton({
             <Button
                 onClick={() => handleAction('REMOVE')}
                 disabled={loading}
-                variant="outline"
-                color="primary"
-                size={size}
-                rounded="pill"
-                className={cn("h-10 px-6 font-black uppercase tracking-widest text-[10px] border-2 group hover:border-red-500 hover:text-red-500 transition-all", className)}
+                className={cn("flex items-center justify-center h-10 px-6 rounded-full border-2 border-secondary-200 dark:border-secondary-700 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 text-secondary-900 dark:text-white hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900/50 font-black uppercase tracking-widest text-[10px] group transition-colors", className)}
             >
                 {loading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />

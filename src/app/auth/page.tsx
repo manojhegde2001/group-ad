@@ -47,7 +47,7 @@ function AuthContent() {
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h1>
             <p className="text-secondary-500 dark:text-secondary-400 text-sm font-medium">
-              {isSignUp ? 'Join us and start networking' : 'Sign in to your account'}
+              {isSignUp ? 'Join us and start connecting' : 'Sign in to your account'}
             </p>
           </div>
 
@@ -127,7 +127,7 @@ function AuthContent() {
         >
           <div className="flex flex-col items-center text-center mb-6">
             <h1 className="text-4xl font-black text-secondary-900 dark:text-white mb-2 tracking-tight">Create Account</h1>
-            <p className="text-secondary-500 dark:text-secondary-400 font-medium">Join us and start networking.</p>
+            <p className="text-secondary-500 dark:text-secondary-400 font-medium">Join us and start connecting.</p>
           </div>
           <div className="w-full max-w-sm mx-auto max-h-[70vh] overflow-y-auto no-scrollbar pb-6 pr-2">
             <SignupForm hideFooter />

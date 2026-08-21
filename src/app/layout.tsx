@@ -17,11 +17,11 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Vrutta — Enterprise Social Networking',
+    default: 'Vrutta — Enterprise Professional Ecosystem',
     template: '%s | Vrutta'
   },
   description: 'Connect with professionals and businesses in a neat, curated environment for maximum growth and collaboration.',
-  keywords: ['enterprise social network', 'business networking', 'professional collaboration', 'Vrutta', 'b2b networking'],
+  keywords: ['enterprise professional ecosystem', 'professional connections', 'professional collaboration', 'Vrutta', 'b2b connections'],
   authors: [{ name: 'Vrutta Team' }],
   creator: 'Vrutta',
   publisher: 'Vrutta',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Vrutta — Enterprise Social Networking',
+    title: 'Vrutta — Enterprise Professional Ecosystem',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
     url: 'https://www.vrutta.net',
     siteName: 'Vrutta',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vrutta — Enterprise Social Networking',
+    title: 'Vrutta — Enterprise Professional Ecosystem',
     description: 'Connect with professionals and businesses in a neat, curated environment.',
     creator: '@vrutta',
     images: ['/auth/thumbnail.png'],

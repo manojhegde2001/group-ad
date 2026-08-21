@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils';
 import { Drawer, Popover } from 'rizzui';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { useChatbot } from '@/hooks/use-chatbot';
+import { ConvertToBusinessModal } from './convert-to-business-modal';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -104,6 +105,7 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const chatbot = useChatbot();
 
   useEffect(() => { setMounted(true); }, []);
@@ -226,13 +228,42 @@ export function Navbar() {
                           size="sm"
                           className="w-11 h-11 shadow-sm transition-transform group-hover:scale-105"
                         />
-                        <div className="min-w-0">
-                          <p className="font-bold text-secondary-900 dark:text-white leading-tight truncate">{user?.name}</p>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-secondary-400 mt-1">
-                            {(user as any).userType === 'BUSINESS' ? 'Business' : 'Personal Account'}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-secondary-900 dark:text-white leading-tight truncate" title={user?.name}>
+                            {user?.name}
                           </p>
+                          {user?.email && (
+                            <p className="text-xs text-secondary-500 dark:text-secondary-400 truncate" title={user.email}>
+                              {user.email}
+                            </p>
+                          )}
+                          <div className="mt-1 flex items-center">
+                            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-300">
+                                {(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Individual'}
+                            </span>
+                          </div>
                         </div>
                       </Link>
+
+                      {/* Convert to Business Option */}
+                      {(user as any).userType !== 'BUSINESS' && (
+                        <div className="px-3 pb-2 pt-1">
+                          <button
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              setIsConvertModalOpen(true);
+                            }}
+                            className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border border-primary-100 dark:border-primary-800 hover:from-primary-100 hover:to-primary-200 dark:hover:from-primary-800/40 dark:hover:to-primary-700/40 transition-colors group"
+                          >
+                            <div className="flex flex-col items-start min-w-0">
+                                <span className="text-xs font-bold text-primary-700 dark:text-primary-300 flex items-center gap-1.5">
+                                    <Zap className="w-3.5 h-3.5" /> Convert to Business
+                                </span>
+                                <span className="text-[10px] font-semibold text-primary-600/80 dark:text-primary-400/80 mt-0.5 text-left leading-tight">Unlock enterprise features</span>
+                            </div>
+                          </button>
+                        </div>
+                      )}
 
                       <div className="h-px bg-secondary-100 dark:bg-secondary-800 my-1 mx-2" />
 
@@ -264,14 +295,6 @@ export function Navbar() {
                             <ShieldCheck className="w-4 h-4" /> Admin Console
                           </Link>
                         )}
-
-                        <Link
-                          href="/settings"
-                          onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800/50 font-bold text-xs text-secondary-700 dark:text-secondary-300 transition-colors"
-                        >
-                          <Settings className="w-4 h-4" /> Account Settings
-                        </Link>
 
                         {/* <button
                           onClick={() => { setDropdownOpen(false); chatbot.open(); }}
@@ -431,6 +454,11 @@ export function Navbar() {
       <Suspense fallback={null}>
         <AuthRequiredHandler />
       </Suspense>
+
+      <ConvertToBusinessModal 
+        isOpen={isConvertModalOpen} 
+        onClose={() => setIsConvertModalOpen(false)} 
+      />
     </>
   );
 }

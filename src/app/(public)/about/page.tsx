@@ -142,7 +142,7 @@ export default function AboutPage() {
           </h1>
           
           <p className="text-sm text-secondary-600 dark:text-secondary-400 max-w-lg mx-auto mb-6 leading-relaxed font-medium">
-            A premium business network built for professionals to showcase their work, connect with the right people, and grow through trusted referrals.
+            A premium business ecosystem built for professionals to showcase their work, connect with the right people, and grow through trusted referrals.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto px-4 mb-4">
@@ -243,7 +243,7 @@ export default function AboutPage() {
                     <div className="w-6 h-6 rounded-md bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
                       <TrendingUp className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <span className="text-xs md:text-sm font-bold text-secondary-900 dark:text-white">Network Growth</span>
+                    <span className="text-xs md:text-sm font-bold text-secondary-900 dark:text-white">Community Growth</span>
                   </div>
                   <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full">+12 this month</span>
                 </div>

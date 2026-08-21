@@ -137,7 +137,7 @@ export default function EditEventForm({ event }: { event: any }) {
                             <input
                                 value={form.title}
                                 onChange={(e) => set('title', e.target.value)}
-                                placeholder="e.g. Q1 Business Networking Meetup"
+                                placeholder="e.g. Q1 Business Ecosysteming Meetup"
                                 className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             />
                         </div>

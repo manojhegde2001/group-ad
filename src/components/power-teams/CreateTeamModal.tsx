@@ -98,7 +98,7 @@ export function CreateTeamModal() {
           {/* Team Name */}
           <Input
             label="Team Name *"
-            placeholder="e.g. Real Estate Growth Network"
+            placeholder="e.g. Real Estate Growth Community"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="font-bold"

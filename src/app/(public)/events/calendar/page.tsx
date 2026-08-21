@@ -30,7 +30,7 @@ export default function EventsCalendarPage() {
             <div className="mb-4">
                 <h1 className="text-2xl font-bold text-secondary-900 dark:text-white leading-tight">Event Calendar</h1>
                 <p className="text-secondary-500 mt-0.5 font-medium text-sm">
-                    Explore all live meetings, webinars, and networking sessions in our community.
+                    Explore all live meetings, webinars, and collaboration sessions in our community.
                 </p>
             </div>
 

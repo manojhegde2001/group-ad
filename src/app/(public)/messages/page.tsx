@@ -407,7 +407,7 @@ function MessagesContent() {
                   </div>
                   <div>
                     <p className="font-black text-base md:text-lg text-secondary-900 dark:text-white">No connections found</p>
-                    <p className="text-[10px] md:text-xs text-secondary-400 mt-1 max-w-[200px]">You haven't connected with anyone yet. Grow your network to start messaging.</p>
+                    <p className="text-[10px] md:text-xs text-secondary-400 mt-1 max-w-[200px]">You haven't connected with anyone yet. Grow your connections to start messaging.</p>
                   </div>
                 </div>
               ) : (

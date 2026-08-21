@@ -18,7 +18,7 @@ export function HeroSection() {
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-secondary-900 dark:text-white mb-4 tracking-tight leading-[1.1]">
           Vrutta — The{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-violet-500">
-            Enterprise Social Network
+            Enterprise Professional Ecosystem
           </span>
           {' '}for Growth
         </h1>

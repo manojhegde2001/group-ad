@@ -72,7 +72,7 @@ export const TOOL_DECLARATIONS: ToolDeclaration[] = [
   {
     name: 'searchUsers',
     description:
-      'Find Vrutta users by name, username, or profession for networking.',
+      'Find Vrutta users by name, username, or profession for connecting.',
     parameters: {
       type: 'object',
       properties: {

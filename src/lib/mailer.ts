@@ -156,7 +156,7 @@ function baseLayout(title: string, content: string, baseUrl?: string) {
                 <div class="border-separator" style="padding:0 40px 40px;text-align:center;border-top:1px solid #f3f4f6;">
                     <p class="text-footer" style="margin:24px 0 0;color:#6b7280;font-size:13px;line-height:1.6;">
                         This is an automated message from Vrutta.<br/>
-                        Connect with top professionals and expand your network.
+                        Connect with top professionals and expand your connections.
                     </p>
                     <div class="border-separator" style="margin-top:20px;padding-top:20px;border-top:1px solid #f3f4f6;">
                         <p style="margin:0;color:#9ca3af;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">
@@ -185,7 +185,7 @@ export function welcomeEmail(name: string, email: string, baseUrl?: string) {
         <a href="${loginUrl}" style="display:inline-block;background-color:${accentColor};color:#ffffff;padding:16px 36px;border-radius:14px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 6px -1px rgba(124, 58, 237, 0.2);transition:background-color 0.2s;">Get Started Now</a>
     </div>
     <p class="text-footer" style="margin:0;font-size:15px;line-height:1.6;color:#6b7280;text-align:center;">
-        Explore our groups and events to start networking today!
+        Explore our groups and events to start connecting today!
     </p>`;
 
     return baseLayout('Welcome to Vrutta!', content, finalBaseUrl);

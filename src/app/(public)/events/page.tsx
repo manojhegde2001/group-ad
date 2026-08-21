@@ -95,7 +95,7 @@ export default function EventsPage() {
             Find Events That Matter
           </h1>
           <p className="text-primary-100 text-lg max-w-xl mx-auto font-medium">
-            Discover workshops, networking sessions, and exclusive meetups tailored to your community.
+            Discover workshops, collaboration sessions, and exclusive meetups tailored to your community.
           </p>
 
           {/* Search */}

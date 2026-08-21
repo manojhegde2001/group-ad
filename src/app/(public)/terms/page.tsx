@@ -74,7 +74,7 @@ export default function TermsPage() {
             <section id="content" className="mb-16">
                 <h2 className="text-2xl font-black text-secondary-900 dark:text-white mb-4 border-l-4 border-primary-500 pl-4">3. Content Standards & Professional Conduct</h2>
                 <p className="text-secondary-600 dark:text-secondary-400">
-                    Vrutta is a professional networking environment. You agree not to post content that:
+                    Vrutta is a professional collaboration environment. You agree not to post content that:
                 </p>
                 <div className="grid md:grid-cols-2 gap-4 mt-4">
                     {[

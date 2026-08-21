@@ -15,12 +15,15 @@ import {
   Plus,
   Library,
   Bell,
-  Zap
+  Zap,
+  HelpCircle
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useCreatePostModal } from '@/hooks/use-feed';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
+import { useState } from 'react';
+import { HelpModal } from './help-modal';
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -32,6 +35,7 @@ export function Sidebar() {
   const createPostModal = useCreatePostModal();
   const { totalUnread: unreadMessages } = useUnreadMessages();
   const { unreadCount: unreadNotifications } = useUnreadNotifications();
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   if (!isAuthenticated) return null;
 
@@ -116,9 +120,21 @@ export function Sidebar() {
       </nav>
 
       {/* Settings pinned at bottom */}
-      <div className="mt-auto shrink-0 px-4">
+      <div className="mt-auto shrink-0 px-4 pb-4 flex flex-col gap-2">
+        <button
+          onClick={() => setIsHelpModalOpen(true)}
+          title="Help & Info"
+          className="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group relative text-secondary-500 hover:bg-secondary-100 dark:hover:bg-secondary-800 hover:text-secondary-900 dark:hover:text-white"
+        >
+          <HelpCircle className="w-6 h-6 stroke-[2px]" />
+          <span className="absolute left-16 px-2 py-1 bg-secondary-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+            Help & Info
+          </span>
+        </button>
         <SidebarLink href="/settings" icon={Settings} label="Settings" />
       </div>
+
+      <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
     </aside>
   );
 }

@@ -25,7 +25,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
     const isAdminSubdomain = host.startsWith('admin.');
 
     return (
-        <div className="min-h-screen flex bg-background transition-colors duration-300 font-jakarta">
+        <div className="min-h-screen flex bg-background transition-colors duration-300">
             <AdminSidebar
                 userName={dbUser.name ?? 'Admin'}
                 userEmail={dbUser.email ?? ''}

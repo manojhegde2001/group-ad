@@ -55,7 +55,7 @@ export default function AdminLoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen flex lg:grid lg:grid-cols-2 bg-background relative overflow-hidden font-jakarta select-none">
+    <div className="min-h-screen flex lg:grid lg:grid-cols-2 bg-background relative overflow-hidden select-none">
       
 
       {/* Logo Area - Absolute Top Left */}

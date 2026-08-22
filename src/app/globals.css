@@ -31,7 +31,7 @@
   --foreground: 17 24 39;
   --overlay-bg: 0 0 0;
 
-  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .dark {
@@ -100,13 +100,13 @@
 }
 
 html {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -114,10 +114,6 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
-  }
-
-  .font-jakarta {
-    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
   /* Safe-area inset for mobile bottom sheets */

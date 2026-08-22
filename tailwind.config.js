@@ -47,8 +47,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        jakarta: ['Plus Jakarta Sans', 'sans-serif'],
+        sans: ['var(--font-inter)', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         inter: ['var(--font-inter)', 'sans-serif'],
       },
       borderRadius: {

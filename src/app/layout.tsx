@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import NextAuthProvider from '@/components/providers/session-provider';
 import { ThemeProvider } from '@/components/theme/theme-provider';
@@ -8,10 +8,9 @@ import QueryProvider from '@/components/providers/query-provider';
 import { Analytics } from '@vercel/analytics/react';
 import { SocketProvider } from '@/components/providers/socket-provider';
 
-const plusJakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-jakarta',
-  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-inter',
   display: 'swap',
 });
 
@@ -93,7 +92,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
-      <body suppressHydrationWarning className={plusJakarta.className}>
+      <body suppressHydrationWarning className={inter.className}>
         <NextAuthProvider>
           <QueryProvider>
             <ThemeProvider

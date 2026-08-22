@@ -82,7 +82,7 @@ function AuthContent() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 flex flex-col items-center justify-center p-4 relative overflow-hidden font-jakarta">
+    <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Animated Background Gradients - Exactly matching Admin "Proper" look */}
       <div className="absolute top-[-20%] left-[-10%] w-[150%] h-[150%] bg-gradient-to-br from-primary-600/10 dark:from-primary-600/30 via-transparent to-purple-600/10 dark:to-purple-600/20 blur-[120px] animate-pulse pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-primary-100/40 dark:bg-primary-900/40 rounded-full blur-[100px] pointer-events-none" />

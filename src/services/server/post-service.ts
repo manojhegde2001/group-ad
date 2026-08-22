@@ -140,7 +140,6 @@ export async function getPostsServer(params: GetPostsParams) {
               username: true,
               avatar: true,
               userType: true,
-              verificationStatus: true,
               website: true,
               companyWebsite: true,
               companyName: true,

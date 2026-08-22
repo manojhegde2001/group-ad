@@ -34,7 +34,6 @@ export async function GET(
                 username: true, 
                 avatar: true, 
                 userType: true,
-                verificationStatus: true,
                 companyName: true,
               },
             },

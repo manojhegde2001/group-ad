@@ -62,8 +62,6 @@ export type ProfileUser = Prisma.UserGetPayload<{
     messagingEnabled: true;
     userType: true;
     visibility: true;
-    verificationStatus: true;
-    verifiedAt: true;
     onboardingStep: true;
     isProfileCompleted: true;
     categoryId: true;
@@ -126,7 +124,6 @@ export type PostWithRelations = {
     username: string;
     avatar: string | null;
     userType: string;
-    verificationStatus: string;
     bio: string | null;
     website: string | null;
     websiteLabel: string | null;
@@ -168,7 +165,6 @@ export type EventWithRelations = Prisma.EventGetPayload<{
         username: true;
         avatar: true;
         userType: true;
-        verificationStatus: true;
       };
     };
     category: {

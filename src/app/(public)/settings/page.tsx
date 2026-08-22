@@ -105,15 +105,15 @@ export default function SettingsPage() {
   const [bsReason, setBsReason]                   = useState('');
 
   // Power Teams state
-  const [ptCategoryId, setPtCategoryId] = useState<string | null>(null);
-  const [ptSearchQuery, setPtSearchQuery] = useState('');
-  const { open: openPtModal, openEditTeam } = usePowerTeamModal();
-  const { data: myTeam, isLoading: loadingMyTeam } = useMyPowerTeam();
-  const { data: teamsData, isLoading: teamsLoading } = usePowerTeams({
-    categoryId: ptCategoryId || undefined,
-    search: ptSearchQuery || undefined,
-  });
-  const teams = teamsData?.teams || [];
+  // const [ptCategoryId, setPtCategoryId] = useState<string | null>(null);
+  // const [ptSearchQuery, setPtSearchQuery] = useState('');
+  // const { open: openPtModal, openEditTeam } = usePowerTeamModal();
+  // const { data: myTeam, isLoading: loadingMyTeam } = useMyPowerTeam();
+  // const { data: teamsData, isLoading: teamsLoading } = usePowerTeams({
+  //   categoryId: ptCategoryId || undefined,
+  //   search: ptSearchQuery || undefined,
+  // });
+  // const teams = teamsData?.teams || [];
   const profile = profileData?.user ?? profileData;
   const isAdmin = profile?.userType === 'ADMIN';
 
@@ -285,10 +285,10 @@ export default function SettingsPage() {
                       key={key}
                       onClick={() => setTab(key)}
                       className={cn(
-                        'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-bold transition-all',
+                        'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-bold transition-all outline-none',
                         active
                           ? 'bg-white dark:bg-secondary-900 text-secondary-900 dark:text-white shadow-sm border border-secondary-100 dark:border-secondary-800'
-                          : 'text-secondary-500 hover:bg-white/60 dark:hover:bg-secondary-900/50 hover:text-secondary-800 dark:hover:text-secondary-200',
+                          : 'text-secondary-500 border border-transparent hover:bg-white/60 dark:hover:bg-secondary-900/50 hover:text-secondary-800 dark:hover:text-secondary-200',
                       )}
                     >
                       <span className={cn('p-1.5 rounded-lg transition-colors', active ? bgParts.join(' ') : 'bg-transparent')}>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                 <div className="pt-3 mt-1 border-t border-secondary-200 dark:border-secondary-800">
                   <button
                     onClick={() => signOut({ callbackUrl: window.location.origin })}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-colors group"
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-colors group outline-none"
                   >
                     <span className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 group-hover:bg-red-100 transition-colors">
                       <LogOut className="w-3.5 h-3.5 text-red-500 transition-transform group-hover:-translate-x-0.5" />
@@ -424,8 +424,8 @@ export default function SettingsPage() {
                           placeholder="Select Category"
                           searchable={true}
                           selectClassName="w-full bg-white dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 rounded-2xl px-4 py-3 text-sm font-bold text-secondary-900 dark:text-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
-                          dropdownClassName="p-2 z-[9999]"
-                          optionClassName="hover:bg-primary-50 dark:hover:bg-primary-900/20 py-2 rounded-lg"
+                          dropdownClassName="p-2 z-[9999] bg-white dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 shadow-xl rounded-xl"
+                          optionClassName="hover:bg-primary-50 dark:hover:bg-primary-900/20 py-2 rounded-lg text-secondary-700 dark:text-secondary-200 font-medium"
                         />
                       </Field>
                       <Field label="GST Number"><input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} className={inputCls} placeholder="22AAAAA0000A1Z5" /></Field>
@@ -731,7 +731,7 @@ export default function SettingsPage() {
                           <h2 className="text-xl font-black text-secondary-900 dark:text-white tracking-tight">Explore Alliances</h2>
                           <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest mt-0.5">Strategic Partnerships</p>
                         </div>
-                        {(profile?.userType === 'ADMIN' || (profile?.userType === 'BUSINESS' && profile?.verificationStatus === 'VERIFIED')) && (
+                        {(profile?.userType === 'ADMIN' || profile?.userType === 'BUSINESS') && (
                           <Button
                             onClick={openPtModal}
                             className="rounded-2xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 font-black text-[10px] uppercase tracking-widest h-10 px-6 shadow-lg active:scale-95 transition-all"

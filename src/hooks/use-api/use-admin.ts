@@ -30,12 +30,12 @@ export const useUpdateUserStatus = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ userId, status }: { userId: string; status: string }) =>
-            adminService.updateUserStatus(userId, { status }),
+        mutationFn: ({ userId, userType }: { userId: string; userType: 'INDIVIDUAL' | 'BUSINESS' }) =>
+            adminService.updateUser(userId, { userType }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
             queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
-            toast.success('User status updated');
+            toast.success('Account type updated');
         },
         onError: (error: any) => {
             toast.error(error.message || 'Failed to update user');

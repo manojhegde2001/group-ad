@@ -25,20 +25,28 @@ export function LayoutContent({
 }) {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
-  const isMessagesPage = pathname?.startsWith('/messages');
+  
+  const NO_FOOTER_ROUTES = ['/messages'];
+
+  // Always show mobile nav space since we now have unauthenticated bottom nav
+  const showMobileNav = true; 
+  const showFooter = !NO_FOOTER_ROUTES.some(p => pathname?.startsWith(p));
   
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar />
       <div className={cn(
-        "flex-1 flex flex-col min-w-0",
+        "flex-1 flex flex-col min-w-0 relative",
         isAuthenticated ? "md:pl-20" : ""
       )}>
         <Navbar />
         <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
           {children}
         </main>
-        {!isMessagesPage && <Footer />}
+        {showFooter && <Footer />}
+        {showMobileNav && showFooter && (
+          <div className="md:hidden w-full shrink-0 h-[calc(4rem+env(safe-area-inset-bottom,0px))]" aria-hidden="true" />
+        )}
       </div>
       <AuthModal />
       <CreatePostModal />

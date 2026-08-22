@@ -129,10 +129,9 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { 
-        id: true, 
-        userType: true, 
-        verificationStatus: true,
+      select: {
+        id: true,
+        userType: true,
         powerTeamMemberships: {
           select: { id: true }
         }
@@ -146,11 +145,6 @@ export async function POST(request: NextRequest) {
     // Constraint: Only BUSINESS users
     if (user.userType !== 'BUSINESS' && (session.user as any).userType !== 'ADMIN') {
       return NextResponse.json({ error: 'Only business users can create power teams' }, { status: 403 });
-    }
-
-    // Constraint: Only VERIFIED users
-    if (user.verificationStatus !== 'VERIFIED' && (session.user as any).userType !== 'ADMIN') {
-      return NextResponse.json({ error: 'Your account must be verified to create a power team' }, { status: 403 });
     }
 
     // Constraint: Only one team membership allowed

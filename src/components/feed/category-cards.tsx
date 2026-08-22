@@ -8,10 +8,10 @@ const DEFAULT_CATEGORY_IMAGE = 'https://images.unsplash.com/photo-1616469829581-
 
 function CategorySkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-8">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 md:py-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
         {[...Array(10)].map((_, i) => (
-          <Skeleton key={i} className="w-full aspect-[4/5] rounded-2xl" />
+          <Skeleton key={i} className="w-full aspect-[4/3] rounded-xl" />
         ))}
       </div>
     </div>
@@ -27,8 +27,8 @@ export function CategoryCards({ initialData }: { initialData?: any }) {
 
   return (
     <div className="w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 md:py-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
           {categories.map((cat: any) => {
             const bgImage = cat.banner || DEFAULT_CATEGORY_IMAGE;
 
@@ -37,46 +37,38 @@ export function CategoryCards({ initialData }: { initialData?: any }) {
                 key={cat.id}
                 href={`/explore/${cat.slug}`}
                 className="
-                  group/card relative
-                  w-full aspect-[3/4]
-                  overflow-hidden rounded-[2rem]
-                  shadow-sm hover:shadow-2xl
-                  hover:-translate-y-3
-                  transition-all duration-700 cubic-bezier(0.2, 0, 0, 1)
-                  border border-secondary-100/50 dark:border-secondary-800/30
+                  group relative
+                  w-full aspect-[4/3]
+                  overflow-hidden rounded-xl
+                  bg-secondary-100 dark:bg-secondary-800
+                  transition-all duration-300 ease-out
                 "
               >
-                {/* Image Layer */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover/card:scale-110"
-                  style={{ backgroundImage: `url('${bgImage}')` }}
-                />
-
-                {/* Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary-950/90 via-secondary-900/20 to-transparent transition-opacity duration-700 group-hover/card:opacity-90" />
-                <div className="absolute inset-0 bg-primary-500/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700" />
-
-                {/* Content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="space-y-4 group-hover/card:scale-105 transition-transform duration-500">
-                    {cat.icon && (
-                      <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-[2rem] bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/20 shadow-2xl transition-all duration-700 group-hover/card:rotate-[10deg] group-hover/card:bg-white/20">
-                        <span className="text-3xl sm:text-4xl filter drop-shadow-xl">{cat.icon}</span>
-                      </div>
-                    )}
-                    <div className="space-y-1">
-                      <h3 className="font-black text-white tracking-tight leading-none text-xl sm:text-2xl uppercase drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                        {cat.name}
-                      </h3>
-                      <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] opacity-0 group-hover/card:opacity-100 transition-opacity duration-500">
-                        Explore Hub
-                      </p>
-                    </div>
-                  </div>
+                {/* Image Container with Blur-Fill Strategy */}
+                <div className="absolute inset-0 bg-secondary-100 dark:bg-secondary-900 overflow-hidden">
+                  {/* Blurred Backdrop to fill empty space without solid color bars */}
+                  <div
+                    className="absolute inset-[-20%] bg-cover bg-center opacity-60 dark:opacity-40 blur-xl scale-110 transition-transform duration-500 ease-out group-hover:scale-125"
+                    style={{ backgroundImage: `url('${bgImage}')` }}
+                  />
+                  {/* Foreground Image using contain to prevent cropping */}
+                  <img
+                    src={bgImage}
+                    alt={cat.name}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
+                  />
                 </div>
 
-                {/* Intersection Line */}
-                <div className="absolute bottom-0 left-0 w-full h-1.5 bg-primary-500 translate-y-full group-hover/card:translate-y-0 transition-transform duration-500" />
+                {/* Subdued Gradient Overlay for Text Readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                {/* Content */}
+                <div className="absolute inset-0 p-4 sm:p-5 flex flex-col justify-end pointer-events-none">
+                  <h3 className="font-bold text-white tracking-tight leading-tight text-base sm:text-lg lg:text-xl drop-shadow-sm">
+                    {cat.name}
+                  </h3>
+                </div>
               </Link>
             );
           })}

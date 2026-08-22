@@ -115,6 +115,19 @@ export default function AdminCategoriesPage() {
       return;
     }
 
+    // Check image dimensions for aspect ratio warning
+    const img = new Image();
+    img.onload = () => {
+      const aspectRatio = img.width / img.height;
+      if (aspectRatio < 0.9 || aspectRatio > 1.8) {
+        toast('Uploaded, but its aspect ratio is unusual. A 4:3 format is recommended for best presentation.', {
+          icon: '⚠️',
+          duration: 6000,
+        });
+      }
+    };
+    img.src = URL.createObjectURL(file);
+
     const formData = new FormData();
     formData.append('image', file);
     if (currentId) formData.append('categoryId', currentId);
@@ -203,12 +216,22 @@ export default function AdminCategoriesPage() {
                 />
 
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-secondary-400 uppercase tracking-widest ml-1">Banner Visual</label>
+                  <div className="flex justify-between items-center ml-1">
+                    <label className="block text-[10px] font-black text-secondary-400 uppercase tracking-widest">Banner Visual</label>
+                    <span className="text-[10px] font-medium text-secondary-400 bg-secondary-100 dark:bg-secondary-800 px-2 py-0.5 rounded-md">Rec: 4:3 (800x600)</span>
+                  </div>
                   
                   {banner ? (
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-secondary-50 dark:border-secondary-800 bg-secondary-100 dark:bg-secondary-800 aspect-video group shadow-inner">
-                      <CloudinaryImage src={banner} alt="Banner Preview" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-secondary-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-secondary-50 dark:border-secondary-800 bg-secondary-100 dark:bg-secondary-900 aspect-[4/3] group shadow-inner">
+                      {/* Blur fill preview */}
+                      <div
+                        className="absolute inset-[-20%] bg-cover bg-center opacity-60 dark:opacity-40 blur-xl scale-110"
+                        style={{ backgroundImage: `url('${banner}')` }}
+                      />
+                      {/* Actual foreground image */}
+                      <img src={banner} alt="Banner Preview" className="absolute inset-0 w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" />
+
+                      <div className="absolute inset-0 bg-secondary-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm z-10">
                         <Button 
                           type="button" 
                           size="sm" 
@@ -232,7 +255,7 @@ export default function AdminCategoriesPage() {
                   ) : (
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-secondary-100 dark:border-secondary-800 rounded-2xl aspect-video flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group relative overflow-hidden"
+                      className="border-2 border-dashed border-secondary-100 dark:border-secondary-800 rounded-2xl aspect-[4/3] flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group relative overflow-hidden"
                     >
                       {isUploading ? (
                         <div className="flex flex-col items-center gap-3">

@@ -240,7 +240,7 @@ export default function AdminDashboardPage() {
                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate font-black uppercase tracking-widest">@{u.username} · {u.userType}</p>
                      </div>
                      <div className="flex items-center gap-3 shrink-0">
-                       {u.verificationStatus === 'VERIFIED' && (
+                       {u.userType === 'BUSINESS' && (
                          <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shadow-emerald-500/20" />
                          </div>

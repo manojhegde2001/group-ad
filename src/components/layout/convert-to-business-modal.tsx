@@ -110,8 +110,8 @@ export function ConvertToBusinessModal({ isOpen, onClose }: ConvertToBusinessMod
                     placeholder="Select Category"
                     searchable={true}
                     selectClassName="w-full bg-secondary-50 dark:bg-secondary-800 border-2 border-secondary-100 dark:border-secondary-700 rounded-xl py-3 text-sm font-semibold text-secondary-900 dark:text-white focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 transition-all"
-                    dropdownClassName="p-2 z-[9999]"
-                    optionClassName="hover:bg-primary-50 dark:hover:bg-primary-900/20 py-2 rounded-lg"
+                    dropdownClassName="p-2 z-[9999] bg-white dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 shadow-xl rounded-xl"
+                    optionClassName="hover:bg-primary-50 dark:hover:bg-primary-900/20 py-2 rounded-lg text-secondary-700 dark:text-secondary-200 font-medium"
                   />
                 </div>
               </div>

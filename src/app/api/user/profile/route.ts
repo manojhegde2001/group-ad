@@ -106,11 +106,6 @@ export async function GET(request: NextRequest) {
         userType: true,
         visibility: true,
 
-        // Verification
-        verificationStatus: true,
-        verifiedAt: true,
-        verificationNote: true,
-
         // Onboarding
         onboardingStep: true,
         isProfileCompleted: true,
@@ -276,7 +271,6 @@ export async function PATCH(request: NextRequest) {
         messagingEnabled: true,
         userType: true,
         visibility: true,
-        verificationStatus: true,
         category: {
           select: {
             id: true,

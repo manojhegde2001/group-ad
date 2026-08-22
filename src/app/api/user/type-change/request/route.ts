@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the conversion request.
-    // IMPORTANT: The user's userType and verificationStatus are NOT updated here.
+    // IMPORTANT: The user's userType is NOT updated here.
     // The user remains INDIVIDUAL until the Admin explicitly approves the request.
     const typeChangeRequest = await prisma.userTypeChangeRequest.create({
       data: {

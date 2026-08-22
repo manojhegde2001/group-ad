@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
         username: true,
         avatar: true,
         userType: true,
-        verificationStatus: true,
       },
       take: 10,
     });

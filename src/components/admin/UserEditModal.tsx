@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, User, Shield, Ban, Loader2 } from 'lucide-react';
+import { X, Save, User, Shield, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
@@ -30,7 +30,6 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
     email: '',
     userType: '',
     categoryId: '',
-    verificationStatus: '',
     companyName: '',
     website: '',
     websiteLabel: '',
@@ -45,7 +44,6 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
         email: user.email || '',
         userType: user.userType || 'INDIVIDUAL',
         categoryId: user.categoryId || 'NONE',
-        verificationStatus: user.verificationStatus || 'UNVERIFIED',
         companyName: user.companyName || '',
         website: user.website || '',
         websiteLabel: user.websiteLabel || '',
@@ -80,7 +78,6 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
 
   if (!isOpen || !user || !mounted) return null;
 
-  const isVerified = form.verificationStatus === 'VERIFIED';
   const f = (key: string, val: string) => setForm(p => ({ ...p, [key]: val }));
 
   const modal = (
@@ -164,8 +161,8 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
               </div>
             </Section>
 
-            {/* VERIFICATION */}
-            <Section label="Verification">
+            {/* CATEGORY */}
+            <Section label="Category">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Select label="Primary Interest" value={form.categoryId}
                   onChange={val => f('categoryId', val)}
@@ -174,27 +171,7 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
                     ...categories.map(c => ({ label: c.name, value: c.id })),
                   ]}
                 />
-                <Select label="Trust Status" value={form.verificationStatus}
-                  onChange={val => f('verificationStatus', val)}
-                  options={[
-                    { label: 'Unverified', value: 'UNVERIFIED' },
-                    { label: 'Pending Review', value: 'PENDING' },
-                    { label: 'Verified', value: 'VERIFIED' },
-                    { label: 'Rejected', value: 'REJECTED' },
-                  ]}
-                />
               </div>
-              {isVerified && (
-                <button
-                  onClick={() => {
-                    f('verificationStatus', 'UNVERIFIED');
-                    toast.success('Set to Unverified. Click Save to apply.');
-                  }}
-                  className="mt-3 flex items-center gap-2 text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 active:scale-95 px-4 py-2.5 rounded-xl transition-all border border-red-200 dark:border-red-500/30 touch-manipulation"
-                >
-                  <Ban className="w-3.5 h-3.5 shrink-0" /> Revoke Verification
-                </button>
-              )}
             </Section>
 
             {/* PROFESSIONAL */}

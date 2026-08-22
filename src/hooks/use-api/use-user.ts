@@ -53,7 +53,7 @@ export const useUpgradeToBusiness = () => {
     return useMutation({
         mutationFn: (data?: any) => userService.upgradeToBusiness(data),
         onSuccess: () => {
-            toast.success('Account upgraded to business successfully');
+            toast.success('Upgrade request submitted. An admin will review it shortly.');
             queryClient.invalidateQueries({ queryKey: ['me'] });
             queryClient.invalidateQueries({ queryKey: ['profile'] });
         },

@@ -7,7 +7,6 @@ export interface AdminUser {
     email: string;
     avatar: string;
     userType: 'INDIVIDUAL' | 'BUSINESS' | 'ADMIN';
-    verificationStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
     createdAt: string;
     companyName?: string;
     website?: string;
@@ -47,13 +46,12 @@ export interface PaginatedUsers {
 export const adminService = {
     getStats: () => apiClient.get<AdminStats>('/api/admin/stats'),
     
-    getUsers: (params?: { page?: number; limit?: number; search?: string; type?: string; status?: string }) => {
+    getUsers: (params?: { page?: number; limit?: number; search?: string; type?: string }) => {
         const query = new URLSearchParams();
         if (params?.page) query.append('page', params.page.toString());
         if (params?.limit) query.append('limit', params.limit.toString());
         if (params?.search) query.append('q', params.search);
         if (params?.type) query.append('type', params.type);
-        if (params?.status) query.append('status', params.status);
         const url = `/api/admin/users${query.toString() ? '?' + query.toString() : ''}`;
         return apiClient.get<PaginatedUsers>(url);
     },
@@ -67,9 +65,6 @@ export const adminService = {
         const url = `/api/admin/businesses${query.toString() ? '?' + query.toString() : ''}`;
         return apiClient.get(url);
     },
-    
-    updateUserStatus: (userId: string, data: { status: string; userType?: string; note?: string }) =>
-        apiClient.patch(`/api/admin/users/${userId}/verify`, data),
     
     updateVerificationRequest: (id: string, data: { status: string }) =>
         apiClient.patch(`/api/admin/verification-requests/${id}`, data),

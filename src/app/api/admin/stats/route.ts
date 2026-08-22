@@ -21,7 +21,6 @@ export async function GET() {
       totalEvents,
       publishedEvents,
       pendingUpgradeRequests,
-      pendingVerifications,
       pendingReports,
       recentUsers,
       recentPosts,
@@ -40,12 +39,11 @@ export async function GET() {
       prisma.event.count(),
       prisma.event.count({ where: { status: 'PUBLISHED' } }),
       prisma.userTypeChangeRequest.count({ where: { status: 'PENDING' } }),
-      prisma.user.count({ where: { verificationStatus: 'PENDING' } }),
       prisma.report.count({ where: { status: 'PENDING' } }),
       prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
         take: 5,
-        select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, createdAt: true },
+        select: { id: true, name: true, username: true, avatar: true, userType: true, createdAt: true },
       }),
       prisma.post.findMany({
         orderBy: { createdAt: 'desc' },
@@ -79,7 +77,6 @@ export async function GET() {
         totalEvents,
         publishedEvents,
         pendingUpgradeRequests,
-        pendingVerifications,
         pendingReports,
         trends: {
           users: calculateTrend(usersLast30, usersPrior30),

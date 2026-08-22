@@ -107,7 +107,7 @@ export default function MyPostsTab() {
                         ))}
                     </div>
                 </div>
-                {((user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
+                {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
                 <Button
                     onClick={() => openCreatePost()}
 
@@ -132,7 +132,7 @@ export default function MyPostsTab() {
                     <p className="text-secondary-400 text-sm mb-4">
                         {filter === 'ALL' ? 'Share your first idea with the world!' : `Switch to another filter to see more.`}
                     </p>
-                    {filter === 'ALL' && ((user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
+                    {filter === 'ALL' && ((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
                         <Button onClick={() => openCreatePost()} variant="solid" color="primary" size="sm" rounded="pill">
                             Create your first post
                         </Button>

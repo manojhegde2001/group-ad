@@ -26,16 +26,14 @@ export function CreateTeamModal() {
 
   const createMutation = useCreatePowerTeam();
 
-  // Constraints Check
   // Constraints Check - Use fresh profile data to avoid session staleness
   const isBusiness = profile?.userType === 'BUSINESS';
-  const isVerified = profile?.verificationStatus === 'VERIFIED';
   const isAdmin = profile?.userType === 'ADMIN';
-  const canCreate = isAdmin || (isBusiness && isVerified);
+  const canCreate = isAdmin || isBusiness;
 
   useEffect(() => {
     if (isOpen && !canCreate) {
-      toast.error('Only verified business accounts can create Power Teams');
+      toast.error('Only business accounts can create Power Teams');
       close();
     }
   }, [isOpen, canCreate, close]);

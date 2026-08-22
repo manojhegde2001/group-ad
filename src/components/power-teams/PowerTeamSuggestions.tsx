@@ -13,7 +13,7 @@ interface PowerTeamMate {
   username: string;
   avatar: string | null;
   companyName: string | null;
-  verificationStatus: string;
+  userType: string;
 }
 
 interface PowerTeamSuggestionsProps {
@@ -88,7 +88,7 @@ export const PowerTeamSuggestions = memo(function PowerTeamSuggestions({ team, v
                 name={teammate.name}
                 className="w-10 h-10 rounded-xl ring-2 ring-transparent group-hover:ring-primary-500/20 transition-all"
               />
-              {teammate.verificationStatus === 'VERIFIED' && (
+              {teammate.userType === 'BUSINESS' && (
                 <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-white dark:bg-secondary-900 rounded-full flex items-center justify-center">
                   <ShieldCheck className="w-3 h-3 text-emerald-500" />
                 </div>

@@ -20,12 +20,9 @@ import {
   CheckCheck,
   Loader2,
   X,
-  Menu,
   Calendar,
   ShieldCheck,
   Library,
-  Home,
-  Compass,
   MessageSquare,
   PlusCircle,
   User,
@@ -33,7 +30,14 @@ import {
   Sun,
   Moon,
   Zap,
-  Bot
+  Bot,
+  Info,
+  HelpCircle,
+  Newspaper,
+  Mail,
+  FileText,
+  Shield,
+  Home
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -46,6 +50,16 @@ import { Drawer, Popover } from 'rizzui';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { useChatbot } from '@/hooks/use-chatbot';
 import { ConvertToBusinessModal } from './convert-to-business-modal';
+import { footerLinks } from './footer';
+
+const FOOTER_LINK_ICONS: Record<string, any> = {
+  '/about': Info,
+  '/how-it-works': HelpCircle,
+  '/blogs': Newspaper,
+  '/contact': Mail,
+  '/privacy-policy': Shield,
+  '/terms': FileText,
+};
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
@@ -75,7 +89,7 @@ function DrawerLink({ href, icon: Icon, label, onClick, active, className, badge
     >
       <div className="relative">
         <Icon className={cn("w-5 h-5", active ? "stroke-[2.5px]" : "stroke-[2px]")} />
-        {badge && badge > 0 && (
+        {typeof badge === 'number' && badge > 0 && (
           <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 ring-2 ring-white dark:ring-secondary-900 leading-none">
             {badge > 99 ? '99+' : badge}
           </span>
@@ -137,35 +151,117 @@ export function Navbar() {
   // --- Guest View (Logged Out) ---
   if (!isAuthenticated) {
     return (
-      <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 hidden md:flex h-20 items-center">
-        <div className="max-w-[1440px] mx-auto w-full flex items-center justify-between px-4 md:px-8 gap-4">
-          {/* Logo */}
-          <Link href="/" className="shrink-0 flex items-center">
-            <Logo className="w-28 md:w-32 h-8 md:h-10" />
-          </Link>
+      <>
+        <nav className="sticky top-0 z-50 bg-white dark:bg-secondary-900 border-b border-secondary-100 dark:border-secondary-800 flex h-16 md:h-20 items-center">
+          <div className="max-w-[1440px] mx-auto w-full flex items-center justify-between px-4 md:px-8 gap-2 md:gap-4">
+            {/* Logo */}
+            <Link href="/" className="shrink-0 flex items-center">
+              <Logo className="w-28 md:w-32 h-8 md:h-10" />
+            </Link>
 
-          {/* Guest Links */}
-          <div className="hidden lg:flex items-center gap-6 font-bold text-secondary-900 dark:text-white">
-            <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
-            <Link href="/about" className="hover:text-primary-500 transition-colors">About</Link>
-            <Link href="/blogs" className="hover:text-primary-500 transition-colors">Blogs</Link>
-          </div>
+            {/* Guest Links */}
+            <div className="hidden lg:flex items-center gap-6 font-bold text-secondary-900 dark:text-white">
+              <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
+              <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
+              <Link href="/about" className="hover:text-primary-500 transition-colors">About</Link>
+              <Link href="/blogs" className="hover:text-primary-500 transition-colors">Blogs</Link>
+            </div>
 
-          {/* Search Bar (Static/Small for Guests) */}
-          <div className="flex-1">
-            <SearchBar className="w-full" />
-          </div>
+            {/* Search Bar (Static/Small for Guests) */}
+            <div className="flex-1 hidden md:block">
+              <SearchBar className="w-full" />
+            </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            {pathname !== '/auth' && (
-              <>
-                <Button onClick={() => openLogin()} variant="text" color="secondary" className="font-bold text-secondary-900 dark:text-white px-4">Log in</Button>
-                <Button onClick={() => openSignup()} variant="solid" color="danger" className="font-bold px-4 py-2 bg-[#e60023] hover:bg-[#ad081b] rounded-full text-white">Sign up</Button>
-              </>
-            )}
+            <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+              {pathname !== '/auth' && (
+                <>
+                  <Button onClick={() => openLogin()} variant="text" color="secondary" className="hidden md:inline-flex font-bold text-secondary-900 dark:text-white px-2 sm:px-4 text-[11px] sm:text-sm">Log in</Button>
+                  <Button onClick={() => openSignup()} variant="solid" color="danger" className="font-bold px-3 py-1.5 sm:px-4 sm:py-2 bg-[#e60023] hover:bg-[#ad081b] rounded-full text-white text-[11px] sm:text-sm">Sign up</Button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+
+        {/* Mobile Bottom Navigation (Guest) */}
+        <MobileBottomNav onMenuClick={() => setMobileDrawerOpen(true)} />
+
+        {/* Mobile Drawer for Guest View */}
+        <Drawer
+          isOpen={mobileDrawerOpen && !isAuthenticated}
+          onClose={() => setMobileDrawerOpen(false)}
+          placement="bottom"
+          containerClassName="md:hidden w-full h-auto max-h-[90vh] bg-white dark:bg-secondary-900 shadow-2xl flex flex-col overflow-hidden rounded-t-[2.5rem]"
+        >
+          <div className="flex flex-col items-center pt-3 pb-1 shrink-0">
+            <div className="w-12 h-1.5 bg-secondary-200 dark:bg-secondary-800 rounded-full" />
+          </div>
+          <div className="flex-1 overflow-y-auto scrollbar-none">
+            <div className="flex items-center justify-between px-6 pt-2 pb-4">
+              <div className="flex items-center gap-2">
+                <Logo className="w-8 h-8" iconOnly />
+                <span className="font-bold text-xl text-secondary-900 dark:text-white">Menu</span>
+              </div>
+              <ActionIcon variant="flat" rounded="full" onClick={() => setMobileDrawerOpen(false)}>
+                <X className="w-5 h-5" />
+              </ActionIcon>
+            </div>
+
+            <div className="px-6 pb-6 space-y-6">
+              {/* Auth Actions */}
+              <div className="flex flex-col gap-3 pt-2">
+                <Button onClick={() => { setMobileDrawerOpen(false); openSignup(); }} variant="solid" color="danger" className="w-full font-bold py-3.5 bg-[#e60023] hover:bg-[#ad081b] rounded-2xl text-white">Sign up</Button>
+                <Button onClick={() => { setMobileDrawerOpen(false); openLogin(); }} variant="outline" color="secondary" className="w-full font-bold py-3.5 rounded-2xl">Log in</Button>
+              </div>
+
+              {/* Discover */}
+              <div className="space-y-1">
+                <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Discover</p>
+                <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
+                <DrawerLink href="/explore" icon={Layout} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
+                <DrawerLink href="/about" icon={Info} label="About" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/about'} />
+                <DrawerLink href="/blogs" icon={Newspaper} label="Blogs" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/blogs'} />
+              </div>
+
+              {/* Appearance */}
+              <div className="space-y-1">
+                <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Appearance</p>
+                <div className="px-4">
+                  <button
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 active:scale-[0.98] transition-all"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm text-secondary-600 dark:text-secondary-400">
+                        {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                      </div>
+                      <span className="font-bold text-secondary-900 dark:text-white">Theme</span>
+                    </div>
+                    <div className="px-3 py-1 bg-white dark:bg-secondary-900 rounded-lg text-xs font-black uppercase tracking-wider text-secondary-500 shadow-sm border border-secondary-100 dark:border-secondary-800">
+                      {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Legal */}
+              <div className="space-y-1">
+                <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Legal</p>
+                {[...footerLinks.Company, ...footerLinks.Legal].map((link) => (
+                  <DrawerLink
+                    key={link.href}
+                    href={link.href}
+                    icon={FOOTER_LINK_ICONS[link.href] || Info}
+                    label={link.label}
+                    onClick={() => setMobileDrawerOpen(false)}
+                    active={pathname === link.href}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </Drawer>
+      </>
     );
   }
 
@@ -330,7 +426,10 @@ export function Navbar() {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav onMenuClick={() => setMobileDrawerOpen(true)} />
+      <MobileBottomNav
+        onMenuClick={() => setMobileDrawerOpen(true)}
+        unreadCount={unreadMessages + unreadNotifications}
+      />
 
       <Drawer
         isOpen={mobileDrawerOpen}
@@ -338,13 +437,17 @@ export function Navbar() {
         placement="bottom"
         containerClassName="md:hidden w-full h-auto max-h-[90vh] bg-white dark:bg-secondary-900 shadow-2xl flex flex-col overflow-hidden rounded-t-[2.5rem]"
       >
-        {/* Header - Centered Handle for Drawer */}
-        <div className="flex flex-col items-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-secondary-200 dark:bg-secondary-800 rounded-full mb-4" />
-          <div className="flex items-center justify-between w-full px-6">
+        {/* Drag handle only - stays out of the way of scroll content */}
+        <div className="flex flex-col items-center pt-3 pb-1 shrink-0">
+          <div className="w-12 h-1.5 bg-secondary-200 dark:bg-secondary-800 rounded-full" />
+        </div>
+
+        {/* Everything below scrolls as a single region - no isolated static header/footer */}
+        <div className="flex-1 overflow-y-auto scrollbar-none">
+          <div className="flex items-center justify-between px-6 pt-2 pb-4">
             <div className="flex items-center gap-2">
               <Logo className="w-8 h-8" iconOnly />
-              <span className="font-bold text-xl text-secondary-900 dark:text-white">More Options</span>
+              <span className="font-bold text-xl text-secondary-900 dark:text-white">Menu</span>
             </div>
             <ActionIcon
               variant="flat"
@@ -354,100 +457,122 @@ export function Navbar() {
               <X className="w-5 h-5" />
             </ActionIcon>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-none">
-          {/* User Profile Section */}
-          {isAuthenticated && user && (
-            <div className="p-4 bg-secondary-50 dark:bg-secondary-800/50 rounded-2xl border border-secondary-100 dark:border-secondary-800">
-              <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setMobileDrawerOpen(false)} className="flex items-center gap-4">
-                <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-14 h-14 ring-2 ring-white dark:ring-secondary-700 shadow-sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-secondary-900 dark:text-white truncate">{user?.name}</p>
-                  <p className="text-sm text-secondary-500 truncate">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
-                </div>
-              </Link>
-            </div>
-          )}
-
-          {/* Main Navigation */}
-          <nav className="space-y-1">~
-            <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Navigation</p>
-            <DrawerLink href="/" icon={Home} label="Home" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/'} />
-            <DrawerLink href="/explore" icon={Compass} label="Explore" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/explore'} />
-            {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
-              <>
-                <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
-              </>
+          <div className="px-6 pb-6 space-y-8">
+            {/* User Profile Section */}
+            {isAuthenticated && user && (
+              <div className="p-4 bg-secondary-50 dark:bg-secondary-800/50 rounded-2xl border border-secondary-100 dark:border-secondary-800">
+                <Link href={`/profile/${(user as any).username || ''}`} onClick={() => setMobileDrawerOpen(false)} className="flex items-center gap-4">
+                  <Avatar src={(user?.avatar as string) || undefined} name={user?.name || 'User'} size="md" className="w-14 h-14 ring-2 ring-white dark:ring-secondary-700 shadow-sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-secondary-900 dark:text-white truncate">{user?.name}</p>
+                    <p className="text-sm text-secondary-500 truncate">{(user as any).userType === 'BUSINESS' ? 'Business Account' : 'Personal Account'}</p>
+                  </div>
+                </Link>
+              </div>
             )}
-            <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
-            <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
-            <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
-          </nav>
 
-          {/* Create Post Section - Only for authorized users */}
-          {((user as any)?.userType === 'ADMIN' || ((user as any)?.userType === 'BUSINESS' && (user as any)?.verificationStatus === 'VERIFIED')) && (
-            <div className="space-y-1">
-              <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Actions</p>
+            {/* Convert to Business Option */}
+            {(user as any)?.userType !== 'BUSINESS' && (
+              <button
+                onClick={() => {
+                  setMobileDrawerOpen(false);
+                  setIsConvertModalOpen(true);
+                }}
+                className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 border border-primary-100 dark:border-primary-800 hover:from-primary-100 hover:to-primary-200 dark:hover:from-primary-800/40 dark:hover:to-primary-700/40 transition-colors group"
+              >
+                <div className="flex flex-col items-start min-w-0">
+                  <span className="text-sm font-bold text-primary-700 dark:text-primary-300 flex items-center gap-1.5">
+                    <Zap className="w-4 h-4" /> Convert to Business
+                  </span>
+                  <span className="text-xs font-semibold text-primary-600/80 dark:text-primary-400/80 mt-0.5 text-left leading-tight">Unlock enterprise features</span>
+                </div>
+              </button>
+            )}
+
+            {/* Create Post - highest-priority action for eligible users */}
+            {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
               <button
                 onClick={() => {
                   setMobileDrawerOpen(false);
                   createPostModal.open();
                 }}
-                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary-500 text-white font-bold shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-primary-500 text-white font-bold shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
               >
-                <PlusCircle className="w-6 h-6" /> Create Post
+                <PlusCircle className="w-5 h-5" /> Create Post
               </button>
-            </div>
-          )}
-
-          {/* Account Section */}
-          <div className="space-y-1">
-            <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Account</p>
-            <DrawerLink href={`/profile/${(user as any).username || ''}`} icon={User} label="My Profile" onClick={() => setMobileDrawerOpen(false)} active={pathname === `/profile/${(user as any).username}`} />
-            {(user as any)?.userType === 'ADMIN' && (
-              <DrawerLink href="https://admin.vrutta.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
             )}
-            <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
-            {/* <button
-                    onClick={() => { setMobileDrawerOpen(false); chatbot.open(); }}
-                    className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-primary-600 dark:text-primary-400 font-bold hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-colors"
-                >
-                    <Bot className="w-5 h-5" /> AI Assistant
-                </button> */}
-          </div>
 
-          {/* Appearance Section */}
-          <div className="space-y-1">
-            <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Appearance</p>
-            <div className="px-4">
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 active:scale-[0.98] transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm text-secondary-600 dark:text-secondary-400">
-                    {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            {/* Quick Access - live/frequently-checked items first; Home & Explore already live in the bottom bar */}
+            <div className="space-y-1">
+              <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Quick Access</p>
+              <DrawerLink href="/notifications" icon={Bell} label="Notifications" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/notifications'} badge={unreadNotifications} />
+              <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
+              <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
+              {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
+                <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
+              )}
+            </div>
+
+            {/* Account Section */}
+            <div className="space-y-1">
+              <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Account</p>
+              <DrawerLink href={`/profile/${(user as any).username || ''}`} icon={User} label="My Profile" onClick={() => setMobileDrawerOpen(false)} active={pathname === `/profile/${(user as any).username}`} />
+              {(user as any)?.userType === 'ADMIN' && (
+                <DrawerLink href="https://admin.vrutta.net/" icon={ShieldCheck} label="Admin Panel" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/admin'} className="text-primary-600 dark:text-primary-400" />
+              )}
+              <DrawerLink href="/settings" icon={Settings} label="Settings" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/settings'} />
+            </div>
+
+            {/* Appearance Section */}
+            <div className="space-y-1">
+              <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">Appearance</p>
+              <div className="px-4">
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 active:scale-[0.98] transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm text-secondary-600 dark:text-secondary-400">
+                      {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                    </div>
+                    <span className="font-bold text-secondary-900 dark:text-white">Theme</span>
                   </div>
-                  <span className="font-bold text-secondary-900 dark:text-white">Theme</span>
-                </div>
-                <div className="px-3 py-1 bg-white dark:bg-secondary-900 rounded-lg text-xs font-black uppercase tracking-wider text-secondary-500 shadow-sm border border-secondary-100 dark:border-secondary-800">
-                  {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-                </div>
+                  <div className="px-3 py-1 bg-white dark:bg-secondary-900 rounded-lg text-xs font-black uppercase tracking-wider text-secondary-500 shadow-sm border border-secondary-100 dark:border-secondary-800">
+                    {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Company & Legal - sourced from the footer so mobile users don't need to scroll a whole feed to reach them */}
+            <div className="space-y-1">
+              <p className="px-4 text-xs font-bold text-secondary-400 uppercase tracking-widest mb-2">More</p>
+              {[...footerLinks.Company, ...footerLinks.Legal].map((link) => (
+                <DrawerLink
+                  key={link.href}
+                  href={link.href}
+                  icon={FOOTER_LINK_ICONS[link.href] || Info}
+                  label={link.label}
+                  onClick={() => setMobileDrawerOpen(false)}
+                  active={pathname === link.href}
+                />
+              ))}
+            </div>
+
+            {/* Log out - part of the natural scroll flow, not pinned */}
+            <div className="pt-2 border-t border-secondary-100 dark:border-secondary-800">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-4 px-4 py-3 mt-4 rounded-2xl text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="w-5 h-5" /> Log out
               </button>
+              <p className="text-center text-xs text-secondary-400 dark:text-secondary-500 mt-4">
+                © {new Date().getFullYear()} Vrutta
+              </p>
             </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-secondary-100 dark:border-secondary-800">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut className="w-5 h-5" /> Log out
-          </button>
         </div>
       </Drawer>
       {/* Auth required handler - must be in Suspense because of useSearchParams */}

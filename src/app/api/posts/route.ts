@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, userType: true, companyId: true, categoryId: true, verificationStatus: true },
+      select: { id: true, userType: true, companyId: true, categoryId: true },
     });
 
     if (!user) {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         user: {
-          select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true, bio: true, website: true, companyWebsite: true, companyName: true, websiteLabel: true },
+          select: { id: true, name: true, username: true, avatar: true, userType: true, bio: true, website: true, companyWebsite: true, companyName: true, websiteLabel: true },
         },
         category: { select: { id: true, name: true, slug: true, icon: true } },
         company: { select: { id: true, name: true, slug: true, logo: true, isVerified: true } },

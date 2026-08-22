@@ -1,4 +1,4 @@
-import { PrismaClient, UserType, VerificationStatus, PostType, EventStatus, AccountVisibility } from '@prisma/client';
+import { PrismaClient, UserType, PostType, EventStatus, AccountVisibility } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -68,8 +68,6 @@ async function main() {
       name: 'Admin User',
       username: 'admin',
       userType: UserType.ADMIN,
-      verificationStatus: VerificationStatus.VERIFIED,
-      verifiedAt: new Date(),
       isProfileCompleted: true,
       profileCompletedAt: new Date(),
       categoryId: createdCategories[0].id, // Technology
@@ -131,7 +129,7 @@ async function main() {
   }
 
   // ============================================================================
-  // 4. CREATE BUSINESS USERS (Verified & Unverified)
+  // 4. CREATE BUSINESS USERS
   // ============================================================================
 
   const businessUsers = [
@@ -141,8 +139,6 @@ async function main() {
       name: 'John Doe',
       username: 'johndoe',
       userType: UserType.BUSINESS,
-      verificationStatus: VerificationStatus.VERIFIED,
-      verifiedAt: new Date(),
       companyId: createdCompanies[0].id,
       categoryId: createdCategories[0].id, // Technology
       bio: 'Tech entrepreneur and software architect',
@@ -159,8 +155,6 @@ async function main() {
       name: 'Sarah Johnson',
       username: 'sarahjohnson',
       userType: UserType.BUSINESS,
-      verificationStatus: VerificationStatus.VERIFIED,
-      verifiedAt: new Date(),
       companyId: createdCompanies[1].id,
       categoryId: createdCategories[1].id, // Healthcare
       bio: 'Healthcare innovator and medical tech specialist',
@@ -177,7 +171,6 @@ async function main() {
       name: 'Mike Wilson',
       username: 'mikewilson',
       userType: UserType.BUSINESS,
-      verificationStatus: VerificationStatus.PENDING,
       companyId: createdCompanies[2].id,
       categoryId: createdCategories[8].id, // Renewable Energy
       bio: 'Green energy advocate and sustainability expert',
@@ -211,7 +204,6 @@ async function main() {
       name: 'Alice Smith',
       username: 'alicesmith',
       userType: UserType.INDIVIDUAL,
-      verificationStatus: VerificationStatus.UNVERIFIED,
       categoryId: createdCategories[7].id, // Marketing
       bio: 'Digital marketing specialist and content creator',
       location: 'Bengaluru, Karnataka',
@@ -224,7 +216,6 @@ async function main() {
       name: 'Bob Brown',
       username: 'bobbrown',
       userType: UserType.INDIVIDUAL,
-      verificationStatus: VerificationStatus.UNVERIFIED,
       categoryId: createdCategories[2].id, // Finance
       bio: 'Financial analyst and investment consultant',
       location: 'Mumbai, Maharashtra',
@@ -243,6 +234,27 @@ async function main() {
     createdIndividualUsers.push(createdUser);
     console.log(`✅ Individual user created: ${createdUser.name}`);
   }
+
+  // ============================================================================
+  // 4b. CREATE A PENDING BUSINESS CONVERSION REQUEST
+  // Demonstrates the individual -> business flow: the user stays INDIVIDUAL
+  // until an admin approves the request in the Businesses panel.
+  // ============================================================================
+
+  await prisma.userTypeChangeRequest.create({
+    data: {
+      userId: createdIndividualUsers[0].id,
+      fromType: UserType.INDIVIDUAL,
+      toType: UserType.BUSINESS,
+      companyName: 'Smith Digital Marketing',
+      categoryId: createdCategories[7].id, // Marketing
+      companySize: '1-10',
+      reason: 'Registering my freelance marketing practice as a business account.',
+      status: 'PENDING',
+    },
+  });
+
+  console.log('✅ Pending business conversion request created for:', createdIndividualUsers[0].name);
 
   // ============================================================================
   // 6. CREATE SAMPLE POSTS (DISABLED)

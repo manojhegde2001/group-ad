@@ -513,8 +513,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         <hr className="border-gray-100 dark:border-secondary-800 my-4" />
 
                         {/* Author Card */}
-                        <div className="flex items-center justify-between py-2">
-                            <Link href={`/profile/${post.user.username}`} className="flex items-center gap-3 group">
+                        <div className="flex items-center justify-between gap-3 py-2">
+                            <Link href={`/profile/${post.user.username}`} className="flex items-center gap-3 group min-w-0 flex-1">
                                 <div className="w-[44px] h-[44px] rounded-full bg-gray-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-50 dark:border-secondary-700 relative">
                                      {post.user.avatar ? (
                                          <CloudinaryImage src={post.user.avatar} fill className="w-full h-full object-cover" alt="" />
@@ -523,26 +523,21 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     )}
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="inline-flex items-center gap-1">
+                                    <div className="inline-flex items-center gap-1 max-w-full">
                                         <span className="font-semibold text-[14px] text-gray-900 dark:text-white truncate group-hover:underline">{post.user.companyName || post.user.name}</span>
-                                        {post.user.verificationStatus === 'VERIFIED' && <BadgeCheck className="w-4 h-4 text-primary-500 shrink-0" />}
+                                        {post.user.userType === 'BUSINESS' && <BadgeCheck className="w-4 h-4 text-primary-500 shrink-0" />}
                                     </div>
                                     <span className="block text-[12px] text-gray-400 mt-0.5">{(post as any).followerCount || 0} followers</span>
                                 </div>
                             </Link>
                             {!loadingAuth && user?.id !== post.user.id && (
-                                <ConnectionButton 
-                                    userId={post.user.id} 
+                                <ConnectionButton
+                                    userId={post.user.id}
                                     targetName={post.user.companyName || post.user.name}
                                     initialStatus={(post.user as any).connectionStatus}
                                     isInitiator={(post.user as any).connectionInitiator}
                                     mutualConnections={(post.user as any).mutualConnections}
-                                    className={cn(
-                                        "rounded-full font-semibold text-sm px-4 py-1.5 transition-all active:scale-95",
-                                        (post.user as any).connectionStatus === 'CONNECTED'
-                                            ? "bg-gray-100 text-gray-600 border border-gray-200"
-                                            : "border border-gray-900 text-gray-900 bg-white hover:bg-gray-900 hover:text-white"
-                                    )}
+                                    className="shrink-0 whitespace-nowrap h-9 px-4 text-[10px]"
                                 />
                             )}
                         </div>
@@ -614,7 +609,10 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
 
                     {/* Pinned Comment Input Row */}
-                    <div className="sticky bottom-0 p-6 md:px-8 md:py-6 bg-white dark:bg-secondary-900 border-t border-gray-100 dark:border-secondary-800 z-20">
+                    <div className={cn(
+                        "sticky p-6 md:px-8 md:py-6 bg-white dark:bg-secondary-900 border-t border-gray-100 dark:border-secondary-800 z-20",
+                        isModal ? "bottom-0" : "bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] md:bottom-0"
+                    )}>
                         {post.commentsEnabled !== false ? (
                             <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
                                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden relative">

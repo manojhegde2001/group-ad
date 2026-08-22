@@ -32,8 +32,6 @@ export async function GET() {
         messagingEnabled: true,
         userType: true,
         visibility: true,
-        verificationStatus: true,
-        verifiedAt: true,
         category: true,
         interests: true,
         turnover: true,

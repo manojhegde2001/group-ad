@@ -150,7 +150,7 @@ export default function PowerTeamDetailPage() {
                             <p className="font-black text-secondary-900 dark:text-white truncate text-sm uppercase tracking-tight">
                                 {member.user.name}
                             </p>
-                            {member.user.verificationStatus === 'VERIFIED' && (
+                            {member.user.userType === 'BUSINESS' && (
                                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                             )}
                         </div>

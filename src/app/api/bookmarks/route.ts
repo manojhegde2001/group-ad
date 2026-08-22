@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
                                     username: true,
                                     avatar: true,
                                     userType: true,
-                                    verificationStatus: true,
                                 },
                             },
                             category: { select: { id: true, name: true, slug: true, icon: true } },

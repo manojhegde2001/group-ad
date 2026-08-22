@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
-import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, Settings, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff, CalendarRange } from 'lucide-react';
+import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, LayoutDashboard, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff, CalendarRange, ChevronLeft } from 'lucide-react';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
@@ -167,93 +167,106 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
     return (
         <>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="w-full min-w-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
+            {/* --- Back Button --- */}
+            <button
+                onClick={() => router.back()}
+                className="mb-6 md:mb-8 flex items-center justify-center w-10 h-10 rounded-full bg-secondary-100 dark:bg-secondary-800/50 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors active:scale-95"
+                aria-label="Go back"
+            >
+                <ChevronLeft className="w-5 h-5" />
+            </button>
+
             {/* --- Profile Header --- */}
-            <div className="relative mb-12">
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12">
+            <div className="relative mb-8 md:mb-12">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-5 md:gap-12">
                     {/* Avatar with Ring */}
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-tr from-primary-500 to-violet-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                         <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-[2.2rem] overflow-hidden border-4 border-white dark:border-secondary-900 shadow-2xl bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center">
+                    <div className="relative group shrink-0">
+                        <div className="absolute -inset-1 bg-gradient-to-tr from-primary-500 to-violet-500 rounded-4xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                         <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-44 md:h-44 rounded-4xl overflow-hidden border-4 border-white dark:border-secondary-900 shadow-2xl bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center">
                              {profile.avatar ? (
                                  <CloudinaryImage src={profile.avatar} alt={profile.companyName || profile.name} fill className="w-full h-full object-cover" />
                              ) : (
-                                 <span className="text-4xl font-black text-secondary-400 uppercase">{(profile.companyName || profile.name).charAt(0)}</span>
+                                 <span className="text-3xl sm:text-4xl font-black text-secondary-400 uppercase">{(profile.companyName || profile.name).charAt(0)}</span>
                              )}
                          </div>
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 text-center md:text-left pt-2">
-                        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-                            <h1 className="text-3xl md:text-4xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter flex items-center justify-center md:justify-start gap-2">
-                                {profile.companyName || profile.name}
-                                {profile.verificationStatus === 'VERIFIED' && <BadgeCheck className="w-8 h-8 text-primary-500" />}
-                            </h1>
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                    <div className="flex-1 min-w-0 w-full text-center md:text-left pt-0 md:pt-2">
+                        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 mb-5 md:mb-6">
+                            <div className="min-w-0">
+                                <h1 className="min-w-0 text-2xl sm:text-3xl md:text-4xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter flex items-center justify-center md:justify-start gap-2">
+                                    <span className="break-words">{profile.companyName || profile.name}</span>
+                                    {profile.userType === 'BUSINESS' && <BadgeCheck className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-500 shrink-0" />}
+                                </h1>
+                                <p className="text-sm font-bold text-secondary-400 dark:text-secondary-500 break-words mt-0.5 md:mt-1">@{profile.username}</p>
+                            </div>
+                            <div className="flex items-center justify-center md:justify-start gap-2 sm:gap-3 w-full sm:w-auto mt-3 md:mt-0">
                                 {isOwnProfile ? (
                                     <>
+                                        {/* Edit Profile (Primary) */}
+                                        <Link href="/settings" className="flex-1 min-w-0 sm:flex-none sm:w-auto flex items-center justify-center h-10 px-4 sm:px-6 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 shadow-lg shadow-secondary-900/20 dark:shadow-white/10 font-black uppercase tracking-widest text-[10px] whitespace-nowrap transition-all active:scale-95">
+                                            Edit Profile
+                                        </Link>
+
                                         {/* Visibility Badge */}
-                                        <div className="flex items-center gap-1.5 h-10 px-4 rounded-full bg-secondary-100/50 dark:bg-secondary-800/50 text-[10px] font-black uppercase tracking-widest text-secondary-600 dark:text-secondary-300">
-                                            {(profile as any).visibility === 'PUBLIC' ? <Globe className="w-3.5 h-3.5 text-emerald-500" /> : <EyeOff className="w-3.5 h-3.5 text-amber-500" />}
-                                            {(profile as any).visibility}
+                                        <div className="flex items-center justify-center sm:justify-start gap-1.5 h-10 w-10 sm:w-auto px-0 sm:px-4 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 text-[10px] font-black uppercase tracking-widest text-secondary-600 dark:text-secondary-300">
+                                            {(profile as any).visibility === 'PUBLIC' ? <Globe className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <EyeOff className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                                            <span className="hidden sm:inline">{(profile as any).visibility}</span>
                                         </div>
-                                        
+
                                         {/* Share Icon */}
-                                        <ActionIcon onClick={handleShareProfile} className="h-10 w-10 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-700 dark:text-secondary-300 transition-colors">
+                                        <ActionIcon onClick={handleShareProfile} className="h-10 w-10 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-700 dark:text-secondary-300 transition-colors">
                                             <Share2 className="w-4 h-4" />
                                         </ActionIcon>
 
                                         {/* My Boards */}
-                                        <Link href="/boards" className="flex items-center justify-center h-10 px-5 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-900 dark:text-white font-black uppercase tracking-widest text-[10px] transition-colors gap-2">
-                                            <Settings className="w-3.5 h-3.5" /> My Boards
-                                        </Link>
-
-                                        {/* Edit Profile (Primary) */}
-                                        <Link href="/settings" className="flex items-center justify-center h-10 px-6 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 shadow-lg shadow-secondary-900/20 dark:shadow-white/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95">
-                                            Edit Profile
+                                        <Link href="/boards" className="flex items-center justify-center h-10 w-10 sm:w-auto px-0 sm:px-5 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-900 dark:text-white font-black uppercase tracking-widest text-[10px] transition-colors gap-0 sm:gap-2">
+                                            <LayoutDashboard className="w-3.5 h-3.5 shrink-0" /> <span className="hidden sm:inline">My Boards</span>
                                         </Link>
                                     </>
                                 ) : (
                                     <>
-                                        <ConnectionButton 
-                                            userId={profile.id} 
+                                        <ConnectionButton
+                                            userId={profile.id}
                                             targetName={profile.companyName || profile.name}
                                             initialStatus={profile.connectionStatus}
                                             isInitiator={profile.connectionInitiator}
                                             mutualConnections={(profile as any).mutualConnections}
+                                            className="flex-1 min-w-0 sm:flex-none sm:w-auto h-10 whitespace-nowrap"
                                         />
-                                        
+
                                         {profile.messagingEnabled && ((profile as any).visibility === 'PUBLIC' || profile.connectionStatus === 'ACCEPTED') && (
-                                            <Link href={`/messages?userId=${profile.id}`} className="flex items-center justify-center h-10 px-5 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-900 dark:text-white font-black uppercase tracking-widest text-[10px] transition-colors gap-2">
-                                                <MessageSquare className="w-3.5 h-3.5 mt-0.5" />
-                                                Message
+                                            <Link href={`/messages?userId=${profile.id}`} className="flex items-center justify-center h-10 w-10 sm:w-auto px-0 sm:px-5 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-900 dark:text-white font-black uppercase tracking-widest text-[10px] transition-colors gap-0 sm:gap-2">
+                                                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                                                <span className="hidden sm:inline">Message</span>
                                             </Link>
                                         )}
 
-                                        <ActionIcon onClick={handleShareProfile} className="h-10 w-10 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-700 dark:text-secondary-300 transition-colors">
+                                        <ActionIcon onClick={handleShareProfile} className="h-10 w-10 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-700 dark:text-secondary-300 transition-colors">
                                             <Share2 className="w-4 h-4" />
                                         </ActionIcon>
 
-                                        <Popover 
-                                            isOpen={isMenuOpen} 
+                                        <Popover
+                                            isOpen={isMenuOpen}
                                             setIsOpen={setIsMenuOpen}
                                             placement="bottom-end"
                                         >
                                             <Popover.Trigger>
-                                                <ActionIcon className="h-10 w-10 rounded-full border-2 border-secondary-200 dark:border-secondary-700 hover:bg-secondary-50 dark:hover:bg-secondary-800 text-secondary-700 dark:text-secondary-300 transition-colors">
+                                                <ActionIcon className="h-10 w-10 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-700 dark:text-secondary-300 transition-colors">
                                                     <MoreHorizontal className="w-4 h-4" />
                                                 </ActionIcon>
                                             </Popover.Trigger>
                                             <Popover.Content className="w-44 p-2 bg-white dark:bg-secondary-900 rounded-2xl shadow-2xl border border-secondary-200 dark:border-secondary-700">
                                                 <div className="flex flex-col gap-1">
-                                                    <button 
+                                                    <button
                                                         onClick={handleReport}
                                                         className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-colors text-secondary-900 dark:text-white"
                                                     >
                                                         <Flag className="w-4 h-4" /> Report
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         onClick={handleBlock}
                                                         className="w-full flex items-center gap-2 text-sm font-bold py-2.5 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors"
                                                     >
@@ -268,44 +281,44 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                         </div>
 
                         {/* Stats */}
-                        <div className="flex items-center justify-center md:justify-start gap-12 mb-8">
+                        <div className="flex items-center justify-center md:justify-start gap-8 sm:gap-10 md:gap-12 mb-6 md:mb-8">
                             <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.posts || 0}</p>
+                                <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.posts || 0}</p>
                                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Posts</p>
                             </div>
                             <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.connections || 0}</p>
+                                <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.connections || 0}</p>
                                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Connections</p>
                             </div>
                         </div>
 
                         {/* Bio & Links */}
-                        <div className="max-w-2xl space-y-4">
-                            {profile.bio && <p className="text-secondary-700 dark:text-secondary-300 font-medium leading-relaxed">{profile.bio}</p>}
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm font-bold">
+                        <div className="max-w-2xl mx-auto md:mx-0 space-y-3 md:space-y-4">
+                            {profile.bio && <p className="text-secondary-700 dark:text-secondary-300 font-medium leading-relaxed break-words">{profile.bio}</p>}
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4 text-sm font-bold">
                                 {profile.location && (
-                                    <div className="flex items-center gap-1.5 text-secondary-500">
-                                        <MapPin className="w-4 h-4" /> {profile.location}
+                                    <div className="flex items-center gap-1.5 text-secondary-500 min-w-0">
+                                        <MapPin className="w-4 h-4 shrink-0" /> <span className="break-words">{profile.location}</span>
                                     </div>
                                 )}
                                 {profile.website && (
-                                    <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary-500 hover:underline">
-                                        <LinkIcon className="w-4 h-4" /> {profile.websiteLabel || profile.website.replace(/^https?:\/\//, '')}
+                                    <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary-500 hover:underline min-w-0">
+                                        <LinkIcon className="w-4 h-4 shrink-0" /> <span className="break-words">{profile.websiteLabel || profile.website.replace(/^https?:\/\//, '')}</span>
                                     </a>
                                 )}
                                 {profile.phone && (isOwnProfile || profile.phoneVisibility === 'PRIMARY' || profile.phoneVisibility === 'BOTH') && (
                                     <div className="flex items-center gap-1.5 text-secondary-500">
-                                        <Phone className="w-4 h-4" /> {profile.phone}
+                                        <Phone className="w-4 h-4 shrink-0" /> {profile.phone}
                                         {isOwnProfile && profile.phoneVisibility !== 'PRIMARY' && profile.phoneVisibility !== 'BOTH' && (
-                                            <span className="text-[10px] bg-secondary-100 px-1.5 py-0.5 rounded text-secondary-400 uppercase font-bold">Only you</span>
+                                            <span className="text-[10px] bg-secondary-100 dark:bg-secondary-800 px-1.5 py-0.5 rounded text-secondary-400 dark:text-secondary-500 uppercase font-bold">Only you</span>
                                         )}
                                     </div>
                                 )}
                                 {profile.secondaryPhone && (isOwnProfile || profile.phoneVisibility === 'SECONDARY' || profile.phoneVisibility === 'BOTH') && (
                                     <div className="flex items-center gap-1.5 text-secondary-500">
-                                        <Phone className="w-4 h-4" /> {profile.secondaryPhone}
+                                        <Phone className="w-4 h-4 shrink-0" /> {profile.secondaryPhone}
                                         {isOwnProfile && profile.phoneVisibility !== 'SECONDARY' && profile.phoneVisibility !== 'BOTH' && (
-                                            <span className="text-[10px] bg-secondary-100 px-1.5 py-0.5 rounded text-secondary-400 uppercase font-bold">Only you</span>
+                                            <span className="text-[10px] bg-secondary-100 dark:bg-secondary-800 px-1.5 py-0.5 rounded text-secondary-400 dark:text-secondary-500 uppercase font-bold">Only you</span>
                                         )}
                                     </div>
                                 )}
@@ -324,7 +337,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
                 {/* Connection Suggestions for own profile */}
                 {isOwnProfile && (
-                    <div className="mt-8">
+                    <div className="mt-6 md:mt-8">
                         <TeammateSuggestions limit={3} />
                     </div>
                 )}

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         const otherId = conn.requesterId === userId ? conn.receiverId : conn.requesterId;
         const otherUser = await prisma.user.findUnique({
           where: { id: otherId },
-          select: { id: true, name: true, username: true, avatar: true, userType: true, verificationStatus: true },
+          select: { id: true, name: true, username: true, avatar: true, userType: true },
         });
         return {
           ...conn,

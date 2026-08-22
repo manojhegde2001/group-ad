@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Select, Switch, Button, Text } from 'rizzui';
-import { Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Shield } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
 import { ProfileUser } from '@/types';
 import { useUpdateProfile, useUpgradeToBusiness } from '@/hooks/use-api/use-user';
@@ -119,48 +119,6 @@ export default function AccountSettingsTab({ user }: AccountSettingsTabProps) {
               </Button>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Verification Status */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <AlertCircle className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
-          <Text className="text-lg font-semibold text-secondary-900 dark:text-white">
-            Verification Status
-          </Text>
-        </div>
-
-        <div
-          className={`p-4 rounded-lg ${user.verificationStatus === 'VERIFIED'
-            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-            : user.verificationStatus === 'PENDING'
-              ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
-              : 'bg-secondary-50 dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-700'
-            }`}
-        >
-          <Text
-            className={`font-semibold mb-1 ${user.verificationStatus === 'VERIFIED'
-              ? 'text-green-700 dark:text-green-300'
-              : user.verificationStatus === 'PENDING'
-                ? 'text-orange-700 dark:text-orange-300'
-                : 'text-secondary-900 dark:text-white'
-              }`}
-          >
-            {user.verificationStatus}
-          </Text>
-          <Text className="text-sm text-secondary-600 dark:text-secondary-400">
-            {user.verificationStatus === 'VERIFIED'
-              ? 'Your account is verified'
-              : user.verificationStatus === 'PENDING'
-                ? 'Your verification request is under review'
-                : 'Request verification to get verified badge'}
-          </Text>
-          {user.verificationStatus === 'UNVERIFIED' && (
-            <Button size="sm" className="mt-3">
-              Request Verification
-            </Button>
-          )}
         </div>
       </div>
 

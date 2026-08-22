@@ -75,7 +75,6 @@ export async function POST(request: NextRequest) {
         name: true,
         username: true,
         userType: true,
-        verificationStatus: true,
         company: {
           select: {
             id: true,

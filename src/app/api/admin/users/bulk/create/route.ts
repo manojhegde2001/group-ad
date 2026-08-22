@@ -43,7 +43,6 @@ export async function POST(req: Request) {
       userType: (u.userType || 'INDIVIDUAL') as any,
       categoryId: u.categoryId || null,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}`,
-      verificationStatus: (u.userType === 'BUSINESS' ? 'VERIFIED' : 'UNVERIFIED') as any,
       onboardingStep: 'PROFILE_COMPLETED' as any,
     })));
 

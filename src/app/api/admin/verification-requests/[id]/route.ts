@@ -47,9 +47,6 @@ export async function PATCH(
         where: { id: typeChangeRequest.userId },
         data: {
           userType: typeChangeRequest.toType,
-          verificationStatus: 'VERIFIED',
-          verifiedAt: new Date(),
-          verificationNote: reviewNote,
           categoryId: typeChangeRequest.categoryId ?? undefined,
           companyName: typeChangeRequest.companyName,
           companyLogo: typeChangeRequest.companyLogo,
@@ -79,14 +76,12 @@ export async function PATCH(
         });
       }
     } else {
-      // REJECTED: revert the user to INDIVIDUAL and clear verificationStatus
-      // so they remain on the platform as an Individual and can reapply.
+      // REJECTED: revert the user to INDIVIDUAL so they remain on the
+      // platform as an Individual and can reapply.
       await prisma.user.update({
         where: { id: typeChangeRequest.userId },
         data: {
           userType: 'INDIVIDUAL',
-          verificationStatus: 'UNVERIFIED',
-          verificationNote: reviewNote
         }
       });
 

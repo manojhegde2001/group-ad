@@ -85,7 +85,7 @@ export const TeammateSuggestions = memo(function TeammateSuggestions({ className
                                 rounded="xl"
                                 className="w-10 h-10 ring-2 ring-transparent group-hover:ring-primary-500/20 transition-all"
                             />
-                            {user.verificationStatus === 'VERIFIED' && (
+                            {user.userType === 'BUSINESS' && (
                                 <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-white dark:bg-secondary-900 rounded-full flex items-center justify-center shadow-sm">
                                     <ShieldCheck className="w-3 h-3 text-emerald-500" />
                                 </div>

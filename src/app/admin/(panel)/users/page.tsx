@@ -34,7 +34,6 @@ interface AdminUser {
   email: string;
   avatar: string;
   userType: 'INDIVIDUAL' | 'BUSINESS' | 'ADMIN';
-  verificationStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
   createdAt: string;
   companyName?: string;
   website?: string;
@@ -47,7 +46,6 @@ export default function AdminUsersPage() {
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
   const [page, setPage] = useState(1);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
@@ -55,7 +53,7 @@ export default function AdminUsersPage() {
   // Reset page on filter change
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, typeFilter, statusFilter]);
+  }, [searchQuery, typeFilter]);
 
   // Queries
   const { data, isLoading: usersLoading, refetch } = useAdminUsers({
@@ -63,16 +61,15 @@ export default function AdminUsersPage() {
     limit: 20,
     search: searchQuery || undefined,
     type: typeFilter !== 'ALL' ? typeFilter : undefined,
-    status: statusFilter !== 'ALL' ? statusFilter : undefined
   });
-  
+
   const users = data?.users || [];
 
   // Mutations
   const updateUserStatusMutation = useUpdateUserStatus();
 
-  const handleManualVerify = (userId: string, status: string, userType?: string) => {
-    updateUserStatusMutation.mutate({ userId, status });
+  const handleSetUserType = (userId: string, userType: 'INDIVIDUAL' | 'BUSINESS') => {
+    updateUserStatusMutation.mutate({ userId, userType });
   };
 
   if (authLoading) return null;
@@ -93,7 +90,7 @@ export default function AdminUsersPage() {
             User <span className="text-primary italic">Management</span>
           </h1>
           <p className="text-secondary-400 font-bold uppercase text-[10px] tracking-widest leading-none">
-            Manage profiles, hande verifications, and monitor platform health
+            Manage profiles, account types, and monitor platform health
           </p>
         </div>
         <button
@@ -112,7 +109,7 @@ export default function AdminUsersPage() {
       />
 
       {/* Filters & Search */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900/50 p-6 rounded-[2.5rem] border border-secondary-100 dark:border-secondary-800 shadow-sm backdrop-blur-xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white dark:bg-slate-900/50 p-6 rounded-[2.5rem] border border-secondary-100 dark:border-secondary-800 shadow-sm backdrop-blur-xl">
         <div className="md:col-span-2">
           <Input
             prefix={<Search className="w-4 h-4 text-slate-400" />}
@@ -137,20 +134,6 @@ export default function AdminUsersPage() {
             onChange={(val: string) => setTypeFilter(val)}
           />
         </div>
-        <div>
-          <Select
-            placeholder="Filter Status"
-            options={[
-              { label: 'All Status', value: 'ALL' },
-              { label: 'Unverified', value: 'UNVERIFIED' },
-              { label: 'Pending', value: 'PENDING' },
-              { label: 'Verified', value: 'VERIFIED' },
-              { label: 'Rejected', value: 'REJECTED' },
-            ]}
-            value={statusFilter}
-            onChange={(val: string) => setStatusFilter(val)}
-          />
-        </div>
       </div>
 
       {/* Users Table */}
@@ -161,7 +144,6 @@ export default function AdminUsersPage() {
               <tr className="bg-secondary-50/50 dark:bg-secondary-800/20 border-b border-secondary-100 dark:border-secondary-800">
                 <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">User Profile</th>
                 <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Type</th>
-                <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Status</th>
                 <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Joined</th>
                 <th className="px-8 py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Actions</th>
               </tr>
@@ -169,7 +151,7 @@ export default function AdminUsersPage() {
             <tbody className="divide-y divide-secondary-50 dark:divide-secondary-800/50">
               {usersLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
+                  <td colSpan={4} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-6">
                       <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                       <p className="font-black text-secondary-400 uppercase text-[10px] tracking-[0.4em]">Querying Database</p>
@@ -178,7 +160,7 @@ export default function AdminUsersPage() {
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
+                  <td colSpan={4} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-6 opacity-40">
                       <ShieldQuestion className="w-16 h-16 text-secondary-200" />
                       <p className="font-black text-secondary-400 uppercase text-[10px] tracking-[0.4em]">Zero Results Found</p>
@@ -217,42 +199,31 @@ export default function AdminUsersPage() {
                         {user.userType}
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <span className={cn(
-                        "px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                        user.verificationStatus === 'VERIFIED' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50" :
-                          user.verificationStatus === 'PENDING' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800/50" :
-                            user.verificationStatus === 'REJECTED' ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800/50" :
-                              "bg-slate-50 dark:bg-slate-800/40 text-slate-400 border-slate-100 dark:border-slate-800/50"
-                      )}>
-                        {user.verificationStatus}
-                      </span>
-                    </td>
                     <td className="px-8 py-6 font-black text-[10px] text-secondary-400 uppercase tracking-tight">
                       {format(new Date(user.createdAt), 'MMM d, yyyy')}
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex items-center justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
-                        {user.verificationStatus === 'VERIFIED' ? (
+                        {user.userType === 'BUSINESS' ? (
                           <button
-                            onClick={() => handleManualVerify(user.id, 'UNVERIFIED', user.userType)}
+                            onClick={() => handleSetUserType(user.id, 'INDIVIDUAL')}
                             disabled={updateUserStatusMutation.isPending}
                             className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90 shadow-sm border border-red-100 dark:border-red-800/50"
-                            title="Revoke Verification"
+                            title="Revert to Individual"
                           >
                             <ShieldX className="w-5 h-5" />
                           </button>
-                        ) : (
+                        ) : user.userType === 'INDIVIDUAL' ? (
                           <button
-                            onClick={() => handleManualVerify(user.id, 'VERIFIED', 'BUSINESS')}
+                            onClick={() => handleSetUserType(user.id, 'BUSINESS')}
                             disabled={updateUserStatusMutation.isPending}
                             className="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all active:scale-90 shadow-sm border border-emerald-100 dark:border-emerald-800/50"
-                            title="Verify Account"
+                            title="Make Business"
                           >
                             <Check className="w-5 h-5" />
                           </button>
-                        )}
-                        <button 
+                        ) : null}
+                        <button
                           onClick={() => setEditingUser(user)}
                           className="p-3 bg-secondary-50 dark:bg-secondary-800/40 text-secondary-500 dark:text-secondary-400 rounded-2xl hover:bg-primary hover:text-white transition-all active:scale-90 shadow-sm border border-secondary-100 dark:border-secondary-800/50"
                           title="Edit Profile"

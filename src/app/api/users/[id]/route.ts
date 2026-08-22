@@ -25,7 +25,6 @@ export async function GET(
                 location: true,
                 website: true,
                 userType: true,
-                verificationStatus: true,
                 createdAt: true,
             },
         });

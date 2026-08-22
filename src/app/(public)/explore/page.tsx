@@ -12,34 +12,34 @@ export default async function ExplorePage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col overflow-x-hidden pt-16 md:pt-0">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex flex-col overflow-x-hidden pt-6 md:pt-0">
       {/* Mobile Fixed Search - Professional Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl px-4 py-3 border-b border-secondary-100 dark:border-secondary-800/50">
           <SearchBar className="w-full" autoFocus />
       </div>
       {/* Hero */}
-      <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-900/20 border-b border-secondary-100 dark:border-secondary-900/50 px-4 sm:px-6 pt-12 pb-12 md:pt-20 md:pb-16">
+      <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-900/20 border-b border-secondary-100 dark:border-secondary-900/50 px-4 sm:px-6 pt-2 pb-4 md:pt-4 md:pb-6">
         {/* Animated Background Element */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full opacity-20 dark:opacity-40 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] rounded-full bg-primary-400/30 blur-[100px] animate-pulse" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[60%] rounded-full bg-violet-400/30 blur-[100px] animate-pulse [animation-delay:2s]" />
         </div>
 
-        <div className="relative max-w-3xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-3xl shadow-sm bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
-            <Compass className="w-7 h-7 md:w-8 md:h-8" />
+        <div className="relative max-w-3xl mx-auto text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-2xl shadow-sm bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
+            <Compass className="w-5 h-5 md:w-6 md:h-6" />
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-secondary-900 dark:text-white uppercase leading-none">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-secondary-900 dark:text-white uppercase leading-none">
             Discovery <span className="text-primary-600 dark:text-primary-400 italic">Central</span>
           </h1>
-          <p className="text-secondary-500 dark:text-secondary-400 text-xs sm:text-sm md:text-base max-w-lg mx-auto font-black uppercase tracking-[0.3em] leading-relaxed opacity-80">
+          <p className="text-secondary-500 dark:text-secondary-400 text-[10px] sm:text-xs md:text-sm max-w-lg mx-auto font-black uppercase tracking-[0.2em] leading-relaxed opacity-80">
             The pulse of Vrutta. Find trending communities, local hubs, and premium creators.
           </p>
         </div>
       </div>
 
-      <div className="flex-1 bg-white dark:bg-[#0a0a0f] space-y-16 py-10 pb-24">
+      <div className="flex-1 bg-white dark:bg-[#0a0a0f] space-y-6 py-4 md:py-6">
         {/* Section 1: Trending */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <TrendingCategories initialData={trendingData} />

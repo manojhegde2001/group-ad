@@ -69,8 +69,7 @@ export default function PowerTeamsPage() {
   }
 
   const isBusiness = (user as any)?.userType === 'BUSINESS';
-  const isVerified = (user as any)?.verificationStatus === 'VERIFIED';
-  const canCreate = isAdmin || (isBusiness && isVerified);
+  const canCreate = isAdmin || isBusiness;
 
   return (
     <main className="min-h-screen bg-white dark:bg-secondary-950 pb-20">

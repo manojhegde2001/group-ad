@@ -31,13 +31,6 @@ enum OnboardingStep {
   PROFILE_COMPLETED
 }
 
-enum VerificationStatus {
-  UNVERIFIED
-  PENDING
-  VERIFIED
-  REJECTED
-}
-
 enum PostType {
   IMAGE
   TEXT
@@ -238,10 +231,6 @@ model User {
   userType   UserType @default(INDIVIDUAL)
   visibility AccountVisibility @default(PUBLIC)
 
-  verificationStatus VerificationStatus @default(UNVERIFIED)
-  verifiedAt         DateTime?
-  verificationNote   String?
-
   onboardingStep     OnboardingStep @default(ACCOUNT_CREATED)
   isProfileCompleted Boolean @default(false)
   profileCompletedAt DateTime?
@@ -302,7 +291,6 @@ model User {
   followers            Follow[]     @relation("UserFollowing")
 
   @@index([userType])
-  @@index([verificationStatus])
   @@index([isProfileCompleted])
   @@index([companyId])
   @@index([categoryId])

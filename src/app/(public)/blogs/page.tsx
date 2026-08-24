@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, BookOpen, Clock, Calendar } from 'lucide-react';
 import blogsData from '@/lib/data/blogs.json';
 
@@ -56,10 +57,12 @@ export default function BlogsPage() {
               {/* Card Image */}
               <div className="h-48 relative overflow-hidden bg-secondary-100 dark:bg-secondary-800">
                 {blog.image ? (
-                  <img 
-                    src={blog.image} 
-                    alt={blog.title} 
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  <Image
+                    src={blog.image}
+                    alt={blog.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-secondary-100 to-secondary-50 dark:from-secondary-800 dark:to-secondary-900/50 flex items-center justify-center">

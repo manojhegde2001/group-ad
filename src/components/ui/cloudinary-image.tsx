@@ -10,6 +10,11 @@ interface CloudinaryImageProps extends Omit<ImageProps, 'src'> {
   crop?: string;
 }
 
+// Cap applied to fill-mode images that don't specify a width, so the CDN never
+// ships a full-resolution original for what's usually a small/medium container.
+// crop stays 'limit', so this only shrinks oversized originals — never upscales.
+const FILL_MAX_WIDTH = 1024;
+
 export function CloudinaryImage({
   src,
   alt,
@@ -24,9 +29,9 @@ export function CloudinaryImage({
   ...props
 }: CloudinaryImageProps) {
   // Generate optimized URL
-  // If fill is true, we don't pass width/height to the utility to keep it responsive via Next.js
+  // If fill is true, height stays responsive via Next.js, but width is still capped (see FILL_MAX_WIDTH)
   const optimizedSrc = getOptimizedCloudinaryUrl(src, {
-    width: fill ? undefined : (width as number),
+    width: fill ? ((width as number) || FILL_MAX_WIDTH) : (width as number),
     height: fill ? undefined : (height as number),
     enhance,
     crop,

@@ -6,10 +6,10 @@ import { useProfile, useUpdateProfile, useChangePassword, useUploadAvatar, useTy
 import { useCategories } from '@/hooks/use-api/use-categories';
 import {
   User, Shield, Lock, Bell, Globe, CheckCircle,
-  Save, LogOut, ChevronRight, MapPin, Link2, CreditCard,
+  Save, LogOut, ChevronRight, ChevronLeft, MapPin, Link2, CreditCard,
   Building2, Briefcase, Users, Layout, Map, Compass, Trash2,
   Camera, Loader2, Edit3, X, Eye, EyeOff, Linkedin, Twitter, BarChart3, Phone,
-  Zap, Plus, Search, ArrowRight, Clock
+  Zap, Plus, Search, ArrowRight, Clock, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
@@ -18,13 +18,13 @@ import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
 import { useAuthModal } from '@/hooks/use-modal';
-import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
+import dynamic from 'next/dynamic';
 import { PowerTeamGrid } from '@/components/power-teams/PowerTeamGrid';
-import { CreateTeamModal } from '@/components/power-teams/CreateTeamModal';
-import { EditTeamModal } from '@/components/power-teams/EditTeamModal';
 import { usePowerTeams, useMyPowerTeam } from '@/hooks/use-api/use-power-teams';
 import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import Link from 'next/link';
+
+const AnalyticsDashboard = dynamic(() => import('@/components/analytics/AnalyticsDashboard'), { ssr: false });
 
 type Tab = 'profile' | 'security' | 'privacy' | 'notifications' | 'analytics' | 'power-teams';
 
@@ -46,6 +46,28 @@ export default function SettingsPage() {
 
   const [tab, setTab] = useState<Tab>('profile');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  const handleTabChange = (key: Tab) => {
+    setTab(key);
+    mainRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // Mobile tab strip scroll affordance
+  const tabStripRef = useRef<HTMLDivElement>(null);
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
+
+  const checkTabStripScroll = () => {
+    const el = tabStripRef.current;
+    if (!el) return;
+    setCanScrollTabsLeft(el.scrollLeft > 0);
+    setCanScrollTabsRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  };
+
+  const scrollTabStrip = (dir: 'left' | 'right') => {
+    tabStripRef.current?.scrollBy({ left: dir === 'left' ? -160 : 160, behavior: 'smooth' });
+  };
 
   // Profile forms
   const [name, setName]               = useState('');
@@ -145,6 +167,18 @@ export default function SettingsPage() {
       setBsCompanyWebsite(profile.companyWebsite ?? '');
     }
   }, [profile]);
+
+  useEffect(() => {
+    const el = tabStripRef.current;
+    if (!el) return;
+    checkTabStripScroll();
+    el.addEventListener('scroll', checkTabStripScroll);
+    window.addEventListener('resize', checkTabStripScroll);
+    return () => {
+      el.removeEventListener('scroll', checkTabStripScroll);
+      window.removeEventListener('resize', checkTabStripScroll);
+    };
+  }, [profile?.userType]);
 
   if (authLoading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -264,12 +298,93 @@ export default function SettingsPage() {
 
   const inputCls = "w-full bg-white dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 rounded-2xl px-4 py-3 text-sm font-bold text-secondary-900 dark:text-white placeholder:text-secondary-400 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none disabled:opacity-50";
 
+  const visibleTabs = TABS.filter(t => !t.businessOnly || profile?.userType === 'BUSINESS' || profile?.userType === 'ADMIN');
+
+  const tabAction: Partial<Record<Tab, { label: string; onClick: () => void; loading?: boolean }>> = {
+    profile: { label: 'Save Changes', onClick: handleProfileSave, loading: savingProfile },
+    security: { label: 'Update Password', onClick: handlePasswordChange, loading: changingPassword },
+    privacy: { label: 'Apply Settings', onClick: () => updateProfile({ visibility, messagingEnabled }), loading: savingProfile },
+    notifications: { label: 'Save Preferences', onClick: () => toast.success('Preferences saved!') },
+  };
+  const activeMobileAction = !showBusinessForm ? tabAction[tab] : undefined;
+
   return (
     <div className="min-h-screen bg-[#f6f7fb] dark:bg-secondary-950">
+      {/* Mobile compact header */}
+      <div className="md:hidden max-w-6xl mx-auto px-4 pt-6 pb-2 flex items-center justify-between gap-2">
+        <h1 className="text-lg font-black text-secondary-900 dark:text-white tracking-tight">Settings</h1>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-secondary-900 rounded-full border border-secondary-100 dark:border-secondary-800 shadow-sm">
+            <span className={cn("w-1.5 h-1.5 rounded-full", profile?.userType === 'BUSINESS' ? 'bg-indigo-400' : 'bg-emerald-400')} />
+            <span className="text-[10px] font-black text-secondary-900 dark:text-white uppercase">{profile?.userType === 'BUSINESS' ? 'Business' : 'Individual'}</span>
+          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: window.location.origin })}
+            aria-label="Sign Out"
+            className="shrink-0 flex items-center justify-center p-2 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile sticky tab strip */}
+      <div className="md:hidden sticky top-16 z-40 bg-white/90 dark:bg-secondary-900/90 backdrop-blur-lg border-b border-secondary-100 dark:border-secondary-800">
+        <div className="relative">
+          {canScrollTabsLeft && (
+            <div className="absolute left-0 top-0 bottom-0 flex items-center pl-4 z-10 bg-gradient-to-r from-white dark:from-secondary-900 to-transparent w-14">
+              <button
+                onClick={() => scrollTabStrip('left')}
+                className="p-1 bg-white dark:bg-secondary-800 rounded-full shadow border border-secondary-200 dark:border-secondary-700"
+              >
+                <ChevronLeft className="w-3.5 h-3.5 text-secondary-600 dark:text-secondary-300" />
+              </button>
+            </div>
+          )}
+
+          <div
+            ref={tabStripRef}
+            className="flex items-center gap-2 px-4 py-3 overflow-x-auto scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {visibleTabs.map(({ key, label, icon: Icon, accent }) => {
+              const active = tab === key;
+              const [iconColor] = accent.split(' ');
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleTabChange(key)}
+                  className={cn(
+                    'shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
+                    active
+                      ? 'bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 shadow-md'
+                      : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-500 dark:text-secondary-400'
+                  )}
+                >
+                  <Icon className={cn('w-3.5 h-3.5', active ? '' : iconColor)} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {canScrollTabsRight && (
+            <div className="absolute right-0 top-0 bottom-0 flex items-center pr-4 z-10 bg-gradient-to-l from-white dark:from-secondary-900 to-transparent w-14 justify-end">
+              <button
+                onClick={() => scrollTabStrip('right')}
+                className="p-1 bg-white dark:bg-secondary-800 rounded-full shadow border border-secondary-200 dark:border-secondary-700"
+              >
+                <ChevronRight className="w-3.5 h-3.5 text-secondary-600 dark:text-secondary-300" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
         <div className="flex flex-col md:flex-row gap-8 lg:gap-10">
 
-          <aside className="w-full md:w-60 shrink-0">
+          <aside className="hidden md:block w-full md:w-60 shrink-0">
             <div className="sticky top-8 space-y-5">
               <div>
                 <h1 className="text-2xl font-black text-secondary-900 dark:text-white tracking-tight">Settings</h1>
@@ -277,13 +392,13 @@ export default function SettingsPage() {
               </div>
 
               <nav className="space-y-0.5">
-                {TABS.filter(t => !t.businessOnly || profile?.userType === 'BUSINESS' || profile?.userType === 'ADMIN').map(({ key, label, icon: Icon, accent }) => {
+                {visibleTabs.map(({ key, label, icon: Icon, accent }) => {
                   const active = tab === key;
                   const [iconColor, ...bgParts] = accent.split(' ');
                   return (
                     <button
                       key={key}
-                      onClick={() => setTab(key)}
+                      onClick={() => handleTabChange(key)}
                       className={cn(
                         'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-bold transition-all outline-none',
                         active
@@ -326,7 +441,7 @@ export default function SettingsPage() {
             </div>
           </aside>
 
-          <main className="flex-1 min-w-0 max-w-3xl">
+          <main ref={mainRef} className="flex-1 min-w-0 max-w-3xl scroll-mt-32 md:scroll-mt-8 pb-28 md:pb-0">
             {tab === 'profile' && (
               <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-400">
                 <SettingsCard className="overflow-hidden">
@@ -358,7 +473,7 @@ export default function SettingsPage() {
                           {website && <a href={website} target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline flex items-center gap-1"><Link2 className="w-3 h-3" /> Website</a>}
                         </div>
                       </div>
-                      <div className="hidden sm:block pb-2">
+                      <div className="hidden md:block pb-2">
                         <Button onClick={handleProfileSave} isLoading={savingProfile} disabled={profileLoading} className="rounded-2xl font-black px-6 shadow-md shadow-primary-500/10 active:scale-95">Save Changes</Button>
                       </div>
                     </div>
@@ -442,8 +557,7 @@ export default function SettingsPage() {
                   <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary-500" /></div>
                 ) : !showBusinessForm && (
                   <div className="space-y-5">
-                    <SettingsCard className="p-6 sm:p-8">
-                      <SectionTitle icon={User} label="Identity" accent="text-violet-500 bg-violet-100 dark:bg-violet-900/30" />
+                    <CollapsibleCard icon={User} label="Identity" accent="text-violet-500 bg-violet-100 dark:bg-violet-900/30">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                         <Field label="Full Name" span2 error={fieldErrors.name}><input type="text" value={name} onChange={e => setName(e.target.value)} className={cn(inputCls, fieldErrors.name && 'ring-1 ring-red-500 border-red-500')} /></Field>
                         <Field label="Location" error={fieldErrors.location}><div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="text" value={location} onChange={e => setLocation(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.location && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
@@ -461,21 +575,19 @@ export default function SettingsPage() {
                         />
                         <Field label="Bio" span2 error={fieldErrors.bio}><textarea value={bio} onChange={e => setBio(e.target.value)} className={cn(inputCls, "resize-none", fieldErrors.bio && 'ring-1 ring-red-500 border-red-500')} rows={3} maxLength={300} /><div className="flex justify-end mt-1 text-[10px] font-bold text-secondary-400">{bio.length}/300</div></Field>
                       </div>
-                    </SettingsCard>
+                    </CollapsibleCard>
 
-                    <SettingsCard className="p-6 sm:p-8">
-                      <SectionTitle icon={Globe} label="Professional Links" accent="text-blue-500 bg-blue-100 dark:bg-blue-900/30" />
+                    <CollapsibleCard icon={Globe} label="Professional Links" accent="text-blue-500 bg-blue-100 dark:bg-blue-900/30">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                         <Field label="Website URL" span2 error={fieldErrors.website}><div className="relative"><Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="url" value={website} onChange={e => setWebsite(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.website && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                         <Field label="Website Link Label (e.g. 'Book a Demo')" span2 error={fieldErrors.websiteLabel}><input type="text" value={websiteLabel} onChange={e => setWebsiteLabel(e.target.value)} className={cn(inputCls, fieldErrors.websiteLabel && 'ring-1 ring-red-500 border-red-500')} placeholder="E.g. Book a Demo, Download App" /></Field>
                         <Field label="LinkedIn" error={fieldErrors.linkedin}><div className="relative"><Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="text" value={linkedin} onChange={e => setLinkedin(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.linkedin && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                         <Field label="Twitter / X" error={fieldErrors.twitter}><div className="relative"><Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary-400" /><input type="text" value={twitter} onChange={e => setTwitter(e.target.value)} className={cn(inputCls, "pl-9", fieldErrors.twitter && 'ring-1 ring-red-500 border-red-500')} /></div></Field>
                       </div>
-                    </SettingsCard>
+                    </CollapsibleCard>
 
                     {profile?.userType === 'BUSINESS' && (
-                      <SettingsCard className="p-6 sm:p-8 border-indigo-100 ring-2 ring-indigo-500/5">
-                        <SectionTitle icon={Shield} label="Business Details" accent="text-indigo-500 bg-indigo-100 dark:bg-indigo-900/30" />
+                      <CollapsibleCard icon={Shield} label="Business Details" accent="text-indigo-500 bg-indigo-100 dark:bg-indigo-900/30" className="border-indigo-100 ring-2 ring-indigo-500/5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                           <Field label="Business Name" span2 error={fieldErrors.companyName}><input type="text" value={bsCompanyName} onChange={e => setBsCompanyName(e.target.value)} className={cn(inputCls, fieldErrors.companyName && 'ring-1 ring-red-500 border-red-500')} /></Field>
                           <Field label="GST Number *" span2 error={fieldErrors.gstNumber}><input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value.toUpperCase())} className={cn(inputCls, fieldErrors.gstNumber && 'ring-1 ring-red-500 border-red-500')} /></Field>
@@ -483,10 +595,9 @@ export default function SettingsPage() {
                           <Field label="Pincode" error={fieldErrors.pincode}><input type="text" value={pincode} onChange={e => setPincode(e.target.value)} className={cn(inputCls, fieldErrors.pincode && 'ring-1 ring-red-500 border-red-500')} /></Field>
                           <Field label="External Profile Link" error={fieldErrors.externalLink}><input type="text" value={externalLink} onChange={e => setExternalLink(e.target.value)} className={cn(inputCls, fieldErrors.externalLink && 'ring-1 ring-red-500 border-red-500')} placeholder="E.g. Portfolio, Blog" /></Field>
                         </div>
-                      </SettingsCard>
+                      </CollapsibleCard>
                     )}
 
-                    <div className="sm:hidden pb-8"><Button onClick={handleProfileSave} isLoading={savingProfile} className="w-full h-14 rounded-2xl font-black shadow-xl">Save Changes</Button></div>
                   </div>
                 )}
               </div>
@@ -500,7 +611,7 @@ export default function SettingsPage() {
                   <Field label="New Password" error={fieldErrors.newPassword}><div className="relative"><input type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} className={cn(inputCls, 'pr-10', fieldErrors.newPassword && 'ring-1 ring-red-500 border-red-500')} /><button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400">{showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></Field>
                   <Field label="Confirm Password" error={fieldErrors.confirmPassword}><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={cn(inputCls, fieldErrors.confirmPassword && 'ring-1 ring-red-500 border-red-500')} /></Field>
                 </div>
-                <div className="pt-6"><Button onClick={handlePasswordChange} isLoading={changingPassword} className="px-8 rounded-2xl font-black uppercase text-xs">Update Password</Button></div>
+                <div className="hidden md:block pt-6"><Button onClick={handlePasswordChange} isLoading={changingPassword} className="px-8 rounded-2xl font-black uppercase text-xs">Update Password</Button></div>
               </SettingsCard>
             )}
 
@@ -536,7 +647,7 @@ export default function SettingsPage() {
                     <Switch checked={messagingEnabled} onChange={() => setMessagingEnabled(!messagingEnabled)} />
                   </div>
                 </div>
-                <div className="pt-6"><Button onClick={() => updateProfile({ visibility, messagingEnabled })} isLoading={savingProfile} className="px-8 rounded-2xl font-black uppercase text-xs">Apply Settings</Button></div>
+                <div className="hidden md:block pt-6"><Button onClick={() => updateProfile({ visibility, messagingEnabled })} isLoading={savingProfile} className="px-8 rounded-2xl font-black uppercase text-xs">Apply Settings</Button></div>
               </SettingsCard>
             )}
 
@@ -557,7 +668,7 @@ export default function SettingsPage() {
                     </label>
                   ))}
                 </div>
-                <div className="pt-6"><Button onClick={() => toast.success('Preferences saved!')} className="px-8 rounded-2xl font-black uppercase text-xs">Save Preferences</Button></div>
+                <div className="hidden md:block pt-6"><Button onClick={() => toast.success('Preferences saved!')} className="px-8 rounded-2xl font-black uppercase text-xs">Save Preferences</Button></div>
               </SettingsCard>
             )}
 
@@ -792,6 +903,19 @@ export default function SettingsPage() {
           </main>
         </div>
       </div>
+
+      {/* Floating mobile action bar */}
+      {activeMobileAction && (
+        <div className="md:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 px-4">
+          <Button
+            onClick={activeMobileAction.onClick}
+            isLoading={activeMobileAction.loading}
+            className="w-full h-14 rounded-2xl font-black shadow-xl shadow-black/10"
+          >
+            {activeMobileAction.label}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -806,12 +930,16 @@ function SettingsCard({ children, className }: { children: React.ReactNode; clas
   );
 }
 
-function SectionTitle({ icon: Icon, label, accent }: { icon: any; label: string; accent: string }) {
+function CollapsibleCard({ icon: Icon, label, accent, className, children }: { icon: any; label: string; accent: string; className?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className={cn("p-2 rounded-xl", accent)}><Icon className="w-4 h-4" /></div>
-      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-400">{label}</h3>
-    </div>
+    <details open className={cn("group bg-white dark:bg-secondary-900 border border-secondary-100 dark:border-secondary-800 shadow-[0_1px_6px_rgba(0,0,0,0.02)] rounded-[2rem] p-6 sm:p-8", className)}>
+      <summary className="flex items-center gap-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+        <div className={cn("p-2 rounded-xl", accent)}><Icon className="w-4 h-4" /></div>
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-400 flex-1">{label}</h3>
+        <ChevronDown className="w-4 h-4 text-secondary-400 transition-transform group-open:rotate-180" />
+      </summary>
+      {children}
+    </details>
   );
 }
 

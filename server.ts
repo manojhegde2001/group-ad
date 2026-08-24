@@ -13,7 +13,7 @@ import { initSocket } from './src/lib/socket-io';
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT || '3000', 10);
-const app = next({ dev, hostname, port });
+const app = next({ dev, hostname, port, webpack: true });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {

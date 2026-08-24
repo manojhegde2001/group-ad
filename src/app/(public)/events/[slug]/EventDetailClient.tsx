@@ -24,12 +24,14 @@ import { notFound } from 'next/navigation';
 import AttendeeConnectBanner from '@/components/events/AttendeeConnectBanner';
 import { useAuth } from '@/hooks/use-auth';
 import { AttendanceTicket } from '@/components/events/attendance-ticket';
-import { QRScannerModal } from '@/components/events/qr-scanner-modal';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import ShareInviteModal from '@/components/events/ShareInviteModal';
 import AttendeesManager from '@/components/events/AttendeesManager';
 import { downloadICSFile } from '@/lib/calendar-export';
+
+const QRScannerModal = dynamic(() => import('@/components/events/qr-scanner-modal').then(mod => mod.QRScannerModal), { ssr: false });
 
 export default function EventDetailClient({ slug }: { slug: string }) {
     const { user: currentUser } = useAuth();

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Clock, Calendar, User, Share2 } from 'lucide-react';
 import blogsData from '@/lib/data/blogs.json';
@@ -56,11 +57,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {/* ==================== HERO IMAGE ==================== */}
       {(blog as any).image && (
         <div className="max-w-5xl mx-auto px-4 -mt-12 relative z-20 mb-12">
-          <div className="aspect-[21/9] md:aspect-[2.5/1] w-full rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl border border-secondary-200 dark:border-secondary-800 bg-secondary-100 dark:bg-secondary-900">
-            <img 
-              src={(blog as any).image} 
-              alt={blog.title} 
-              className="w-full h-full object-cover"
+          <div className="relative aspect-[21/9] md:aspect-[2.5/1] w-full rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl border border-secondary-200 dark:border-secondary-800 bg-secondary-100 dark:bg-secondary-900">
+            <Image
+              src={(blog as any).image}
+              alt={blog.title}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1024px"
+              className="object-cover"
             />
           </div>
         </div>

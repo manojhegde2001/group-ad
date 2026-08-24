@@ -1,3 +1,9 @@
+const withSerwist = require('@serwist/next').default({
+  swSrc: 'src/app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async redirects() {
@@ -29,4 +35,4 @@ const nextConfig = {
   serverExternalPackages: ['@prisma/client', 'bcryptjs'],
 };
 
-module.exports = nextConfig;
+module.exports = withSerwist(nextConfig);

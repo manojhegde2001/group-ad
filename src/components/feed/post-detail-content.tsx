@@ -79,7 +79,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     // Derived State
     const liked = post?.isLikedByUser || false;
     const likeCount = post?._count?.postLikes ?? (post as any)?.likes ?? 0;
-    const saved = (post as any)?.isBookmarked || false;
+    const saved = post?.isSaved || false;
 
     // Reset index when postId changes
     useEffect(() => {
@@ -448,13 +448,14 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         <button
                             onClick={() => requireAuth(() => openSaveToBoard(post.id))}
                             className={cn(
-                                "rounded-full px-6 py-2 text-sm font-semibold transition-all duration-150 active:scale-95",
-                                saved 
-                                    ? "bg-gray-900 text-white" 
-                                    : "bg-[#E60023] text-white hover:bg-[#b5001c]"
+                                "rounded-full px-5 py-2 text-sm font-semibold transition-all duration-150 active:scale-95 flex items-center gap-1.5",
+                                saved
+                                    ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30"
+                                    : "bg-blue-600 text-white hover:bg-blue-700"
                             )}
                         >
-                            {saved ? 'Saved ✓' : 'Save'}
+                            <Bookmark className={cn("w-4 h-4", saved && "fill-blue-600 dark:fill-blue-400")} />
+                            {saved ? 'Saved' : 'Save'}
                         </button>
                     </div>
 

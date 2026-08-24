@@ -44,7 +44,10 @@ export async function GET(
         },
         _count: { select: { postLikes: true, postComments: true } },
         ...(currentUserId
-          ? { postLikes: { where: { userId: currentUserId }, select: { userId: true }, take: 1 } }
+          ? {
+            postLikes: { where: { userId: currentUserId }, select: { userId: true }, take: 1 },
+            boardPosts: { where: { board: { userId: currentUserId } }, select: { id: true }, take: 1 },
+          }
           : {}),
       },
     });
@@ -113,7 +116,11 @@ export async function GET(
       isLikedByUser: currentUserId
         ? Array.isArray((postRaw as any).postLikes) && (postRaw as any).postLikes.length > 0
         : false,
+      isSaved: currentUserId
+        ? Array.isArray((postRaw as any).boardPosts) && (postRaw as any).boardPosts.length > 0
+        : false,
       postLikes: undefined, // strip raw join data
+      boardPosts: undefined, // strip raw join data
       user: {
         ...(postRaw.user as any),
         connectionStatus: connectionRecord?.status || null,

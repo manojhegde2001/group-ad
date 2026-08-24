@@ -1,6 +1,33 @@
-import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseQueryOptions, QueryClient } from '@tanstack/react-query';
 import { boardService, Board } from '@/services/api/boards';
 import toast from 'react-hot-toast';
+
+type PostBoardsData = { boardIds: string[] };
+
+// Surgically patches the cached `isSaved` flag on a post wherever it appears
+// (feed lists, infinite feeds, post detail) instead of refetching everything.
+function setPostSavedState(queryClient: QueryClient, postId: string, isSaved: boolean) {
+    const patchPost = (post: any) => (post && post.id === postId ? { ...post, isSaved } : post);
+
+    queryClient.setQueriesData<any>({ queryKey: ['posts'] }, (old: any) => {
+        if (!old) return old;
+        if (Array.isArray(old.posts)) {
+            return { ...old, posts: old.posts.map(patchPost) };
+        }
+        if (old.post) {
+            return { ...old, post: patchPost(old.post) };
+        }
+        if (Array.isArray(old.pages)) {
+            return {
+                ...old,
+                pages: old.pages.map((page: any) =>
+                    Array.isArray(page?.posts) ? { ...page, posts: page.posts.map(patchPost) } : page
+                ),
+            };
+        }
+        return old;
+    });
+}
 
 export const useBoards = (options?: Omit<UseQueryOptions<{ boards: Board[] }>, 'queryKey' | 'queryFn'>) => {
     return useQuery({
@@ -73,14 +100,29 @@ export const useAddPostToBoard = () => {
     return useMutation({
         mutationFn: ({ boardId, postId }: { boardId: string; postId: string }) =>
             boardService.addPostToBoard(boardId, postId),
-        onSuccess: (_, { boardId, postId }) => {
+        onMutate: async ({ boardId, postId }) => {
+            await queryClient.cancelQueries({ queryKey: ['post-boards', postId] });
+            const previous = queryClient.getQueryData<PostBoardsData>(['post-boards', postId]);
+
+            queryClient.setQueryData<PostBoardsData>(['post-boards', postId], (old) => ({
+                boardIds: Array.from(new Set([...(old?.boardIds || []), boardId])),
+            }));
+            setPostSavedState(queryClient, postId, true);
+
+            return { previous };
+        },
+        onError: (error: any, { postId }, context) => {
+            queryClient.setQueryData(['post-boards', postId], context?.previous);
+            setPostSavedState(queryClient, postId, (context?.previous?.boardIds.length ?? 0) > 0);
+            toast.error(error.message || 'Failed to add to board');
+        },
+        onSuccess: (_, { boardId }) => {
             queryClient.invalidateQueries({ queryKey: ['boards'] });
             queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
-            queryClient.invalidateQueries({ queryKey: ['post-boards', postId] });
             toast.success('Added to board');
         },
-        onError: (error: any) => {
-            toast.error(error.message || 'Failed to add to board');
+        onSettled: (_, __, { postId }) => {
+            queryClient.invalidateQueries({ queryKey: ['post-boards', postId] });
         },
     });
 };
@@ -91,14 +133,28 @@ export const useRemovePostFromBoard = () => {
     return useMutation({
         mutationFn: ({ boardId, postId }: { boardId: string; postId: string }) =>
             boardService.removePostFromBoard(boardId, postId),
-        onSuccess: (_, { boardId, postId }) => {
+        onMutate: async ({ boardId, postId }) => {
+            await queryClient.cancelQueries({ queryKey: ['post-boards', postId] });
+            const previous = queryClient.getQueryData<PostBoardsData>(['post-boards', postId]);
+            const nextBoardIds = (previous?.boardIds || []).filter((id) => id !== boardId);
+
+            queryClient.setQueryData<PostBoardsData>(['post-boards', postId], { boardIds: nextBoardIds });
+            setPostSavedState(queryClient, postId, nextBoardIds.length > 0);
+
+            return { previous };
+        },
+        onError: (error: any, { postId }, context) => {
+            queryClient.setQueryData(['post-boards', postId], context?.previous);
+            setPostSavedState(queryClient, postId, (context?.previous?.boardIds.length ?? 0) > 0);
+            toast.error(error.message || 'Failed to remove from board');
+        },
+        onSuccess: (_, { boardId }) => {
             queryClient.invalidateQueries({ queryKey: ['boards'] });
             queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
-            queryClient.invalidateQueries({ queryKey: ['post-boards', postId] });
             toast.success('Removed from board');
         },
-        onError: (error: any) => {
-            toast.error(error.message || 'Failed to remove from board');
+        onSettled: (_, __, { postId }) => {
+            queryClient.invalidateQueries({ queryKey: ['post-boards', postId] });
         },
     });
 };

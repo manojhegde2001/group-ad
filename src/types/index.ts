@@ -152,6 +152,7 @@ export type PostWithRelations = {
     postComments: number;
   };
   isLikedByUser?: boolean;
+  isSaved?: boolean;
 };
 
 

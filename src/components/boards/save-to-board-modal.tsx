@@ -144,7 +144,7 @@ export function SaveToBoardModal() {
                           </div>
                         )}
                       </div>
-                      <div>
+                      <div className="flex flex-col gap-1">
                         <p className={cn("font-black text-sm uppercase tracking-tight", isSelected ? "text-primary-600 dark:text-primary-400" : "text-secondary-900 dark:text-white")}>
                           {board.name}
                         </p>

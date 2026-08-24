@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
       select: { boardId: true },
     });
 
-    const savedBoardIds = boardPosts.map((bp) => bp.boardId);
+    const boardIds = boardPosts.map((bp) => bp.boardId);
 
-    return NextResponse.json({ savedBoardIds });
+    return NextResponse.json({ boardIds });
   } catch (error) {
     console.error('Error checking boards for post:', error);
     return NextResponse.json({ error: 'Failed to check boards' }, { status: 500 });

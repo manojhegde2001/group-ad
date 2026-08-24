@@ -54,7 +54,7 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
         setLikeCount(post._count?.postLikes ?? (post as any).likes ?? 0);
     }, [(post as any).isLikedByUser, post._count?.postLikes]);
 
-    const saved = (post as any).isBookmarked ?? false;
+    const saved = post.isSaved ?? false;
     const [copied, setCopied] = useState(false);
 
     const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
@@ -199,19 +199,29 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                         </div>
                     )}
 
+                {/* Persistent Saved indicator - always visible, fades out for the interactive pill on desktop hover */}
+                {saved && (
+                    <div className="absolute top-3 right-3 z-20 flex items-center justify-center w-7 h-7 bg-blue-600 text-white rounded-full shadow-lg pointer-events-none md:group-hover:opacity-0 transition-opacity duration-300">
+                        <Bookmark className="w-3.5 h-3.5 fill-white" />
+                    </div>
+                )}
+
                 {/* Hover Overlays - Hidden on mobile */}
-                <div 
+                <div
                     className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:flex flex-col justify-between p-4 pointer-events-none bg-black/10"
                     onClick={e => { e.preventDefault(); e.stopPropagation(); }}
                 >
                     <div className="flex items-start justify-end w-full pointer-events-auto">
-                        <button 
-                            onClick={handleSave} 
+                        <button
+                            onClick={handleSave}
                             className={cn(
-                                "h-9 px-4 rounded-full flex items-center justify-center backdrop-blur-md shadow-xl transition-all duration-300 font-bold text-[11px] uppercase tracking-wider",
-                                saved ? 'bg-[#E60023] text-white scale-105' : 'bg-[#E60023] text-white hover:bg-[#ad081b] active:scale-95'
+                                "h-9 px-4 rounded-full flex items-center gap-1.5 justify-center backdrop-blur-md shadow-xl transition-all duration-300 font-bold text-[11px] uppercase tracking-wider",
+                                saved
+                                    ? 'bg-white text-blue-600 scale-105'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
                             )}
                         >
+                            {saved && <Bookmark className="w-3 h-3 fill-blue-600" />}
                             {saved ? 'Saved' : 'Save'}
                         </button>
                     </div>
@@ -345,10 +355,10 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                         className="w-full flex items-center gap-3 p-3 rounded-2xl bg-secondary-50 dark:bg-secondary-800/50 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition-all active:scale-[0.98]"
                                     >
                                         <div className="w-9 h-9 rounded-xl bg-white dark:bg-secondary-900 flex items-center justify-center shadow-sm">
-                                            <Bookmark className={cn("w-4.5 h-4.5", (post as any).isBookmarked ? "text-primary-500 fill-primary-500" : "text-secondary-600")} />
+                                            <Bookmark className={cn("w-4.5 h-4.5", saved ? "text-blue-600 fill-blue-600" : "text-secondary-600")} />
                                         </div>
                                         <div className="text-left">
-                                            <span className="block font-bold text-secondary-900 dark:text-white">{(post as any).isBookmarked ? "Saved to Board" : "Save to Board"}</span>
+                                            <span className="block font-bold text-secondary-900 dark:text-white">{saved ? "Saved to Board" : "Save to Board"}</span>
                                             <span className="text-[10px] text-secondary-500 uppercase font-bold tracking-wider">Keep for later</span>
                                         </div>
                                     </button>

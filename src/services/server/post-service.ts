@@ -162,6 +162,11 @@ export async function getPostsServer(params: GetPostsParams) {
                 select: { userId: true },
                 take: 1,
               },
+              boardPosts: {
+                where: { board: { userId: currentUserId } },
+                select: { id: true },
+                take: 1,
+              },
             }
             : {}),
         },
@@ -174,7 +179,11 @@ export async function getPostsServer(params: GetPostsParams) {
       isLikedByUser: currentUserId
         ? Array.isArray(post.postLikes) && post.postLikes.length > 0
         : false,
+      isSaved: currentUserId
+        ? Array.isArray(post.boardPosts) && post.boardPosts.length > 0
+        : false,
       postLikes: undefined,
+      boardPosts: undefined,
     }));
 
     return {

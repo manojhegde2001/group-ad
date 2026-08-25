@@ -38,14 +38,21 @@ export const useUpdateConnectionMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ targetUserId, action }: { targetUserId: string; action: 'ACCEPT' | 'REJECT' }) => 
+        mutationFn: ({ targetUserId, action }: { targetUserId: string; action: 'ACCEPT' | 'REJECT' }) =>
             connectionService.updateRequest(targetUserId, action),
         onSuccess: (_, { targetUserId, action }) => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
             queryClient.invalidateQueries({ queryKey: ['connections', 'user', targetUserId] });
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
             toast.success(action === 'ACCEPT' ? 'Connection accepted' : 'Request ignored');
         },
         onError: (error: any) => {
+            // Request was likely already resolved elsewhere — refresh so the stale item clears instead of getting stuck
+            if (error?.status === 404) {
+                queryClient.invalidateQueries({ queryKey: ['notifications'] });
+                queryClient.invalidateQueries({ queryKey: ['connections'] });
+                return;
+            }
             toast.error(error.message || 'Action failed');
         },
     });
@@ -59,6 +66,7 @@ export const useRemoveConnectionMutation = () => {
         onSuccess: (_, targetUserId) => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
             queryClient.invalidateQueries({ queryKey: ['connections', 'user', targetUserId] });
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
             toast.success('Connection removed');
         },
         onError: (error: any) => {

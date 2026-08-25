@@ -153,9 +153,7 @@ export default function NotificationsPage() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            updateConnectionMutation.mutate({ targetUserId: n.senderId!, action: 'ACCEPT' }, {
-                              onSuccess: () => deleteMutation.mutate(n.id)
-                            });
+                            updateConnectionMutation.mutate({ targetUserId: n.senderId!, action: 'ACCEPT' });
                           }}
                           className="h-8 px-4 text-[10px] font-bold rounded-lg"
                         >
@@ -166,9 +164,7 @@ export default function NotificationsPage() {
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            updateConnectionMutation.mutate({ targetUserId: n.senderId!, action: 'REJECT' }, {
-                              onSuccess: () => deleteMutation.mutate(n.id)
-                            });
+                            updateConnectionMutation.mutate({ targetUserId: n.senderId!, action: 'REJECT' });
                           }}
                           className="h-8 px-4 text-[10px] font-bold rounded-lg border-2"
                         >
@@ -183,7 +179,7 @@ export default function NotificationsPage() {
                     {!n.isRead && <span className="w-2 h-2 rounded-full bg-primary-500" />}
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(n.id); }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-all"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-all"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>

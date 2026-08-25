@@ -38,6 +38,16 @@ export async function PATCH(
       },
     });
 
+    // Clean up the original request notification so it doesn't linger with stale Accept/Reject buttons
+    await prisma.notification.deleteMany({
+      where: {
+        userId: currentUserId,
+        type: 'CONNECTION_REQUEST',
+        entityType: 'Connection',
+        entityId: connection.id,
+      },
+    }).catch(() => null);
+
     if (action === 'ACCEPT') {
       const notification = await prisma.notification.create({
         data: {
@@ -96,6 +106,15 @@ export async function DELETE(
     }
 
     await prisma.connection.delete({ where: { id: connection.id } });
+
+    // Clean up any request notification tied to this connection (e.g. requester canceled it)
+    await prisma.notification.deleteMany({
+      where: {
+        type: 'CONNECTION_REQUEST',
+        entityType: 'Connection',
+        entityId: connection.id,
+      },
+    }).catch(() => null);
 
     return NextResponse.json({ success: true });
   } catch (error) {

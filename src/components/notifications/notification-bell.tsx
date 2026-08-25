@@ -7,9 +7,11 @@ import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from '@/hooks/use-api/use-notifications';
+import { useUpdateConnectionMutation } from '@/hooks/use-api/use-connections';
 import { Popover } from 'rizzui';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 const NOTIFICATION_ICONS: Record<string, string> = {
     CONNECTION_REQUEST: '👤',
@@ -55,6 +57,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
     const markReadMutation = useMarkNotificationRead();
     const markAllReadMutation = useMarkAllNotificationsRead();
     const deleteMutation = useDeleteNotification();
+    const updateConnectionMutation = useUpdateConnectionMutation();
 
     const notifications = data?.notifications || [];
 
@@ -209,6 +212,31 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                             )}>
                                                 {notif.message}
                                             </p>
+                                            {notif.type === 'CONNECTION_REQUEST' && notif.senderId && (
+                                                <div className="flex gap-2 mt-2.5">
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            updateConnectionMutation.mutate({ targetUserId: notif.senderId!, action: 'ACCEPT' });
+                                                        }}
+                                                        className="h-7 px-3 text-[10px] font-bold rounded-lg"
+                                                    >
+                                                        Accept
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            updateConnectionMutation.mutate({ targetUserId: notif.senderId!, action: 'REJECT' });
+                                                        }}
+                                                        className="h-7 px-3 text-[10px] font-bold rounded-lg border-2"
+                                                    >
+                                                        Reject
+                                                    </Button>
+                                                </div>
+                                            )}
                                             <p className="text-[10px] font-black uppercase tracking-widest text-secondary-400 mt-1.5 flex items-center gap-1.5 opacity-70">
                                                 {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
                                             </p>
@@ -221,7 +249,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                             )}
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(notif.id); }}
-                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-secondary-400 hover:text-red-500 transition-all active:scale-90"
+                                                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-secondary-400 hover:text-red-500 transition-all active:scale-90"
                                                 title="Delete Notification"
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />

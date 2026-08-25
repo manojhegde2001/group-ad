@@ -1,46 +1,39 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { NextRequest } from 'next/server';
 
-let transporter: nodemailer.Transporter | null = null;
+let resend: Resend | null = null;
 
-function getTransporter() {
-    const host = process.env.EMAIL_HOST;
-    const port = parseInt(process.env.EMAIL_PORT || '587');
-    const user = process.env.EMAIL_USER;
-    const pass = process.env.EMAIL_PASS;
-
-    if (!host || !user || !pass) {
-        console.warn('[mailer] Missing SMTP configuration:', { host, user: !!user, pass: !!pass });
+function getResendClient() {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        console.warn('[mailer] Missing RESEND_API_KEY configuration');
         return null;
     }
-    if (!transporter) {
-        console.log('[mailer] Creating transporter for', host);
-        transporter = nodemailer.createTransport({
-            host,
-            port,
-            secure: port === 465,
-            auth: { user, pass }
-        });
+    if (!resend) {
+        resend = new Resend(apiKey);
     }
-    return transporter;
+    return resend;
 }
 
-const getFromAddress = () => process.env.EMAIL_FROM || '"Vrutta" <no-reply@vrutta.net>';
+const getFromAddress = () => process.env.EMAIL_FROM || 'Vrutta <onboarding@resend.dev>';
 
 export async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
     console.log('[mailer] Attempting to send email to:', to);
     console.log('[mailer] Using APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
-    const t = getTransporter();
-    if (!t) {
-        const error = new Error('Email SMTP configuration is missing');
+    const client = getResendClient();
+    if (!client) {
+        const error = new Error('Email API configuration is missing');
         console.error('[mailer]', error.message);
         throw error;
     }
     try {
         const from = getFromAddress();
-        const info = await t.sendMail({ from, to, subject, html });
-        console.log('[mailer] Email sent successfully:', info.messageId);
-        return info;
+        const { data, error } = await client.emails.send({ from, to, subject, html });
+        if (error) {
+            throw new Error(error.message);
+        }
+        console.log('[mailer] Email sent successfully:', data?.id);
+        return data;
     } catch (err) {
         console.error('[mailer] Failed to send email:', err);
         throw err; // Rethrow to let the API handle it
@@ -134,17 +127,15 @@ function baseLayout(title: string, content: string, baseUrl?: string) {
             <div class="email-card" style="max-width:560px;margin:0 auto;background-color:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);border:1px solid #f3f4f6;">
                 <!-- Header -->
                 <div class="border-separator" style="padding:40px 40px 0;text-align:center;">
-                    <div style="display:inline-block;width:180px;height:44px;margin:0 auto;">
+                    <div style="display:inline-block;vertical-align:middle;width:36px;height:36px;">
                         <!-- Light Mode Logo -->
-                        <img class="logo-light" src="${finalBaseUrl}/auth/logo-full.svg" width="180" height="44" alt="Vrutta Logo" style="display:block;width:180px;height:44px;border:0;" />
+                        <img class="logo-light" src="${finalBaseUrl}/auth/logo-small.svg" width="36" height="36" alt="Vrutta" style="display:block;width:36px;height:36px;border:0;" />
                         <!-- Dark Mode Logo (hidden by default) -->
                         <!--[if !mso]><!-->
-                        <img class="logo-dark" src="${finalBaseUrl}/auth/logo-full-dark.svg" width="180" height="44" alt="Vrutta Logo" style="display:none;width:180px;height:44px;border:0;" />
+                        <img class="logo-dark" src="${finalBaseUrl}/auth/logo-small-dark.svg" width="36" height="36" alt="Vrutta" style="display:none;width:36px;height:36px;border:0;" />
                         <!--<![endif]-->
                     </div>
-                    <div style="margin-top:12px;">
-                        <span style="font-size:18px;font-weight:800;color:${accentColor};letter-spacing:-0.5px;text-transform:uppercase;">Vrutta</span>
-                    </div>
+                    <span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;font-weight:800;color:${accentColor};letter-spacing:-0.5px;">Vrutta</span>
                 </div>
 
                 <!-- Main Content -->

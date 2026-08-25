@@ -68,12 +68,20 @@ function MessagesContent() {
 
   const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
 
+  // Mutations (markReadMutation is needed by the socket effect below)
+  const sendMessageMutation = useSendMessage(selectedConvId as string);
+  const markReadMutation = useMarkMessagesRead();
+  const startConvMutation = useStartConversation();
+
   // 1. Socket.IO integration for real-time messages & typing
   useEffect(() => {
     if (!selectedConvId || !socket || !user) return;
 
-    // Join the conversation room
-    socket.emit('join-conversation', selectedConvId);
+    // Join the conversation room (and rejoin on any reconnect, since the
+    // server-side room membership doesn't survive a dropped connection)
+    const joinRoom = () => socket.emit('join-conversation', selectedConvId);
+    joinRoom();
+    socket.on('connect', joinRoom);
 
     const handleNewMessage = (message: Message) => {
       console.log('[Socket] New message received:', message);
@@ -84,6 +92,9 @@ function MessagesContent() {
         });
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
         refreshUnreadBadge();
+        // Already viewing this conversation — mark the new message read immediately
+        // instead of waiting for the next conversation switch to catch up.
+        markReadMutation.mutate(selectedConvId, { onSuccess: () => refreshUnreadBadge() });
       }
     };
 
@@ -99,10 +110,11 @@ function MessagesContent() {
 
     return () => {
       socket.emit('leave-conversation', selectedConvId);
+      socket.off('connect', joinRoom);
       socket.off('new_message', handleNewMessage);
       socket.off('user-typing', handleTyping);
     };
-  }, [selectedConvId, socket, user, queryClient, refreshUnreadBadge]);
+  }, [selectedConvId, socket, user, queryClient, refreshUnreadBadge, markReadMutation.mutate]);
 
   // Merge API messages with real-time socket messages
   const messages = useMemo(() => {
@@ -124,11 +136,6 @@ function MessagesContent() {
     setIsOtherTyping(false);
     setTypingUser(null);
   }, [selectedConvId]);
-
-  // Mutations
-  const sendMessageMutation = useSendMessage(selectedConvId as string);
-  const markReadMutation = useMarkMessagesRead();
-  const startConvMutation = useStartConversation();
 
   // Filtered lists
   const filteredConversations = useMemo(() => {

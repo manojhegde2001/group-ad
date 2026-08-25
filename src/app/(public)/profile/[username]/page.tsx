@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import ProfileView from './profile-view';
 import { notFound } from 'next/navigation';
 import { getPostsServer } from '@/services/server/post-service';
+import { getOptimizedCloudinaryUrl } from '@/lib/cloudinary-utils';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -18,6 +19,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!user) return { title: 'User Not Found' };
 
+  const fallbackImage = 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1';
+  const ogImage = user.avatar
+    ? getOptimizedCloudinaryUrl(user.avatar, { width: 1200, height: 630, crop: 'fill', quality: 'auto', format: 'jpg' })
+    : fallbackImage;
+
   return {
     title: `${user.name} (@${username})`,
     description: user.bio || `Connect with ${user.name} on Vrutta — Enterprise Professional Ecosystem.`,
@@ -26,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: user.bio || `Connect with ${user.name} on Vrutta.`,
       images: [
         {
-          url: user.avatar || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1',
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: user.name,
@@ -37,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${user.name} (@${username})`,
       description: user.bio || `Connect with ${user.name} on Vrutta.`,
-      images: [user.avatar || 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1'],
+      images: [ogImage],
     },
   };
 }

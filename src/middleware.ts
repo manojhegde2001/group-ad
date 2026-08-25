@@ -103,7 +103,14 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/events') ||
     pathname.startsWith('/settings');
 
-  if (isProtected && !token) {
+  // Link-preview crawlers (WhatsApp, Facebook, Twitter/X, etc.) never carry a session
+  // cookie. Let them through on /profile so generateMetadata can serve real OG data
+  // instead of redirecting them to '/'.
+  const userAgent = req.headers.get('user-agent') || '';
+  const isPreviewCrawler = /facebookexternalhit|whatsapp|twitterbot|slackbot|telegrambot|linkedinbot|discordbot|skypeuripreview|googlebot|applebot|pinterest|redditbot|vkshare|w3c_validator/i.test(userAgent);
+  const isCrawlableProfilePath = pathname.startsWith('/profile') && isPreviewCrawler;
+
+  if (isProtected && !token && !isCrawlableProfilePath) {
     const url = new URL('/', req.url);
     url.searchParams.set('auth', 'required');
     return NextResponse.redirect(url);

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import { PostPageClient } from './post-page-client';
+import { getOptimizedCloudinaryUrl } from '@/lib/cloudinary-utils';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -29,7 +30,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? `${post.content.slice(0, 157)}...`
       : post.content
     : `View this post by ${post.user.name} on Vrutta.`;
-  const image = post.images[0] || post.user.avatar;
+  const rawImage = post.images[0] || post.user.avatar;
+  const image = rawImage
+    ? getOptimizedCloudinaryUrl(rawImage, { width: 1200, height: 630, crop: 'fill', quality: 'auto', format: 'jpg' })
+    : undefined;
 
   return {
     title,

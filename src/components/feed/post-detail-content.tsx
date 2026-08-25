@@ -683,7 +683,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         isOpen={isCommentSheetOpen}
                         onClose={() => setIsCommentSheetOpen(false)}
                         placement="bottom"
-                        containerClassName="w-full h-[85vh] bg-white dark:bg-secondary-900 rounded-t-[2rem] overflow-hidden flex flex-col md:hidden"
+                        containerClassName="w-full h-[60vh] max-h-[60vh] bg-white dark:bg-secondary-900 rounded-t-[2rem] overflow-hidden flex flex-col md:hidden"
                     >
                         <div className="flex flex-col h-full">
                             {/* Handle + Header */}

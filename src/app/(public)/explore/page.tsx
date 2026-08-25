@@ -2,6 +2,7 @@ import { CategoryCards } from '@/components/feed/category-cards';
 import { Compass, Layout } from 'lucide-react';
 import { TrendingCategories } from '@/components/explore/trending-categories';
 import { SearchBar } from '@/components/layout/search-bar';
+import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { getCategoriesServer } from '@/services/server/category-service';
 import { getTrendingTagsServer } from '@/services/server/tag-service';
 
@@ -41,11 +42,15 @@ export default async function ExplorePage() {
       </div>
 
       <div className="flex-1 bg-white dark:bg-[#0a0a0f] space-y-6 py-4 md:py-6">
-        {/* Section 1: Trending */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Section 1: Suggestions */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <TeammateSuggestions limit={10} />
+        </div>
+        {/* Section 2: Trending */}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:200ms]">
             <TrendingCategories initialData={{ tags: trendingTags }} />
         </div>
-        {/* Section 2: All Topics */}
+        {/* Section 3: All Topics */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:400ms]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-xl bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400">

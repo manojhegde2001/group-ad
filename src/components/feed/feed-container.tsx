@@ -32,9 +32,10 @@ interface FeedContainerProps {
   categoryId?: string | null;
   boardId?: string | null;
   initialData?: any;
+  showSuggestions?: boolean;
 }
 
-export function FeedContainer({ categoryId: initialCategoryId, boardId, initialData }: FeedContainerProps) {
+export function FeedContainer({ categoryId: initialCategoryId, boardId, initialData, showSuggestions = true }: FeedContainerProps) {
   const { selectedCategoryId, searchQuery } = useFeedFilter();
   const effectiveCategoryId = initialCategoryId !== undefined ? initialCategoryId : selectedCategoryId;
   const { setOnCreated, setOnDeleted } = useCreatePostModal();
@@ -128,7 +129,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
         </p>
       )}
 
-      {isAuthenticated && !isLoading && allPosts.length > 0 && (
+      {showSuggestions && isAuthenticated && !isLoading && allPosts.length > 0 && (
         <div className="mb-4 animate-slide-up">
           <TeammateSuggestions limit={10} />
         </div>

@@ -10,7 +10,7 @@ export default async function HomePage() {
   return (
     <>
       <HeroSection />
-      <FeedContainer initialData={initialData} />
+      <FeedContainer initialData={initialData} showSuggestions={false} />
     </>
   );
 }

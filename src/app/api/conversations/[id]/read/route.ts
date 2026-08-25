@@ -49,6 +49,19 @@ export async function PATCH(
       )
     );
 
+    // Keep the notification bell in sync: clear any unread MESSAGE_RECEIVED
+    // notifications for this conversation now that its messages are read.
+    await prisma.notification.updateMany({
+      where: {
+        userId,
+        type: 'MESSAGE_RECEIVED',
+        entityType: 'Conversation',
+        entityId: conversationId,
+        isRead: false,
+      },
+      data: { isRead: true, readAt: new Date() },
+    });
+
     return NextResponse.json({ ok: true, marked: unreadMessages.length });
   } catch (error) {
     console.error('PATCH /api/conversations/[id]/read error:', error);

@@ -50,6 +50,9 @@ export const useMarkMessagesRead = () => {
             queryClient.invalidateQueries({ queryKey: ['messages', 'unread-count'] });
             // For the specific conversation messages, we can just invalidate specifically
             queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+            // The server also clears matching MESSAGE_RECEIVED notifications, so
+            // refresh the notification bell badge too.
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
         },
     });
 };

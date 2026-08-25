@@ -9,6 +9,8 @@ export interface Notification {
     createdAt: Date;
     isRead: boolean;
     senderId?: string;
+    entityType?: string | null;
+    entityId?: string | null;
     sender?: {
         name: string;
         username: string;

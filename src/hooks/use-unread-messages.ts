@@ -17,7 +17,7 @@ export function useUnreadMessages(pollInterval = 30_000) {
         refetchInterval: pollInterval,
     });
 
-    const totalUnread = countData?.count || 0;
+    const totalUnread = countData?.totalUnread || 0;
 
     useEffect(() => {
         if (!socket) return;

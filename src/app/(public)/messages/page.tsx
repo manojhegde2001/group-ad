@@ -34,6 +34,7 @@ function MessagesContent() {
   const { refresh: refreshUnreadBadge } = useUnreadMessages();
   const searchParams = useSearchParams();
   const initialUserId = searchParams.get('userId');
+  const initialConversationId = searchParams.get('conversationId');
   const queryClient = useQueryClient();
   
   // Tabs & UI State
@@ -181,6 +182,23 @@ function MessagesContent() {
   }, [conversations, markReadMutation, refreshUnreadBadge]);
 
   const lastHandledInitialUserId = useRef<string | null>(null);
+  const lastHandledInitialConversationId = useRef<string | null>(null);
+
+  // Handle deep link to a specific conversation (e.g. from a notification)
+  useEffect(() => {
+    if (initialConversationId && !loadingConvs && conversations.length > 0) {
+      if (lastHandledInitialConversationId.current === initialConversationId) return;
+      lastHandledInitialConversationId.current = initialConversationId;
+
+      const existing = conversations.find(c => c.id === initialConversationId);
+      if (existing) {
+        setSelectedConvId(existing.id);
+        setShowMobileChat(true);
+      }
+
+      router.replace('/messages', { scroll: false });
+    }
+  }, [initialConversationId, loadingConvs, conversations, router]);
 
   // Handle initial user from redirect
   useEffect(() => {

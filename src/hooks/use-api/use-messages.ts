@@ -54,7 +54,7 @@ export const useMarkMessagesRead = () => {
     });
 };
 
-export const useUnreadMessagesCount = (options?: Omit<UseQueryOptions<{ count: number }>, 'queryKey' | 'queryFn'>) => {
+export const useUnreadMessagesCount = (options?: Omit<UseQueryOptions<{ totalUnread: number }>, 'queryKey' | 'queryFn'>) => {
     return useQuery({
         queryKey: ['messages', 'unread-count'],
         queryFn: () => messageService.getUnreadCount(),

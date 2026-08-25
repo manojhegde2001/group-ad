@@ -43,7 +43,7 @@ export const messageService = {
         apiClient.patch(`/api/conversations/${conversationId}/read`, {}),
 
     getUnreadCount: () =>
-        apiClient.get<{ count: number }>('/api/conversations/unread-count'),
+        apiClient.get<{ totalUnread: number }>('/api/conversations/unread-count'),
 
     startConversation: (participantId: string) =>
         apiClient.post<{ conversation: Conversation }>('/api/conversations', { participantId }),

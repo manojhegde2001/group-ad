@@ -124,7 +124,11 @@ export default function NotificationsPage() {
                   key={n.id}
                   onClick={() => {
                     if (!n.isRead) markReadMutation.mutate(n.id);
-                    if (n.sender) router.push(`/profile/${n.sender.username}`);
+                    if (n.type === 'MESSAGE_RECEIVED' && n.entityId) {
+                      router.push(`/messages?conversationId=${n.entityId}`);
+                    } else if (n.sender) {
+                      router.push(`/profile/${n.sender.username}`);
+                    }
                   }}
                   className={cn(
                     'flex items-start gap-3 px-4 py-4 cursor-pointer hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors group',

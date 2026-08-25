@@ -162,6 +162,9 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                             if (notif.type === 'MEETING_INVITE') {
                                                 router.push('/events');
                                                 setOpen(false);
+                                            } else if (notif.type === 'MESSAGE_RECEIVED' && notif.entityId) {
+                                                router.push(`/messages?conversationId=${notif.entityId}`);
+                                                setOpen(false);
                                             }
                                         }}
                                         onKeyDown={(e) => {
@@ -170,6 +173,9 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                                 !notif.isRead && markReadMutation.mutate(notif.id);
                                                 if (notif.type === 'MEETING_INVITE') {
                                                     router.push('/events');
+                                                    setOpen(false);
+                                                } else if (notif.type === 'MESSAGE_RECEIVED' && notif.entityId) {
+                                                    router.push(`/messages?conversationId=${notif.entityId}`);
                                                     setOpen(false);
                                                 }
                                             }

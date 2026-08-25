@@ -28,6 +28,9 @@ import { cn, getLinkDomain } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
+import dynamic from 'next/dynamic';
+
+const Drawer = dynamic(() => import('rizzui').then((mod) => mod.Drawer), { ssr: false });
 
 interface Comment {
     id: string;
@@ -73,6 +76,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const blockMutation = useBlock();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
+    const [isCommentSheetOpen, setIsCommentSheetOpen] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [imageStats, setImageStats] = useState<Record<string, { isLong: boolean; ratio: number }>>({});
 
@@ -426,9 +430,27 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 </Popover.Content>
                             </Popover>
 
-                            <ActionIcon onClick={handleLike} variant="text" rounded="full" className="w-10 h-10 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors group/like">
+                            <ActionIcon onClick={handleLike} variant="text" rounded="full" className="hidden md:flex w-10 h-10 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors group/like">
                                 <Heart className={cn("w-5 h-5 transition-all duration-200", liked ? "fill-red-500 text-red-500 scale-110" : "text-gray-600 dark:text-gray-300 group-hover/like:text-red-500")} />
                             </ActionIcon>
+                            <button
+                                onClick={handleLike}
+                                className="md:hidden flex items-center gap-1.5 h-10 px-3 rounded-full hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors group/like"
+                            >
+                                <Heart className={cn("w-5 h-5 transition-all duration-200", liked ? "fill-red-500 text-red-500 scale-110" : "text-gray-600 dark:text-gray-300 group-hover/like:text-red-500")} />
+                                <span className={cn("text-sm font-medium", liked ? "text-red-500" : "text-gray-600 dark:text-gray-300")}>{likeCount}</span>
+                            </button>
+
+                            {post.commentsEnabled !== false && (
+                                <button
+                                    onClick={() => setIsCommentSheetOpen(true)}
+                                    aria-label="Add a comment"
+                                    className="md:hidden flex items-center gap-1.5 h-10 px-3 rounded-full hover:bg-gray-50 dark:hover:bg-secondary-800 transition-colors"
+                                >
+                                    <MessageCircle className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{totalComments}</span>
+                                </button>
+                            )}
 
                             <Popover isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} placement="bottom-start">
                                 <Popover.Trigger>
@@ -473,7 +495,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
 
                     {/* Metadata Panel (Independently Scrollable on Desktop) */}
-                    <div className="md:flex-1 md:overflow-y-auto px-6 md:px-8 pb-24 scrollbar-hide">
+                    <div className="md:flex-1 md:overflow-y-auto px-6 md:px-8 pb-6 md:pb-24 scrollbar-hide">
                         
                         {/* Title Section */}
                         <div className="mb-4">
@@ -571,8 +593,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             </div>
                         )}
 
-                        {/* Comments Section */}
-                        <div className="mt-6 pb-4">
+                        {/* Comments Section (Desktop/Tablet only — mobile uses the full-screen drawer) */}
+                        <div className="hidden md:block mt-6 pb-4">
                             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Comments</h3>
                             
                             {loadingComments ? (
@@ -622,10 +644,10 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         </div>
                     </div>
 
-                    {/* Pinned Comment Input Row */}
+                    {/* Pinned Comment Input Row (Desktop/Tablet only — mobile uses the bottom drawer) */}
                     <div className={cn(
-                        "sticky p-6 md:px-8 md:py-6 bg-white dark:bg-secondary-900 border-t border-gray-100 dark:border-secondary-800 z-20",
-                        isModal ? "bottom-0" : "bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] md:bottom-0"
+                        "hidden md:block sticky md:px-8 md:py-6 bg-white dark:bg-secondary-900 border-t border-gray-100 dark:border-secondary-800 z-20 md:bottom-0",
+                        isModal && "bottom-0"
                     )}>
                         {post.commentsEnabled !== false ? (
                             <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
@@ -655,11 +677,95 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             <p className="text-xs text-center text-gray-400 font-medium py-1">Comments are disabled for this post</p>
                         )}
                     </div>
+
+                    {/* Mobile Comments — Instagram-style bottom drawer (list + input) */}
+                    <Drawer
+                        isOpen={isCommentSheetOpen}
+                        onClose={() => setIsCommentSheetOpen(false)}
+                        placement="bottom"
+                        containerClassName="w-full h-[85vh] bg-white dark:bg-secondary-900 rounded-t-[2rem] overflow-hidden flex flex-col md:hidden"
+                    >
+                        <div className="flex flex-col h-full">
+                            {/* Handle + Header */}
+                            <div className="pt-3 px-6 pb-3 relative shrink-0 border-b border-gray-100 dark:border-secondary-800">
+                                <div className="w-12 h-1.5 bg-secondary-200 dark:bg-secondary-800 rounded-full mx-auto" />
+                                <button
+                                    onClick={() => setIsCommentSheetOpen(false)}
+                                    className="absolute top-3 right-5 p-2 rounded-full bg-secondary-100 dark:bg-secondary-800 text-secondary-500 active:scale-90 transition-all"
+                                    aria-label="Close"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white text-center mt-2">
+                                    Comments{totalComments > 0 ? ` (${totalComments})` : ''}
+                                </h3>
+                            </div>
+
+                            {/* Scrollable Comments List */}
+                            <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-hide">
+                                {loadingComments ? (
+                                    <div className="space-y-4">
+                                        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-2xl" />)}
+                                    </div>
+                                ) : comments.length === 0 ? (
+                                    <p className="text-sm text-gray-400 py-4 text-center">No comments yet. Share your thoughts!</p>
+                                ) : (
+                                    <div className="space-y-5">
+                                        {comments.map((c) => (
+                                            <div key={c.id} className="flex gap-3">
+                                                 <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700 relative">
+                                                     {c.user.avatar ? <CloudinaryImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
+                                                 </Link>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">{c.user.companyName || c.user.name}</span>
+                                                        <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{c.content}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pinned Comment Input */}
+                            <div className="shrink-0 p-4 border-t border-gray-100 dark:border-secondary-800 bg-white dark:bg-secondary-900 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                                {post.commentsEnabled !== false ? (
+                                    <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden relative">
+                                            {user?.avatar ? <CloudinaryImage src={user.avatar as string} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">?</span>}
+                                        </div>
+                                        <div className="flex-1 relative">
+                                            <input
+                                                type="text"
+                                                value={comment}
+                                                onChange={(e) => setComment(e.target.value)}
+                                                placeholder="Add a comment"
+                                                className="w-full bg-white dark:bg-secondary-800 border border-gray-200 dark:border-secondary-700 rounded-full py-2.5 px-4 pr-14 text-sm focus:outline-none focus-visible:ring-2 ring-gray-300 dark:ring-secondary-600 text-gray-900 dark:text-white transition-all"
+                                            />
+                                            {comment.trim() && (
+                                                <button
+                                                    type="submit"
+                                                    disabled={commentMutation.isPending}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#E60023] font-semibold text-sm hover:text-[#b5001c] transition-colors"
+                                                >
+                                                    {commentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Post'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </form>
+                                ) : (
+                                    <p className="text-xs text-center text-gray-400 font-medium py-1">Comments are disabled for this post</p>
+                                )}
+                            </div>
+                        </div>
+                    </Drawer>
                 </div>
             </div>
 
             {/* More to Explore Section */}
-            <div className="mt-12 w-full max-w-[1800px] mx-auto px-4 md:px-2 pb-20">
+            <div className="mt-4 md:mt-12 w-full max-w-[1800px] mx-auto px-4 md:px-2 pb-20">
                 <div className="mb-6">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">More to explore</h2>
                     <p className="text-sm text-gray-400 mt-1">Related posts you might like</p>

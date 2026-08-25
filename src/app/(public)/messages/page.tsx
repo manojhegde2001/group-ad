@@ -52,6 +52,9 @@ function MessagesContent() {
   // Queries
   const { data: convsData, isLoading: loadingConvs } = useConversations({
     enabled: !!user,
+    // Fallback safety net: self-heal if a socket event is ever missed
+    // (e.g. a brief reconnect), same pattern as the unread-badge poll below.
+    refetchInterval: 20_000,
   });
   const conversations = convsData?.conversations || [];
 
@@ -63,6 +66,8 @@ function MessagesContent() {
   const messageQueryParams = useMemo(() => ({}), []);
   const { data: msgsData, isLoading: loadingMsgs } = useMessages(selectedConvId as string, messageQueryParams, {
     enabled: !!selectedConvId,
+    // Defense-in-depth alongside the socket room-rejoin-on-reconnect handling below.
+    refetchInterval: 15_000,
   });
   const apiMessages = msgsData?.messages || [];
 
@@ -84,11 +89,22 @@ function MessagesContent() {
     socket.on('connect', joinRoom);
 
     const handleNewMessage = (message: Message) => {
-      console.log('[Socket] New message received:', message);
       if (message.conversationId === selectedConvId) {
         setRealtimeMessages(prev => {
           if (prev.some(m => m.id === message.id)) return prev;
           return [...prev, message];
+        });
+        // Reflect it in the conversation list instantly instead of waiting on a
+        // refetch round-trip; the invalidate below reconciles with the server.
+        queryClient.setQueryData<{ conversations: Conversation[] }>(['conversations'], (old) => {
+          if (!old) return old;
+          return {
+            conversations: old.conversations.map((c) =>
+              c.id === message.conversationId
+                ? { ...c, lastMessage: message, lastMessageAt: message.createdAt }
+                : c
+            ),
+          };
         });
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
         refreshUnreadBadge();
@@ -252,14 +268,6 @@ function MessagesContent() {
     }, 60000);
     return () => clearInterval(timer);
   }, [refreshUnreadBadge]);
-
-  // Handle Mark Read when conversation switches
-  useEffect(() => {
-    if (selectedConvId) {
-      markConversationRead(selectedConvId);
-    }
-  }, [selectedConvId, markConversationRead]);
-
 
   const lastConvIdRef = useRef<string | null>(null);
 

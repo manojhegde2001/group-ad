@@ -20,6 +20,9 @@ import {
 } from '@/hooks/use-api/use-admin';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { DataGrid, DataGridColumn, DataGridAction } from '@/components/ui/data-grid';
+import { Switch } from '@/components/ui/switch';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { LayoutGrid } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -193,14 +196,23 @@ export default function AdminCategoriesPage() {
       sortable: true,
       accessor: (cat) => (cat.isActive ? 1 : 0),
       render: (cat) => (
-        <span className={cn(
-          'inline-flex items-center px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide border',
-          cat.isActive
-            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/50'
-            : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800/50'
-        )}>
-          {cat.isActive ? 'Active' : 'Offline'}
-        </span>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={cat.isActive}
+            disabled={updateMutation.isPending && updateMutation.variables?.id === cat.id}
+            onChange={(e) =>
+              updateMutation.mutate({ id: cat.id, data: { isActive: e.target.checked } })
+            }
+          />
+          <span className={cn(
+            'text-[9px] font-bold uppercase tracking-wide',
+            cat.isActive
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-red-500 dark:text-red-400'
+          )}>
+            {cat.isActive ? 'Active' : 'Offline'}
+          </span>
+        </div>
       ),
     },
   ];
@@ -242,21 +254,17 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="space-y-5 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase leading-none mb-2">
-            Category <span className="text-primary italic">Forge</span>
-          </h1>
-          <p className="text-secondary-400 font-bold uppercase text-[10px] tracking-widest leading-none">
-            Manage platform tags, interests, and discovery hubs
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-            <div className="px-4 py-2 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-lg font-black uppercase text-[10px] tracking-[0.2em]">
-                {categories.length} Active Hubs
-            </div>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={LayoutGrid}
+        title="Category"
+        accent="Forge"
+        description="Manage platform tags, interests, and discovery hubs"
+        actions={
+          <div className="px-4 py-2 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-lg font-black uppercase text-[10px] tracking-[0.2em]">
+            {categories.length} Active Hubs
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 

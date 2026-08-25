@@ -6,8 +6,9 @@ import { redirect } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import {
   Check, X, Loader2, ShieldCheck, ShieldAlert, Search,
-  UserPlus, UserMinus, Globe
+  UserPlus, UserMinus, Globe, Building2
 } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { Input, Button, Badge } from 'rizzui';
@@ -219,16 +220,12 @@ export default function AdminBusinessesPage() {
 
   return (
     <div className="space-y-5 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase leading-none mb-2">
-            Business <span className="text-primary italic">Center</span>
-          </h1>
-          <p className="text-secondary-400 font-bold uppercase text-[10px] tracking-widest leading-none">
-            Manage business accounts and review conversion requests
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={Building2}
+        title="Business"
+        accent="Center"
+        description="Manage business accounts and review conversion requests"
+      />
 
       {/* Global Search & Account Type Section */}
       <Card className="p-4 border border-primary-100 dark:border-primary-900/30 rounded-xl shadow-sm bg-gradient-to-br from-white to-primary-50/20 dark:from-secondary-950 dark:to-primary-900/5">

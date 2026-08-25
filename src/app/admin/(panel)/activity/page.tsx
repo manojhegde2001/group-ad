@@ -5,13 +5,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import {
-  Clock, TrendingUp, ArrowLeft,
+  Clock, TrendingUp,
   ChevronLeft, ChevronRight, MessageSquare, Heart,
   ArrowUpRight, Zap
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAdminActivity } from '@/hooks/use-api/use-admin';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import Link from 'next/link';
 
 export default function AdminActivityPage() {
@@ -31,25 +32,15 @@ export default function AdminActivityPage() {
   if (!isAuthenticated || (user as any)?.userType !== 'ADMIN') return null;
 
   return (
-    <div className="space-y-8 pb-20 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-secondary-50 dark:border-secondary-900/60 pb-10">
-        <div>
-          <Link href="/admin" className="flex items-center gap-2 text-[10px] font-black text-secondary-400 hover:text-primary transition-all mb-4 uppercase tracking-[0.2em] group">
-            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" /> Back to Dashboard
-          </Link>
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2rem] flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 ring-4 ring-emerald-500/10">
-              <Zap className="w-8 h-8 fill-current opacity-80" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-black text-secondary-900 dark:text-white tracking-tighter uppercase leading-none mb-2">
-                Live <span className="text-emerald-500 italic">Feed</span>
-              </h1>
-              <p className="text-secondary-400 text-[10px] font-black uppercase tracking-[0.3em]">Comprehensive platform activity monitoring</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6 pb-20 animate-in fade-in duration-700">
+      <AdminPageHeader
+        icon={Zap}
+        title="Live"
+        accent="Feed"
+        description="Comprehensive platform activity monitoring"
+        color="emerald"
+        backHref="/admin"
+      />
 
       {/* Activity Table */}
       <Card className="overflow-hidden border-2 border-secondary-50 dark:border-secondary-900/40 rounded-[3rem] shadow-sm bg-white dark:bg-slate-900">

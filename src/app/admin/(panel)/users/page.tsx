@@ -16,6 +16,7 @@ import {
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAdminUsers, useUpdateUserStatus } from '@/hooks/use-api/use-admin';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 const BulkImportDialog = dynamic(() => import('@/components/admin/BulkImportDialog'), {
   ssr: false,
@@ -162,24 +163,22 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase leading-none mb-2">
-            User <span className="text-primary italic">Management</span>
-          </h1>
-          <p className="text-secondary-400 font-bold uppercase text-[10px] tracking-widest leading-none">
-            Manage profiles, account types, and monitor platform health
-          </p>
-        </div>
-        <button
-          onClick={() => setIsImportOpen(true)}
-          className="flex items-center gap-2.5 px-7 py-3.5 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-2xl active:scale-90 transition-all hover:-translate-y-1"
-        >
-          <UserPlus className="w-4 h-4" />
-          Bulk Onboarding
-        </button>
-      </div>
+    <div className="space-y-6 pb-20">
+      <AdminPageHeader
+        icon={User}
+        title="User"
+        accent="Management"
+        description="Manage profiles, account types, and monitor platform health"
+        actions={
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-90 transition-all"
+          >
+            <UserPlus className="w-4 h-4" />
+            Bulk Onboarding
+          </button>
+        }
+      />
 
       <BulkImportDialog
         isOpen={isImportOpen}

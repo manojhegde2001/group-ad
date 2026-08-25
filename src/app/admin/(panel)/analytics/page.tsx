@@ -4,15 +4,15 @@ import { useState } from 'react';
 import { 
   AreaChart, Area, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, CartesianGrid, XAxis, YAxis
 } from 'recharts';
-import { 
-  Users, CalendarDays, FileText, 
-  ArrowLeft, Download, RefreshCw, BarChart3,
+import {
+  Users, CalendarDays, FileText,
+  Download, RefreshCw, BarChart3,
   Award, Tags
 } from 'lucide-react';
-import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useAdminAnalytics } from '@/hooks/use-api/use-admin';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b'];
 
@@ -46,37 +46,27 @@ export default function AdminAnalyticsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-secondary-50 dark:border-secondary-900/60 pb-10">
-        <div>
-          <Link href="/admin" className="flex items-center gap-2 text-[10px] font-black text-secondary-400 hover:text-primary transition-all mb-4 uppercase tracking-[0.2em] group">
-            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" /> Back to Dashboard
-          </Link>
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-[2rem] flex items-center justify-center text-white shadow-xl shadow-violet-500/20 ring-4 ring-violet-500/10">
-              <BarChart3 className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-black text-secondary-900 dark:text-white tracking-tighter uppercase leading-none mb-2">
-                Insights <span className="text-violet-500 italic">&</span> Analytics
-              </h1>
-              <p className="text-secondary-400 text-[10px] font-black uppercase tracking-[0.3em]">Real-time performance and growth metrics</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-900 border-2 border-secondary-50 dark:border-secondary-800 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-secondary-600 hover:bg-secondary-50 transition-all active:scale-95 shadow-sm">
-            <Download className="w-4 h-4" /> Export PDF
-          </button>
-          <button 
-            onClick={() => refetch()}
-            className="flex items-center gap-3 px-6 py-3 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary-600 transition-all active:scale-95 shadow-xl shadow-primary/20 border-b-4 border-primary-700"
-          >
-            <RefreshCw className="w-4 h-4" /> Refresh
-          </button>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={BarChart3}
+        title="Insights"
+        accent="Analytics"
+        description="Real-time performance and growth metrics"
+        color="violet"
+        backHref="/admin"
+        actions={
+          <>
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-secondary-50 dark:border-secondary-800 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-secondary-600 hover:bg-secondary-50 transition-all active:scale-95 shadow-sm">
+              <Download className="w-4 h-4" /> Export PDF
+            </button>
+            <button
+              onClick={() => refetch()}
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary-600 transition-all active:scale-95 shadow-lg shadow-primary/20"
+            >
+              <RefreshCw className="w-4 h-4" /> Refresh
+            </button>
+          </>
+        }
+      />
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

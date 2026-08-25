@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default function AdminPowerTeamsPage() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
@@ -57,17 +58,13 @@ export default function AdminPowerTeamsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase leading-none mb-2">
-            Power Team <span className="text-primary-500 italic">Moderation</span>
-          </h1>
-          <p className="text-secondary-400 font-bold uppercase text-[10px] tracking-widest leading-none">
-            Monitor strategic alliances and manage team memberships
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6 pb-20">
+      <AdminPageHeader
+        icon={Users}
+        title="Power Team"
+        accent="Moderation"
+        description="Monitor strategic alliances and manage team memberships"
+      />
 
       {/* Filters */}
       <div className="bg-white dark:bg-secondary-900 p-6 rounded-[2.5rem] border border-secondary-100 dark:border-secondary-800 shadow-sm">

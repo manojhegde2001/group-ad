@@ -15,6 +15,7 @@ import { DataGrid, DataGridPagination, DataGridToolbar, DataGridColumn, DataGrid
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useReports, useUpdateReport } from '@/hooks/use-api/use-admin';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface AdminReport {
   id: string;
@@ -189,27 +190,22 @@ export default function AdminReportsPage() {
   ];
 
   return (
-    <div className="space-y-8 pb-20">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-black text-secondary-900 dark:text-white tracking-tight uppercase leading-none mb-2">
-            Moderation <span className="text-primary italic">Reports</span>
-          </h1>
-          <p className="text-secondary-400 font-bold uppercase text-[10px] tracking-widest leading-none">
-            Review and resolve user-flagged content to maintain community standards
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+    <div className="space-y-6 pb-20">
+      <AdminPageHeader
+        icon={ShieldAlert}
+        title="Moderation"
+        accent="Reports"
+        description="Review and resolve user-flagged content to maintain community standards"
+        actions={
           <div className={cn(
-              "px-5 py-2.5 rounded-2xl border-2 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-3 shadow-xl transition-all",
+              "px-4 py-2.5 rounded-xl border-2 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2.5 shadow-lg transition-all",
               pendingCount > 0 ? "bg-red-500 text-white border-red-400 shadow-red-500/20" : "bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/20"
           )}>
             <ShieldAlert className="w-4 h-4 animate-pulse" />
             {pendingCount} Urgent Flags
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filters & Search */}
       <DataGridToolbar

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useVenues, useCreateVenue, useDeleteVenue } from '@/hooks/use-api/use-admin';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 interface Venue {
   id: string;
@@ -50,28 +51,21 @@ export default function AdminVenuesPage() {
   const isSubmitting = createMutation.isPending;
 
   return (
-    <div className="space-y-10 pb-20 animate-in fade-in duration-700">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-secondary-50 dark:border-secondary-900/60 pb-10">
-        <div>
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-rose-600 rounded-[2rem] flex items-center justify-center text-white shadow-xl shadow-orange-500/20 ring-4 ring-orange-500/10">
-              <MapPin className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-black text-secondary-900 dark:text-white tracking-tighter uppercase leading-none mb-2">
-                Venue <span className="text-orange-500 italic">Registry</span>
-              </h1>
-              <p className="text-secondary-400 text-[10px] font-black uppercase tracking-[0.3em]">Configure platform event nodes and locales</p>
-            </div>
-          </div>
-        </div>
-        <div className="px-6 py-3 bg-white dark:bg-slate-900 border-2 border-secondary-50 dark:border-secondary-800 rounded-2xl flex items-center gap-4 shadow-sm">
+    <div className="space-y-6 pb-20 animate-in fade-in duration-700">
+
+      <AdminPageHeader
+        icon={MapPin}
+        title="Venue"
+        accent="Registry"
+        description="Configure platform event nodes and locales"
+        color="orange"
+        actions={
+          <div className="px-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-secondary-50 dark:border-secondary-800 rounded-xl flex items-center gap-2.5 shadow-sm">
             <Globe className="w-4 h-4 text-orange-500" />
             <span className="text-[10px] font-black uppercase tracking-widest text-secondary-500">{venues.length} Logged Sites</span>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         

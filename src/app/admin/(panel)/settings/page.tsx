@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default function AdminSettingsPage() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -15,17 +16,12 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4 border-b border-secondary-200 dark:border-secondary-800 pb-6">
-        <div className="p-3 bg-secondary-100 dark:bg-secondary-800 rounded-2xl text-secondary-600 dark:text-secondary-400">
-          <SettingsIcon className="w-8 h-8" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-secondary-900 dark:text-white">
-            Platform Settings
-          </h1>
-          <p className="text-secondary-500 mt-1">Configure global application variables and controls.</p>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={SettingsIcon}
+        title="Platform"
+        accent="Settings"
+        description="Configure global application variables and controls"
+      />
 
       <Card className="p-6 space-y-6">
          <h3 className="font-bold text-lg text-secondary-900 dark:text-white border-b border-secondary-100 dark:border-secondary-800 pb-2">Registrations & Upgrades</h3>

@@ -345,6 +345,7 @@ model Post {
   type        PostType
   content     String
   images      String[]
+  link        String?
   tags        String[]
 
   visibility  AccountVisibility @default(PUBLIC)

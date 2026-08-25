@@ -38,13 +38,28 @@ export async function getPostsServer(params: GetPostsParams) {
 
     const where: any = {};
 
-    // Apply visibility filter only for general feed queries (not profile-specific)
+    // Resolve the target user (by id or username) before deciding the visibility filter,
+    // so the profile owner can see their own private posts.
+    let resolvedUserId = userId;
+    if (username && username !== 'null' && username !== 'undefined') {
+      const userByUsername = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true },
+      });
+      if (!userByUsername) {
+        return { posts: [], pagination: { total: 0, page, limit, totalPages: 0 } };
+      }
+      resolvedUserId = userByUsername.id;
+    }
+
     const isUserSpecificQuery = !!(userId || username);
+    const isOwnProfileQuery = isUserSpecificQuery && !!currentUserId && currentUserId === resolvedUserId;
     if (!isUserSpecificQuery) {
       where.visibility = (visibility as any) || 'PUBLIC';
-    } else {
-      where.visibility = 'PUBLIC'; // Show only public posts on profile
+    } else if (!isOwnProfileQuery) {
+      where.visibility = 'PUBLIC'; // Show only public posts on someone else's profile
     }
+    // Own profile: no visibility filter, so PUBLIC and PRIVATE posts both show
 
     if (currentUserId) {
       const blocks = await prisma.block.findMany({
@@ -96,18 +111,6 @@ export async function getPostsServer(params: GetPostsParams) {
     if (companyId && companyId !== 'null' && companyId !== 'undefined') where.companyId = companyId;
     
     if (postType && postType !== 'CREATED') where.type = postType as any;
-    
-    let resolvedUserId = userId;
-    if (username && username !== 'null' && username !== 'undefined') {
-      const userByUsername = await prisma.user.findUnique({
-        where: { username },
-        select: { id: true },
-      });
-      if (!userByUsername) {
-        return { posts: [], pagination: { total: 0, page, limit, totalPages: 0 } };
-      }
-      resolvedUserId = userByUsername.id;
-    }
 
     if (resolvedUserId && resolvedUserId !== 'null' && resolvedUserId !== 'undefined') {
         if (where.userId?.notIn?.includes(resolvedUserId)) {

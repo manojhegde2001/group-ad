@@ -91,11 +91,7 @@ export function CategoryBar() {
                                     : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700'
                                     }`}
                             >
-                                {cat.id === null ? (
-                                    <LayoutGrid className="w-3.5 h-3.5" />
-                                ) : cat.icon ? (
-                                    <span>{cat.icon}</span>
-                                ) : null}
+                                {cat.id === null && <LayoutGrid className="w-3.5 h-3.5" />}
                                 {cat.name}
                             </button>
                         );

@@ -24,7 +24,7 @@ import { useReport, useBlock } from '@/hooks/use-api/use-moderation';
 import { useDeletePost, usePost, usePostComments, useLikePost, useCommentOnPost, useBookmarkPost } from '@/hooks/use-api/use-posts';
 
 import { FeedContainer } from './feed-container';
-import { cn } from '@/lib/utils';
+import { cn, getLinkDomain } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
@@ -379,6 +379,19 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             >
                                 <Maximize2 className="w-5 h-5" />
                             </button>
+
+                            {post.link && (
+                                <a
+                                    href={post.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute bottom-4 left-4 z-30 flex items-center gap-1.5 max-w-[60%] bg-black/50 hover:bg-black/70 backdrop-blur-md text-white text-[11px] px-3 py-1.5 rounded-full font-bold border border-white/20 shadow-lg transition-all active:scale-95"
+                                >
+                                    <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">{getLinkDomain(post.link)}</span>
+                                </a>
+                            )}
                         </div>
                     ) : (
                         <div className={cn("w-full h-[60vh] md:h-full flex items-center justify-center p-8 text-white text-center rounded-b-2xl md:rounded-none", `bg-gradient-to-br ${gradient}`)}>
@@ -497,7 +510,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     </a>
                                 </div>
                             )}
-                            
+
                             {/* Likes + Views Stats */}
                             <div className="flex items-center gap-2 mt-4 text-[13px] text-gray-400 font-medium">
                                 <button onClick={handleLike} className="flex items-center gap-1.5 hover:text-red-500 transition-colors group/stat">

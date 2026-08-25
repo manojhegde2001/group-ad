@@ -6,6 +6,7 @@ import { z } from 'zod';
 const updatePostSchema = z.object({
   content: z.string().min(1).max(5000).optional(),
   images: z.array(z.string().url()).optional(),
+  link: z.string().url('Enter a valid URL').optional().or(z.literal('')),
   tags: z.array(z.string()).optional(),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional(),
   commentsEnabled: z.boolean().optional(),

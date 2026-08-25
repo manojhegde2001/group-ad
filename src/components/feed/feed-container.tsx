@@ -128,6 +128,12 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
         </p>
       )}
 
+      {isAuthenticated && !isLoading && allPosts.length > 0 && (
+        <div className="mb-4 animate-slide-up">
+          <TeammateSuggestions limit={10} />
+        </div>
+      )}
+
       <Masonry
         breakpointCols={breakpointCols}
         className="flex -ml-2 sm:-ml-2.5 md:-ml-3 w-auto"
@@ -154,21 +160,14 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
           ))
         ) : allPosts.length > 0 ? (
           allPosts.map((post, i) => (
-            <div key={`post-wrapper-${post.id}`}>
-              <div
-                className={cn(
-                  "mb-2 sm:mb-2.5 md:mb-3",
-                  !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
-                )}
-              >
-                <PostCard post={post} priority={i < 4} />
-              </div>
-              
-              {i === 2 && isAuthenticated && (
-                <div className="mb-2 sm:mb-2.5 md:mb-3 animate-slide-up stagger-4">
-                  <TeammateSuggestions limit={4} />
-                </div>
+            <div
+              key={`post-wrapper-${post.id}`}
+              className={cn(
+                "mb-2 sm:mb-2.5 md:mb-3",
+                !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
               )}
+            >
+              <PostCard post={post} priority={i < 4} />
             </div>
           ))
         ) : null}

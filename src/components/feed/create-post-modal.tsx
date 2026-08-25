@@ -6,9 +6,9 @@ import { useCreatePost, useUpdatePost } from '@/hooks/use-api/use-posts';
 import { useUpload } from '@/hooks/use-api/use-common';
 import { useAuth } from '@/hooks/use-auth';
 import {
-    X, Image as ImageIcon, Type, Tag, Globe, Lock,
-    Upload, Loader2, CheckCircle, Plus, Video, Film,
-    Tags, MessageCircle, MessageCircleOff
+    X, Image as ImageIcon, Globe, Lock,
+    Upload, Loader2, CheckCircle, Plus, Film,
+    MessageCircle, MessageCircleOff, Link as LinkIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Modal, Button } from 'rizzui';
@@ -18,13 +18,32 @@ import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
 
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
+const HASHTAG_PATTERN = /#[a-zA-Z0-9_]+/g;
+
+function extractHashtags(text: string): string[] {
+    const matches = text.match(HASHTAG_PATTERN) || [];
+    const seen = new Set<string>();
+    for (const m of matches) seen.add(m.slice(1).toLowerCase());
+    return Array.from(seen);
+}
+
+function renderHighlightedCaption(text: string) {
+    const parts = text.split(new RegExp(`(${HASHTAG_PATTERN.source})`, 'g'));
+    return parts.map((part, i) =>
+        /^#[a-zA-Z0-9_]+$/.test(part) ? (
+            <span key={i} className="text-primary-500 dark:text-primary-400">{part}</span>
+        ) : (
+            <span key={i}>{part}</span>
+        )
+    );
+}
+
 export function CreatePostModal() {
     const { isOpen, close, notifyCreated, editingPost } = useCreatePostModal();
     const { user } = useAuth();
 
     const [postType, setPostType] = useState<PostType>('IMAGE');
     const [content, setContent] = useState('');
-    const [tags, setTags] = useState('');
     const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC');
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
@@ -34,25 +53,36 @@ export function CreatePostModal() {
     const [success, setSuccess] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [commentsEnabled, setCommentsEnabled] = useState(true);
+    const [link, setLink] = useState('');
+    const [showLinkInput, setShowLinkInput] = useState(false);
     
     // Check verification status
     const isAdmin = (user as any)?.userType === 'ADMIN';
     const isBusiness = (user as any)?.userType === 'BUSINESS';
     const isAllowed = isAdmin || isBusiness;
 
-    const imageInputRef = useRef<HTMLInputElement>(null);
-    const videoInputRef = useRef<HTMLInputElement>(null);
+    const mediaInputRef = useRef<HTMLInputElement>(null);
+    const backdropRef = useRef<HTMLDivElement>(null);
 
     // Populate editing data
     useEffect(() => {
         if (editingPost) {
             setPostType(editingPost.type as PostType);
-            setContent(editingPost.content);
-            setTags(editingPost.tags.join(', '));
+            // Carry over tags that existed before hashtags lived in the caption itself,
+            // so re-saving an old post doesn't silently drop them.
+            const existingTags = editingPost.tags || [];
+            const captionTags = new Set(extractHashtags(editingPost.content));
+            const missingTags = existingTags.filter((t) => !captionTags.has(t.toLowerCase()));
+            const caption = missingTags.length > 0
+                ? `${editingPost.content}${editingPost.content.trim() ? '\n\n' : ''}${missingTags.map((t) => `#${t}`).join(' ')}`
+                : editingPost.content;
+            setContent(caption);
             setVisibility(editingPost.visibility as 'PUBLIC' | 'PRIVATE');
             setMediaPreviews(editingPost.images);
             setMediaFiles([]);
             setCommentsEnabled(editingPost.commentsEnabled !== false);
+            setLink((editingPost as any).link || '');
+            setShowLinkInput(!!(editingPost as any).link);
         }
     }, [editingPost, user]);
 
@@ -66,7 +96,6 @@ export function CreatePostModal() {
 
     const reset = () => {
         setContent('');
-        setTags('');
         setVisibility('PUBLIC');
         setMediaFiles([]);
         setMediaPreviews([]);
@@ -75,6 +104,8 @@ export function CreatePostModal() {
         setUploadProgress(0);
         setIsDragging(false);
         setCommentsEnabled(true);
+        setLink('');
+        setShowLinkInput(false);
     };
 
     const handleClose = () => {
@@ -194,21 +225,26 @@ export function CreatePostModal() {
             toast.error(`Please add at least one ${postType === 'VIDEO' ? 'video' : 'image'}`);
             return;
         }
+        const trimmedLink = link.trim();
+        if (trimmedLink && !/^https?:\/\/.+/i.test(trimmedLink)) {
+            toast.error('Link must start with http:// or https://');
+            return;
+        }
 
         try {
             const newMediaUrls = await uploadToCloudinary();
             const existingUrls = mediaPreviews.filter(p => !p.startsWith('blob:'));
             const finalMediaUrls = [...existingUrls, ...newMediaUrls];
 
-            const parsedTags = tags
-                .split(',')
-                .map((t) => t.trim().toLowerCase().replace(/^#/, ''))
-                .filter(Boolean);
+            const parsedTags = extractHashtags(content);
 
             const postData = {
                 type: postType,
                 content: content.trim(),
                 images: finalMediaUrls,
+                // When editing, always send the link (including '') so clearing it persists.
+                // When creating, omit it entirely unless the user set one.
+                link: editingPost ? trimmedLink : (trimmedLink || undefined),
                 tags: parsedTags,
                 visibility,
                 commentsEnabled,
@@ -285,34 +321,9 @@ export function CreatePostModal() {
                             <p className="text-[13px] font-black text-secondary-900 dark:text-white leading-tight uppercase tracking-tight">
                                 {user?.name as string}
                             </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <button
-                                    type="button"
-                                    onClick={() => setVisibility('PUBLIC')}
-                                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${visibility === 'PUBLIC' ? 'bg-green-500/10 text-green-600 ring-1 ring-green-500/20' : 'text-secondary-400 hover:text-secondary-600'}`}
-                                >
-                                    <Globe className="w-2.5 h-2.5" />
-                                    Public
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setVisibility('PRIVATE')}
-                                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${visibility === 'PRIVATE' ? 'bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20' : 'text-secondary-400 hover:text-secondary-600'}`}
-                                >
-                                    <Lock className="w-2.5 h-2.5" />
-                                    Private
-                                </button>
-                                <div className="h-4 w-px bg-secondary-100 dark:bg-secondary-800 mx-1" />
-                                <button
-                                    type="button"
-                                    onClick={() => setCommentsEnabled(!commentsEnabled)}
-                                    className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${commentsEnabled ? 'text-secondary-400 hover:text-primary-500' : 'bg-red-500/10 text-red-600 ring-1 ring-red-500/20'}`}
-                                    title={commentsEnabled ? "Disable Comments" : "Enable Comments"}
-                                >
-                                    {commentsEnabled ? <MessageCircle className="w-2.5 h-2.5" /> : <MessageCircleOff className="w-2.5 h-2.5" />}
-                                    {commentsEnabled ? 'Comments On' : 'Comments Off'}
-                                </button>
-                            </div>
+                            <p className="text-[10px] font-bold text-secondary-400 mt-0.5">
+                                {editingPost ? 'Editing post' : 'Creating a new post'}
+                            </p>
                         </div>
                     </div>
 
@@ -338,14 +349,26 @@ export function CreatePostModal() {
                 ) : (
                     <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar">
                         <div className="px-5 sm:px-6 py-6 space-y-4 flex-1">
-                            <textarea
-                                autoFocus
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                placeholder="What's happening? Share your thoughts..."
-                                className="w-full resize-none bg-transparent border-none outline-none text-secondary-900 dark:text-secondary-100 placeholder:text-secondary-400 text-lg font-medium leading-relaxed min-h-[100px] max-h-[300px] focus:ring-0"
-                                maxLength={5000}
-                            />
+                            <div className="relative">
+                                <div
+                                    ref={backdropRef}
+                                    aria-hidden
+                                    className="absolute inset-0 overflow-y-auto whitespace-pre-wrap break-words text-secondary-900 dark:text-secondary-100 text-lg font-medium leading-relaxed min-h-[100px] max-h-[300px] pointer-events-none select-none"
+                                >
+                                    {renderHighlightedCaption(content)}
+                                </div>
+                                <textarea
+                                    autoFocus
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    onScroll={(e) => {
+                                        if (backdropRef.current) backdropRef.current.scrollTop = e.currentTarget.scrollTop;
+                                    }}
+                                    placeholder="What's happening? Share your thoughts... #tag your post"
+                                    className="relative w-full resize-none bg-transparent border-none outline-none text-transparent caret-secondary-900 dark:caret-white placeholder:text-secondary-400 text-lg font-medium leading-relaxed min-h-[100px] max-h-[300px] focus:ring-0"
+                                    maxLength={5000}
+                                />
+                            </div>
 
                             {mediaPreviews.length > 0 && (
                                 <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -376,7 +399,7 @@ export function CreatePostModal() {
                                     {mediaPreviews.length < 5 && (
                                         <button
                                             type="button"
-                                            onClick={() => imageInputRef.current?.click()}
+                                            onClick={() => mediaInputRef.current?.click()}
                                             className="shrink-0 w-24 h-24 border-2 border-dashed border-secondary-200 dark:border-secondary-700/50 rounded-2xl flex flex-col items-center justify-center gap-1 text-secondary-400 hover:border-primary-400 hover:text-primary-500 hover:bg-primary-50/30 dark:hover:bg-primary-900/10 transition-all group active:scale-95"
                                         >
                                             <Plus className="w-5 h-5" />
@@ -386,15 +409,53 @@ export function CreatePostModal() {
                                 </div>
                             )}
 
-                            <div className="flex items-center gap-3 bg-secondary-50 dark:bg-secondary-800/40 rounded-2xl px-4 py-3 border border-secondary-100 dark:border-secondary-800/50 focus-within:ring-2 ring-primary-500/20 transition-all">
-                                <Tags className="w-4 h-4 text-secondary-400 shrink-0" />
-                                <input
-                                    type="text"
-                                    value={tags}
-                                    onChange={(e) => setTags(e.target.value)}
-                                    placeholder="Add tags separated by comma"
-                                    className="flex-1 bg-transparent outline-none text-sm font-bold text-secondary-800 dark:text-secondary-200 placeholder:text-secondary-400/80 min-w-0"
-                                />
+                            {showLinkInput && (
+                                <div className="flex items-center gap-3 bg-secondary-50 dark:bg-secondary-800/40 rounded-2xl px-4 py-3 border border-secondary-100 dark:border-secondary-800/50 focus-within:ring-2 ring-primary-500/20 transition-all animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <LinkIcon className="w-4 h-4 text-secondary-400 shrink-0" />
+                                    <input
+                                        type="url"
+                                        value={link}
+                                        onChange={(e) => setLink(e.target.value)}
+                                        placeholder="https://your-link.com"
+                                        className="flex-1 bg-transparent outline-none text-sm font-bold text-secondary-800 dark:text-secondary-200 placeholder:text-secondary-400/80 min-w-0"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => { setLink(''); setShowLinkInput(false); }}
+                                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-secondary-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                                <span className="text-[9px] font-black text-secondary-300 uppercase tracking-widest mr-1">Post settings</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibility('PUBLIC')}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${visibility === 'PUBLIC' ? 'bg-green-500/10 text-green-600 ring-1 ring-green-500/20' : 'bg-secondary-50 dark:bg-secondary-800/40 text-secondary-400 hover:text-secondary-600'}`}
+                                >
+                                    <Globe className="w-2.5 h-2.5" />
+                                    Public
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisibility('PRIVATE')}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${visibility === 'PRIVATE' ? 'bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20' : 'bg-secondary-50 dark:bg-secondary-800/40 text-secondary-400 hover:text-secondary-600'}`}
+                                >
+                                    <Lock className="w-2.5 h-2.5" />
+                                    Private
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setCommentsEnabled(!commentsEnabled)}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${commentsEnabled ? 'bg-secondary-50 dark:bg-secondary-800/40 text-secondary-400 hover:text-primary-500' : 'bg-red-500/10 text-red-600 ring-1 ring-red-500/20'}`}
+                                    title={commentsEnabled ? "Disable Comments" : "Enable Comments"}
+                                >
+                                    {commentsEnabled ? <MessageCircle className="w-2.5 h-2.5" /> : <MessageCircleOff className="w-2.5 h-2.5" />}
+                                    {commentsEnabled ? 'Comments On' : 'Comments Off'}
+                                </button>
                             </div>
                         </div>
 
@@ -421,19 +482,19 @@ export function CreatePostModal() {
                                 <div className="flex items-center gap-1">
                                     <button
                                         type="button"
-                                        title="Photo"
-                                        onClick={() => imageInputRef.current?.click()}
+                                        title="Add Photo or Video"
+                                        onClick={() => mediaInputRef.current?.click()}
                                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 hover:text-primary-500 transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
                                     >
                                         <ImageIcon className="w-5 h-5" />
                                     </button>
                                     <button
                                         type="button"
-                                        title="Video"
-                                        onClick={() => videoInputRef.current?.click()}
-                                        className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 hover:text-primary-500 transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+                                        title={showLinkInput ? "Remove Link" : "Add Link"}
+                                        onClick={() => setShowLinkInput(v => !v)}
+                                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 ${showLinkInput ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-500' : 'hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 hover:text-primary-500'}`}
                                     >
-                                        <Film className="w-5 h-5" />
+                                        <LinkIcon className="w-5 h-5" />
                                     </button>
                                     <div className="h-5 w-px bg-secondary-100 dark:bg-secondary-800 mx-1" />
                                     <div className="text-[10px] font-black text-secondary-300 uppercase tracking-widest px-2">
@@ -455,8 +516,7 @@ export function CreatePostModal() {
                             </div>
                         </div>
 
-                        <input ref={imageInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} className="hidden" />
-                        <input ref={videoInputRef} type="file" accept="video/*,image/*" multiple onChange={handleFileSelect} className="hidden" />
+                        <input ref={mediaInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} className="hidden" />
                     </form>
                 )}
             </div>

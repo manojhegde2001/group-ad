@@ -338,7 +338,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                 {/* Connection Suggestions for own profile */}
                 {isOwnProfile && (
                     <div className="mt-6 md:mt-8">
-                        <TeammateSuggestions limit={3} />
+                        <TeammateSuggestions limit={8} />
                     </div>
                 )}
             </div>

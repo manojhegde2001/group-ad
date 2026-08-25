@@ -6,14 +6,15 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { 
-  Plus, Users, Edit, Eye, AlertCircle, MapPin, 
+import {
+  Plus, Users, Edit, Eye, MapPin,
   Loader2, Calendar, CheckCircle2, LayoutGrid, ArrowRight,
-  ChevronLeft, ChevronRight, Search
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminEvents } from '@/hooks/use-api/use-admin';
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { DataGrid, DataGridPagination, DataGridColumn, DataGridAction } from '@/components/ui/data-grid';
 
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-secondary-100 text-secondary-600 dark:bg-secondary-800 dark:text-secondary-400',
@@ -29,7 +30,7 @@ export default function AdminEventsPage() {
     // Queries
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    const limit = 20;
+    const [limit, setLimit] = useState(20);
     const { data, isLoading, error } = useAdminEvents({
         page,
         limit,
@@ -58,6 +59,75 @@ export default function AdminEventsPage() {
         upcoming: events.filter((e: any) => e.status === 'PUBLISHED' && new Date(e.startDate) > new Date()).length,
         totalEnrollments: events.reduce((sum: number, e: any) => sum + (e._count?.enrollments || 0), 0),
     };
+
+    const columns: DataGridColumn<any>[] = [
+        {
+            key: 'title',
+            header: 'Event',
+            sortable: true,
+            render: (event) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-lg overflow-hidden bg-gradient-to-br from-primary-400 to-primary-600 shrink-0 relative">
+                        {event.coverImage ? (
+                            <CloudinaryImage src={event.coverImage} alt={event.title} fill className="object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white/50">
+                                <Calendar className="w-5 h-5" />
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className={cn(
+                                "text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border",
+                                STATUS_COLORS[event.status || 'DRAFT']
+                            )}>
+                                {event.status}
+                            </span>
+                            <span className="text-[10px] font-semibold text-primary uppercase tracking-wide opacity-80">
+                                {event.category?.name || 'Uncategorized'}
+                            </span>
+                        </div>
+                        <p className="font-bold text-sm text-secondary-900 dark:text-white uppercase tracking-tight truncate leading-tight mb-1">{event.title}</p>
+                        <div className="flex items-center gap-3 text-[10px] font-semibold text-secondary-400 uppercase tracking-wide">
+                            <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-primary" />
+                                {format(new Date(event.startDate), 'MMM d, yyyy')}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Users className="w-3 h-3 text-emerald-500" />
+                                <span className="tabular-nums">{event._count?.enrollments || 0} enrolled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ),
+        },
+    ];
+
+    const actions: DataGridAction<any>[] = [
+        {
+            key: 'view',
+            icon: Eye,
+            variant: 'default',
+            title: 'View Public Interface',
+            href: (event) => `/events/${event.slug}`,
+        },
+        {
+            key: 'edit',
+            icon: Edit,
+            variant: 'default',
+            title: 'Modify Configuration',
+            href: (event) => `/admin/events/${event.id}/edit`,
+        },
+        {
+            key: 'inspect',
+            icon: ArrowRight,
+            label: 'Inspect',
+            variant: 'default',
+            href: (event) => `/admin/events/${event.id}/enrollments`,
+        },
+    ];
 
     return (
         <div className="space-y-10 pb-20 animate-in fade-in duration-700">
@@ -119,170 +189,47 @@ export default function AdminEventsPage() {
             </div>
 
             {/* Event Matrix */}
-            <div className="bg-white dark:bg-slate-900/50 rounded-[3rem] border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden shadow-2xl backdrop-blur-xl">
-                <div className="px-10 py-8 border-b-2 border-secondary-50 dark:border-secondary-800 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-secondary-50/30">
-                    <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter leading-none">
-                        Active <span className="text-primary italic">Matrix</span>
-                    </h2>
-                    
-                    <div className="flex flex-1 max-w-md gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl shadow-primary/5 ring-1 ring-secondary-100 dark:ring-secondary-800">
-                        <div className="pl-3 flex items-center text-secondary-300">
-                            <Search className="w-4 h-4" />
-                        </div>
-                        <input 
-                            placeholder="Find meeting by title..." 
-                            className="flex-1 bg-transparent border-none outline-none px-2 py-1.5 font-bold text-xs uppercase tracking-tight text-secondary-900 dark:text-white placeholder:text-secondary-300"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setPage(1);
-                            }}
-                        />
+            <div className="bg-white dark:bg-slate-900/50 rounded-[3rem] border-2 border-secondary-50 dark:border-secondary-800 overflow-hidden shadow-2xl backdrop-blur-xl px-10 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter leading-none">
+                    Active <span className="text-primary italic">Matrix</span>
+                </h2>
+
+                <div className="flex flex-1 max-w-md gap-3 bg-secondary-50/50 dark:bg-slate-900 p-2 rounded-2xl shadow-xl shadow-primary/5 ring-1 ring-secondary-100 dark:ring-secondary-800">
+                    <div className="pl-3 flex items-center text-secondary-300">
+                        <Search className="w-4 h-4" />
                     </div>
+                    <input
+                        placeholder="Find meeting by title..."
+                        className="flex-1 bg-transparent border-none outline-none px-2 py-1.5 font-bold text-xs uppercase tracking-tight text-secondary-900 dark:text-white placeholder:text-secondary-300"
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setPage(1);
+                        }}
+                    />
                 </div>
-                
-                {events.length === 0 ? (
-                    <div className="flex flex-col items-center gap-6 py-32 text-center">
-                        <div className="w-20 h-20 rounded-[2.5rem] bg-secondary-50 dark:bg-secondary-800/50 flex items-center justify-center">
-                            <AlertCircle className="w-10 h-10 text-secondary-200 dark:text-secondary-700" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter mb-2">Void State</p>
-                            <p className="text-[10px] font-black text-secondary-400 uppercase tracking-[0.2em] mb-6">Initiate your first platform gathering.</p>
-                            {searchTerm && (
-                                <button 
-                                    onClick={() => setSearchTerm('')}
-                                    className="px-6 py-2 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-                                >
-                                    Clear Search
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-secondary-50 dark:divide-secondary-800">
-                        {events.map((event: any) => (
-                            <div key={event.id} className="group flex flex-col md:flex-row md:items-center gap-6 px-10 py-8 hover:bg-primary-50/30 dark:hover:bg-slate-800/50 transition-all duration-300">
-                                {/* Cover Art */}
-                                 <div className="w-20 h-20 rounded-[1.5rem] overflow-hidden bg-gradient-to-br from-primary-400 to-primary-600 shrink-0 border-4 border-white dark:border-secondary-800 shadow-lg group-hover:scale-105 transition-transform relative">
-                                     {event.coverImage ? (
-                                         <CloudinaryImage src={event.coverImage} alt={event.title} fill className="object-cover" />
-                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-white/50">
-                                            <Calendar className="w-8 h-8" />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Hub Info */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <span className={cn(
-                                            "text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-lg border",
-                                            STATUS_COLORS[event.status || 'DRAFT']
-                                        )}>
-                                            {event.status}
-                                        </span>
-                                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] opacity-80">
-                                            {event.category?.icon ? `${event.category.icon} ` : ''}{event.category?.name || 'Uncategorized'}
-                                        </span>
-                                    </div>
-                                    <p className="font-black text-xl text-secondary-900 dark:text-white uppercase tracking-tighter truncate leading-tight mb-2 group-hover:text-primary transition-colors">{event.title}</p>
-                                    <div className="flex items-center gap-5 text-[10px] font-black text-secondary-400 uppercase tracking-widest">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-3.5 h-3.5 text-primary" />
-                                            {format(new Date(event.startDate), 'MMM d, yyyy')}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Users className="w-3.5 h-3.5 text-emerald-500" />
-                                            <span className="tabular-nums">{event._count?.enrollments || 0} enrolled</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Strategic Actions */}
-                                <div className="flex items-center gap-3 shrink-0">
-                                    <Link
-                                        href={`/events/${event.slug}`}
-                                        className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border-2 border-secondary-50 dark:border-secondary-800 flex items-center justify-center text-secondary-400 hover:text-primary hover:border-primary transition-all active:scale-90 shadow-sm"
-                                        title="View Public Interface"
-                                    >
-                                        <Eye className="w-5 h-5" />
-                                    </Link>
-                                    <Link
-                                        href={`/admin/events/${event.id}/edit`}
-                                        className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border-2 border-secondary-50 dark:border-secondary-800 flex items-center justify-center text-secondary-400 hover:text-indigo-500 hover:border-indigo-500 transition-all active:scale-90 shadow-sm"
-                                        title="Modify Configuration"
-                                    >
-                                        <Edit className="w-5 h-5" />
-                                    </Link>
-                                    <Link
-                                        href={`/admin/events/${event.id}/enrollments`}
-                                        className="flex items-center gap-3 px-6 py-3 bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all active:scale-95 shadow-xl group/btn"
-                                    >
-                                        Inspect <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                                    </Link>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Pagination */}
-                {data?.pagination && data.pagination.totalPages > 1 && (
-                    <div className="px-10 py-8 bg-secondary-50/30 dark:bg-secondary-800/10 border-t-2 border-secondary-50 dark:border-secondary-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
-                            Showing <span className="text-secondary-900 dark:text-white">{(page - 1) * limit + 1}</span> to <span className="text-secondary-900 dark:text-white">{Math.min(page * limit, data.pagination.total)}</span> of <span className="text-secondary-900 dark:text-white">{data.pagination.total}</span> events
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                            </button>
-                            
-                            <div className="flex items-center gap-1.5 px-3">
-                                {[...Array(data.pagination.totalPages)].map((_, i) => {
-                                    const p = i + 1;
-                                    if (p === 1 || p === data.pagination.totalPages || Math.abs(p - page) <= 1) {
-                                        return (
-                                            <button
-                                                key={p}
-                                                onClick={() => setPage(p)}
-                                                className={cn(
-                                                    "w-9 h-9 rounded-xl text-[10px] font-black transition-all active:scale-90",
-                                                    page === p 
-                                                        ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                                                        : "bg-white dark:bg-slate-800 text-secondary-400 hover:text-secondary-900 dark:hover:text-white border border-secondary-100 dark:border-secondary-700 shadow-sm"
-                                                )}
-                                            >
-                                                {p}
-                                            </button>
-                                        );
-                                    }
-                                    if (p === 2 || p === data.pagination.totalPages - 1) {
-                                        return <span key={p} className="text-secondary-300">...</span>;
-                                    }
-                                    return null;
-                                }).filter(Boolean).reduce((acc: any[], curr, i, arr) => {
-                                    if (curr?.type === 'span' && arr[i-1]?.type === 'span') return acc;
-                                    return [...acc, curr];
-                                }, [])}
-                            </div>
-
-                            <button
-                                onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))}
-                                disabled={page === data.pagination.totalPages}
-                                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
+
+            <DataGrid
+                columns={columns}
+                data={events}
+                emptyMessage="Initiate your first platform gathering"
+                getRowId={(event) => event.id}
+                actions={actions}
+                footer={
+                    data?.pagination && (
+                        <DataGridPagination
+                            page={page}
+                            totalPages={data.pagination.totalPages}
+                            total={data.pagination.total}
+                            pageSize={limit}
+                            onPageChange={setPage}
+                            onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
+                            itemLabel="events"
+                        />
+                    )
+                }
+            />
         </div>
     );
 }

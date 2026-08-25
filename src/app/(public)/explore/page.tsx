@@ -3,11 +3,12 @@ import { Compass, Layout } from 'lucide-react';
 import { TrendingCategories } from '@/components/explore/trending-categories';
 import { SearchBar } from '@/components/layout/search-bar';
 import { getCategoriesServer } from '@/services/server/category-service';
+import { getTrendingTagsServer } from '@/services/server/tag-service';
 
 export default async function ExplorePage() {
   // Fetch initial data on server for SEO
-  const [trendingData, allCategoriesData] = await Promise.all([
-    getCategoriesServer({ trending: true, limit: 8 }),
+  const [trendingTags, allCategoriesData] = await Promise.all([
+    getTrendingTagsServer(12),
     getCategoriesServer()
   ]);
 
@@ -42,11 +43,11 @@ export default async function ExplorePage() {
       <div className="flex-1 bg-white dark:bg-[#0a0a0f] space-y-6 py-4 md:py-6">
         {/* Section 1: Trending */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <TrendingCategories initialData={trendingData} />
+            <TrendingCategories initialData={{ tags: trendingTags }} />
         </div>
         {/* Section 2: All Topics */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:400ms]">
-            <div className="flex items-center gap-2 px-4 sm:px-6 mb-2">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-2 mb-2">
                 <div className="p-2 rounded-xl bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400">
                     <Layout className="w-4 h-4" />
                 </div>

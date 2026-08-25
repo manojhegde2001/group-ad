@@ -4,18 +4,28 @@ import { useState, useEffect } from 'react';
 import {
   ShieldAlert, Clock, CheckCircle, XCircle,
   User, FileText, CalendarDays, MessageSquare,
-  Search, Loader2, Eye,
-  ShieldQuestion, ArrowRight, ChevronLeft, ChevronRight
+  Search, Eye,
+  ArrowRight
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
+import { DataGrid, DataGridPagination, DataGridToolbar, DataGridColumn, DataGridAction } from '@/components/ui/data-grid';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useReports, useUpdateReport } from '@/hooks/use-api/use-admin';
+
+interface AdminReport {
+  id: string;
+  targetType: string;
+  targetId: string;
+  reason: string;
+  description?: string;
+  status: string;
+  createdAt: string;
+  reporter: { name: string; username: string; avatar: string };
+}
 
 const statusColors: Record<string, { color: string; icon: any; label: string }> = {
   PENDING: { color: 'bg-amber-100/50 text-amber-700 border-amber-200/50', icon: Clock, label: 'Pending' },
@@ -36,7 +46,8 @@ export default function AdminReportsPage() {
   const [search, setSearch] = useState('');
 
   const [page, setPage] = useState(1);
-  const limit = 20;
+  const [limit, setLimit] = useState(20);
+  const [expandedReportId, setExpandedReportId] = useState<string | null>(null);
 
   // Queries
   const { data, isLoading } = useReports({
@@ -62,6 +73,121 @@ export default function AdminReportsPage() {
 
   const pendingCount = reports.filter(r => r.status === 'PENDING').length;
 
+  const columns: DataGridColumn<AdminReport>[] = [
+    {
+      key: 'targetType',
+      header: 'Target Type',
+      sortable: true,
+      render: (report) => {
+        const TypeIcon = typeIcons[report.targetType] || FileText;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-secondary-100 dark:bg-secondary-800/50 rounded-lg flex items-center justify-center text-secondary-600 dark:text-secondary-400 shrink-0">
+              <TypeIcon className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-secondary-400">{report.targetType}</p>
+              <p className="text-[10px] font-mono font-semibold text-secondary-300 dark:text-secondary-600">#{report.targetId.slice(-6)}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'reason',
+      header: 'Reason & Detail',
+      sortable: true,
+      render: (report) => (
+        <div className="max-w-md min-w-[180px]">
+          <p className="text-xs font-bold text-secondary-900 dark:text-white uppercase tracking-tight leading-none mb-1">{report.reason}</p>
+          {report.description && (
+            <p className="text-[11px] text-secondary-500 font-medium italic border-l-2 border-primary/20 pl-2 line-clamp-1">
+              "{report.description}"
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'reporter',
+      header: 'Reporter',
+      sortable: true,
+      accessor: (report) => report.reporter.name,
+      render: (report) => (
+        <div className="flex items-center gap-2.5">
+          <Avatar src={report.reporter.avatar} name={report.reporter.name} className="w-8 h-8 rounded-lg shadow-sm" />
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-secondary-900 dark:text-white uppercase tracking-tight truncate max-w-[120px] leading-none mb-0.5">{report.reporter.name}</p>
+            <p className="text-[10px] font-semibold text-secondary-400 uppercase tracking-wide leading-none">@{report.reporter.username}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      sortable: true,
+      className: 'whitespace-nowrap',
+      render: (report) => {
+        const statusInfo = statusColors[report.status] || statusColors.PENDING;
+        const StatusIcon = statusInfo.icon;
+        return (
+          <>
+            <div className={cn(
+              "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide border",
+              statusInfo.color
+            )}>
+              <StatusIcon className="w-3 h-3" />
+              {statusInfo.label}
+            </div>
+            <p className="text-[10px] font-semibold text-secondary-300 mt-1 uppercase tracking-tight opacity-80">
+              {formatDistanceToNow(new Date(report.createdAt), { addSuffix: true })}
+            </p>
+          </>
+        );
+      },
+    },
+  ];
+
+  const actions: DataGridAction<AdminReport>[] = [
+    {
+      key: 'view',
+      icon: ArrowRight,
+      variant: 'default',
+      title: 'View Content',
+      show: (report) => report.targetType === 'POST',
+      href: (report) => `/post/${report.targetId}`,
+      newTab: true,
+    },
+    {
+      key: 'resolve',
+      icon: CheckCircle,
+      variant: 'success',
+      title: 'Resolve',
+      show: (report) => report.status !== 'RESOLVED',
+      disabled: () => updateReportMutation.isPending,
+      onClick: (report) => handleUpdateStatus(report.id, 'RESOLVED'),
+    },
+    {
+      key: 'review',
+      icon: Eye,
+      variant: 'primary',
+      title: 'Mark Reviewed',
+      show: (report) => report.status === 'PENDING',
+      disabled: () => updateReportMutation.isPending,
+      onClick: (report) => handleUpdateStatus(report.id, 'REVIEWED'),
+    },
+    {
+      key: 'dismiss',
+      icon: XCircle,
+      variant: 'danger',
+      title: 'Dismiss',
+      show: (report) => report.status !== 'DISMISSED',
+      disabled: () => updateReportMutation.isPending,
+      onClick: (report) => handleUpdateStatus(report.id, 'DISMISSED'),
+    },
+  ];
+
   return (
     <div className="space-y-8 pb-20">
       {/* Header */}
@@ -86,8 +212,8 @@ export default function AdminReportsPage() {
       </div>
 
       {/* Filters & Search */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white dark:bg-slate-900/50 p-6 rounded-[2.5rem] border border-secondary-100 dark:border-secondary-800 shadow-sm backdrop-blur-xl">
-        <div className="md:col-span-2">
+      <DataGridToolbar
+        search={
           <Input
             prefix={<Search className="w-4 h-4 text-slate-400" />}
             clearable
@@ -95,10 +221,10 @@ export default function AdminReportsPage() {
             placeholder="Search reports or reporters..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="rounded-2xl border-none bg-slate-100 dark:bg-slate-800"
+            className="rounded-lg border-none bg-slate-100 dark:bg-slate-800"
           />
-        </div>
-        <div>
+        }
+        filters={
           <Select
             value={filter}
             onChange={(val: any) => setFilter(val)}
@@ -110,198 +236,53 @@ export default function AdminReportsPage() {
               { label: 'Dismissed', value: 'DISMISSED' },
             ]}
           />
-        </div>
-      </div>
+        }
+      />
 
-      {/* Reports Table */}
-      <Card className="overflow-hidden border-2 border-secondary-50 dark:border-secondary-900/40 rounded-[3rem] shadow-sm bg-white dark:bg-slate-900">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-secondary-50/50 dark:bg-secondary-800/20 border-b border-secondary-50 dark:border-secondary-800">
-                <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Target Type</th>
-                <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Reason & Detail</th>
-                <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Reporter</th>
-                <th className="px-8 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Status</th>
-                <th className="px-8 py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-secondary-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-secondary-50 dark:divide-secondary-800/40">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
-                    <div className="flex flex-col items-center gap-6">
-                      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                      <p className="font-black text-secondary-400 uppercase text-[10px] tracking-[0.4em]">Querying Records</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : reports.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
-                    <div className="flex flex-col items-center gap-6 opacity-40">
-                      <ShieldQuestion className="w-16 h-16 text-secondary-200" />
-                      <p className="font-black text-secondary-400 uppercase text-[10px] tracking-[0.4em]">All Clear! No reports</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                reports.map((report) => {
-                  const TypeIcon = typeIcons[report.targetType] || FileText;
-                  const statusInfo = statusColors[report.status] || statusColors.PENDING;
-                  const StatusIcon = statusInfo.icon;
-
-                  return (
-                    <tr key={report.id} className="group hover:bg-secondary-50/30 dark:hover:bg-secondary-800/20 transition-all duration-300">
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-800/50 rounded-2xl flex items-center justify-center text-secondary-600 dark:text-secondary-400 ring-4 ring-secondary-50 dark:ring-secondary-800/20 shadow-sm transition-transform group-hover:scale-110">
-                            <TypeIcon className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-400">{report.targetType}</p>
-                            <p className="text-[10px] font-mono font-bold text-secondary-300 dark:text-secondary-600 mt-1">#{report.targetId.slice(-6)}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="max-w-md min-w-[200px]">
-                          <p className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tight leading-none mb-2">{report.reason}</p>
-                          {report.description && (
-                            <p className="text-[11px] text-secondary-500 font-medium italic border-l-2 border-primary/20 pl-3 py-1">
-                              "{report.description}"
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-3">
-                          <Avatar src={report.reporter.avatar} name={report.reporter.name} className="w-10 h-10 rounded-[1.25rem] shadow-sm transform transition-transform group-hover:scale-110" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tight truncate max-w-[120px] leading-none mb-1">{report.reporter.name}</p>
-                            <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest leading-none">@{report.reporter.username}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 whitespace-nowrap">
-                        <div className={cn(
-                          "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                          statusInfo.color
-                        )}>
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {statusInfo.label}
-                        </div>
-                        <p className="text-[10px] font-black text-secondary-300 mt-2 uppercase tracking-tighter opacity-80">
-                          {formatDistanceToNow(new Date(report.createdAt), { addSuffix: true })}
-                        </p>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex items-center justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
-                          {report.targetType === 'POST' && (
-                            <Link
-                              href={`/post/${report.targetId}`}
-                              target="_blank"
-                              className="p-3 bg-secondary-50 dark:bg-secondary-800/40 text-secondary-500 dark:text-secondary-400 rounded-2xl hover:bg-primary hover:text-white transition-all active:scale-90 shadow-sm border border-secondary-100 dark:border-secondary-800/50"
-                              title="View Content"
-                            >
-                              <ArrowRight className="w-5 h-5" />
-                            </Link>
-                          )}
-                          {report.status !== 'RESOLVED' && (
-                            <button
-                              onClick={() => handleUpdateStatus(report.id, 'RESOLVED')}
-                              disabled={updateReportMutation.isPending}
-                              className="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all active:scale-90 shadow-sm border border-emerald-100 dark:border-emerald-800/50"
-                              title="Resolve"
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                            </button>
-                          )}
-                          {report.status === 'PENDING' && (
-                            <button
-                              onClick={() => handleUpdateStatus(report.id, 'REVIEWED')}
-                              disabled={updateReportMutation.isPending}
-                              className="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl hover:bg-indigo-500 hover:text-white transition-all active:scale-90 shadow-sm border border-indigo-100 dark:border-indigo-800/50"
-                              title="Mark Reviewed"
-                            >
-                              <Eye className="w-5 h-5" />
-                            </button>
-                          )}
-                          {report.status !== 'DISMISSED' && (
-                            <button
-                              onClick={() => handleUpdateStatus(report.id, 'DISMISSED')}
-                              disabled={updateReportMutation.isPending}
-                              className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90 shadow-sm border border-red-100 dark:border-red-800/50"
-                              title="Dismiss"
-                            >
-                              <XCircle className="w-5 h-5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {data && data.pages > 1 && (
-          <div className="px-8 py-6 bg-secondary-50/30 dark:bg-secondary-800/10 border-t border-secondary-100 dark:border-secondary-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
-              Showing <span className="text-secondary-900 dark:text-white">{(page - 1) * limit + 1}</span> to <span className="text-secondary-900 dark:text-white">{Math.min(page * limit, data.total)}</span> of <span className="text-secondary-900 dark:text-white">{data.total}</span> records
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              
-              <div className="flex items-center gap-1.5 px-3">
-                {[...Array(data.pages)].map((_, i) => {
-                  const p = i + 1;
-                  if (p === 1 || p === data.pages || Math.abs(p - page) <= 1) {
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => setPage(p)}
-                        className={cn(
-                          "w-9 h-9 rounded-xl text-[10px] font-black transition-all active:scale-90",
-                          page === p 
-                            ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                            : "bg-white dark:bg-slate-800 text-secondary-400 hover:text-secondary-900 dark:hover:text-white border border-secondary-100 dark:border-secondary-700 shadow-sm"
-                        )}
-                      >
-                        {p}
-                      </button>
-                    );
-                  }
-                  if (p === 2 || p === data.pages - 1) {
-                    return <span key={p} className="text-secondary-300">...</span>;
-                  }
-                  return null;
-                }).filter(Boolean).reduce((acc: any[], curr, i, arr) => {
-                  if (curr?.type === 'span' && arr[i-1]?.type === 'span') return acc;
-                  return [...acc, curr];
-                }, [])}
+      {/* Reports Grid */}
+      <DataGrid
+        columns={columns}
+        data={reports}
+        loading={isLoading}
+        emptyMessage="All Clear! No reports"
+        getRowId={(report) => report.id}
+        actions={actions}
+        expandedRowId={expandedReportId}
+        onToggleExpand={(id) => setExpandedReportId((prev) => (prev === id ? null : (id as string)))}
+        expandable={{
+          render: (report) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-400 mb-2">Full Report</p>
+                <p className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">{report.reason}</p>
+                {report.description && (
+                  <p className="text-[13px] text-secondary-500 dark:text-secondary-400 font-medium italic border-l-2 border-primary/20 pl-3 py-1">
+                    "{report.description}"
+                  </p>
+                )}
               </div>
-
-              <button
-                onClick={() => setPage(p => Math.min(data.pages, p + 1))}
-                disabled={page === data.pages}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-secondary-100 dark:border-secondary-700 text-secondary-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-all shadow-sm active:scale-90"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="text-[10px] font-black uppercase tracking-widest text-secondary-400 space-y-2">
+                <p>Target ID: <span className="text-secondary-700 dark:text-secondary-200 font-mono normal-case">{report.targetId}</span></p>
+                <p>Reported: <span className="text-secondary-700 dark:text-secondary-200">{new Date(report.createdAt).toLocaleString()}</span></p>
+                <p>Reporter: <span className="text-secondary-700 dark:text-secondary-200">{report.reporter.name} (@{report.reporter.username})</span></p>
+              </div>
             </div>
-          </div>
-        )}
-      </Card>
+          ),
+        }}
+        footer={
+          data && (
+            <DataGridPagination
+              page={page}
+              totalPages={data.pages}
+              total={data.total}
+              pageSize={limit}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
+              itemLabel="records"
+            />
+          )
+        }
+      />
 
       {/* Summary Section */}
       {!isLoading && (

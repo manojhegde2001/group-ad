@@ -38,6 +38,18 @@ export function formatDate(date: Date | string): string {
   return d.toLocaleDateString('en-US', options);
 }
 
+export function formatCompactNumber(n: number): string {
+  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+}
+
+export function getLinkDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+}
+
 export function formatEventDate(date: Date | string): string {
   const d = new Date(date);
   const options: Intl.DateTimeFormatOptions = {

@@ -23,6 +23,8 @@ const Drawer = dynamic(() => import('rizzui').then((mod) => mod.Drawer), { ssr: 
 import { CloudinaryImage } from '@/components/ui/cloudinary-image';
 import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
 
+const clampMediaRatio = (ratio: number) => Math.min(Math.max(ratio, 0.5), 2.2);
+
 interface PostCardProps {
     post: PostWithRelations;
     onLikeChange?: (postId: string, liked: boolean) => void;
@@ -32,7 +34,7 @@ interface PostCardProps {
 
 export const PostCard = memo(function PostCard({ post, onLikeChange, showActions = false, priority = false }: PostCardProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLong, setIsLong] = useState(false);
+    const [mediaRatio, setMediaRatio] = useState(0.8);
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
     const { open: openSaveToBoard } = useSaveToBoard();
@@ -138,9 +140,9 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (
-                    <div 
-                        className="relative w-full overflow-hidden bg-secondary-100 dark:bg-secondary-800 min-h-[200px]" 
-                        style={{ aspectRatio: ['4/5', '1/1', '3/4', '2/3'][parseInt(post.id.slice(-1), 16) % 4] }}
+                    <div
+                        className="relative w-full overflow-hidden bg-secondary-100 dark:bg-secondary-800 min-h-[200px]"
+                        style={{ aspectRatio: mediaRatio }}
                     >
                         {(() => {
                             const src = post.images[0];
@@ -149,33 +151,36 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                  <CloudinaryVideo
                                      src={src}
                                      className="w-full h-full object-cover block"
-                                     muted playsInline loop 
+                                     muted playsInline loop
                                      onMouseEnter={e => {
                                          const playPromise = e.currentTarget.play();
                                          if (playPromise !== undefined) {
                                              playPromise.catch(() => {});
                                          }
                                      }}
-                                     onMouseLeave={e => { 
-                                         e.currentTarget.pause(); 
-                                         e.currentTarget.currentTime = 0; 
+                                     onMouseLeave={e => {
+                                         e.currentTarget.pause();
+                                         e.currentTarget.currentTime = 0;
                                      }}
                                      onDoubleClick={handleDoubleTap}
+                                     onLoadedMetadata={e => {
+                                         const { videoWidth, videoHeight } = e.currentTarget;
+                                         if (videoWidth && videoHeight) {
+                                             setMediaRatio(clampMediaRatio(videoWidth / videoHeight));
+                                         }
+                                     }}
                                  />
                              ) : (
                                  <CloudinaryImage
                                      src={src}
                                      alt={post.content || ''}
                                      fill
-                                     className={cn(
-                                         "w-full h-full object-cover block transition-transform duration-700 group-hover:scale-[1.03]",
-                                         isLong && "object-top"
-                                     )}
+                                     className="w-full h-full object-cover block transition-transform duration-700 group-hover:scale-[1.03]"
                                      onDoubleClick={handleDoubleTap}
                                      priority={priority}
                                      onLoadingComplete={(res) => {
-                                         if (res.naturalHeight / res.naturalWidth > 1.8) {
-                                             setIsLong(true);
+                                         if (res.naturalWidth && res.naturalHeight) {
+                                             setMediaRatio(clampMediaRatio(res.naturalWidth / res.naturalHeight));
                                          }
                                      }}
                                  />

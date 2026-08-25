@@ -162,7 +162,7 @@ export default function EditEventForm({ event }: { event: any }) {
                             >
                                 <option value="">Select a category</option>
                                 {categories.map((c: any) => (
-                                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                                    <option key={c.id} value={c.id}>{c.name}</option>
                                 ))}
                             </select>
                         </div>

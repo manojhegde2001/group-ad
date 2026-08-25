@@ -25,6 +25,7 @@ export interface Post {
   type: 'IMAGE' | 'TEXT';
   content: string;
   images: string[];
+  link?: string | null;
   category: string;
   tags: string[];
   visibility: 'PUBLIC' | 'PRIVATE';
@@ -107,6 +108,7 @@ export type PostWithRelations = {
   type: string;
   content: string;
   images: string[];
+  link?: string | null;
   tags: string[];
   visibility: string;
   commentsEnabled: boolean;

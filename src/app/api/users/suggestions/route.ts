@@ -127,6 +127,7 @@ export async function GET(request: NextRequest) {
                 const categorySuggestions = await prisma.user.findMany({
                     where: {
                         categoryId: myProfile.categoryId,
+                        id: { notIn: Array.from(connectedIds) },
                     },
                     select: {
                         id: true,

@@ -5,12 +5,16 @@ import { useAuthModal } from '@/hooks/use-modal';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
-export function HeroSection() {
+export function HeroSection({ initialHideHero = false }: { initialHideHero?: boolean }) {
   const { user, loading } = useAuth();
   const { open } = useAuthModal();
 
-  // Hide hero for logged-in users — go straight to feed
-  if (loading || user) return null;
+  // Hide hero for logged-in users — go straight to feed.
+  // While the client session check is still resolving, trust the server-determined
+  // initialHideHero (computed from the request's session cookie) instead of hiding
+  // unconditionally — otherwise the hero pops in after hydration and shifts the feed down.
+  const hideHero = loading ? initialHideHero : !!user;
+  if (hideHero) return null;
 
   return (
     <section className="relative bg-white dark:bg-secondary-950 border-b border-secondary-100 dark:border-secondary-800 py-4 md:py-12 px-4">

@@ -1,5 +1,52 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { unstable_cache } from 'next/cache';
+
+// Anonymous visitors all see the same PUBLIC post list for a given filter set, so the
+// (uncached) DB round-trip on every request was the main driver of the homepage's slow
+// TTFB/LCP. Authenticated requests are never routed through this cache — their query
+// depends on per-user blocked-user filtering and like/save flags, so they keep running
+// fully live below.
+const getCachedPublicPosts = unstable_cache(
+  async (where: any, skip: number, limit: number) => {
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              avatar: true,
+              userType: true,
+              website: true,
+              companyWebsite: true,
+              companyName: true,
+              websiteLabel: true,
+            },
+          },
+          category: {
+            select: { id: true, name: true, slug: true, icon: true },
+          },
+          company: {
+            select: { id: true, name: true, slug: true, logo: true, isVerified: true },
+          },
+          _count: {
+            select: { postLikes: true, postComments: true },
+          },
+        },
+      }),
+      prisma.post.count({ where }),
+    ]);
+    return { posts, total };
+  },
+  ['public-posts-list'],
+  { revalidate: 30 }
+);
 
 export interface GetPostsParams {
   page?: number;
@@ -129,53 +176,56 @@ export async function getPostsServer(params: GetPostsParams) {
       ];
     }
 
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              avatar: true,
-              userType: true,
-              website: true,
-              companyWebsite: true,
-              companyName: true,
-              websiteLabel: true,
+    let posts: any[];
+    let total: number;
+
+    if (currentUserId) {
+      [posts, total] = await Promise.all([
+        prisma.post.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                avatar: true,
+                userType: true,
+                website: true,
+                companyWebsite: true,
+                companyName: true,
+                websiteLabel: true,
+              },
+            },
+            category: {
+              select: { id: true, name: true, slug: true, icon: true },
+            },
+            company: {
+              select: { id: true, name: true, slug: true, logo: true, isVerified: true },
+            },
+            _count: {
+              select: { postLikes: true, postComments: true },
+            },
+            postLikes: {
+              where: { userId: currentUserId },
+              select: { userId: true },
+              take: 1,
+            },
+            boardPosts: {
+              where: { board: { userId: currentUserId } },
+              select: { id: true },
+              take: 1,
             },
           },
-          category: {
-            select: { id: true, name: true, slug: true, icon: true },
-          },
-          company: {
-            select: { id: true, name: true, slug: true, logo: true, isVerified: true },
-          },
-          _count: {
-            select: { postLikes: true, postComments: true },
-          },
-          ...(currentUserId
-            ? {
-              postLikes: {
-                where: { userId: currentUserId },
-                select: { userId: true },
-                take: 1,
-              },
-              boardPosts: {
-                where: { board: { userId: currentUserId } },
-                select: { id: true },
-                take: 1,
-              },
-            }
-            : {}),
-        },
-      }),
-      prisma.post.count({ where }),
-    ]);
+        }),
+        prisma.post.count({ where }),
+      ]);
+    } else {
+      ({ posts, total } = await getCachedPublicPosts(where, skip, limit));
+    }
 
     const postsWithMeta = posts.map((post: any) => ({
       ...post,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
+import { notificationService } from '@/services/notification-service';
 
 
 
@@ -125,17 +126,21 @@ export async function POST(
     // 1. Emit to the conversation room
     socketService.emitMessage(id, message);
 
-    // 2. Notify other participants
+    // 2. Notify other participants (persists a Notification row + emits via socket)
     const otherParticipants = conversation.participantIds.filter(
       (pid) => pid !== session.user.id
     );
-    otherParticipants.forEach((pid) => {
-      socketService.notifyUser(pid, {
+    await Promise.all(otherParticipants.map((pid) =>
+      notificationService.create({
+        userId: pid,
         type: 'MESSAGE_RECEIVED',
-        message: `New message from ${session.user.name}`,
-        data: { conversationId: id, messageId: message.id }
-      });
-    });
+        title: 'New Message',
+        message: `${session.user.name} sent you a message`,
+        entityType: 'Conversation',
+        entityId: id,
+        senderId: session.user.id,
+      })
+    ));
 
     return NextResponse.json({ message }, { status: 201 });
 

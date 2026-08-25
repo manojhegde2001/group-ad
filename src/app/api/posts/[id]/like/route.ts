@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { notificationService } from '@/services/notification-service';
 
 // POST /api/posts/[id]/like — like a post
 export async function POST(
@@ -20,10 +21,23 @@ export async function POST(
             await prisma.postLike.create({
                 data: { postId, userId: session.user.id },
             });
-            await prisma.post.update({
+            const post = await prisma.post.update({
                 where: { id: postId },
                 data: { likes: { increment: 1 } },
+                select: { userId: true },
             });
+
+            if (post.userId !== session.user.id) {
+                await notificationService.create({
+                    userId: post.userId,
+                    type: 'POST_LIKE',
+                    title: 'New Like',
+                    message: `${session.user.name} liked your post`,
+                    entityType: 'Post',
+                    entityId: postId,
+                    senderId: session.user.id,
+                });
+            }
         } catch {
             // Already liked — idempotent
         }

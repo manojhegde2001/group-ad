@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { notificationService } from '@/services/notification-service';
 
 // GET /api/posts/[id]/comments — fetch comments for a post
 export async function GET(
@@ -57,7 +58,7 @@ export async function POST(
         }
 
         // Make sure the post exists
-        const post = await prisma.post.findUnique({ where: { id: postId }, select: { id: true } });
+        const post = await prisma.post.findUnique({ where: { id: postId }, select: { id: true, userId: true } });
         if (!post) {
             return NextResponse.json({ error: 'Post not found' }, { status: 404 });
         }
@@ -80,6 +81,18 @@ export async function POST(
                 },
             },
         });
+
+        if (post.userId !== session.user.id) {
+            await notificationService.create({
+                userId: post.userId,
+                type: 'POST_COMMENT',
+                title: 'New Comment',
+                message: `${session.user.name} commented on your post`,
+                entityType: 'Post',
+                entityId: postId,
+                senderId: session.user.id,
+            });
+        }
 
         return NextResponse.json({ comment }, { status: 201 });
     } catch (error) {

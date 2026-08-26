@@ -137,7 +137,7 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
     return (
         <Link 
             href={`/posts/${post.id}`}
-            className="group relative rounded-xl overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 block border border-secondary-100/50 dark:border-secondary-800/30"
+            className="group relative rounded-lg overflow-hidden bg-white dark:bg-secondary-900 cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 block border border-secondary-100/50 dark:border-secondary-800/30"
         >
             <div className="relative overflow-hidden bg-secondary-50 dark:bg-secondary-800/30">
                 {post.images && post.images.length > 0 ? (

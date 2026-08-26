@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
+import { optimizeImage } from '@/lib/media-optimize';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,12 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 });
     }
 
-    const timestamp = Date.now();
-    const extension = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
-    const key = `group-ad/categories/banners/${categoryId ? `banner-${categoryId}-${timestamp}` : `banner-new-${timestamp}`}.${extension}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+    const { buffer, contentType, extension } = await optimizeImage(rawBuffer, file.type, { maxWidth: 1600, quality: 82 });
 
-    const bannerUrl = await uploadToS3(key, buffer, file.type);
+    const timestamp = Date.now();
+    const key = `group-ad/categories/banners/${categoryId ? `banner-${categoryId}-${timestamp}` : `banner-new-${timestamp}`}.${extension}`;
+
+    const bannerUrl = await uploadToS3(key, buffer, contentType);
 
     return NextResponse.json({
       success: true,

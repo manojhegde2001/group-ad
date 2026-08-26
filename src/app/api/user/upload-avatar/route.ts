@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
+import { optimizeImage } from '@/lib/media-optimize';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,12 +30,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 });
     }
 
-    const extension = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+    const { buffer, contentType, extension } = await optimizeImage(rawBuffer, file.type, {
+      maxWidth: 512,
+      maxHeight: 512,
+      fit: 'cover',
+      quality: 85,
+    });
+
     const key = `group-ad/avatars/avatar-${session.user.id}.${extension}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
 
     // Cache-bust the CDN/browser cache since the key is stable across re-uploads
-    const avatarUrl = `${await uploadToS3(key, buffer, file.type)}?v=${Date.now()}`;
+    const avatarUrl = `${await uploadToS3(key, buffer, contentType)}?v=${Date.now()}`;
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },

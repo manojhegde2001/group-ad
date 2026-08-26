@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import crypto from 'crypto';
 import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
+import { optimizeImage, optimizeVideo } from '@/lib/media-optimize';
 
 export async function POST(request: NextRequest) {
     try {
@@ -31,11 +32,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const extension = file.name.includes('.') ? file.name.split('.').pop() : undefined;
-        const key = `group-ad/posts/${session.user.id}/${crypto.randomUUID()}${extension ? `.${extension}` : ''}`;
-        const buffer = Buffer.from(await file.arrayBuffer());
+        const rawBuffer = Buffer.from(await file.arrayBuffer());
 
-        const url = await uploadToS3(key, buffer, file.type);
+        const { buffer, contentType, extension } =
+            resourceType === 'video'
+                ? await optimizeVideo(rawBuffer)
+                : await optimizeImage(rawBuffer, file.type, { maxWidth: 1920, quality: 82 });
+
+        const key = `group-ad/posts/${session.user.id}/${crypto.randomUUID()}.${extension}`;
+
+        const url = await uploadToS3(key, buffer, contentType);
 
         return NextResponse.json({
             url,

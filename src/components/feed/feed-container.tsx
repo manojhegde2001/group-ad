@@ -137,12 +137,12 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
 
       <Masonry
         breakpointCols={breakpointCols}
-        className="flex -ml-1.5 sm:-ml-2 md:-ml-2 w-auto"
-        columnClassName="pl-1.5 sm:pl-2 md:pl-2 bg-clip-padding"
+        className="flex -ml-1 sm:-ml-1.5 md:-ml-1.5 w-auto"
+        columnClassName="pl-1 sm:pl-1.5 md:pl-1.5 bg-clip-padding"
       >
         {isLoading ? (
           [...Array(12)].map((_, i) => (
-            <div key={`skeleton-${i}`} className="mb-1.5 sm:mb-2 md:mb-2 space-y-3">
+            <div key={`skeleton-${i}`} className="mb-1 sm:mb-1.5 md:mb-1.5 space-y-3">
               <Skeleton
                 className="w-full rounded-lg bg-secondary-100 dark:bg-secondary-800"
                 style={{ 
@@ -164,7 +164,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
             <div
               key={`post-wrapper-${post.id}`}
               className={cn(
-                "mb-1.5 sm:mb-2 md:mb-2",
+                "mb-1 sm:mb-1.5 md:mb-1.5",
                 !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
               )}
             >

@@ -79,10 +79,11 @@ function ResultThumb({ res, size }: { res: SearchResult; size: 'sm' | 'md' }) {
     );
 }
 
-function ResultRow({ res, size }: { res: SearchResult; size: 'sm' | 'md' }) {
+function ResultRow({ res, size, onNavigate }: { res: SearchResult; size: 'sm' | 'md'; onNavigate: () => void }) {
     return (
         <Link
             href={res.href}
+            onClick={onNavigate}
             className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800 transition-all"
         >
             <ResultThumb res={res} size={size} />
@@ -118,6 +119,7 @@ export function SearchBar({ className = '', autoFocus = false }: SearchBarProps)
     const [localSearch, setLocalSearch] = useState(searchQuery);
     const [debouncedQuery, setDebouncedQuery] = useState('');
     const [isPending, setIsPending] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
     const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     // Sync localSearch when the Zustand searchQuery is reset externally (e.g. category change)
@@ -153,8 +155,13 @@ export function SearchBar({ className = '', autoFocus = false }: SearchBarProps)
         setDebouncedQuery('');
     };
 
+    const handleResultNavigate = () => {
+        clearSearch();
+        setIsOpen(false);
+    };
+
     return (
-        <Popover placement="bottom-start" showArrow={false}>
+        <Popover placement="bottom-start" showArrow={false} isOpen={isOpen} setIsOpen={setIsOpen}>
             <Popover.Trigger>
                 <div className={`relative ${className}`}>
                     <Input
@@ -169,6 +176,7 @@ export function SearchBar({ className = '', autoFocus = false }: SearchBarProps)
                         prefix={<Search className="w-4 h-4 text-secondary-500" />}
                         clearable={!!localSearch}
                         onClear={clearSearch}
+                        inputClassName="bg-secondary-100 dark:bg-secondary-800"
                     />
                 </div>
             </Popover.Trigger>
@@ -199,7 +207,7 @@ export function SearchBar({ className = '', autoFocus = false }: SearchBarProps)
                                 </Text>
                                 <div className="space-y-0.5">
                                     {results.map((res) => (
-                                        <ResultRow key={`${res.type}-${res.id}`} res={res} size="sm" />
+                                        <ResultRow key={`${res.type}-${res.id}`} res={res} size="sm" onNavigate={handleResultNavigate} />
                                     ))}
                                 </div>
                             </div>
@@ -216,7 +224,7 @@ export function SearchBar({ className = '', autoFocus = false }: SearchBarProps)
                                             </Text>
                                             <div className="space-y-0.5 mb-2">
                                                 {group.map((res) => (
-                                                    <ResultRow key={`${res.type}-${res.id}`} res={res} size="md" />
+                                                    <ResultRow key={`${res.type}-${res.id}`} res={res} size="md" onNavigate={handleResultNavigate} />
                                                 ))}
                                             </div>
                                         </div>

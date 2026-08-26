@@ -10,7 +10,7 @@ import {
     useUpdateConnectionMutation, 
     useRemoveConnectionMutation 
 } from '@/hooks/use-api/use-connections';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 type ConnectionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED' | null;
 
@@ -111,7 +111,7 @@ export function ConnectionButton({
                         <div className="flex -space-x-2">
                             {mutualConnections.avatars.map((avatar, i) => (
                                  <div key={i} className="w-5 h-5 rounded-full border border-white dark:border-secondary-900 overflow-hidden bg-gray-100 relative">
-                                     <CloudinaryImage src={avatar} fill className="w-full h-full object-cover" alt="" />
+                                     <AppImage src={avatar} fill className="w-full h-full object-cover" alt="" />
                                  </div>
                             ))}
                         </div>

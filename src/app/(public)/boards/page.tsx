@@ -11,7 +11,7 @@ import {
     useUpdateBoard 
 } from '@/hooks/use-api/use-boards';
 import { Board } from '@/services/api/boards';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 export default function BoardsPage() {
   const { data: boardsData, isLoading: loading } = useBoards();
@@ -162,7 +162,7 @@ function BoardCard({
           <div className="grid grid-cols-2 grid-rows-2 h-full gap-1 p-1">
              <div className="row-span-2 relative rounded-2xl overflow-hidden bg-secondary-100 dark:bg-secondary-800">
                {images[0] ? (
-                 <CloudinaryImage src={images[0]} fill className="object-cover" alt="" />
+                 <AppImage src={images[0]} fill className="object-cover" alt="" />
                ) : (
                 <div className="w-full h-full flex items-center justify-center">
                     <LayoutGrid className="w-6 h-6 text-secondary-200" />
@@ -171,12 +171,12 @@ function BoardCard({
             </div>
              <div className="relative rounded-2xl overflow-hidden bg-secondary-100/60 dark:bg-secondary-800/60">
                {images[1] ? (
-                 <CloudinaryImage src={images[1]} fill className="object-cover" alt="" />
+                 <AppImage src={images[1]} fill className="object-cover" alt="" />
                ) : null}
              </div>
              <div className="relative rounded-2xl overflow-hidden bg-secondary-100/40 dark:bg-secondary-800/40">
                {images[2] ? (
-                 <CloudinaryImage src={images[2]} fill className="object-cover" alt="" />
+                 <AppImage src={images[2]} fill className="object-cover" alt="" />
                ) : null}
              </div>
           </div>

@@ -77,7 +77,7 @@ export function CreateEventModal() {
         }
     };
 
-    const uploadToCloudinary = async (): Promise<string | null> => {
+    const uploadMedia = async (): Promise<string | null> => {
         if (!coverImage) return null;
         try {
             const data = await uploadMutation.mutateAsync({ file: coverImage, resourceType: 'image' });
@@ -119,7 +119,7 @@ export function CreateEventModal() {
 
         setSubmitting(true);
         try {
-            const imageUrl = await uploadToCloudinary();
+            const imageUrl = await uploadMedia();
 
             const data = {
                 title,

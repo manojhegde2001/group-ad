@@ -12,7 +12,7 @@ import {
   Zap, Plus, Search, ArrowRight, Clock, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { Avatar, Button, Input, Textarea, Switch, Checkbox, Select as RizzSelect } from 'rizzui';
 import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
@@ -706,7 +706,7 @@ export default function SettingsPage() {
                         <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-10 relative z-10">
                            <div className="w-24 h-24 rounded-3xl bg-white dark:bg-secondary-800 p-1.5 shadow-2xl border border-secondary-100 dark:border-secondary-800 relative overflow-hidden">
                              {myTeam.logo ? (
-                               <CloudinaryImage src={myTeam.logo} alt={myTeam.name} fill className="w-full h-full object-cover rounded-2xl" />
+                               <AppImage src={myTeam.logo} alt={myTeam.name} fill className="w-full h-full object-cover rounded-2xl" />
                              ) : (
                               <div className="w-full h-full rounded-2xl bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-primary-500">
                                 <Building2 className="w-10 h-10" />
@@ -958,7 +958,7 @@ function AvatarUploader({ src, name, uploading, onFileChange, fileRef }: { src?:
     <div className="relative group">
       <div className="w-28 h-28 rounded-[2rem] overflow-hidden bg-white dark:bg-secondary-800 p-1.5 shadow-xl transition-transform group-hover:scale-[1.02]">
          <div className="w-full h-full rounded-[1.6rem] overflow-hidden relative">
-           {src ? <CloudinaryImage src={src} alt={name} fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-secondary-100 dark:bg-secondary-800 text-3xl font-black text-secondary-300 uppercase">{name.charAt(0)}</div>}
+           {src ? <AppImage src={src} alt={name} fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-secondary-100 dark:bg-secondary-800 text-3xl font-black text-secondary-300 uppercase">{name.charAt(0)}</div>}
            {uploading && <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-white" /></div>}
          </div>
       </div>

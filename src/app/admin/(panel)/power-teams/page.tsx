@@ -13,7 +13,7 @@ import {
   Trash2, Edit
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -112,7 +112,7 @@ export default function AdminPowerTeamsPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                          <div className="w-12 h-12 rounded-xl bg-secondary-50 dark:bg-secondary-800 flex items-center justify-center overflow-hidden border border-secondary-100 dark:border-secondary-700 relative">
-                           {team.logo ? <CloudinaryImage src={team.logo} alt={team.name} fill className="object-cover" /> : <Building className="w-6 h-6 text-secondary-300" />}
+                           {team.logo ? <AppImage src={team.logo} alt={team.name} fill className="object-cover" /> : <Building className="w-6 h-6 text-secondary-300" />}
                          </div>
                         <div>
                           <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight text-sm leading-none mb-1">{team.name}</p>

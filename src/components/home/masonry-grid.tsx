@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 const DEMO_POSTS:any = [
 ];
@@ -51,7 +51,7 @@ export function MasonryGrid() {
               <Card variant="elevated" className="overflow-hidden group cursor-pointer hover:shadow-xl transition-shadow">
                 {/* Image */}
                  <div className="relative overflow-hidden">
-                   <CloudinaryImage
+                   <AppImage
                      src={post.image}
                      alt={post.title}
                      width={400}

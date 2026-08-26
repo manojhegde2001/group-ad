@@ -2,7 +2,7 @@
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Building2, Users } from 'lucide-react';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { useAuth } from '@/hooks/use-auth';
 import { useVenues } from '@/hooks/use-api/use-venues';
 
@@ -65,7 +65,7 @@ export function FeaturedVenues() {
             >
               {/* Image Header */}
               <div className="absolute inset-0 h-full w-full">
-                <CloudinaryImage 
+                <AppImage 
                     src={venue.image} 
                     alt={venue.name}
                     fill

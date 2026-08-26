@@ -5,8 +5,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Building, Users, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
-import { getOptimizedCloudinaryUrl } from '@/lib/cloudinary-utils';
+import { AppImage } from '@/components/ui/app-image';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80';
 
@@ -34,7 +33,7 @@ export function PowerTeamCard({ team, className }: PowerTeamCardProps) {
     >
       {/* Banner Section */}
       <div className="relative h-32 w-full overflow-hidden">
-         <CloudinaryImage src={team.banner || DEFAULT_BANNER} alt={team.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+         <AppImage src={team.banner || DEFAULT_BANNER} alt={team.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         
         {/* Industry Badge */}
@@ -61,7 +60,7 @@ export function PowerTeamCard({ team, className }: PowerTeamCardProps) {
         <div className="absolute -top-8 left-6">
           <div className="w-16 h-16 rounded-2xl bg-white dark:bg-secondary-800 p-1 shadow-xl border border-secondary-100 dark:border-secondary-700">
             {team.logo ? (
-              <CloudinaryImage src={team.logo} alt={team.name} fill className="object-cover rounded-xl" />
+              <AppImage src={team.logo} alt={team.name} fill className="object-cover rounded-xl" />
             ) : (
               <div className="w-full h-full rounded-xl bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center text-secondary-400">
                 <Building className="w-8 h-8" />

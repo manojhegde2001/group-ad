@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { ChevronRight, ChevronLeft, Check, Calendar, MapPin, Users, Image, Send, Save, Loader2 } from 'lucide-react';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { format } from 'date-fns';
 import { useUpdateEvent } from '@/hooks/use-api/use-events';
 import { useCategories } from '@/hooks/use-api/use-categories';
@@ -331,7 +331,7 @@ export default function EditEventForm({ event }: { event: any }) {
                         </div>
                          {form.coverImage && (
                              <div className="rounded-xl overflow-hidden aspect-video bg-secondary-100 dark:bg-secondary-800 relative">
-                                 <CloudinaryImage src={form.coverImage} alt="Cover preview" fill className="object-cover" />
+                                 <AppImage src={form.coverImage} alt="Cover preview" fill className="object-cover" />
                              </div>
                          )}
                     </div>

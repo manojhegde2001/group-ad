@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
+import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +9,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-    if (!cloudName || !apiKey || !apiSecret) {
-      return NextResponse.json({ error: 'Cloudinary not configured' }, { status: 500 });
+    if (!isS3Configured()) {
+      return NextResponse.json({ error: `S3 not configured. Missing: ${getMissingS3Config().join(', ')}` }, { status: 500 });
     }
 
     const formData = await request.formData();
@@ -34,42 +29,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 });
     }
 
-    // Generate Cloudinary signed upload params
-    const timestamp = Math.round(Date.now() / 1000);
-    const folder = `group-ad/categories/banners`;
-    const publicId = categoryId ? `banner-${categoryId}-${timestamp}` : `banner-new-${timestamp}`;
+    const timestamp = Date.now();
+    const extension = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
+    const key = `group-ad/categories/banners/${categoryId ? `banner-${categoryId}-${timestamp}` : `banner-new-${timestamp}`}.${extension}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    const paramsToSign: Record<string, string | number> = {
-      folder,
-      public_id: publicId,
-      timestamp,
-    };
-
-    const signatureString = Object.keys(paramsToSign)
-        .sort()
-        .map((key) => `${key}=${paramsToSign[key]}`)
-        .join('&') + apiSecret;
-
-    const signature = crypto.createHash('sha256').update(signatureString).digest('hex');
-
-    const cloudinaryForm = new FormData();
-    cloudinaryForm.append('file', file);
-    cloudinaryForm.append('api_key', apiKey);
-    cloudinaryForm.append('timestamp', String(timestamp));
-    cloudinaryForm.append('signature', signature);
-    cloudinaryForm.append('folder', folder);
-    cloudinaryForm.append('public_id', publicId);
-
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-    const res = await fetch(uploadUrl, { method: 'POST', body: cloudinaryForm });
-
-    if (!res.ok) {
-      const err = await res.json();
-      return NextResponse.json({ error: err.error?.message || 'Upload failed' }, { status: 500 });
-    }
-
-    const data = await res.json();
-    const bannerUrl = data.secure_url;
+    const bannerUrl = await uploadToS3(key, buffer, file.type);
 
     return NextResponse.json({
       success: true,

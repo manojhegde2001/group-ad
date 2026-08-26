@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { useCreateEvent } from '@/hooks/use-feed';
 import { Button } from '@/components/ui/button';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 import { useEvents, useMyEvents } from '@/hooks/use-api/use-events';
 import { useUnreadMeetings } from '@/hooks/use-unread-meetings';
@@ -277,7 +277,7 @@ function EventCard({ event }: { event: any }) {
         !event.coverImage && 'bg-gradient-to-br from-primary-400 via-primary-500 to-indigo-600'
       )}>
          {event.coverImage ? (
-           <CloudinaryImage src={event.coverImage} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+           <AppImage src={event.coverImage} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
          ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <Calendar className="w-16 h-16 text-white/30" />
@@ -362,7 +362,7 @@ function EventCard({ event }: { event: any }) {
             <div className="flex items-center gap-1.5">
                <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900 overflow-hidden shrink-0 relative">
                  {event.organizer.avatar ? (
-                   <CloudinaryImage src={event.organizer.avatar} alt="" fill className="object-cover" />
+                   <AppImage src={event.organizer.avatar} alt="" fill className="object-cover" />
                  ) : (
                   <span className="flex items-center justify-center h-full text-[9px] font-bold text-primary-600">
                     {event.organizer.name?.charAt(0)}

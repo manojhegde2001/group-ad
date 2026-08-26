@@ -1,14 +1,13 @@
 'use client';
 
-import { getOptimizedCloudinaryUrl } from '@/lib/cloudinary-utils';
 import { cn } from '@/lib/utils';
 import { VideoHTMLAttributes } from 'react';
 
-interface CloudinaryVideoProps extends Omit<VideoHTMLAttributes<HTMLVideoElement>, 'src'> {
+interface AppVideoProps extends Omit<VideoHTMLAttributes<HTMLVideoElement>, 'src'> {
   src: string | null | undefined;
 }
 
-export function CloudinaryVideo({
+export function AppVideo({
   src,
   className,
   autoPlay = false,
@@ -17,12 +16,8 @@ export function CloudinaryVideo({
   playsInline = true,
   controls = true,
   ...props
-}: CloudinaryVideoProps) {
-  const optimizedSrc = getOptimizedCloudinaryUrl(src, {
-    resourceType: 'video',
-  });
-
-  if (!optimizedSrc) {
+}: AppVideoProps) {
+  if (!src) {
     return (
       <div className={cn("bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center aspect-video", className)}>
         <span className="text-secondary-400 text-[10px] uppercase font-bold">No Video</span>
@@ -32,7 +27,7 @@ export function CloudinaryVideo({
 
   return (
     <video
-      src={optimizedSrc}
+      src={src}
       className={cn("w-full h-auto block", className)}
       autoPlay={autoPlay}
       muted={muted}

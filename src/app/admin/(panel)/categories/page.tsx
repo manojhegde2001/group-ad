@@ -18,7 +18,7 @@ import {
   useDeleteCategory,
   useUploadCategoryBanner
 } from '@/hooks/use-api/use-admin';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { DataGrid, DataGridColumn, DataGridAction } from '@/components/ui/data-grid';
 import { Switch } from '@/components/ui/switch';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -151,7 +151,7 @@ export default function AdminCategoriesPage() {
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg overflow-hidden bg-secondary-100 dark:bg-secondary-800 shrink-0 relative">
             {cat.banner ? (
-              <CloudinaryImage src={cat.banner} alt={cat.name} fill className="object-cover" />
+              <AppImage src={cat.banner} alt={cat.name} fill className="object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-secondary-300 dark:text-secondary-700">
                 <ImageIcon className="w-4 h-4" />

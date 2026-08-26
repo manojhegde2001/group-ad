@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminEvents } from '@/hooks/use-api/use-admin';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { DataGrid, DataGridPagination, DataGridToolbar, DataGridColumn, DataGridAction } from '@/components/ui/data-grid';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
@@ -70,7 +70,7 @@ export default function AdminEventsPage() {
                 <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-lg overflow-hidden bg-gradient-to-br from-primary-400 to-primary-600 shrink-0 relative">
                         {event.coverImage ? (
-                            <CloudinaryImage src={event.coverImage} alt={event.title} fill className="object-cover" />
+                            <AppImage src={event.coverImage} alt={event.title} fill className="object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-white/50">
                                 <Calendar className="w-5 h-5" />

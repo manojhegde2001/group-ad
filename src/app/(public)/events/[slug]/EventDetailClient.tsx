@@ -24,7 +24,7 @@ import { notFound } from 'next/navigation';
 import AttendeeConnectBanner from '@/components/events/AttendeeConnectBanner';
 import { useAuth } from '@/hooks/use-auth';
 import { AttendanceTicket } from '@/components/events/attendance-ticket';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import ShareInviteModal from '@/components/events/ShareInviteModal';
@@ -61,7 +61,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
             <div className="relative h-[45vh] md:h-[60vh] w-full overflow-hidden">
                  {event.coverImage ? (
                      <>
-                         <CloudinaryImage
+                         <AppImage
                              src={event.coverImage}
                              alt={event.title}
                              fill

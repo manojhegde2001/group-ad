@@ -13,8 +13,8 @@ import {
 import toast from 'react-hot-toast';
 import { Modal, Button } from 'rizzui';
 import { Avatar } from '@/components/ui/avatar';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
-import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
+import { AppImage } from '@/components/ui/app-image';
+import { AppVideo } from '@/components/ui/app-video';
 
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
@@ -190,7 +190,7 @@ export function CreatePostModal() {
         }
     };
 
-    const uploadToCloudinary = async (): Promise<string[]> => {
+    const uploadMedia = async (): Promise<string[]> => {
         if (mediaFiles.length === 0) return [];
         setUploadProgress(0);
 
@@ -232,7 +232,7 @@ export function CreatePostModal() {
         }
 
         try {
-            const newMediaUrls = await uploadToCloudinary();
+            const newMediaUrls = await uploadMedia();
             const existingUrls = mediaPreviews.filter(p => !p.startsWith('blob:'));
             const finalMediaUrls = [...existingUrls, ...newMediaUrls];
 
@@ -377,9 +377,9 @@ export function CreatePostModal() {
                                         return (
                                              <div key={i} className="relative shrink-0 w-24 h-24 rounded-2xl overflow-hidden group bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-100 dark:border-secondary-800 shadow-sm transition-transform hover:scale-[1.05]">
                                                  {isVideoItem ? (
-                                                     <CloudinaryVideo src={src} className="w-full h-full object-cover" muted playsInline controls={false} />
+                                                     <AppVideo src={src} className="w-full h-full object-cover" muted playsInline controls={false} />
                                                  ) : (
-                                                     <CloudinaryImage src={src} fill className="w-full h-full object-cover" alt="" />
+                                                     <AppImage src={src} fill className="w-full h-full object-cover" alt="" />
                                                  )}
                                                 {isVideoItem && (
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">

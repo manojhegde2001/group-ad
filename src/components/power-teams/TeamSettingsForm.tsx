@@ -11,7 +11,7 @@ import { useCategories, useUpload } from '@/hooks/use-api/use-common';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 interface TeamSettingsFormProps {
   team: any;
@@ -64,7 +64,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
     }
   };
 
-  const uploadToCloudinary = async (file: File): Promise<string | null> => {
+  const uploadMedia = async (file: File): Promise<string | null> => {
     try {
       const data = await uploadMutation.mutateAsync({ file, resourceType: 'image' });
       return data.url;
@@ -87,11 +87,11 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
 
       // Handle new uploads
       if (logoFile) {
-        const url = await uploadToCloudinary(logoFile);
+        const url = await uploadMedia(logoFile);
         if (url) finalLogo = url;
       }
       if (bannerFile) {
-        const url = await uploadToCloudinary(bannerFile);
+        const url = await uploadMedia(bannerFile);
         if (url) finalBanner = url;
       }
 
@@ -149,7 +149,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
              >
                 {logoPreview ? (
                    <>
-                    <CloudinaryImage src={logoPreview} alt="Logo" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <AppImage src={logoPreview} alt="Logo" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                        <Upload className="w-8 h-8 text-white" />
                     </div>
@@ -175,7 +175,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
              >
                 {bannerPreview ? (
                    <>
-                    <CloudinaryImage src={bannerPreview} alt="Banner" fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <AppImage src={bannerPreview} alt="Banner" fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                        <Upload className="w-10 h-10 text-white" />
                     </div>

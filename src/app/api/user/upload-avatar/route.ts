@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
+import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,16 +10,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-    if (!cloudName || !apiKey || !apiSecret) {
-      const missing = [];
-      if (!cloudName) missing.push('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME');
-      if (!apiKey) missing.push('CLOUDINARY_API_KEY');
-      if (!apiSecret) missing.push('CLOUDINARY_API_SECRET');
-      return NextResponse.json({ error: `Cloudinary not configured. Missing: ${missing.join(', ')}` }, { status: 500 });
+    if (!isS3Configured()) {
+      return NextResponse.json({ error: `S3 not configured. Missing: ${getMissingS3Config().join(', ')}` }, { status: 500 });
     }
 
     const formData = await request.formData();
@@ -37,57 +29,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 });
     }
 
-    // Generate Cloudinary signed upload params
-    const timestamp = Math.round(Date.now() / 1000);
-    const folder = `group-ad/avatars`;
-    const publicId = `avatar-${session.user.id}`;
+    const extension = file.name.includes('.') ? file.name.split('.').pop() : 'jpg';
+    const key = `group-ad/avatars/avatar-${session.user.id}.${extension}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    const paramsToSign: Record<string, string | number> = {
-      folder,
-      invalidate: 'true',
-      overwrite: 'true',
-      public_id: publicId,
-      timestamp,
-    };
+    // Cache-bust the CDN/browser cache since the key is stable across re-uploads
+    const avatarUrl = `${await uploadToS3(key, buffer, file.type)}?v=${Date.now()}`;
 
-    // Build the signature string: alphabetically sorted key=value pairs joined by &
-    const signatureString =
-      Object.keys(paramsToSign)
-        .sort()
-        .map((key) => `${key}=${paramsToSign[key]}`)
-        .join('&') + apiSecret;
-
-    const signature = crypto.createHash('sha256').update(signatureString).digest('hex');
-
-    // Upload to Cloudinary
-    const cloudinaryForm = new FormData();
-    cloudinaryForm.append('file', file);
-    cloudinaryForm.append('api_key', apiKey);
-    cloudinaryForm.append('timestamp', String(timestamp));
-    cloudinaryForm.append('signature', signature);
-    cloudinaryForm.append('folder', folder);
-    cloudinaryForm.append('public_id', publicId);
-    // Overwrite existing avatar with the same public_id
-    cloudinaryForm.append('overwrite', 'true');
-    cloudinaryForm.append('invalidate', 'true');
-
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-
-    const res = await fetch(uploadUrl, {
-      method: 'POST',
-      body: cloudinaryForm,
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      console.error('Cloudinary avatar upload error:', err);
-      return NextResponse.json({ error: err.error?.message || 'Upload failed' }, { status: 500 });
-    }
-
-    const data = await res.json();
-    const avatarUrl = data.secure_url;
-
-    // Persist the Cloudinary URL to the database
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {

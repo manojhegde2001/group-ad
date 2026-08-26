@@ -518,7 +518,7 @@ export default function CreateEventPage() {
                             <input
                                 value={form.coverImage}
                                 onChange={(e) => set('coverImage', e.target.value)}
-                                placeholder="Paste a Cloudinary or image URL"
+                                placeholder="Paste an image URL"
                                 className="w-full px-4 py-2.5 rounded-xl border border-secondary-200 dark:border-secondary-700 bg-secondary-50 dark:bg-secondary-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             />
                         </div>

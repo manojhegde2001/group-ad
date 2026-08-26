@@ -1,6 +1,6 @@
 'use client';
 
-import { CloudinaryImage } from './cloudinary-image';
+import { AppImage } from './app-image';
 import { cn } from '@/lib/utils';
 
 interface AvatarProps {
@@ -53,7 +53,7 @@ export function Avatar({
       )}
     >
       {src ? (
-        <CloudinaryImage
+        <AppImage
           src={src}
           alt={name}
           fill

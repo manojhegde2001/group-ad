@@ -7,7 +7,7 @@ import { usePowerTeamModal } from '@/hooks/use-power-teams';
 import { useJoinPowerTeam, useLeavePowerTeam } from '@/hooks/use-api/use-power-teams';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import Link from 'next/link';
 
 const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80';
@@ -53,7 +53,7 @@ export const PowerTeamHeader = memo(function PowerTeamHeader({ team }: PowerTeam
     <div className="relative">
       {/* Banner */}
        <div className="h-64 sm:h-80 w-full relative overflow-hidden rounded-[3rem] shadow-2xl bg-secondary-100 dark:bg-secondary-800">
-         <CloudinaryImage
+         <AppImage
            src={team.banner || DEFAULT_BANNER}
            alt={`${team.name} Banner`}
            fill
@@ -88,7 +88,7 @@ export const PowerTeamHeader = memo(function PowerTeamHeader({ team }: PowerTeam
             {/* Logo */}
              <div className="relative w-40 h-40 rounded-[2.5rem] bg-white dark:bg-secondary-900 p-2 shadow-2xl border-4 border-white dark:border-secondary-900 ring-1 ring-secondary-100 dark:ring-secondary-800 overflow-hidden">
                {team.logo ? (
-                 <CloudinaryImage 
+                 <AppImage 
                      src={team.logo} 
                      alt={team.name} 
                      fill 

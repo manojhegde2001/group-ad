@@ -20,8 +20,8 @@ import dynamic from 'next/dynamic';
 import { Popover } from 'rizzui';
 
 const Drawer = dynamic(() => import('rizzui').then((mod) => mod.Drawer), { ssr: false });
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
-import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
+import { AppImage } from '@/components/ui/app-image';
+import { AppVideo } from '@/components/ui/app-video';
 
 const clampMediaRatio = (ratio: number) => Math.min(Math.max(ratio, 0.5), 2.2);
 
@@ -148,7 +148,7 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                             const src = post.images[0];
                             const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                              return isVideoItem ? (
-                                 <CloudinaryVideo
+                                 <AppVideo
                                      src={src}
                                      className="w-full h-full object-cover block"
                                      muted playsInline loop
@@ -171,7 +171,7 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
                                      }}
                                  />
                              ) : (
-                                 <CloudinaryImage
+                                 <AppImage
                                      src={src}
                                      alt={post.content || ''}
                                      fill

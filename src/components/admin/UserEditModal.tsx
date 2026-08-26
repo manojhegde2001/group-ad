@@ -8,7 +8,7 @@ import { Select } from '@/components/ui/select';
 import toast from 'react-hot-toast';
 import { useCategories } from '@/hooks/use-api/use-categories';
 import { useUpdateAdminUser } from '@/hooks/use-api/use-admin';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 interface UserEditModalProps {
   user: any;
@@ -117,7 +117,7 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
             <div className="flex items-center gap-3">
                <div className="w-9 h-9 rounded-xl bg-primary-500 flex items-center justify-center text-white shadow overflow-hidden shrink-0 relative">
                  {user?.avatar
-                   ? <CloudinaryImage src={user.avatar} alt="" fill className="object-cover" />
+                   ? <AppImage src={user.avatar} alt="" fill className="object-cover" />
                    : <User className="w-[18px] h-[18px]" />}
                </div>
               <div>

@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { useProfileAnalytics, usePostsAnalytics, useBusinessAnalytics } from '@/hooks/use-api/use-analytics';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userType?: string }) {
   const [activeView, setActiveView] = useState<'profile' | 'posts' | 'business'>('profile');
@@ -175,7 +175,7 @@ export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userTy
                 <div key={viewer.id || `viewer-${index}`} className="flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                      <div className="w-10 h-10 rounded-xl bg-secondary-100 dark:bg-secondary-800 overflow-hidden relative">
-                         {viewer.avatar ? <CloudinaryImage src={viewer.avatar} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center font-black text-secondary-400 capitalize">{viewer.name?.[0] || '?'}</div>}
+                         {viewer.avatar ? <AppImage src={viewer.avatar} alt="" fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center font-black text-secondary-400 capitalize">{viewer.name?.[0] || '?'}</div>}
                      </div>
                     <div>
                         <p className="text-xs font-black text-secondary-900 dark:text-white uppercase truncate max-w-[120px]">{viewer.name}</p>
@@ -226,7 +226,7 @@ export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userTy
                         <div key={comp.name || `comp-${index}`} className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                  <div className="w-10 h-10 rounded-xl bg-white border border-secondary-100 dark:border-secondary-800 p-1 relative overflow-hidden">
-                                     {comp.logo ? <CloudinaryImage src={comp.logo} alt="" fill className="object-contain" /> : <div className="w-full h-full bg-secondary-50 flex items-center justify-center text-[10px] font-black text-secondary-300 uppercase">{comp.name?.[0] || '?'}</div>}
+                                     {comp.logo ? <AppImage src={comp.logo} alt="" fill className="object-contain" /> : <div className="w-full h-full bg-secondary-50 flex items-center justify-center text-[10px] font-black text-secondary-300 uppercase">{comp.name?.[0] || '?'}</div>}
                                  </div>
                                 <p className="text-xs font-black text-secondary-900 dark:text-white uppercase">{comp.name}</p>
                             </div>

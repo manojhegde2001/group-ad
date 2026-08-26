@@ -102,7 +102,7 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <ul className="list-disc pl-6 text-secondary-600 dark:text-secondary-400 space-y-2 mt-4">
                     <li><strong>Public Profile:</strong> Your username, bio, and company details are visible based on your visibility settings.</li>
-                    <li><strong>Service Providers:</strong> We share data with trusted third-party providers (e.g., Cloudinary for images, MongoDB for storage) to maintain platform functionality.</li>
+                    <li><strong>Service Providers:</strong> We share data with trusted third-party providers (e.g., AWS S3 for images, MongoDB for storage) to maintain platform functionality.</li>
                     <li><strong>Legal Obligations:</strong> We may disclose information if required by law or in response to valid legal requests.</li>
                 </ul>
             </section>

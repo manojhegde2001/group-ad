@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Search, User, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { useMe } from '@/hooks/use-api/use-user';
 import { useAuthModal } from '@/hooks/use-modal';
 
@@ -58,7 +58,7 @@ export function MobileBottomNav({ onMenuClick, onSearchClick, unreadCount = 0 }:
                                         isActive ? "ring-secondary-900 dark:ring-white" : "ring-transparent"
                                     )}>
                                         <div className="w-full h-full rounded-full overflow-hidden relative">
-                                            <CloudinaryImage src={user.avatar} alt="" fill className="object-cover" />
+                                            <AppImage src={user.avatar} alt="" fill className="object-cover" />
                                         </div>
                                     </div>
                                 ) : (

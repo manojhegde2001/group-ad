@@ -26,8 +26,8 @@ import { useDeletePost, usePost, usePostComments, useLikePost, useCommentOnPost,
 import { FeedContainer } from './feed-container';
 import { cn, getLinkDomain } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
-import { CloudinaryVideo } from '@/components/ui/cloudinary-video';
+import { AppImage } from '@/components/ui/app-image';
+import { AppVideo } from '@/components/ui/app-video';
 import dynamic from 'next/dynamic';
 
 const Drawer = dynamic(() => import('rizzui').then((mod) => mod.Drawer), { ssr: false });
@@ -283,7 +283,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 
                                 if (isVideoItem) {
                                     return (
-                                        <CloudinaryVideo
+                                        <AppVideo
                                             key={src}
                                             src={src}
                                             className="w-full h-full object-contain block"
@@ -302,7 +302,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                                 className="relative w-full shadow-2xl" 
                                                 style={{ aspectRatio: `1 / ${stats.ratio}` }}
                                             >
-                                                <CloudinaryImage
+                                                <AppImage
                                                     src={src}
                                                     alt={post.content || 'Post image'}
                                                     fill
@@ -322,7 +322,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 }
 
                                 return (
-                                    <CloudinaryImage
+                                    <AppImage
                                         key={src}
                                         src={src}
                                         alt={post.content || 'Post image'}
@@ -553,7 +553,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                             <Link href={`/profile/${post.user.username}`} className="flex items-center gap-3 group min-w-0 flex-1">
                                 <div className="w-[44px] h-[44px] rounded-full bg-gray-100 dark:bg-secondary-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-50 dark:border-secondary-700 relative">
                                      {post.user.avatar ? (
-                                         <CloudinaryImage src={post.user.avatar} fill className="w-full h-full object-cover" alt="" />
+                                         <AppImage src={post.user.avatar} fill className="w-full h-full object-cover" alt="" />
                                      ) : (
                                         <span className="text-[14px] font-[500] text-gray-500 uppercase">{(post.user.companyName || post.user.name).charAt(0)}</span>
                                     )}
@@ -611,7 +611,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     {comments.map((c) => (
                                         <div key={c.id} className="flex gap-3">
                                              <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700 relative">
-                                                 {c.user.avatar ? <CloudinaryImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
+                                                 {c.user.avatar ? <AppImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
                                              </Link>
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-0.5">
@@ -652,7 +652,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                         {post.commentsEnabled !== false ? (
                             <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
                                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden relative">
-                                     {user?.avatar ? <CloudinaryImage src={user.avatar as string} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">?</span>}
+                                     {user?.avatar ? <AppImage src={user.avatar as string} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">?</span>}
                                  </div>
                                 <div className="flex-1 relative">
                                     <input
@@ -714,7 +714,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                         {comments.map((c) => (
                                             <div key={c.id} className="flex gap-3">
                                                  <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700 relative">
-                                                     {c.user.avatar ? <CloudinaryImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
+                                                     {c.user.avatar ? <AppImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
                                                  </Link>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-0.5">
@@ -734,7 +734,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 {post.commentsEnabled !== false ? (
                                     <form onSubmit={handleCommentSubmit} className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden relative">
-                                            {user?.avatar ? <CloudinaryImage src={user.avatar as string} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">?</span>}
+                                            {user?.avatar ? <AppImage src={user.avatar as string} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">?</span>}
                                         </div>
                                         <div className="flex-1 relative">
                                             <input
@@ -817,7 +817,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                                 
                                 if (isVideoItem) {
-                                    return <CloudinaryVideo src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
+                                    return <AppVideo src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
                                 }
 
                                 const stats = imageStats[src];
@@ -828,7 +828,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                                 className="relative w-full max-w-4xl shadow-2xl mt-4 mb-4" 
                                                 style={{ aspectRatio: `1 / ${stats.ratio}` }}
                                             >
-                                                <CloudinaryImage 
+                                                <AppImage 
                                                     src={src} 
                                                     fill 
                                                     className="w-full h-full object-top" 
@@ -842,7 +842,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 
                                 return (
                                     <div className="relative w-full h-full p-4 flex items-center justify-center">
-                                        <CloudinaryImage 
+                                        <AppImage 
                                             src={src} 
                                             fill 
                                             className="max-w-full max-h-full object-contain" 

@@ -14,7 +14,7 @@ import { useMyPosts, useDeletePost, useUpdatePost } from '@/hooks/use-api/use-po
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { useAuth } from '@/hooks/use-auth';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 
 export default function MyPostsTab() {
     const { user } = useAuth();
@@ -155,7 +155,7 @@ export default function MyPostsTab() {
                             >
                                 {/* Image / Text banner */}
                                  {hasImage ? (
-                                     <CloudinaryImage
+                                     <AppImage
                                          src={post.images[0]}
                                          alt={post.content?.slice(0, 60) || 'Post'}
                                          width={400}

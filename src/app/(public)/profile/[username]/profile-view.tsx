@@ -8,7 +8,7 @@ import { ConnectionButton } from '@/components/profile/connection-button';
 import { PostCard } from '@/components/feed/post-card';
 import Masonry from 'react-masonry-css';
 import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, LayoutDashboard, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff, CalendarRange, ChevronLeft } from 'lucide-react';
-import { CloudinaryImage } from '@/components/ui/cloudinary-image';
+import { AppImage } from '@/components/ui/app-image';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
 import { useInfinitePosts, useSavedPosts } from '@/hooks/use-api/use-posts';
 import { useCreatePostModal } from '@/hooks/use-feed';
@@ -185,7 +185,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                         <div className="absolute -inset-1 bg-gradient-to-tr from-primary-500 to-violet-500 rounded-4xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
                          <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-44 md:h-44 rounded-4xl overflow-hidden border-4 border-white dark:border-secondary-900 shadow-2xl bg-secondary-100 dark:bg-secondary-800 flex items-center justify-center">
                              {profile.avatar ? (
-                                 <CloudinaryImage src={profile.avatar} alt={profile.companyName || profile.name} fill className="w-full h-full object-cover" />
+                                 <AppImage src={profile.avatar} alt={profile.companyName || profile.name} fill className="w-full h-full object-cover" />
                              ) : (
                                  <span className="text-3xl sm:text-4xl font-black text-secondary-400 uppercase">{(profile.companyName || profile.name).charAt(0)}</span>
                              )}

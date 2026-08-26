@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -180,7 +181,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    logger.error('Error fetching profile', error);
     return NextResponse.json(
       { error: 'Failed to fetch profile' },
       { status: 500 }
@@ -306,7 +307,7 @@ export async function PATCH(request: NextRequest) {
       user: updatedUser,
     });
   } catch (error: any) {
-    console.error('Error updating profile:', error);
+    logger.error('Error updating profile', error);
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
@@ -384,7 +385,7 @@ export async function PUT(request: NextRequest) {
       message: 'Password changed successfully',
     });
   } catch (error: any) {
-    console.error('Error changing password:', error);
+    logger.error('Error changing password', error);
 
     if (error.name === 'ZodError') {
       return NextResponse.json(

@@ -29,6 +29,48 @@ const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,
 });
 
+interface SidebarLinkProps {
+  href: string;
+  icon: any;
+  label: string;
+  pathname: string;
+  unreadMessages: number;
+  unreadNotifications: number;
+}
+
+const SidebarLink = ({ href, icon: Icon, label, pathname, unreadMessages, unreadNotifications }: SidebarLinkProps) => {
+  const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+
+  let badgeCount = 0;
+  if (href === '/messages') badgeCount = unreadMessages;
+  if (href === '/notifications') badgeCount = unreadNotifications;
+
+  return (
+    <Link
+      href={href}
+      title={label}
+      className={cn(
+        "flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group relative",
+        isActive
+          ? "bg-secondary-900 text-white dark:bg-white dark:text-secondary-900 shadow-md"
+          : "text-secondary-500 hover:bg-secondary-100 dark:hover:bg-secondary-800 hover:text-secondary-900 dark:hover:text-white"
+      )}
+    >
+      <Icon className={cn("w-6 h-6", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
+      {/* Unread badge */}
+      {badgeCount > 0 && (
+        <span className="absolute top-1 right-1 min-w-[17px] h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1 ring-2 ring-white dark:ring-secondary-900 leading-none pointer-events-none shadow-sm">
+          {badgeCount > 99 ? '99+' : badgeCount}
+        </span>
+      )}
+      {/* Tooltip */}
+      <span className="absolute left-16 px-2 py-1 bg-secondary-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+        {label}
+      </span>
+    </Link>
+  );
+};
+
 export function Sidebar() {
   const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
@@ -58,39 +100,6 @@ export function Sidebar() {
     navLinks.push({ label: 'Admin', href: 'https://admin.vrutta.net/', icon: ShieldCheck });
   }
 
-  const SidebarLink = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
-    const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-    
-    let badgeCount = 0;
-    if (href === '/messages') badgeCount = unreadMessages;
-    if (href === '/notifications') badgeCount = unreadNotifications;
-
-    return (
-      <Link
-        href={href}
-        title={label}
-        className={cn(
-          "flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group relative",
-          isActive
-            ? "bg-secondary-900 text-white dark:bg-white dark:text-secondary-900 shadow-md"
-            : "text-secondary-500 hover:bg-secondary-100 dark:hover:bg-secondary-800 hover:text-secondary-900 dark:hover:text-white"
-        )}
-      >
-        <Icon className={cn("w-6 h-6", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} />
-        {/* Unread badge */}
-        {badgeCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[17px] h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1 ring-2 ring-white dark:ring-secondary-900 leading-none pointer-events-none shadow-sm">
-            {badgeCount > 99 ? '99+' : badgeCount}
-          </span>
-        )}
-        {/* Tooltip */}
-        <span className="absolute left-16 px-2 py-1 bg-secondary-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-          {label}
-        </span>
-      </Link>
-    );
-  };
-
   return (
     <aside className="fixed left-0 top-0 w-20 h-screen bg-white dark:bg-secondary-900 border-r border-secondary-100 dark:border-secondary-800 flex flex-col items-center py-4 z-[60] hidden md:flex">
       {/* Logo */}
@@ -103,7 +112,7 @@ export function Sidebar() {
       {/* Nav links */}
       <nav className="flex flex-col items-center gap-2 w-full px-4">
         {navLinks.map((link) => (
-          <SidebarLink key={link.href} {...link} />
+          <SidebarLink key={link.href} {...link} pathname={pathname} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} />
         ))}
         {(isAdmin || isBusiness) && (
           <button
@@ -131,7 +140,7 @@ export function Sidebar() {
             Help & Info
           </span>
         </button>
-        <SidebarLink href="/settings" icon={Settings} label="Settings" />
+        <SidebarLink href="/settings" icon={Settings} label="Settings" pathname={pathname} unreadMessages={unreadMessages} unreadNotifications={unreadNotifications} />
       </div>
 
       <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />

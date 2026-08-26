@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const updateCategorySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').optional(),
@@ -54,7 +55,7 @@ export async function PATCH(
 
     return NextResponse.json({ category, message: 'Category updated successfully' });
   } catch (error) {
-    console.error('Error updating category:', error);
+    logger.error('Error updating category', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
@@ -104,7 +105,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Category deleted successfully' });
   } catch (error) {
-    console.error('Error deleting category:', error);
+    logger.error('Error deleting category', error);
     return NextResponse.json(
       { error: 'Failed to delete category' },
       { status: 500 }

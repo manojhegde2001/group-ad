@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 const db = prisma as any; // new Bookmark model available at runtime after prisma generate
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
         return NextResponse.json({ isBookmarked: !!bookmark });
     } catch (error) {
-        console.error('Error checking bookmark:', error);
+        logger.error('Error checking bookmark', error);
         return NextResponse.json({ error: 'Failed to check bookmark' }, { status: 500 });
     }
 }
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         return NextResponse.json({ message: 'Bookmarked successfully', isBookmarked: true });
     } catch (error) {
-        console.error('Error bookmarking post:', error);
+        logger.error('Error bookmarking post', error);
         return NextResponse.json({ error: 'Failed to bookmark post' }, { status: 500 });
     }
 }
@@ -77,7 +78,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
         return NextResponse.json({ message: 'Bookmark removed', isBookmarked: false });
     } catch (error) {
-        console.error('Error removing bookmark:', error);
+        logger.error('Error removing bookmark', error);
         return NextResponse.json({ error: 'Failed to remove bookmark' }, { status: 500 });
     }
 }

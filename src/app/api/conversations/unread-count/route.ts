@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/conversations/unread-count
 // Returns the total number of unread messages across all conversations for the current user.
@@ -25,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json({ totalUnread });
   } catch (error) {
-    console.error('GET /api/conversations/unread-count error:', error);
+    logger.error('GET /api/conversations/unread-count error', error);
     return NextResponse.json({ totalUnread: 0 }, { status: 500 });
   }
 }

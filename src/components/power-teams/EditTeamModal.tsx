@@ -27,6 +27,7 @@ export function EditTeamModal() {
 
   useEffect(() => {
     if (activeTeam) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs the editable form from the team prop when the modal opens
       setName(activeTeam.name || '');
       setDescription(activeTeam.description || '');
       setCategoryId(activeTeam.categoryId || '');

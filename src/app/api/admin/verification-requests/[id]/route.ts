@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
+import { logger } from '@/lib/logger';
+import { reviewVerificationRequestSchema } from '@/lib/validations/admin';
 
 export async function PATCH(
   request: NextRequest,
@@ -14,11 +16,8 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const { status, reviewNote } = await request.json();
-
-    if (!['APPROVED', 'REJECTED'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-    }
+    const body = await request.json();
+    const { status, reviewNote } = reviewVerificationRequestSchema.parse(body);
 
     const typeChangeRequest = await prisma.userTypeChangeRequest.findUnique({
       where: { id },
@@ -108,8 +107,11 @@ export async function PATCH(
       message: `Request ${status.toLowerCase()} successfully.`,
       request: updatedRequest 
     });
-  } catch (error) {
-    console.error('PATCH /api/admin/verification-requests/[id] error:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('PATCH /api/admin/verification-requests/[id] error', error);
     return NextResponse.json({ error: 'Failed to update request' }, { status: 500 });
   }
 }

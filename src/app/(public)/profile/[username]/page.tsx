@@ -13,33 +13,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const user = await prisma.user.findUnique({
     where: { username },
-    select: { name: true, bio: true, avatar: true },
+    select: { name: true, companyName: true, bio: true, avatar: true },
   });
 
   if (!user) return { title: 'User Not Found' };
 
+  const displayName = user.companyName || user.name;
   const fallbackImage = 'https://drive.google.com/uc?export=download&id=1C8sCXdXsuwVadNbQJ1ycoBBa84okc9A1';
   const ogImage = user.avatar || fallbackImage;
 
   return {
-    title: `${user.name} (@${username})`,
-    description: user.bio || `Connect with ${user.name} on Vrutta — Enterprise Professional Ecosystem.`,
+    title: `${displayName} (@${username})`,
+    description: user.bio || `Connect with ${displayName} on Vrutta — Enterprise Professional Ecosystem.`,
     openGraph: {
-      title: `${user.name} on Vrutta`,
-      description: user.bio || `Connect with ${user.name} on Vrutta.`,
+      title: `${displayName} on Vrutta`,
+      description: user.bio || `Connect with ${displayName} on Vrutta.`,
       images: [
         {
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: user.name,
+          alt: displayName,
         }
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${user.name} (@${username})`,
-      description: user.bio || `Connect with ${user.name} on Vrutta.`,
+      title: `${displayName} (@${username})`,
+      description: user.bio || `Connect with ${displayName} on Vrutta.`,
       images: [ogImage],
     },
   };

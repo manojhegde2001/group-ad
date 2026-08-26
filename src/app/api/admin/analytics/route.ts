@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { startOfDay, subDays, eachDayOfInterval, format } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -119,7 +120,7 @@ export async function GET() {
       summary: totalStats,
     });
   } catch (error) {
-    console.error('Analytics API error:', error);
+    logger.error('Analytics API error', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }
 }

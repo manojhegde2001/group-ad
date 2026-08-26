@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
+import { logger } from '@/lib/logger';
 
 export type NotificationType = 
     | 'CONNECTION_REQUEST'
@@ -59,7 +60,7 @@ export const notificationService = {
 
             return notification;
         } catch (error) {
-            console.error('Error in notificationService.create:', error);
+            logger.error('Error in notificationService.create', error);
             // Don't throw to prevent breaking the caller (like follow) if Firebase fails
             return null;
         }

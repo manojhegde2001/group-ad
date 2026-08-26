@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const updateEventSchema = z.object({
     title: z.string().min(3).max(200).optional(),
@@ -74,7 +75,7 @@ export const GET = async (
 
         return NextResponse.json({ event, userEnrollment });
     } catch (error) {
-        console.error('Error fetching event:', error);
+        logger.error('Error fetching event', error);
         return NextResponse.json({ error: 'Failed to fetch event' }, { status: 500 });
     }
 }
@@ -119,7 +120,7 @@ export async function PATCH(
 
         return NextResponse.json({ message: 'Event updated', event });
     } catch (error: any) {
-        console.error('Error updating event:', error);
+        logger.error('Error updating event', error);
         if (error.name === 'ZodError') {
             return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
         }
@@ -156,7 +157,7 @@ export async function DELETE(
 
         return NextResponse.json({ message: 'Event cancelled' });
     } catch (error) {
-        console.error('Error deleting event:', error);
+        logger.error('Error deleting event', error);
         return NextResponse.json({ error: 'Failed to delete event' }, { status: 500 });
     }
 }

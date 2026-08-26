@@ -148,6 +148,7 @@ function MessagesContent() {
 
   // Reset realtime messages when conversation changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets transient realtime state when the selected conversation changes
     setRealtimeMessages([]);
     setIsOtherTyping(false);
     setTypingUser(null);
@@ -215,6 +216,7 @@ function MessagesContent() {
 
       const existing = conversations.find(c => c.id === initialConversationId);
       if (existing) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- selects the conversation named in the URL once conversation data has loaded
         setSelectedConvId(existing.id);
         setShowMobileChat(true);
       }
@@ -232,6 +234,7 @@ function MessagesContent() {
       // Check if we already have a conversation with this user
       const existing = conversations.find(c => c.participants.some(p => p.id === initialUserId));
       if (existing) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- selects/starts the conversation named in the URL once data has loaded
         setSelectedConvId(existing.id);
         setShowMobileChat(true);
       } else {
@@ -440,7 +443,7 @@ function MessagesContent() {
                   </div>
                   <div>
                     <p className="font-black text-base md:text-lg text-secondary-900 dark:text-white">No connections found</p>
-                    <p className="text-[10px] md:text-xs text-secondary-400 mt-1 max-w-[200px]">You haven't connected with anyone yet. Grow your connections to start messaging.</p>
+                    <p className="text-[10px] md:text-xs text-secondary-400 mt-1 max-w-[200px]">You haven&apos;t connected with anyone yet. Grow your connections to start messaging.</p>
                   </div>
                 </div>
               ) : (
@@ -581,7 +584,7 @@ function MessagesContent() {
                     <Avatar src={otherUser?.avatar ?? undefined} name={otherUser?.name || '?'} size="xl" className="w-16 h-16 md:w-20 md:h-20 shadow-xl" />
                   </div>
                   <p className="font-black text-lg md:text-xl text-secondary-900 dark:text-white uppercase tracking-tight">{otherUser?.name}</p>
-                  <p className="text-xs md:text-sm text-secondary-400 font-medium">Be the first to say "Hello!"</p>
+                  <p className="text-xs md:text-sm text-secondary-400 font-medium">Be the first to say &quot;Hello!&quot;</p>
                 </div>
               ) : (
                 messages.map((msg, idx) => {

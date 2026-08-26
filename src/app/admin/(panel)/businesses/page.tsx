@@ -303,7 +303,7 @@ export default function AdminBusinessesPage() {
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wide text-secondary-400 mb-2">Reason</p>
                       <p className="text-sm text-secondary-600 dark:text-secondary-300 italic border-l-2 border-indigo-500/20 pl-3">
-                        "{req.reason}"
+                        &quot;{req.reason}&quot;
                       </p>
                     </div>
                   )}

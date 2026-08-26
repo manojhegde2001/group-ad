@@ -28,6 +28,7 @@ export default function BoardDetailPage() {
 
   useEffect(() => {
     if (board) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs the editable name field from fetched board data
       setNewName(board.name);
     }
   }, [board]);

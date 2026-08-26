@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 const db = prisma as any; // Follow/Bookmark models available at runtime after prisma generate
 
@@ -61,7 +62,7 @@ export async function GET(
             },
         });
     } catch (error) {
-        console.error('Error fetching user profile:', error);
+        logger.error('Error fetching user profile', error);
         return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 });
     }
 }

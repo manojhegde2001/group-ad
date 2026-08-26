@@ -45,7 +45,7 @@ export default function ContactPage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 text-sm font-bold mb-6">
               <Clock className="w-4 h-4" />
-              We're here for you
+              We&apos;re here for you
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-secondary-900 dark:text-white mb-6">
               Get in Touch with <span className="text-primary-600">Vrutta</span>

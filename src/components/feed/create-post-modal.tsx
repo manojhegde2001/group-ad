@@ -67,6 +67,7 @@ export function CreatePostModal() {
     // Populate editing data
     useEffect(() => {
         if (editingPost) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs form fields when editing an existing post
             setPostType(editingPost.type as PostType);
             // Carry over tags that existed before hashtags lived in the caption itself,
             // so re-saving an old post doesn't silently drop them.

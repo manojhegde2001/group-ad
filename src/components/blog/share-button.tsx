@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Share2, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast'; // Assuming react-hot-toast is installed based on standard Next.js stacks (I will check or fallback to simple UI)
+import { logger } from '@/lib/logger';
 
 export function ShareButton({ title, text, url }: { title: string; text: string; url: string }) {
   const [copied, setCopied] = useState(false);
@@ -32,7 +33,7 @@ export function ShareButton({ title, text, url }: { title: string; text: string;
       setTimeout(() => setCopied(false), 2000);
       toast.success('Link copied to clipboard!');
     }).catch(err => {
-      console.error('Failed to copy: ', err);
+      logger.error('Failed to copy', err);
     });
   };
 

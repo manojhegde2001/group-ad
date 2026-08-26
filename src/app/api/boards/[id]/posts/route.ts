@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // POST /api/boards/[id]/posts — Add a post to a board
 export async function POST(
@@ -54,7 +55,7 @@ export async function POST(
 
     return NextResponse.json(boardPost);
   } catch (error: any) {
-    console.error('Error adding post to board:', error);
+    logger.error('Error adding post to board', error);
     return NextResponse.json({ 
       error: 'Failed to add post to board',
       message: error?.message || 'Unknown error'
@@ -99,7 +100,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Post removed from board' });
   } catch (error) {
-    console.error('Error removing post from board:', error);
+    logger.error('Error removing post from board', error);
     return NextResponse.json({ error: 'Failed to remove post from board' }, { status: 500 });
   }
 }

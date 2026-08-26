@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 import { notificationService } from '@/services/notification-service';
+import { logger } from '@/lib/logger';
 
 
 const db = prisma as any; // new models (Follow, Bookmark) available at runtime after prisma generate
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             followingCount,
         });
     } catch (error) {
-        console.error('Error getting follow status:', error);
+        logger.error('Error getting follow status', error);
         return NextResponse.json({ error: 'Failed to get follow status' }, { status: 500 });
     }
 }
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             followerCount,
         });
     } catch (error) {
-        console.error('Error following user:', error);
+        logger.error('Error following user', error);
         return NextResponse.json({ error: 'Failed to follow user' }, { status: 500 });
     }
 }
@@ -129,7 +130,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
             followerCount,
         });
     } catch (error) {
-        console.error('Error unfollowing user:', error);
+        logger.error('Error unfollowing user', error);
         return NextResponse.json({ error: 'Failed to unfollow user' }, { status: 500 });
     }
 }

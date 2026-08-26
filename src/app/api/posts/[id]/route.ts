@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const updatePostSchema = z.object({
   content: z.string().min(1).max(5000).optional(),
@@ -67,7 +68,7 @@ export async function GET(
             viewerId: currentUserId,
           }
         })
-      ]).catch((err) => console.error('Error recording post view:', err));
+      ]).catch((err) => logger.error('Error recording post view', err));
     }
 
     // Fetch connection status if user is logged in
@@ -132,7 +133,7 @@ export async function GET(
 
     return NextResponse.json({ post });
   } catch (error) {
-    console.error('Error fetching post:', error);
+    logger.error('Error fetching post', error);
     return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
   }
 }
@@ -182,7 +183,7 @@ export async function PATCH(
 
     return NextResponse.json({ message: 'Post updated successfully', post });
   } catch (error: any) {
-    console.error('Error updating post:', error);
+    logger.error('Error updating post', error);
     if (error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
     }
@@ -225,7 +226,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Post deleted successfully' });
   } catch (error) {
-    console.error('Error deleting post:', error);
+    logger.error('Error deleting post', error);
     return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
   }
 }

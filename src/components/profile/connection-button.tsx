@@ -52,6 +52,7 @@ export function ConnectionButton({
     const [localIsInitiator, setLocalIsInitiator] = useState<boolean>(isInitiator);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local status from props when they change
         setStatus(initialStatus);
         setLocalIsInitiator(isInitiator);
     }, [initialStatus, isInitiator]);

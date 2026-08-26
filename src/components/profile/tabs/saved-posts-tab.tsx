@@ -42,7 +42,7 @@ export default function SavedPostsTab() {
             <div className="flex flex-col items-center justify-center py-24 text-center px-4">
                 <Bookmark className="w-12 h-12 text-secondary-300 mb-3" />
                 <p className="text-secondary-700 dark:text-secondary-300 font-medium mb-1">No saved posts yet</p>
-                <p className="text-secondary-400 text-sm">Bookmark posts from the feed and they'll appear here.</p>
+                <p className="text-secondary-400 text-sm">Bookmark posts from the feed and they&apos;ll appear here.</p>
             </div>
         );
     }

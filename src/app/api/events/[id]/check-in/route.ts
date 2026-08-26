@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
+import { logger } from '@/lib/logger';
 
 const CHECKIN_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-for-checkin';
 
@@ -87,7 +88,7 @@ export async function POST(
       attendee: enrollment.user
     });
   } catch (error) {
-    console.error('Check-in error:', error);
+    logger.error('Check-in error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

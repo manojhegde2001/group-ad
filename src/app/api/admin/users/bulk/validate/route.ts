@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const userSchema = z.object({
   name: z.string().min(2, "Name too short"),
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ results });
   } catch (error) {
-    console.error('Bulk validate error:', error);
+    logger.error('Bulk validate error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

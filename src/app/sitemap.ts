@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.vrutta.net';
@@ -53,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...routes, ...categoryRoutes, ...userRoutes];
   } catch (error) {
-    console.error('Sitemap generation error:', error);
+    logger.error('Sitemap generation error', error);
     return routes;
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const createPowerTeamSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters').max(100, 'Name too long'),
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching power teams:', error);
+    logger.error('Error fetching power teams', error);
     return NextResponse.json({ error: 'Failed to fetch power teams' }, { status: 500 });
   }
 }
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: 'Power Team created successfully', team }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating power team:', error);
+    logger.error('Error creating power team', error);
     if (error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
     }

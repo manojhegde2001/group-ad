@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
+import { logger } from '@/lib/logger';
 
 // PATCH /api/connections/by-user/[userId] - Accept or Reject a connection request
 export async function PATCH(
@@ -72,7 +73,7 @@ export async function PATCH(
 
     return NextResponse.json({ connection: updated });
   } catch (error) {
-    console.error('PATCH /api/connections/by-user/[userId] error:', error);
+    logger.error('PATCH /api/connections/by-user/[userId] error', error);
     return NextResponse.json({ error: 'Failed to update connection' }, { status: 500 });
   }
 }
@@ -118,7 +119,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('DELETE /api/connections/by-user/[userId] error:', error);
+    logger.error('DELETE /api/connections/by-user/[userId] error', error);
     return NextResponse.json({ error: 'Failed to delete connection' }, { status: 500 });
   }
 }

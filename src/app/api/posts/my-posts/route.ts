@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/posts/my-posts — fetch all posts belonging to the logged-in user
 export async function GET(request: NextRequest) {
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({ posts: postsWithCounts });
     } catch (error) {
-        console.error('Error fetching my posts:', error);
+        logger.error('Error fetching my posts', error);
         return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
     }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/users - Search and list users
 export async function GET(request: NextRequest) {
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
       pages: Math.ceil(total / limit)
     });
   } catch (error) {
-    console.error('GET /api/admin/users error:', error);
+    logger.error('GET /api/admin/users error', error);
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }

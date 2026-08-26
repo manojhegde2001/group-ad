@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
 import { sendMail, eventReminderEmail, getAppBaseUrl } from '@/lib/mailer';
 import { addHours, isWithinInterval } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
     try {
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
             expiredCount: expiredResult.count
         });
     } catch (error) {
-        console.error('Error sending reminders:', error);
+        logger.error('Error sending reminders', error);
         return NextResponse.json({ error: 'Failed to send reminders' }, { status: 500 });
     }
 }

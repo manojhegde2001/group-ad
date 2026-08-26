@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -16,12 +17,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         identifier: { label: 'Email or Phone', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.identifier || !credentials?.password) {
           throw new Error('Invalid credentials');
         }
 
         const identifierStr = (credentials.identifier as string)?.toLowerCase();
+
+        // Limit brute-force attempts per IP+identifier pair
+        const ip = getClientIp(request);
+        const { success } = rateLimit(`login:${ip}:${identifierStr}`, 10, 15 * 60 * 1000);
+        if (!success) {
+          throw new Error('Too many login attempts. Please try again later.');
+        }
 
         const user = await prisma.user.findFirst({
           where: {

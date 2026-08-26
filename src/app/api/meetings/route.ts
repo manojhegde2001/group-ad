@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { notificationService } from '@/services/notification-service';
 import { sendMail, meetingInviteEmail, getAppBaseUrl } from '@/lib/mailer';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 const createMeetingSchema = z.object({
     receiverId: z.string().min(1, 'Receiver is required'),
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
                     baseUrl
                 ),
             }).catch(mailErr => {
-                console.error('Failed to send meeting invite email', mailErr);
+                logger.error('Failed to send meeting invite email', mailErr);
             });
         }
 

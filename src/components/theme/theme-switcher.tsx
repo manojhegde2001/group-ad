@@ -1,23 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, Palette, Type, Check } from 'lucide-react';
 import { Button, Popover, Text } from 'rizzui';
 import { useThemeConfig } from '@/hooks/use-theme';
 import { THEMES, FONTS } from '@/lib/constants';
 import { useAuth } from '@/hooks/use-auth';
+import { useMounted } from '@/hooks/use-mounted';
 
 export function ThemeSwitcher() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const isAdmin = (user as any)?.userType === 'ADMIN';
   const { colorTheme, setColorTheme, fontFamily, setFontFamily } = useThemeConfig();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) {
     return (

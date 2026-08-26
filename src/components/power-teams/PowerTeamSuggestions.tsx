@@ -70,7 +70,7 @@ export const PowerTeamSuggestions = memo(function PowerTeamSuggestions({ team, v
           </div>
         )}
         <p className="text-[10px] font-black text-secondary-600 dark:text-secondary-300 uppercase tracking-widest truncate">
-          {viewedUserName}'s Power Team
+          {viewedUserName}&apos;s Power Team
         </p>
       </div>
 

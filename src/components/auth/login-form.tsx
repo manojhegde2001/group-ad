@@ -180,7 +180,7 @@ export function LoginForm({ hideFooter, onToggle }: { hideFooter?: boolean; onTo
       {!hideFooter && (
         <div className="text-center pt-2">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <button
               type="button"
               onClick={() => {

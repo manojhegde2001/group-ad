@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/boards/check?postId=[id] — Check which boards a post is in
 export async function GET(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ boardIds });
   } catch (error) {
-    console.error('Error checking boards for post:', error);
+    logger.error('Error checking boards for post', error);
     return NextResponse.json({ error: 'Failed to check boards' }, { status: 500 });
   }
 }

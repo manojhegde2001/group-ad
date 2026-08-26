@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { useCategories } from '@/hooks/use-api/use-categories';
 import { useUpdateAdminUser } from '@/hooks/use-api/use-admin';
 import { AppImage } from '@/components/ui/app-image';
+import { useMounted } from '@/hooks/use-mounted';
 
 interface UserEditModalProps {
   user: any;
@@ -17,7 +18,7 @@ interface UserEditModalProps {
 }
 
 export default function UserEditModal({ user, isOpen, onClose }: UserEditModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const scrollRef = useRef<HTMLDivElement>(null);
   
   // Queries & Mutations
@@ -35,10 +36,9 @@ export default function UserEditModal({ user, isOpen, onClose }: UserEditModalPr
     websiteLabel: '',
   });
 
-  useEffect(() => { setMounted(true); }, []);
-
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs the editable form from the user prop when the modal opens
       setForm({
         name: user.name || '',
         email: user.email || '',

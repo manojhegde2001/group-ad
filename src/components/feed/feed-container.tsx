@@ -198,7 +198,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
 
       {!hasNextPage && allPosts.length > 0 && !useDemoData && !isLoading && (
         <p className="text-center text-sm text-secondary-400 py-8">
-          You've seen all posts ✨
+          You&apos;ve seen all posts ✨
         </p>
       )}
     </div>

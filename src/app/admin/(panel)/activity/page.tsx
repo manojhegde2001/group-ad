@@ -88,7 +88,7 @@ export default function AdminActivityPage() {
                     </td>
                     <td className="px-8 py-6">
                       <p className="text-xs text-slate-600 dark:text-slate-400 font-medium line-clamp-1 italic max-w-xs transition-opacity group-hover:opacity-100 opacity-80">
-                        " {post.content} "
+                        &quot; {post.content} &quot;
                       </p>
                     </td>
                     <td className="px-8 py-6">

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
+import { logger } from '@/lib/logger';
+import { createConnectionSchema } from '@/lib/validations/content';
 
 // GET /api/connections?status=PENDING|ACCEPTED
 export async function GET(request: NextRequest) {
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ connections: enriched });
   } catch (error) {
-    console.error('GET /api/connections error:', error);
+    logger.error('GET /api/connections error', error);
     return NextResponse.json({ error: 'Failed to fetch connections' }, { status: 500 });
   }
 }
@@ -57,10 +59,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { receiverId, note } = await request.json();
-    if (!receiverId) {
-      return NextResponse.json({ error: 'receiverId is required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const { receiverId, note } = createConnectionSchema.parse(body);
 
     const userId = session.user.id;
     const userName = session.user.name || 'A user';
@@ -119,8 +119,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ connection }, { status: 201 });
-  } catch (error) {
-    console.error('POST /api/connections error:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('POST /api/connections error', error);
     return NextResponse.json({ error: 'Failed to send connection request' }, { status: 500 });
   }
 }

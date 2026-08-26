@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
       pages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error('GET /api/admin/activity error:', error);
+    logger.error('GET /api/admin/activity error', error);
     return NextResponse.json({ error: 'Failed to fetch activity' }, { status: 500 });
   }
 }

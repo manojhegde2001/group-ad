@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/users/by-username/[username] — Get public user profile by username
 export async function GET(
@@ -47,7 +48,7 @@ export async function GET(
                     viewedId: user.id,
                     viewerId: currentUserId,
                 }
-            }).catch(err => console.error('Error recording profile view:', err));
+            }).catch(err => logger.error('Error recording profile view', err));
         }
 
         // Get counts, connection status, and block status separately
@@ -195,7 +196,7 @@ export async function GET(
             },
         });
     } catch (error) {
-        console.error('Error fetching user profile by username:', error);
+        logger.error('Error fetching user profile by username', error);
         return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 });
     }
 }

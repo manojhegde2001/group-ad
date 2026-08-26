@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 export class ApiError extends Error {
     constructor(public status: number, message: string, public data?: any) {
         super(message);
@@ -23,7 +25,7 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
         try {
             data = await response.json();
         } catch (e) {
-            console.error('Error parsing JSON:', e);
+            logger.error('Error parsing JSON', e);
         }
     } else {
         // Handle non-JSON or empty response

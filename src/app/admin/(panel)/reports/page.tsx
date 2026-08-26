@@ -61,6 +61,7 @@ export default function AdminReportsPage() {
 
   // Reset page on filter/search change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets pagination when filters change
     setPage(1);
   }, [filter, search]);
 
@@ -103,7 +104,7 @@ export default function AdminReportsPage() {
           <p className="text-xs font-bold text-secondary-900 dark:text-white uppercase tracking-tight leading-none mb-1">{report.reason}</p>
           {report.description && (
             <p className="text-[11px] text-secondary-500 font-medium italic border-l-2 border-primary/20 pl-2 line-clamp-1">
-              "{report.description}"
+              &quot;{report.description}&quot;
             </p>
           )}
         </div>
@@ -253,7 +254,7 @@ export default function AdminReportsPage() {
                 <p className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">{report.reason}</p>
                 {report.description && (
                   <p className="text-[13px] text-secondary-500 dark:text-secondary-400 font-medium italic border-l-2 border-primary/20 pl-3 py-1">
-                    "{report.description}"
+                    &quot;{report.description}&quot;
                   </p>
                 )}
               </div>

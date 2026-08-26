@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
+import { logger } from '@/lib/logger';
+import { inviteToEventSchema } from '@/lib/validations/content';
 
 export async function POST(
     request: NextRequest,
@@ -14,11 +16,8 @@ export async function POST(
         }
 
         const { id: eventId } = await params;
-        const { userIds } = await request.json();
-
-        if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-            return NextResponse.json({ error: 'Invalid or empty user IDs list' }, { status: 400 });
-        }
+        const body = await request.json();
+        const { userIds } = inviteToEventSchema.parse(body);
 
         const event = await prisma.event.findUnique({
             where: { id: eventId },
@@ -58,8 +57,11 @@ export async function POST(
         });
 
         return NextResponse.json({ success: true, message: `Invitations sent to ${userIds.length} users` });
-    } catch (error) {
-        console.error('Error sending invitations:', error);
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
+            return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+        }
+        logger.error('Error sending invitations', error);
         return NextResponse.json({ error: 'Failed to send invitations' }, { status: 500 });
     }
 }

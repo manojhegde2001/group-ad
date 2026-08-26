@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { startConversationSchema } from '@/lib/validations/content';
 
 // GET /api/conversations - list all conversations for current user
 export async function GET() {
@@ -79,7 +81,7 @@ export async function GET() {
 
     return NextResponse.json({ conversations: enriched });
   } catch (error) {
-    console.error('GET /api/conversations error:', error);
+    logger.error('GET /api/conversations error', error);
     return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
   }
 }
@@ -92,10 +94,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { participantId } = await request.json();
-    if (!participantId) {
-      return NextResponse.json({ error: 'participantId is required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const { participantId } = startConversationSchema.parse(body);
 
     const userId = session.user.id;
     if (userId === participantId) {
@@ -169,8 +169,11 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ conversation }, { status: 201 });
-  } catch (error) {
-    console.error('POST /api/conversations error:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('POST /api/conversations error', error);
     return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
   }
 }

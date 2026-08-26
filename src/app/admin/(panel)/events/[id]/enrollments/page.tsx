@@ -51,6 +51,7 @@ export default function AdminEnrollmentsPage() {
             const attendedIds = enrollments
                 .filter((e: Enrollment) => e.attended && e.status === 'APPROVED')
                 .map((e: Enrollment) => e.user.id);
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs the selection set from fetched enrollment data
             setSelectedAttendees(new Set(attendedIds));
         }
     }, [enrollmentsData]);

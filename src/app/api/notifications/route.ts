@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/notifications — Get paginated notifications + unread count
 export async function GET(request: NextRequest) {
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
             },
         });
     } catch (error) {
-        console.error('Error fetching notifications:', error);
+        logger.error('Error fetching notifications', error);
         return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
     }
 }

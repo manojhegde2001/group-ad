@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -71,7 +72,7 @@ export async function GET() {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Session error:', error);
+    logger.error('Session error', error);
     return NextResponse.json(
       { error: 'Failed to fetch user' },
       { status: 500 }

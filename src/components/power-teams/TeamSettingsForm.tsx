@@ -136,7 +136,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
       <section className="space-y-6">
         <div>
           <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Visual Identity</h3>
-          <p className="text-xs text-secondary-500 font-medium mt-1 uppercase tracking-widest">Update your team's logo and banner</p>
+          <p className="text-xs text-secondary-500 font-medium mt-1 uppercase tracking-widest">Update your team&apos;s logo and banner</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

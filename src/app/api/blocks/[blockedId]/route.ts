@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function DELETE(
   req: Request,
@@ -25,7 +26,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'User unblocked successfully' });
   } catch (error) {
-    console.error('Unblock error:', error);
+    logger.error('Unblock error', error);
     return NextResponse.json({ error: 'Failed to unblock user' }, { status: 500 });
   }
 }

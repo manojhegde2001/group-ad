@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 const db = prisma as any; // new Bookmark model available at runtime after prisma generate
 
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
             },
         });
     } catch (error) {
-        console.error('Error fetching bookmarks:', error);
+        logger.error('Error fetching bookmarks', error);
         return NextResponse.json({ error: 'Failed to fetch bookmarks' }, { status: 500 });
     }
 }

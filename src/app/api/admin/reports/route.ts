@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { updateReportStatusSchema } from '@/lib/validations/admin';
 
 export async function GET(request: Request) {
   try {
@@ -55,7 +57,7 @@ export async function GET(request: Request) {
       pages: Math.ceil(total / limit)
     });
   } catch (error) {
-    console.error('Admin reports error:', error);
+    logger.error('Admin reports error', error);
     return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 });
   }
 }
@@ -67,11 +69,8 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { reportId, status, adminNote } = await req.json();
-
-    if (!reportId || !status) {
-      return NextResponse.json({ error: 'Report ID and status are required' }, { status: 400 });
-    }
+    const body = await req.json();
+    const { reportId, status, adminNote } = updateReportStatusSchema.parse(body);
 
     const report = await prisma.report.update({
       where: { id: reportId },
@@ -84,8 +83,11 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json(report);
-  } catch (error) {
-    console.error('Update report error:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('Update report error', error);
     return NextResponse.json({ error: 'Failed to update report' }, { status: 500 });
   }
 }

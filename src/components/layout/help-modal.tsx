@@ -130,7 +130,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 </h3>
                 
                 <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400 leading-relaxed mb-8">
-                  We don't do massive paywalls here. We believe in building real business connections. Vrutta is completely free to join and start growing your connections.
+                  We don&apos;t do massive paywalls here. We believe in building real business connections. Vrutta is completely free to join and start growing your connections.
                 </p>
 
                 <Link

@@ -49,6 +49,7 @@ import { cn } from '@/lib/utils';
 import { Drawer, Popover } from 'rizzui';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { useChatbot } from '@/hooks/use-chatbot';
+import { useMounted } from '@/hooks/use-mounted';
 import { ConvertToBusinessModal } from './convert-to-business-modal';
 import { footerLinks } from './footer';
 
@@ -114,15 +115,13 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const chatbot = useChatbot();
-
-  useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) return null;
 

@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
+import { useMounted } from '@/hooks/use-mounted';
 import {
   Clock, CalendarCheck, Users, RefreshCw, 
   ArrowRight, ShieldCheck, UserCheck, Play, Grip, ChevronDown
 } from 'lucide-react';
 
 export default function HowItWorksPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  
+  const mounted = useMounted();
+
   if (!mounted) return null;
 
   return (

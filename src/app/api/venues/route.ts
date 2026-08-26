@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/venues - Public endpoint to fetch venues
 export async function GET(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
       count: venues.length,
     });
   } catch (error) {
-    console.error('Error fetching venues:', error);
+    logger.error('Error fetching venues', error);
     return NextResponse.json(
       { error: 'Failed to fetch venues' },
       { status: 500 }

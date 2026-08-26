@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const bulkRegisterSchema = z.object({
   participants: z.array(z.object({
@@ -96,7 +97,7 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
-    console.error('Bulk registration error:', error);
+    logger.error('Bulk registration error', error);
     return NextResponse.json(
       { error: 'Failed to process bulk registration' },
       { status: 500 }

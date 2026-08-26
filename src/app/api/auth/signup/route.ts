@@ -4,9 +4,14 @@ import { prisma } from '@/lib/prisma';
 import { signupSchema } from '@/lib/validations/auth';
 import { sendMail, welcomeEmail, getAppBaseUrl } from '@/lib/mailer';
 import { logger } from '@/lib/logger';
+import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const { success, resetAt } = rateLimit(`signup:${ip}`, 5, 60 * 60 * 1000);
+    if (!success) return rateLimitResponse(resetAt);
+
     const body = await request.json();
 
     // Validate input

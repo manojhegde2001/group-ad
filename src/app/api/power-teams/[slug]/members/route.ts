@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 export async function POST(
   request: NextRequest,
@@ -64,7 +65,7 @@ export async function POST(
       membership 
     }, { status: 201 });
   } catch (error: any) {
-    console.error('Error joining power team:', error);
+    logger.error('Error joining power team', error);
     if (error.code === 'P2002') {
         return NextResponse.json({ error: 'You are already in a Power Team' }, { status: 400 });
     }
@@ -124,7 +125,7 @@ export async function PATCH(
 
     return NextResponse.json({ message: 'Member updated successfully', member: updatedMember });
   } catch (error) {
-    console.error('Error updating member:', error);
+    logger.error('Error updating member', error);
     return NextResponse.json({ error: 'Failed to update member' }, { status: 500 });
   }
 }
@@ -166,7 +167,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Member removed successfully' });
   } catch (error) {
-    console.error('Error removing member:', error);
+    logger.error('Error removing member', error);
     return NextResponse.json({ error: 'Failed to remove member' }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const attendanceSchema = z.object({
     attendedUserIds: z.array(z.string()),
@@ -91,7 +92,7 @@ export async function POST(
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        console.error('Error saving attendance:', error);
+        logger.error('Error saving attendance', error);
         if (error.name === 'ZodError') {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
         }

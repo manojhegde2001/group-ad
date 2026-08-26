@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTheme } from 'next-themes';
 import { signIn } from 'next-auth/react';
@@ -8,22 +8,18 @@ import { useRouter } from 'next/navigation';
 import { Loader2, AlertCircle, Eye, EyeOff, Lock, Mail, Activity, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
 import Logo from '@/components/ui/logo';
+import { useMounted } from '@/hooks/use-mounted';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  
+  const mounted = useMounted();
+
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Avoid hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

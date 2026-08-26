@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io as ClientIO, Socket } from 'socket.io-client';
 import { useAuth } from '@/hooks/use-auth';
+import { logger } from '@/lib/logger';
 
 type SocketContextType = {
     socket: Socket | null;
@@ -25,6 +26,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         if (!isAuthenticated) {
             if (socket) {
                 socket.disconnect();
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- disconnects and clears socket state when auth is lost
                 setSocket(null);
                 setIsConnected(false);
             }
@@ -37,7 +39,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         socketInstance.on('connect', () => {
-            console.log('Socket.io connected');
+            logger.debug('Socket.io connected');
             setIsConnected(true);
             
             if (user?.id) {
@@ -46,7 +48,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         socketInstance.on('disconnect', () => {
-            console.log('Socket.io disconnected');
+            logger.debug('Socket.io disconnected');
             setIsConnected(false);
         });
 

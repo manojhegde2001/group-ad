@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export interface TrendingTag {
   tag: string;
@@ -25,7 +26,7 @@ export async function getTrendingTagsServer(limit = 12): Promise<TrendingTag[]> 
       image: Array.isArray(r.sampleImages) && r.sampleImages.length > 0 ? r.sampleImages[0] : null,
     }));
   } catch (error) {
-    console.error('Error fetching trending tags in server service:', error);
+    logger.error('Error fetching trending tags in server service', error);
     throw error;
   }
 }

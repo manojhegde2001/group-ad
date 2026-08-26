@@ -77,6 +77,7 @@ export default function AdminTopBar({ userName, userAvatar, isAdminSubdomain = f
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- merges search results once the query resolves
     setSearchResults([...menuResults, ...(searchData?.results || [])]);
   }, [searchData, searchQuery]);
 
@@ -150,7 +151,7 @@ export default function AdminTopBar({ userName, userAvatar, isAdminSubdomain = f
                     </div>
                   </div>
                 ) : searchResults.length === 0 ? (
-                  <div className="text-center py-4 text-xs text-slate-400 font-bold">No matches found for "{searchQuery}"</div>
+                  <div className="text-center py-4 text-xs text-slate-400 font-bold">No matches found for &quot;{searchQuery}&quot;</div>
                 ) : (
                   <div>
                     <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">

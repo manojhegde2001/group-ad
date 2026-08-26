@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const updatePowerTeamSchema = z.object({
   name: z.string().min(3).max(100).optional(),
@@ -51,7 +52,7 @@ export async function GET(
 
     return NextResponse.json({ team });
   } catch (error) {
-    console.error('Error fetching power team details:', error);
+    logger.error('Error fetching power team details', error);
     return NextResponse.json({ error: 'Failed to fetch power team' }, { status: 500 });
   }
 }
@@ -94,7 +95,7 @@ export async function PATCH(
 
     return NextResponse.json({ message: 'Power Team updated successfully', team: updatedTeam });
   } catch (error: any) {
-    console.error('Error updating power team:', error);
+    logger.error('Error updating power team', error);
     if (error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
     }
@@ -133,7 +134,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Power Team deleted successfully' });
   } catch (error) {
-    console.error('Error deleting power team:', error);
+    logger.error('Error deleting power team', error);
     return NextResponse.json({ error: 'Failed to delete power team' }, { status: 500 });
   }
 }

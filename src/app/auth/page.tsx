@@ -26,6 +26,7 @@ function AuthContent() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs sign-up/login mode from the URL's mode query param
     setIsSignUp(searchParams.get('mode') === 'signup');
   }, [searchParams]);
 

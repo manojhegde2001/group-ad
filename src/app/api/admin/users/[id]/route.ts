@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { logger } from '@/lib/logger';
+import { adminUpdateUserSchema } from '@/lib/validations/admin';
 
 export async function PATCH(
   request: NextRequest,
@@ -14,7 +16,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, email, userType, categoryId, website, websiteLabel } = body;
+    const { name, email, userType, categoryId, website, websiteLabel } = adminUpdateUserSchema.parse(body);
 
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -38,7 +40,10 @@ export async function PATCH(
 
     return NextResponse.json({ user: updatedUser, message: 'User updated successfully' });
   } catch (error: any) {
-    console.error('Error updating user:', error);
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('Error updating user', error);
     return NextResponse.json(
       { error: error.message || 'Failed to update user' },
       { status: 500 }

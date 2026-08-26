@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export interface GetCategoriesParams {
   active?: boolean;
@@ -41,7 +42,7 @@ export async function getCategoriesServer(params: GetCategoriesParams = {}) {
       count: categories.length,
     };
   } catch (error) {
-    console.error('Error fetching categories in server service:', error);
+    logger.error('Error fetching categories in server service', error);
     throw error;
   }
 }

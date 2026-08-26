@@ -87,6 +87,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
 
     // Reset index when postId changes
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- resets UI state when navigating to a different post
         setCurrentImageIndex(0);
         setComment('');
     }, [postId]);
@@ -96,6 +97,24 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
     const touchEnd = useRef<number | null>(null);
 
     const minSwipeDistance = 50;
+
+    const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
+
+    const handleLike = () => {
+        requireAuth(() => {
+            if (!post) return;
+            likeMutation.mutate({ postId: post.id, liked: !liked });
+        });
+    };
+
+    const nextImage = () => {
+        if (!post?.images?.length) return;
+        setCurrentImageIndex((i) => (i + 1) % post.images.length);
+    };
+    const prevImage = () => {
+        if (!post?.images?.length) return;
+        setCurrentImageIndex((i) => (i - 1 + post.images.length) % post.images.length);
+    };
 
     const onTouchStart = (e: React.TouchEvent) => {
         touchEnd.current = null;
@@ -133,24 +152,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             document.removeEventListener('keydown', handleKey);
         };
     }, [onClose]);
-
-    const requireAuth = (cb: () => void) => { if (!user) { openLogin(); return; } cb(); };
-
-    const handleLike = () => {
-        requireAuth(() => {
-            if (!post) return;
-            likeMutation.mutate({ postId: post.id, liked: !liked });
-        });
-    };
-
-    const nextImage = () => {
-        if (!post?.images?.length) return;
-        setCurrentImageIndex((i) => (i + 1) % post.images.length);
-    };
-    const prevImage = () => {
-        if (!post?.images?.length) return;
-        setCurrentImageIndex((i) => (i - 1 + post.images.length) % post.images.length);
-    };
 
     const handleImageLoad = (src: string, naturalWidth: number, naturalHeight: number) => {
         const ratio = naturalHeight / naturalWidth;
@@ -613,12 +614,12 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                              <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700 relative">
                                                  {c.user.avatar ? <AppImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
                                              </Link>
-                                            <div className="flex-1">
+                                            <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     <span className="text-sm font-medium text-gray-900 dark:text-white hover:underline cursor-pointer">{c.user.companyName || c.user.name}</span>
                                                     <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
                                                 </div>
-                                                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none">{c.content}</p>
+                                                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-snug md:leading-relaxed line-clamp-2 md:line-clamp-none break-words">{c.content}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -716,12 +717,12 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                                  <Link href={`/profile/${c.user.username}`} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-secondary-800 shrink-0 overflow-hidden border border-gray-50 dark:border-secondary-700 relative">
                                                      {c.user.avatar ? <AppImage src={c.user.avatar} fill className="w-full h-full object-cover" alt="" /> : <span className="flex items-center justify-center h-full text-xs font-bold text-gray-400">{(c.user.companyName || c.user.name).charAt(0)}</span>}
                                                  </Link>
-                                                <div className="flex-1">
+                                                <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-0.5">
                                                         <span className="text-sm font-medium text-gray-900 dark:text-white">{c.user.companyName || c.user.name}</span>
                                                         <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
                                                     </div>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{c.content}</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-words">{c.content}</p>
                                                 </div>
                                             </div>
                                         ))}

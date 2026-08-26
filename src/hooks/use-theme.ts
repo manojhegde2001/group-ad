@@ -20,6 +20,7 @@ export function useThemeConfig() {
     const savedFont = localStorage.getItem('font-family') as FontFamily;
 
     if (sessionTheme) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs theme from session/localStorage, which are only available after mount
       setColorTheme(sessionTheme);
     } else if (savedTheme) {
       setColorTheme(savedTheme);

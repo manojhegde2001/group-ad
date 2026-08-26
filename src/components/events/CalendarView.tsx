@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useEvents, useEnrollEvent, useUnenrollEvent } from '@/hooks/use-api/use-events';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { useMounted } from '@/hooks/use-mounted';
 
 const locales = {
   'en-US': enUS,
@@ -34,12 +35,8 @@ interface CalendarEvent {
 }
 
 export default function CalendarView() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { isAuthenticated } = useAuth();
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -414,7 +411,7 @@ export default function CalendarView() {
                               <div className="flex-1 flex items-center gap-3 px-6 py-4 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 text-green-700 dark:text-green-400">
                                 <CheckCircle2 className="w-6 h-6 shrink-0" />
                                 <div className="text-left">
-                                  <p className="text-sm font-black leading-none mb-1">You're Enrolled!</p>
+                                  <p className="text-sm font-black leading-none mb-1">You&apos;re Enrolled!</p>
                                   <p className="text-[10px] opacity-80 font-bold uppercase tracking-wider">Spot Reserved</p>
                                 </div>
                               </div>

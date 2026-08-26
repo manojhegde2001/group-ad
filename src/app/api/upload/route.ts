@@ -3,6 +3,9 @@ import { auth } from '@/lib/auth';
 import crypto from 'crypto';
 import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
 import { optimizeImage, optimizeVideo } from '@/lib/media-optimize';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
+import { isAllowedImageType, isAllowedVideoType } from '@/lib/upload-validation';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,16 +14,24 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const { success, resetAt } = rateLimit(`upload:${session.user.id}`, 30, 10 * 60 * 1000);
+        if (!success) return rateLimitResponse(resetAt);
+
         if (!isS3Configured()) {
             return NextResponse.json({ error: `S3 not configured. Missing: ${getMissingS3Config().join(', ')}` }, { status: 500 });
         }
 
         const formData = await request.formData();
         const file = formData.get('file') as File;
-        const resourceType = (formData.get('resource_type') as string) || 'image';
+        const resourceTypeRaw = (formData.get('resource_type') as string) || 'image';
+        const resourceType = resourceTypeRaw === 'video' ? 'video' : 'image';
 
         if (!file) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        }
+
+        if (resourceType === 'video' ? !isAllowedVideoType(file.type) : !isAllowedImageType(file.type)) {
+            return NextResponse.json({ error: `Unsupported file type: ${file.type || 'unknown'}` }, { status: 400 });
         }
 
         // Size limits: 25MB images, 100MB videos
@@ -48,7 +59,7 @@ export async function POST(request: NextRequest) {
             resourceType,
         });
     } catch (error) {
-        console.error('Upload error:', error);
+        logger.error('Upload error', error);
         return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
 }

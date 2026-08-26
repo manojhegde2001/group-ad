@@ -70,15 +70,6 @@ export default function ProfileView({ username, initialPosts }: { username: stri
           ) ?? null
         : null;
 
-    // Refresh logic when a post is created
-    const { setOnCreated } = useCreatePostModal();
-    useEffect(() => {
-        setOnCreated((newPost) => {
-            // Refetch posts if we are on the profile
-            refetchCreated();
-        });
-    }, [setOnCreated]);
-
     const {
         data: createdPostsData,
         fetchNextPage: fetchNextCreated,
@@ -86,12 +77,21 @@ export default function ProfileView({ username, initialPosts }: { username: stri
         isFetchingNextPage: isFetchingMoreCreated,
         isLoading: loadingCreated,
         refetch: refetchCreated
-    } = useInfinitePosts({ 
+    } = useInfinitePosts({
         username,
         type: 'CREATED'
     }, {
         initialData: initialPosts ? { pages: [initialPosts], pageParams: [1] } : undefined
     });
+
+    // Refresh logic when a post is created
+    const { setOnCreated } = useCreatePostModal();
+    useEffect(() => {
+        setOnCreated((newPost) => {
+            // Refetch posts if we are on the profile
+            refetchCreated();
+        });
+    }, [setOnCreated, refetchCreated]);
 
     const {
         data: savedPostsData,
@@ -157,7 +157,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                     <ImageOff className="w-10 h-10 text-secondary-400" />
                 </div>
                 <h2 className="text-2xl font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">Profile Not Found</h2>
-                <p className="text-secondary-500 max-w-xs mb-8">The user you're looking for doesn't exist or has set their profile to private.</p>
+                <p className="text-secondary-500 max-w-xs mb-8">The user you&apos;re looking for doesn&apos;t exist or has set their profile to private.</p>
                 <Link href="/">
                     <Button rounded="pill" className="px-8 font-black uppercase tracking-widest text-xs h-12 shadow-xl shadow-primary-500/20">Return Home</Button>
                 </Link>

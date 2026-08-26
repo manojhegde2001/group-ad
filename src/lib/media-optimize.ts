@@ -8,9 +8,12 @@ import crypto from 'crypto';
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
-// Vector and animated formats can't be safely resized/recompressed by sharp
-// (SVG would be rasterized, GIF would lose its animation), so pass them through as-is.
-const PASSTHROUGH_IMAGE_TYPES = new Set(['image/svg+xml', 'image/gif']);
+// Animated formats can't be safely resized/recompressed by sharp (GIF would
+// lose its animation), so pass them through as-is. Note: SVG is deliberately
+// NOT passed through here — SVG can embed <script> and is a stored-XSS
+// vector when served back with an image/svg+xml content type, and nothing
+// in the app's upload UI actually offers SVG uploads.
+const PASSTHROUGH_IMAGE_TYPES = new Set(['image/gif']);
 
 interface OptimizedMedia {
   buffer: Buffer;

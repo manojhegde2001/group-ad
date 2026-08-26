@@ -3,9 +3,35 @@ import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return '';
+  }
+}
+
 export async function middleware(req: NextRequest) {
   const host = req.headers.get('host') || '';
   const pathname = req.nextUrl.pathname;
+
+  // ── API CSRF guard ──────────────────────────────────────────────────────
+  // Session-cookie-authenticated routes rely on SameSite=Lax to block
+  // cross-site cookie sends, but verify Origin/Referer too as defense in
+  // depth. /api/auth/* is excluded — NextAuth manages its own CSRF token.
+  if (pathname.startsWith('/api')) {
+    if (!pathname.startsWith('/api/auth') && MUTATING_METHODS.has(req.method)) {
+      const origin = req.headers.get('origin');
+      const referer = req.headers.get('referer');
+      const sourceHost = origin ? hostOf(origin) : referer ? hostOf(referer) : '';
+      if (sourceHost && sourceHost !== host) {
+        return NextResponse.json({ error: 'Invalid origin' }, { status: 403 });
+      }
+    }
+    return NextResponse.next();
+  }
 
   const isAdminSubdomain = host.startsWith('admin.');
   const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
@@ -69,12 +95,6 @@ export async function middleware(req: NextRequest) {
       if (t) return t;
     }
 
-    // 5. Last resort: development fallback
-    if (process.env.NODE_ENV === 'development') {
-      t = await getToken({ req, secret: "your-secret-key-here", secureCookie: false });
-      if (t) return t;
-    }
-    
     return null;
   }
 
@@ -120,5 +140,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

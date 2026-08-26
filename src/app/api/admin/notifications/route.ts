@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -53,7 +54,7 @@ export async function GET() {
       count: alerts.length 
     });
   } catch (error) {
-    console.error('NOTIFICATIONS_ERROR:', error);
+    logger.error('NOTIFICATIONS_ERROR', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

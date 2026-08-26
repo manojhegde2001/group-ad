@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { createBoardSchema } from '@/lib/validations/content';
 
 // GET /api/boards — List current user's boards
 export async function GET() {
@@ -33,7 +35,7 @@ export async function GET() {
 
     return NextResponse.json({ boards });
   } catch (error) {
-    console.error('Error fetching boards:', error);
+    logger.error('Error fetching boards', error);
     return NextResponse.json({ error: 'Failed to fetch boards' }, { status: 500 });
   }
 }
@@ -46,11 +48,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { name, description } = await request.json();
-
-    if (!name) {
-      return NextResponse.json({ error: 'Board name is required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const { name, description } = createBoardSchema.parse(body);
 
     const board = await prisma.board.create({
       data: {
@@ -61,8 +60,11 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(board);
-  } catch (error) {
-    console.error('Error creating board:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('Error creating board', error);
     return NextResponse.json({ error: 'Failed to create board' }, { status: 500 });
   }
 }

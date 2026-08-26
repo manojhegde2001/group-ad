@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
 import { notificationService } from '@/services/notification-service';
+import { logger } from '@/lib/logger';
+import { createMessageSchema } from '@/lib/validations/content';
 
 
 
@@ -52,7 +54,7 @@ export async function GET(
 
     return NextResponse.json({ messages });
   } catch (error) {
-    console.error('GET conversation messages error:', error);
+    logger.error('GET conversation messages error', error);
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }
 }
@@ -95,18 +97,15 @@ export async function POST(
         return NextResponse.json({ error: 'Messaging is disabled due to a block' }, { status: 403 });
     }
 
-    const { content, messageType = 'TEXT' } = await request.json();
-
-    if (!content?.trim()) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const { content, messageType = 'TEXT' } = createMessageSchema.parse(body);
 
     const [message] = await prisma.$transaction([
       prisma.message.create({
         data: {
           conversationId: id,
           senderId: session.user.id,
-          content: content.trim(),
+          content,
           messageType,
           readBy: [session.user.id],
         },
@@ -144,8 +143,11 @@ export async function POST(
 
     return NextResponse.json({ message }, { status: 201 });
 
-  } catch (error) {
-    console.error('POST conversation message error:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('POST conversation message error', error);
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
   }
 }

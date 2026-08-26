@@ -1,12 +1,13 @@
 import { Resend } from 'resend';
 import { NextRequest } from 'next/server';
+import { logger } from '@/lib/logger';
 
 let resend: Resend | null = null;
 
 function getResendClient() {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-        console.warn('[mailer] Missing RESEND_API_KEY configuration');
+        logger.warn('[mailer] Missing RESEND_API_KEY configuration');
         return null;
     }
     if (!resend) {
@@ -18,12 +19,12 @@ function getResendClient() {
 const getFromAddress = () => process.env.EMAIL_FROM || 'Vrutta <onboarding@resend.dev>';
 
 export async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
-    console.log('[mailer] Attempting to send email to:', to);
-    console.log('[mailer] Using APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+    logger.info('[mailer] Attempting to send email to', { to });
+    logger.info('[mailer] Using APP_URL', { appUrl: process.env.NEXT_PUBLIC_APP_URL });
     const client = getResendClient();
     if (!client) {
         const error = new Error('Email API configuration is missing');
-        console.error('[mailer]', error.message);
+        logger.error('[mailer] Email configuration error', error);
         throw error;
     }
     try {
@@ -32,10 +33,10 @@ export async function sendMail({ to, subject, html }: { to: string; subject: str
         if (error) {
             throw new Error(error.message);
         }
-        console.log('[mailer] Email sent successfully:', data?.id);
+        logger.info('[mailer] Email sent successfully', { id: data?.id });
         return data;
     } catch (err) {
-        console.error('[mailer] Failed to send email:', err);
+        logger.error('[mailer] Failed to send email', err);
         throw err; // Rethrow to let the API handle it
     }
 }

@@ -285,7 +285,7 @@ export default function AdminDashboardPage() {
                    <div key={post.id} className="flex items-center gap-4 p-3 rounded-[1.75rem] hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all group active:scale-[0.98]">
                      <Avatar src={post.user.avatar} name={post.user.name} className="w-11 h-11 shrink-0 rounded-2xl shadow-sm border-2 border-transparent group-hover:border-primary/20 transition-all duration-500" />
                      <div className="flex-1 min-w-0">
-                       <p className="text-sm text-slate-700 dark:text-slate-300 font-bold truncate leading-tight italic tracking-tight mb-1 opacity-90 transition-opacity group-hover:opacity-100">" {post.content} "</p>
+                       <p className="text-sm text-slate-700 dark:text-slate-300 font-bold truncate leading-tight italic tracking-tight mb-1 opacity-90 transition-opacity group-hover:opacity-100">&quot; {post.content} &quot;</p>
                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest truncate">Post by <span className="text-slate-600 dark:text-slate-400 underline decoration-primary/30">{post.user.name}</span></p>
                      </div>
                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800/40 px-2 py-1 rounded-xl shrink-0 group-hover:text-primary transition-colors">

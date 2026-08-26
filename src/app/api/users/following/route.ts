@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/users/following — List users current user is following
 export async function GET(request: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({ users });
     } catch (error) {
-        console.error('Error fetching following list:', error);
+        logger.error('Error fetching following list', error);
         return NextResponse.json({ error: 'Failed to fetch following list' }, { status: 500 });
     }
 }

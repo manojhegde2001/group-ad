@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
             <div className="bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/20 rounded-2xl p-4 flex items-start gap-4">
               <Mail className="w-5 h-5 text-primary-600 mt-0.5" />
               <p className="text-sm text-primary-800 dark:text-primary-200">
-                Didn't receive the email? Check your spam folder or try again in a few minutes.
+                Didn&apos;t receive the email? Check your spam folder or try again in a few minutes.
               </p>
             </div>
             <Button

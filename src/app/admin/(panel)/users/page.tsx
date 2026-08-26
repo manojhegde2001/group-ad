@@ -54,6 +54,7 @@ export default function AdminUsersPage() {
 
   // Reset page on filter change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets pagination when filters change
     setPage(1);
   }, [searchQuery, typeFilter]);
 

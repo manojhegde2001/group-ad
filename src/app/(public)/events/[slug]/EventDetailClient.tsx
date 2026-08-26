@@ -144,7 +144,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                             </div>
                             {event.organizer.bio && (
                                 <p className="mt-4 text-sm text-secondary-500 border-t border-secondary-50 dark:border-secondary-800 pt-4 italic">
-                                    "{event.organizer.bio}"
+                                    &quot;{event.organizer.bio}&quot;
                                 </p>
                             )}
                         </section>

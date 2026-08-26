@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function GET(
     request: NextRequest,
@@ -50,7 +51,7 @@ export async function GET(
 
         return NextResponse.json({ event, enrollments });
     } catch (error) {
-        console.error('Error fetching enrollments:', error);
+        logger.error('Error fetching enrollments', error);
         return NextResponse.json({ error: 'Failed to fetch enrollments' }, { status: 500 });
     }
 }

@@ -66,26 +66,16 @@ const Logo = dynamic(() => import('@/components/ui/logo'), {
   ssr: false,
 });
 
-export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminSubdomain = false }: AdminSidebarProps) {
-  const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+interface SidebarContentProps {
+  collapsed: Record<string, boolean>;
+  onToggleGroup: (title: string) => void;
+  isActive: (href: string) => boolean;
+  getHref: (href: string) => string;
+  onNavigate: () => void;
+  isAdminSubdomain: boolean;
+}
 
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/admin' || pathname === '/';
-    return pathname.startsWith(`/admin${href}`) || pathname.startsWith(href);
-  };
-
-  const getHref = (href: string) => {
-    if (isAdminSubdomain) return href || '/';
-    return `/admin${href === '/' ? '' : href}`;
-  };
-
-  const toggleGroup = (title: string) => {
-    setCollapsed(prev => ({ ...prev, [title]: !prev[title] }));
-  };
-
-  const SidebarContent = () => (
+const SidebarContent = ({ collapsed, onToggleGroup, isActive, getHref, onNavigate, isAdminSubdomain }: SidebarContentProps) => (
     <div className="flex flex-col h-full bg-background border-r border-secondary-100 dark:border-secondary-800">
       {/* Brand */}
       <div className="px-5 py-6 border-b border-secondary-50 dark:border-secondary-800/60 bg-secondary-50/30 dark:bg-secondary-900/40">
@@ -104,7 +94,7 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
           return (
             <div key={title}>
               <button
-                onClick={() => toggleGroup(title)}
+                onClick={() => onToggleGroup(title)}
                 className="w-full flex items-center justify-between px-2 mb-1.5 group"
               >
                 <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-colors">
@@ -126,7 +116,7 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
                       <Link
                         key={href}
                         href={getHref(href)}
-                        onClick={() => setMobileOpen(false)}
+                        onClick={onNavigate}
                         className={cn(
                           'group relative flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200',
                           active
@@ -190,7 +180,35 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
       </div>
 
     </div>
-  );
+);
+
+export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminSubdomain = false }: AdminSidebarProps) {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/admin' || pathname === '/';
+    return pathname.startsWith(`/admin${href}`) || pathname.startsWith(href);
+  };
+
+  const getHref = (href: string) => {
+    if (isAdminSubdomain) return href || '/';
+    return `/admin${href === '/' ? '' : href}`;
+  };
+
+  const toggleGroup = (title: string) => {
+    setCollapsed(prev => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const sidebarContentProps = {
+    collapsed,
+    onToggleGroup: toggleGroup,
+    isActive,
+    getHref,
+    onNavigate: () => setMobileOpen(false),
+    isAdminSubdomain,
+  };
 
   return (
     <>
@@ -211,12 +229,12 @@ export default function AdminSidebar({ userName, userEmail, userAvatar, isAdminS
         size="sm"
         className="z-50"
       >
-        <SidebarContent />
+        <SidebarContent {...sidebarContentProps} />
       </Drawer>
 
       {/* Sidebar — desktop static */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0">
-        <SidebarContent />
+        <SidebarContent {...sidebarContentProps} />
       </aside>
     </>
   );

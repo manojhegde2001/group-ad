@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // PATCH /api/conversations/[id]/read
 // Marks all messages in this conversation as read by the current user.
@@ -64,7 +65,7 @@ export async function PATCH(
 
     return NextResponse.json({ ok: true, marked: unreadMessages.length });
   } catch (error) {
-    console.error('PATCH /api/conversations/[id]/read error:', error);
+    logger.error('PATCH /api/conversations/[id]/read error', error);
     return NextResponse.json({ error: 'Failed to mark as read' }, { status: 500 });
   }
 }

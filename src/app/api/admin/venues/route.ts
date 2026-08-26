@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { createVenueSchema } from '@/lib/validations/admin';
 
 export async function GET(request: NextRequest) {
     try {
@@ -36,18 +37,18 @@ export async function POST(request: NextRequest) {
 
         if (user?.userType !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-        const { name, city, state } = await request.json();
-
-        if (!name || !city || !state) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-        }
+        const body = await request.json();
+        const { name, city, state } = createVenueSchema.parse(body);
 
         const venue = await prisma.venue.create({
             data: { name, city, state }
         });
 
         return NextResponse.json({ venue });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
+            return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+        }
         return NextResponse.json({ error: 'Failed to create venue' }, { status: 500 });
     }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
+import { logger } from '@/lib/logger';
 
 const CHECKIN_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-for-checkin';
 
@@ -43,7 +44,7 @@ export async function GET(
 
     return NextResponse.json({ token });
   } catch (error) {
-    console.error('Error generating check-in token:', error);
+    logger.error('Error generating check-in token', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

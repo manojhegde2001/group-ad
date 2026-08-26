@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { sendMail, bulkAccountCreatedEmail, getAppBaseUrl } from '@/lib/mailer';
+import { logger } from '@/lib/logger';
+import { bulkCreateUsersSchema } from '@/lib/validations/admin';
 
 export async function POST(req: Request) {
   try {
@@ -11,11 +13,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { users } = await req.json();
-
-    if (!Array.isArray(users) || users.length === 0) {
-      return NextResponse.json({ error: 'Expected a non-empty array of users' }, { status: 400 });
-    }
+    const body = await req.json();
+    const { users } = bulkCreateUsersSchema.parse(body);
 
     // Final security check: Re-verify uniqueness before insertion to prevent race conditions
     const emails = users.map(u => u.email);
@@ -63,7 +62,7 @@ export async function POST(req: Request) {
           html: bulkAccountCreatedEmail(u.name, u.username, u.email, baseUrl),
         });
       } catch (err) {
-        console.error(`Failed to send onboarding email to ${u.email}:`, err);
+        logger.error(`Failed to send onboarding email to ${u.email}`, err);
       }
     });
 
@@ -72,8 +71,11 @@ export async function POST(req: Request) {
       count: usersToCreate.length,
       message: `Successfully created ${usersToCreate.length} users and queued welcome emails` 
     });
-  } catch (error) {
-    console.error('Bulk creation error:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('Bulk creation error', error);
     return NextResponse.json({ error: 'Failed to create users' }, { status: 500 });
   }
 }

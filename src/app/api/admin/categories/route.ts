@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ categories });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    logger.error('Error fetching categories', error);
     return NextResponse.json(
       { error: 'Failed to fetch categories' },
       { status: 500 }
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ category, message: 'Category created successfully' });
   } catch (error) {
-    console.error('Error creating category:', error);
+    logger.error('Error creating category', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }

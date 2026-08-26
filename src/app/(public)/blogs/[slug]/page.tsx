@@ -92,7 +92,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               case 'quote':
                 return (
                   <blockquote key={index} className="border-l-4 border-primary-500 pl-6 my-8 italic text-lg text-secondary-800 dark:text-secondary-200 bg-primary-50/50 dark:bg-primary-900/10 py-4 pr-4 rounded-r-xl">
-                    "{block.text}"
+                    &quot;{block.text}&quot;
                   </blockquote>
                 );
               default:

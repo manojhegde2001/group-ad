@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: true,
       content: true,
       visibility: true,
-      user: { select: { name: true, avatar: true } },
+      user: { select: { name: true, companyName: true, avatar: true } },
     },
   });
 
@@ -23,12 +23,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Post' };
   }
 
-  const title = `${post.user.name} on Vrutta`;
+  const displayName = post.user.companyName || post.user.name;
+  const title = `${displayName} on Vrutta`;
   const description = post.content
     ? post.content.length > 160
       ? `${post.content.slice(0, 157)}...`
       : post.content
-    : `View this post by ${post.user.name} on Vrutta.`;
+    : `View this post by ${displayName} on Vrutta.`;
   const image = post.images[0] || post.user.avatar || undefined;
 
   return {

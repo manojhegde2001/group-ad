@@ -141,6 +141,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!profile) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs the editable profile form from fetched profile data
     setName(profile.name ?? '');
     setBio(profile.bio ?? '');
     setWebsite(profile.website ?? '');
@@ -292,9 +293,10 @@ export default function SettingsPage() {
     });
   };
 
-  const avatarSrc = profile?.avatar
-    ? `${profile.avatar}${profile.avatar.includes('?') ? '&' : '?'}v=${Date.now()}`
-    : (user as any)?.avatar;
+  // profile.avatar already carries a fresh `?v=<timestamp>` baked in by the
+  // upload-avatar API on every upload (the S3 key is stable per user, so the
+  // query param is what cache-busts it) — no need to re-stamp it here.
+  const avatarSrc = profile?.avatar || (user as any)?.avatar;
 
   const inputCls = "w-full bg-white dark:bg-secondary-900 border border-secondary-200 dark:border-secondary-800 rounded-2xl px-4 py-3 text-sm font-bold text-secondary-900 dark:text-white placeholder:text-secondary-400 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none disabled:opacity-50";
 

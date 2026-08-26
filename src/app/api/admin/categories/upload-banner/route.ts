@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
 import { optimizeImage } from '@/lib/media-optimize';
+import { isAllowedImageType } from '@/lib/upload-validation';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +24,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
+    if (!isAllowedImageType(file.type)) {
+      return NextResponse.json({ error: `Unsupported file type: ${file.type || 'unknown'}` }, { status: 400 });
     }
 
     if (file.size > 5 * 1024 * 1024) {
@@ -43,7 +45,7 @@ export async function POST(request: NextRequest) {
       bannerUrl,
     });
   } catch (error) {
-    console.error('Banner upload error:', error);
+    logger.error('Banner upload error', error);
     return NextResponse.json({ error: 'Failed to upload banner' }, { status: 500 });
   }
 }

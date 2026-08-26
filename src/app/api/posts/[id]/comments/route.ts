@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { notificationService } from '@/services/notification-service';
+import { logger } from '@/lib/logger';
+import { createCommentSchema } from '@/lib/validations/content';
 
 // GET /api/posts/[id]/comments — fetch comments for a post
 export async function GET(
@@ -29,7 +31,7 @@ export async function GET(
 
         return NextResponse.json({ comments });
     } catch (error) {
-        console.error('Error fetching comments:', error);
+        logger.error('Error fetching comments', error);
         return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 });
     }
 }
@@ -47,15 +49,7 @@ export async function POST(
 
         const { id: postId } = await params;
         const body = await request.json();
-        const content = body.content?.trim();
-
-        if (!content || content.length === 0) {
-            return NextResponse.json({ error: 'Comment cannot be empty' }, { status: 400 });
-        }
-
-        if (content.length > 1000) {
-            return NextResponse.json({ error: 'Comment too long (max 1000 chars)' }, { status: 400 });
-        }
+        const { content } = createCommentSchema.parse(body);
 
         // Make sure the post exists
         const post = await prisma.post.findUnique({ where: { id: postId }, select: { id: true, userId: true } });
@@ -95,8 +89,11 @@ export async function POST(
         }
 
         return NextResponse.json({ comment }, { status: 201 });
-    } catch (error) {
-        console.error('Error creating comment:', error);
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
+            return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+        }
+        logger.error('Error creating comment', error);
         return NextResponse.json({ error: 'Failed to create comment' }, { status: 500 });
     }
 }

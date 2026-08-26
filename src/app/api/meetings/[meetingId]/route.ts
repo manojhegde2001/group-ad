@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { notificationService } from '@/services/notification-service';
 import { sendMail, meetingAcceptedEmail, getAppBaseUrl } from '@/lib/mailer';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 const updateMeetingSchema = z.object({
     status: z.enum(['ACCEPTED', 'REJECTED', 'CANCELLED']),
@@ -99,7 +100,7 @@ export async function PATCH(
                         baseUrl
                     ),
                 }).catch(mailErr => {
-                    console.error('Failed to send meeting accepted email', mailErr);
+                    logger.error('Failed to send meeting accepted email', mailErr);
                 });
             }
         } else if (status === 'REJECTED') {

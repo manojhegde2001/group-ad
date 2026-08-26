@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/logger';
 
 export default function Error({
   error,
@@ -11,7 +12,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Application error:', error);
+    logger.error('Application error', error);
   }, [error]);
 
   return (
@@ -23,7 +24,7 @@ export default function Error({
             Something went wrong
           </h2>
           <p className="text-secondary-600 dark:text-secondary-400">
-            We're sorry for the inconvenience. Please try again.
+            We&apos;re sorry for the inconvenience. Please try again.
           </p>
         </div>
         

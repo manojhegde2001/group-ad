@@ -8,17 +8,14 @@
 
 import { GoogleGenAI } from '@google/genai';
 import type { ChatMessage, AIResponse } from '@/lib/ai/types';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Helper: Debug Logger (Dev-only, avoiding simple console.log to follow rules)
 // ---------------------------------------------------------------------------
 function debugLog(message: string, data?: unknown) {
   if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    console.debug(
-      `[GeminiService] ${message}`,
-      data ? JSON.stringify(data, null, 2) : ''
-    );
+    logger.debug(`[GeminiService] ${message}`, data ? { data } : undefined);
   }
 }
 

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useMounted } from '@/hooks/use-mounted';
 import {
   Users, ShieldCheck, Target, Zap, Globe, MessageSquare, 
   ArrowRight, CheckCircle2, TrendingUp, RefreshCw, BarChart, 
@@ -108,8 +109,7 @@ const StoryFramework = () => {
 // ============================================================================
 
 export default function AboutPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useMounted();
   if (!mounted) return null;
 
   return (
@@ -187,7 +187,7 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-5 text-sm md:text-base text-secondary-600 dark:text-secondary-400 font-medium leading-relaxed">
               <p>
-                Visibility alone isn't enough. We combine it with purposeful relationship building to help you meet complementary businesses and grow through trusted referrals.
+                Visibility alone isn&apos;t enough. We combine it with purposeful relationship building to help you meet complementary businesses and grow through trusted referrals.
               </p>
             </div>
           </motion.div>

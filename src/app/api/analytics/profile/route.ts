@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { startOfDay, subDays, eachDayOfInterval, format } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -84,7 +85,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Profile Analytics Error:', error);
+    logger.error('Profile Analytics Error', error);
     return NextResponse.json({ error: 'Failed to fetch profile analytics' }, { status: 500 });
   }
 }

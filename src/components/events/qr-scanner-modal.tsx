@@ -6,6 +6,7 @@ import { Modal, Button } from 'rizzui';
 import { Loader2, CheckCircle2, Scan, X, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useCheckIn } from '@/hooks/use-api/use-events';
+import { logger } from '@/lib/logger';
 
 interface QRScannerModalProps {
   eventId: string;
@@ -39,7 +40,7 @@ export function QRScannerModal({ eventId, eventName, onSuccess }: QRScannerModal
         // silent - searching for QR
       }
     ).catch((err) => {
-      console.error('Scanner start error:', err);
+      logger.error('Scanner start error', err);
       toast.error('Could not start camera. Check permissions.');
       setScanning(false);
     });
@@ -49,7 +50,7 @@ export function QRScannerModal({ eventId, eventName, onSuccess }: QRScannerModal
     if (scannerRef.current && scannerRef.current.isScanning) {
         scannerRef.current.stop().then(() => {
             setScanning(false);
-        }).catch(err => console.error(err));
+        }).catch(err => logger.error('Scanner stop error', err));
     } else {
         setScanning(false);
     }
@@ -128,7 +129,7 @@ export function QRScannerModal({ eventId, eventName, onSuccess }: QRScannerModal
                     </div>
                     <div className="text-left">
                         <p className="text-[11px] font-black uppercase tracking-wider text-secondary-900 dark:text-white">Point camera at QR code</p>
-                        <p className="text-[10px] text-secondary-500 leading-snug">The attendee's ticket will be verified automatically upon detection.</p>
+                        <p className="text-[10px] text-secondary-500 leading-snug">The attendee&apos;s ticket will be verified automatically upon detection.</p>
                     </div>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 
 export function useAuth() {
   const { data: session, status, update } = useSession();
@@ -22,7 +23,7 @@ export function useAuth() {
       toast.success('Logged out successfully! 👋');
       
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error', error);
       toast.error('Failed to logout');
     }
   };

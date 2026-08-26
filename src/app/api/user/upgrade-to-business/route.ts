@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schema for upgrade request
 const upgradeSchema = z.object({
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Upgrade request error:', error);
+    logger.error('Upgrade request error', error);
 
     if (error.name === 'ZodError') {
       return NextResponse.json(
@@ -156,7 +157,7 @@ export async function GET() {
       count: requests.length,
     });
   } catch (error) {
-    console.error('Error fetching upgrade requests:', error);
+    logger.error('Error fetching upgrade requests', error);
     return NextResponse.json(
       { error: 'Failed to fetch requests' },
       { status: 500 }

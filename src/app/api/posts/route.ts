@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getPostsServer } from '@/services/server/post-service';
+import { logger } from '@/lib/logger';
 
 const createPostSchema = z.object({
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     const result = await getPostsServer(params);
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching posts API:', error);
+    logger.error('Error fetching posts API', error);
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
   }
 }
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating post:', error);
+    logger.error('Error creating post', error);
     if (error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
     }

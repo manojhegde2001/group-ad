@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { unstable_cache } from 'next/cache';
+import { logger } from '@/lib/logger';
 
 // Anonymous visitors all see the same PUBLIC post list for a given filter set, so the
 // (uncached) DB round-trip on every request was the main driver of the homepage's slow
@@ -249,7 +250,7 @@ export async function getPostsServer(params: GetPostsParams) {
       },
     };
   } catch (error) {
-    console.error('Error fetching posts in server service:', error);
+    logger.error('Error fetching posts in server service', error);
     throw error;
   }
 }

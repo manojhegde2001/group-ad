@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/event-utils';
 import { sendMail, enrollmentApprovalEmail, getAppBaseUrl } from '@/lib/mailer';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const schema = z.object({
     action: z.enum(['APPROVE', 'REJECT']),
@@ -114,7 +115,7 @@ export async function PATCH(
 
         return NextResponse.json({ message: `Enrollment ${action.toLowerCase()}d`, enrollment: updatedEnrollment });
     } catch (error: any) {
-        console.error('Error updating enrollment:', error);
+        logger.error('Error updating enrollment', error);
         if (error.name === 'ZodError') {
             return NextResponse.json({ error: 'Invalid action', details: error.errors }, { status: 400 });
         }

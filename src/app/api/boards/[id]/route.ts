@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { renameBoardSchema } from '@/lib/validations/content';
 
 // GET /api/boards/[id]
 export async function GET(
@@ -26,7 +28,7 @@ export async function GET(
 
     return NextResponse.json(board);
   } catch (error) {
-    console.error('Error fetching board:', error);
+    logger.error('Error fetching board', error);
     return NextResponse.json({ error: 'Failed to fetch board' }, { status: 500 });
   }
 }
@@ -43,11 +45,8 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const { name } = await request.json();
-
-    if (!name?.trim()) {
-      return NextResponse.json({ error: 'Board name is required' }, { status: 400 });
-    }
+    const body = await request.json();
+    const { name } = renameBoardSchema.parse(body);
 
     const board = await prisma.board.findFirst({
       where: { id, userId: session.user.id },
@@ -59,12 +58,15 @@ export async function PATCH(
 
     const updated = await prisma.board.update({
       where: { id },
-      data: { name: name.trim() },
+      data: { name },
     });
 
     return NextResponse.json(updated);
-  } catch (error) {
-    console.error('Error renaming board:', error);
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid input data', details: error.errors }, { status: 400 });
+    }
+    logger.error('Error renaming board', error);
     return NextResponse.json({ error: 'Failed to rename board' }, { status: 500 });
   }
 }
@@ -94,7 +96,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Board deleted successfully' });
   } catch (error) {
-    console.error('Error deleting board:', error);
+    logger.error('Error deleting board', error);
     return NextResponse.json({ error: 'Failed to delete board' }, { status: 500 });
   }
 }

@@ -52,6 +52,7 @@ export const PostCard = memo(function PostCard({ post, onLikeChange, showActions
     const [showHeartPop, setShowHeartPop] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local like state from the post prop (server truth)
         setLiked((post as any).isLikedByUser ?? false);
         setLikeCount(post._count?.postLikes ?? (post as any).likes ?? 0);
     }, [(post as any).isLikedByUser, post._count?.postLikes]);

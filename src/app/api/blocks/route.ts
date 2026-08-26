@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: 'User blocked successfully' });
   } catch (error) {
-    console.error('Block error:', error);
+    logger.error('Block error', error);
     return NextResponse.json({ error: 'Failed to block user' }, { status: 500 });
   }
 }
@@ -77,7 +78,7 @@ export async function GET() {
 
     return NextResponse.json(blockedUsers);
   } catch (error) {
-    console.error('Get blocked users error:', error);
+    logger.error('Get blocked users error', error);
     return NextResponse.json({ error: 'Failed to fetch blocked users' }, { status: 500 });
   }
 }

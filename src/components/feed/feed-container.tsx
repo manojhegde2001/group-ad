@@ -8,7 +8,7 @@ import { useFeedFilter, useCreatePostModal } from '@/hooks/use-feed';
 import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { Loader2, ImageOff } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PostCardSkeleton } from './post-card-skeleton';
 import { cn } from '@/lib/utils';
 import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { useAuth } from '@/hooks/use-auth';
@@ -142,21 +142,8 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
       >
         {isLoading ? (
           [...Array(12)].map((_, i) => (
-            <div key={`skeleton-${i}`} className="mb-1 sm:mb-1.5 md:mb-1.5 space-y-3">
-              <Skeleton
-                className="w-full rounded-lg bg-secondary-100 dark:bg-secondary-800"
-                style={{ 
-                  aspectRatio: ['4/5', '1/1', '3/4', '2/3'][i % 4],
-                  height: 'auto'
-                }}
-              />
-              <div className="flex items-center gap-2 px-1">
-                <Skeleton className="w-6 h-6 rounded-lg" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-3 w-2/3 rounded-full" />
-                  <Skeleton className="h-2 w-1/2 rounded-full" />
-                </div>
-              </div>
+            <div key={`skeleton-${i}`} className="mb-1 sm:mb-1.5 md:mb-1.5">
+              <PostCardSkeleton aspectRatio={['4/5', '1/1', '3/4', '2/3'][i % 4]} />
             </div>
           ))
         ) : allPosts.length > 0 ? (

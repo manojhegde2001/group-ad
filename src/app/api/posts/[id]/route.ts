@@ -58,17 +58,23 @@ export async function GET(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    // Record post view for analytics (detailed + counter)
+    // Record post view for analytics (detailed + counter).
+    // Skip if this authenticated viewer already has a recorded view, so refetches
+    // triggered by likes/bookmarks/comments (which invalidate this query) don't inflate views.
     if (postId) {
-      Promise.all([
-        prisma.post.update({ where: { id: postId }, data: { views: { increment: 1 } } }),
-        prisma.postView.create({
-          data: {
-            postId: postId,
-            viewerId: currentUserId,
-          }
-        })
-      ]).catch((err) => logger.error('Error recording post view', err));
+      (async () => {
+        if (currentUserId) {
+          const existingView = await prisma.postView.findFirst({
+            where: { postId, viewerId: currentUserId },
+            select: { id: true },
+          });
+          if (existingView) return;
+        }
+        await Promise.all([
+          prisma.post.update({ where: { id: postId }, data: { views: { increment: 1 } } }),
+          prisma.postView.create({ data: { postId, viewerId: currentUserId } }),
+        ]);
+      })().catch((err) => logger.error('Error recording post view', err));
     }
 
     // Fetch connection status if user is logged in

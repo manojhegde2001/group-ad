@@ -496,7 +496,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                     </div>
 
                     {/* Metadata Panel (Independently Scrollable on Desktop) */}
-                    <div className="md:flex-1 md:overflow-y-auto px-6 md:px-8 pb-6 md:pb-24 scrollbar-hide">
+                    <div className="md:flex-1 md:overflow-y-auto px-3 md:px-4 pb-6 md:pb-24 scrollbar-hide">
                         
                         {/* Title Section */}
                         <div className="mb-4">
@@ -766,8 +766,8 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
             </div>
 
             {/* More to Explore Section */}
-            <div className="mt-4 md:mt-12 w-full max-w-[1800px] mx-auto px-4 md:px-2 pb-20">
-                <div className="mb-6">
+            <div className="mt-4 md:mt-12 w-full max-w-[1800px] mx-auto pb-20">
+                <div className="mb-6 px-4 md:px-2">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">More to explore</h2>
                     <p className="text-sm text-gray-400 mt-1">Related posts you might like</p>
                 </div>
@@ -818,7 +818,11 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 const isVideoItem = src.includes('/video/upload/') || src.match(/\.(mp4|mov|avi|webm|mkv)/i);
                                 
                                 if (isVideoItem) {
-                                    return <AppVideo src={src} controls autoPlay className="max-w-full max-h-full object-contain" />;
+                                    return (
+                                        <div className="relative w-full h-full px-1 md:px-0 flex items-center justify-center">
+                                            <AppVideo src={src} controls autoPlay className="max-w-full max-h-full object-contain" />
+                                        </div>
+                                    );
                                 }
 
                                 const stats = imageStats[src];
@@ -842,7 +846,7 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                 }
                                 
                                 return (
-                                    <div className="relative w-full h-full p-4 flex items-center justify-center">
+                                    <div className="relative w-full h-full px-1 py-4 md:p-4 flex items-center justify-center">
                                         <AppImage 
                                             src={src} 
                                             fill 

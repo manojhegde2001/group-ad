@@ -108,7 +108,7 @@ export async function GET() {
       })),
       summary: {
         totalReach: companyViews.length,
-        categoryRank: industryRank,
+        industryRank,
       },
     });
   } catch (error) {

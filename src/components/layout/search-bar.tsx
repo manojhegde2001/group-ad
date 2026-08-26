@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Search, FileText, Loader2 } from 'lucide-react';
+import { Search, FileText } from 'lucide-react';
 import { Popover, Text } from 'rizzui';
 import { useFeedFilter } from '@/hooks/use-feed';
 import { useMainSearch } from '@/hooks/use-api/use-search';
 import { Input } from '@/components/ui/input';
 import { AppImage } from '@/components/ui/app-image';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { SearchResult } from '@/services/api/search';
 
@@ -108,6 +109,19 @@ function ResultRow({ res, size, onNavigate }: { res: SearchResult; size: 'sm' | 
     );
 }
 
+function SkeletonResultRow({ size }: { size: 'sm' | 'md' }) {
+    const boxClass = size === 'sm' ? 'w-[34px] h-[34px] rounded-lg' : 'w-12 h-12 rounded-xl';
+    return (
+        <div className="flex items-center gap-3 px-2 py-2">
+            <Skeleton className={cn(boxClass, 'shrink-0')} />
+            <div className="flex-1 min-w-0 space-y-1.5">
+                <Skeleton className={cn('rounded-full w-2/3', size === 'sm' ? 'h-3' : 'h-3.5')} />
+                <Skeleton className="h-2.5 w-1/3 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
 const GROUP_ORDER: { type: SearchResult['type']; label: string }[] = [
     { type: 'post', label: 'Posts' },
     { type: 'event', label: 'Events' },
@@ -190,10 +204,14 @@ export function SearchBar({ className = '', autoFocus = false }: SearchBarProps)
                             Type at least 2 characters to search
                         </div>
                     ) : loading ? (
-                        <div className="flex items-center justify-center py-6 gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                            <span className="text-xs text-secondary-400 font-bold">Searching…</span>
-                        </div>
+                        <>
+                            <div className="md:hidden space-y-0.5">
+                                {[...Array(4)].map((_, i) => <SkeletonResultRow key={i} size="sm" />)}
+                            </div>
+                            <div className="hidden md:block space-y-0.5">
+                                {[...Array(4)].map((_, i) => <SkeletonResultRow key={i} size="md" />)}
+                            </div>
+                        </>
                     ) : results.length === 0 ? (
                         <div className="text-center py-6 text-xs text-secondary-400 font-bold">
                             No results for &quot;{localSearch}&quot;

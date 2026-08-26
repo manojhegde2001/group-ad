@@ -63,6 +63,7 @@ export async function GET() {
         select: {
             id: true,
             content: true,
+            images: true,
             views: true,
             type: true,
             createdAt: true,

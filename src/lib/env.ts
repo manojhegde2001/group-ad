@@ -45,7 +45,13 @@ let cachedEnv: Env | undefined;
 export function getEnv(): Env {
   if (cachedEnv) return cachedEnv;
 
-  const parsed = envSchema.safeParse(process.env);
+  // Some hosts (e.g. Render) set optional vars to an empty string rather than
+  // leaving them unset. Treat "" as unset so min(1) doesn't reject them.
+  const sanitizedEnv = Object.fromEntries(
+    Object.entries(process.env).map(([key, value]) => [key, value === '' ? undefined : value])
+  );
+
+  const parsed = envSchema.safeParse(sanitizedEnv);
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`)

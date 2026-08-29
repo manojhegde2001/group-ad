@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { CategoryCards } from '@/components/feed/category-cards';
 import { Compass, Layout } from 'lucide-react';
 import { TrendingCategories } from '@/components/explore/trending-categories';

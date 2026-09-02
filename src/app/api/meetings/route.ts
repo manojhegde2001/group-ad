@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { notificationService } from '@/services/notification-service';
 import { sendMail, meetingInviteEmail, getAppBaseUrl } from '@/lib/mailer';
 import { format } from 'date-fns';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 const createMeetingSchema = z.object({
@@ -80,6 +81,9 @@ export async function POST(request: NextRequest) {
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
+
+        const limited = enforceRateLimit(request, 'meetings:create', 20, 60 * 60_000, session.user.id);
+        if (limited) return limited;
 
         const dbUser = await prisma.user.findUnique({
             where: { id: session.user.id },

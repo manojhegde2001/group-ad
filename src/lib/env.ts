@@ -1,10 +1,22 @@
 import { z } from 'zod';
 
-// Only DATABASE_URL and an auth secret are truly required to boot. Everything
-// else (AWS, Resend, Gemini, Google OAuth) is optional here on purpose — the
-// app already degrades those features gracefully per-feature at request time
-// (see e.g. isS3Configured() in src/lib/s3.ts), so treating them as mandatory
-// at startup would break local/partial setups that work fine today.
+// In development only DATABASE_URL and an auth secret are required — every other
+// integration degrades gracefully per-feature at request time (see e.g.
+// isS3Configured() in src/lib/s3.ts), so a partial local setup still works.
+//
+// In production the bar is higher: signup now requires a working mailer, and
+// uploads require S3, so those are hard-required below (see the superRefine).
+// Google OAuth, Gemini, cron and Sentry stay optional everywhere.
+const REQUIRED_IN_PRODUCTION = [
+  'NEXT_PUBLIC_APP_URL', // verification / reset links are built from this
+  'RESEND_API_KEY',      // email verification is mandatory for signup
+  'EMAIL_FROM',
+  'AWS_REGION',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'AWS_S3_BUCKET_NAME',
+] as const;
+
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
 
@@ -14,6 +26,8 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  // Set automatically by Railway; used as a base-URL fallback for emails/links.
+  RAILWAY_PUBLIC_DOMAIN: z.string().min(1).optional(),
 
   RESEND_API_KEY: z.string().min(1).optional(),
   EMAIL_FROM: z.string().min(1).optional(),
@@ -29,8 +43,25 @@ const envSchema = z.object({
 
   CRON_SECRET: z.string().min(1).optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
+
+  // Error tracking (optional — Sentry stays inert when unset).
+  SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  SENTRY_RELEASE: z.string().min(1).optional(),
+  NEXT_PUBLIC_SENTRY_RELEASE: z.string().min(1).optional(),
 }).refine((data) => data.NEXTAUTH_SECRET || data.AUTH_SECRET, {
   message: 'Either NEXTAUTH_SECRET or AUTH_SECRET must be set',
+}).superRefine((data, ctx) => {
+  if (process.env.NODE_ENV !== 'production') return;
+  for (const key of REQUIRED_IN_PRODUCTION) {
+    if (!data[key as keyof typeof data]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [key],
+        message: 'required in production',
+      });
+    }
+  }
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getPostsServer } from '@/services/server/post-service';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 const createPostSchema = z.object({
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    const limited = enforceRateLimit(request, 'posts:create', 20, 10 * 60_000, session.user.id);
+    if (limited) return limited;
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { signupSchema } from '@/lib/validations/auth';
-import { sendMail, welcomeEmail, getAppBaseUrl } from '@/lib/mailer';
+import { sendMail, verificationEmail, getAppBaseUrl } from '@/lib/mailer';
 import { logger } from '@/lib/logger';
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
@@ -64,6 +65,10 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hash(validatedData.password, 10);
 
+    // Email verification token — user cannot sign in until this link is clicked
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
     // Create user — always INDIVIDUAL; Business conversion handled via Settings
     const user = await prisma.user.create({
       data: {
@@ -73,6 +78,8 @@ export async function POST(request: NextRequest) {
         username: validatedData.username,
         userType: 'INDIVIDUAL',
         companyId: validatedData.companyId || undefined,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiry: verificationExpiry,
       },
       select: {
         id: true,
@@ -93,18 +100,20 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = getAppBaseUrl(request);
 
-    // Send Welcome Email (Non-blocking but awaited before response for reliability)
+    // Send the email-verification link. Awaited before responding so the client
+    // can tell the user to check their inbox. A mail failure does not roll back
+    // the signup — the user can request a fresh link from /auth/verify-email.
     try {
       if (user.email) {
         await sendMail({
           to: user.email,
-          subject: 'Welcome to Vrutta!',
-          html: welcomeEmail(user.name || user.username, user.email, baseUrl),
+          subject: 'Verify your email - Vrutta',
+          html: verificationEmail(user.name || user.username, verificationToken, baseUrl),
         });
-        logger.info('Welcome email sent successfully', { userId: user.id, email: user.email });
+        logger.info('Verification email sent successfully', { userId: user.id, email: user.email });
       }
     } catch (mailError) {
-      logger.error('Failed to send welcome email', mailError, { userId: user.id, email: user.email });
+      logger.error('Failed to send verification email', mailError, { userId: user.id, email: user.email });
       // We don't fail the signup if the email fails
     }
 
@@ -117,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: 'Account created successfully',
+        message: 'Account created. Check your email to verify your account before signing in.',
         user,
       },
       { status: 201 }

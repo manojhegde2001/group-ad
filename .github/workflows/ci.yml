@@ -29,3 +29,10 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Build never connects to the DB; these satisfy config validation only.
+          DATABASE_URL: mongodb://localhost:27017/ci
+          NEXTAUTH_SECRET: ci-build-placeholder-secret

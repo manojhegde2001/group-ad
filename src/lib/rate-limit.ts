@@ -5,8 +5,8 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
-// In-memory store — fine for a single-instance PM2 deployment (see ecosystem.config.js).
-// If the app is ever scaled to multiple instances, this must move to Redis.
+// In-memory store — fine while the app runs as a single instance (current Railway
+// setup). If it is ever scaled to multiple instances/replicas, this must move to Redis.
 const store = new Map<string, RateLimitEntry>();
 
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
@@ -64,4 +64,26 @@ export function rateLimitResponse(resetAt: number): NextResponse {
     { error: 'Too many requests. Please try again later.' },
     { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } }
   );
+}
+
+/**
+ * Route-handler convenience wrapper. Returns a 429 `NextResponse` when the caller
+ * is over the limit, or `null` when the request may proceed.
+ *
+ * `identifier` is the stable caller key — pass the session user id for
+ * authenticated routes; it falls back to the client IP otherwise.
+ *
+ *   const limited = enforceRateLimit(request, 'posts:create', 20, 10 * 60_000, session.user.id);
+ *   if (limited) return limited;
+ */
+export function enforceRateLimit(
+  request: Request,
+  bucket: string,
+  limit: number,
+  windowMs: number,
+  identifier?: string | null,
+): NextResponse | null {
+  const key = `${bucket}:${identifier || getClientIp(request)}`;
+  const { success, resetAt } = rateLimit(key, limit, windowMs);
+  return success ? null : rateLimitResponse(resetAt);
 }

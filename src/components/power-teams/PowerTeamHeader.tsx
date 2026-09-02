@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { AppImage } from '@/components/ui/app-image';
 import Link from 'next/link';
 
-const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80';
+const DEFAULT_BANNER = '/images/placeholder-banner.svg';
 
 interface PowerTeamHeaderProps {
   team: any;

@@ -8,7 +8,7 @@ import { useTrendingTags } from '@/hooks/use-api/use-tags';
 import { useFeedFilter } from '@/hooks/use-feed';
 import { cn, formatCompactNumber } from '@/lib/utils';
 
-const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80';
+const DEFAULT_BANNER = '/images/placeholder-banner.svg';
 
 export function TrendingCategories({ initialData }: { initialData?: any }) {
   const { data, isLoading } = useTrendingTags(12, { initialData });

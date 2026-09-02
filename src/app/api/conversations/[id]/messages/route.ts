@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { socketService } from '@/lib/socket-service';
 import { notificationService } from '@/services/notification-service';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { createMessageSchema } from '@/lib/validations/content';
 
@@ -70,6 +71,9 @@ export async function POST(
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    const limited = enforceRateLimit(request, 'messages:send', 60, 60_000, session.user.id);
+    if (limited) return limited;
 
     const conversation = await prisma.conversation.findUnique({
       where: { id },

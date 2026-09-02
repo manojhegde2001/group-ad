@@ -5,7 +5,6 @@ import NextAuthProvider from '@/components/providers/session-provider';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import ToastProvider from '@/components/providers/toast-provider';
 import QueryProvider from '@/components/providers/query-provider';
-import { Analytics } from '@vercel/analytics/react';
 import { SocketProvider } from '@/components/providers/socket-provider';
 
 const inter = Inter({
@@ -35,26 +34,22 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(
-    (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('group-ad.vercel.app')) 
-    ? process.env.NEXT_PUBLIC_APP_URL 
-    : 'https://www.vrutta.net'
-  ),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.vrutta.net'),
 
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Vrutta — Enterprise Professional Ecosystem',
-    description: 'Connect with professionals and businesses in a neat, curated environment.',
+    title: 'Vrutta — Word of mouth moves in a circle',
+    description: "Word of mouth doesn't travel in a straight line — it moves in a circle. Vrutta is where professionals showcase their work and grow through trusted referrals.",
     url: 'https://www.vrutta.net',
     siteName: 'Vrutta',
     images: [
       {
-        url: '/auth/thumbnail.png',
+        url: '/auth/og-cover.png',
         width: 1200,
         height: 630,
-        alt: 'Vrutta — Business Social Networking Platform',
+        alt: 'Vrutta — word of mouth moves in a circle',
       },
     ],
     locale: 'en_US',
@@ -62,10 +57,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vrutta — Enterprise Professional Ecosystem',
-    description: 'Connect with professionals and businesses in a neat, curated environment.',
+    title: 'Vrutta — Word of mouth moves in a circle',
+    description: "Word of mouth doesn't travel in a straight line — it moves in a circle. Showcase your work and grow through trusted referrals.",
     creator: '@vrutta',
-    images: ['/auth/thumbnail.png'],
+    images: ['/auth/og-cover.png'],
   },
   robots: {
     index: true,
@@ -124,7 +119,6 @@ export default function RootLayout({
                 {children}
               </SocketProvider>
               <ToastProvider />
-              <Analytics />
             </ThemeProvider>
           </QueryProvider>
         </NextAuthProvider>

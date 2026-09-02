@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 const createPowerTeamSchema = z.object({
@@ -127,6 +128,9 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    const limited = enforceRateLimit(request, 'power-teams:create', 10, 60 * 60_000, session.user.id);
+    if (limited) return limited;
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },

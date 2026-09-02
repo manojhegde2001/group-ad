@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { AppImage } from '@/components/ui/app-image';
 
-const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80';
+const DEFAULT_BANNER = '/images/placeholder-banner.svg';
 
 interface PowerTeamCardProps {
   team: any;

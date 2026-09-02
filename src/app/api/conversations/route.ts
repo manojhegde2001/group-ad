@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { startConversationSchema } from '@/lib/validations/content';
 
@@ -93,6 +94,9 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    const limited = enforceRateLimit(request, 'conversations:create', 20, 10 * 60_000, session.user.id);
+    if (limited) return limited;
 
     const body = await request.json();
     const { participantId } = startConversationSchema.parse(body);

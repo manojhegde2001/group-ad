@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 // Validation schema for upgrade request
@@ -27,6 +28,9 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const limited = enforceRateLimit(request, 'upgrade-to-business', 5, 60 * 60_000, session.user.id);
+    if (limited) return limited;
 
     // Get current user
     const user = await prisma.user.findUnique({

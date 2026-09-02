@@ -14,8 +14,6 @@ const CreateEventModal = dynamic(() => import('@/components/events/create-event-
 const SaveToBoardModal = dynamic(() => import('@/components/boards/save-to-board-modal').then(mod => mod.SaveToBoardModal), { ssr: false });
 const ChatbotDrawer = dynamic(() => import('@/components/chatbot').then(mod => mod.ChatbotDrawer), { ssr: false });
 
-import { Analytics } from '@vercel/analytics/react';
-
 export function LayoutContent({ 
   children,
   modal 
@@ -54,7 +52,6 @@ export function LayoutContent({
       <SaveToBoardModal />
       <ChatbotDrawer />
       {modal}
-      <Analytics />
     </div>
   );
 }

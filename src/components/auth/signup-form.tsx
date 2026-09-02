@@ -39,7 +39,7 @@ const GoogleIcon = () => (
 
 export default function SignupForm({ hideFooter, onToggle }: { hideFooter?: boolean; onToggle?: () => void } = {}) {
   const router = useRouter();
-  const { setMode, isOpen } = useAuthModal();
+  const { setMode, isOpen, close } = useAuthModal();
 
   const signupMutation = useSignup();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -77,7 +77,8 @@ export default function SignupForm({ hideFooter, onToggle }: { hideFooter?: bool
   const onSubmit = async (data: SignupFormData) => {
     signupMutation.mutate(data, {
       onSuccess: () => {
-        setMode('login');
+        close();
+        router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
       },
     });
   };

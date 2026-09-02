@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { notificationService } from '@/services/notification-service';
+import { enforceRateLimit } from '@/lib/rate-limit';
 
 // POST /api/posts/[id]/like — like a post
 export async function POST(
@@ -13,6 +14,9 @@ export async function POST(
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
+
+        const limited = enforceRateLimit(request, 'posts:like', 120, 60_000, session.user.id);
+        if (limited) return limited;
 
         const { id: postId } = await params;
 
@@ -58,6 +62,9 @@ export async function DELETE(
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
+
+        const limited = enforceRateLimit(request, 'posts:like', 120, 60_000, session.user.id);
+        if (limited) return limited;
 
         const { id: postId } = await params;
 

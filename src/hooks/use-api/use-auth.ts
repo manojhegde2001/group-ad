@@ -6,10 +6,22 @@ export const useSignup = () => {
     return useMutation({
         mutationFn: (data: any) => authService.signup(data),
         onSuccess: () => {
-            toast.success('Account created successfully');
+            toast.success('Account created! Check your email to verify your account.');
         },
         onError: (error: any) => {
             toast.error(error.message || 'Signup failed');
+        },
+    });
+};
+
+export const useResendVerification = () => {
+    return useMutation({
+        mutationFn: (data: { email: string }) => authService.resendVerification(data),
+        onSuccess: () => {
+            toast.success('If that account still needs verification, a new link is on its way.');
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to resend verification email');
         },
     });
 };

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { processChatTurn, ChatServiceError } from '@/services/chat/chat-service';
 import type { ChatRequestBody, ChatResponseBody } from '@/lib/ai/types';
 
@@ -42,6 +43,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         { status: 401 }
       );
     }
+
+    // Bound Gemini usage/cost per user.
+    const limited = enforceRateLimit(request, 'chat', 30, 5 * 60_000, session.user.id);
+    if (limited) return limited;
 
     // 2. Parse and validate request body
     const body: unknown = await request.json();

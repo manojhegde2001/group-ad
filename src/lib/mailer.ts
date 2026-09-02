@@ -47,10 +47,12 @@ const accentColor = '#7c3aed';
 
 /**
  * Centralized logic to resolve the application's base URL.
- * Prioritizes NEXT_PUBLIC_APP_URL, then VERCEL_URL, then request headers.
+ * Order: request headers (x-forwarded-host / host) → NEXT_PUBLIC_APP_URL →
+ * RAILWAY_PUBLIC_DOMAIN → localhost.
  */
 export function getAppBaseUrl(req?: Request | NextRequest) {
     // 1. First, check request headers if req is provided to support dynamic/custom domains (e.g. vrutta.net)
+    // (proxied deployments such as Railway forward the original host via x-forwarded-host)
     if (req) {
         const protocol = req.headers.get('x-forwarded-proto') || 'http';
         const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
@@ -62,9 +64,9 @@ export function getAppBaseUrl(req?: Request | NextRequest) {
     // 2. Fallback to explicit environment variable
     let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-    // 3. Fallback to Vercel's automatic environment variable
-    if (!baseUrl && process.env.VERCEL_URL) {
-        baseUrl = `https://${process.env.VERCEL_URL}`;
+    // 3. Fallback to the hosting platform's automatic public-domain variable
+    if (!baseUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
+        baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
     }
 
     // 4. Final fallback
@@ -204,6 +206,29 @@ export function passwordResetEmail(name: string, token: string, baseUrl?: string
     </div>`;
 
     return baseLayout('Reset Password - Vrutta', content, finalBaseUrl);
+}
+
+export function verificationEmail(name: string, token: string, baseUrl?: string) {
+    const finalBaseUrl = baseUrl || getAppBaseUrl();
+    const verifyUrl = `${finalBaseUrl}/api/auth/verify-email?token=${token}`;
+
+    const content = `
+    <h1 class="text-title" style="margin:0 0 16px;font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.5px;text-align:center;">Verify your email</h1>
+    <p class="text-body" style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;text-align:center;">
+        Welcome to Vrutta, ${name}! Confirm this email address to activate your account and sign in.
+    </p>
+    <div style="text-align:center;margin:32px 0;">
+        <a href="${verifyUrl}" style="display:inline-block;background-color:${accentColor};color:#ffffff;padding:16px 36px;border-radius:14px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 6px -1px rgba(124, 58, 237, 0.2);">Verify Email</a>
+    </div>
+    <p class="text-footer" style="margin:0;font-size:14px;line-height:1.6;color:#9ca3af;text-align:center;">
+        If you didn't create a Vrutta account, you can safely ignore this email. This link will expire in 24 hours.
+    </p>
+    <div class="border-separator" style="margin-top:24px;padding-top:24px;border-top:1px dashed #e5e7eb;word-break:break-all;font-size:12px;color:#9ca3af;text-align:center;">
+        If the button doesn't work, copy and paste this link into your browser:<br/>
+        <a href="${verifyUrl}" style="color:${accentColor};text-decoration:none;">${verifyUrl}</a>
+    </div>`;
+
+    return baseLayout('Verify your email - Vrutta', content, finalBaseUrl);
 }
 
 export function bulkAccountCreatedEmail(name: string, username: string, email: string, baseUrl?: string) {

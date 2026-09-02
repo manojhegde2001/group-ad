@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { logger } from '@/lib/logger';
 
 export default function GlobalError({
@@ -12,6 +13,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     logger.error('Root application error', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

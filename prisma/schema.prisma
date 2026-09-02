@@ -215,7 +215,10 @@ model User {
 
   avatar    String?
   bio       String?
-  phone     String?  @unique
+  // Not @unique: many accounts legitimately have no phone, and MongoDB cannot
+  // build a plain unique index over multiple null values. Uniqueness, if needed,
+  // is enforced at the application layer.
+  phone     String?
   secondaryPhone String?
   phoneVisibility PhoneVisibility @default(NONE)
   location  String?
@@ -255,8 +258,18 @@ model User {
   facebook  String?
   instagram String?
 
-  resetToken      String?  @unique
+  // Not @unique: most users have no token set, so a plain unique index can't be
+  // built over the many nulls. These are looked up with findFirst, and collisions
+  // are impossible in practice (crypto.randomBytes(32)).
+  resetToken      String?
   resetTokenExpiry DateTime?
+
+  // Email verification (credentials signups). Google logins are pre-verified.
+  // A user with no emailVerified date AND no pending token is a legacy account
+  // created before verification existed — such accounts are treated as verified.
+  emailVerified           DateTime?
+  emailVerificationToken  String?
+  emailVerificationExpiry DateTime?
 
   fcmTokens   String[]
   createdAt DateTime @default(now())
@@ -294,6 +307,10 @@ model User {
   @@index([isProfileCompleted])
   @@index([companyId])
   @@index([categoryId])
+  // Non-unique: auth flows look these up with findFirst; an index keeps that
+  // off a full collection scan without the null-collision problem of @unique.
+  @@index([resetToken])
+  @@index([emailVerificationToken])
 }
 
 // ============================================================================

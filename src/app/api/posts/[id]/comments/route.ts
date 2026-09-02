@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { notificationService } from '@/services/notification-service';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { createCommentSchema } from '@/lib/validations/content';
 
@@ -46,6 +47,9 @@ export async function POST(
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
         }
+
+        const limited = enforceRateLimit(request, 'comments:create', 40, 10 * 60_000, session.user.id);
+        if (limited) return limited;
 
         const { id: postId } = await params;
         const body = await request.json();

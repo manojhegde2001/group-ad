@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCategories } from '@/hooks/use-api/use-categories';
 
-const DEFAULT_CATEGORY_IMAGE = 'https://images.unsplash.com/photo-1616469829581-73993eb86b02?w=500&q=80';
+const DEFAULT_CATEGORY_IMAGE = '/images/placeholder-banner.svg';
 
 function CategorySkeleton() {
   return (

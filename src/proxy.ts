@@ -1,4 +1,4 @@
-// middleware.ts
+// proxy.ts (Next.js request interceptor — formerly the `middleware` convention)
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -13,7 +13,7 @@ function hostOf(url: string): string {
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const host = req.headers.get('host') || '';
   const pathname = req.nextUrl.pathname;
 

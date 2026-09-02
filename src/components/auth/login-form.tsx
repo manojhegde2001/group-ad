@@ -177,6 +177,17 @@ export function LoginForm({ hideFooter, onToggle }: { hideFooter?: boolean; onTo
         Continue with Google
       </Button>
 
+      <p className="text-center text-xs text-secondary-400 dark:text-secondary-500">
+        Haven&apos;t verified your email?{' '}
+        <Link
+          href="/auth/verify-email"
+          onClick={close}
+          className="font-semibold text-primary-600 dark:text-primary-400 hover:underline transition-colors"
+        >
+          Resend link
+        </Link>
+      </p>
+
       {!hideFooter && (
         <div className="text-center pt-2">
           <p className="text-sm text-gray-600 dark:text-gray-400">

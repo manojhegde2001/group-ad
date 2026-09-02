@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { uploadToS3, isS3Configured, getMissingS3Config } from '@/lib/s3';
 import { optimizeImage } from '@/lib/media-optimize';
 import { isAllowedImageType } from '@/lib/upload-validation';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
@@ -12,6 +13,9 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const limited = enforceRateLimit(request, 'avatar:upload', 10, 10 * 60_000, session.user.id);
+    if (limited) return limited;
 
     if (!isS3Configured()) {
       return NextResponse.json({ error: `S3 not configured. Missing: ${getMissingS3Config().join(', ')}` }, { status: 500 });

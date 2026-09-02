@@ -4,6 +4,7 @@ import Google from 'next-auth/providers/google';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { isEmailVerificationSatisfied, resolveSafeRedirect } from '@/lib/auth-helpers';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -54,6 +55,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isPasswordValid) {
           throw new Error('Invalid credentials');
+        }
+
+        // Block sign-in until the email is verified. Legacy accounts created
+        // before verification existed have no token and are allowed through.
+        if (!isEmailVerificationSatisfied(user)) {
+          throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
         }
 
         return {
@@ -123,7 +130,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-8);
           const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-          // Create the new user
+          // Create the new user. Google has already verified this email address,
+          // so mark it verified immediately.
           await prisma.user.create({
             data: {
               email,
@@ -134,6 +142,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               userType: 'INDIVIDUAL',
               isProfileCompleted: false,
               onboardingStep: 'ACCOUNT_CREATED',
+              emailVerified: new Date(),
+            },
+          });
+        } else if (!existingUser.emailVerified) {
+          // A credentials signup that never verified is now proving ownership of
+          // this address via Google — mark it verified and drop the pending token.
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: {
+              emailVerified: new Date(),
+              emailVerificationToken: null,
+              emailVerificationExpiry: null,
             },
           });
         }
@@ -209,20 +229,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) {
-        return `${baseUrl}${url}`.replace(/([^:])\/\//g, '$1/');
-      }
-      // Allows callback URLs on the same origin or any absolute URL provided (more permissive for hosted envs)
-      try {
-        const urlObj = new URL(url);
-        if (urlObj.origin === baseUrl || url.startsWith('http')) {
-          return url;
-        }
-      } catch {
-        // Fallback to baseUrl if URL parsing fails
-      }
-      return baseUrl;
+      // Relative paths and same-origin absolute URLs only — never an external host.
+      return resolveSafeRedirect(url, baseUrl);
     },
   },
 });

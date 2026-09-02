@@ -104,6 +104,10 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
+export const resendVerificationSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token is required'),
   password: z

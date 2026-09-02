@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { enforceRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -204,6 +205,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const limited = enforceRateLimit(request, 'profile:update', 30, 10 * 60_000, session.user.id);
+    if (limited) return limited;
+
     const body = await request.json();
     const validatedData = updateProfileSchema.parse(body);
 
@@ -337,6 +341,9 @@ export async function PUT(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const limited = enforceRateLimit(request, 'password:change', 5, 15 * 60_000, session.user.id);
+    if (limited) return limited;
 
     const body = await request.json();
     const validatedData = changePasswordSchema.parse(body);

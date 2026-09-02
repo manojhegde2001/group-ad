@@ -17,6 +17,32 @@ export async function proxy(req: NextRequest) {
   const host = req.headers.get('host') || '';
   const pathname = req.nextUrl.pathname;
 
+  // ── Canonical host redirect ─────────────────────────────────────────────
+  // Every deployment domain is normalized to a single canonical host so that
+  // OAuth (which derives its callback URL from the incoming host) always starts
+  // and returns on www.vrutta.net — only that one redirect URI then needs to be
+  // registered with Google. The admin subdomain and localhost are left alone.
+  {
+    const hostname = host.split(':')[0].toLowerCase();
+    const isLocalHostname = hostname === 'localhost' || hostname === '127.0.0.1';
+    if (!isLocalHostname) {
+      const CANONICAL: Record<string, string> = {
+        'vrutta.in': 'www.vrutta.net',
+        'www.vrutta.in': 'www.vrutta.net',
+        'vrutta.net': 'www.vrutta.net',
+        'admin.vrutta.in': 'admin.vrutta.net',
+      };
+      const target = CANONICAL[hostname];
+      if (target && target !== hostname) {
+        const url = req.nextUrl.clone();
+        url.protocol = 'https:';
+        url.host = target;
+        url.port = '';
+        return NextResponse.redirect(url, 308);
+      }
+    }
+  }
+
   // ── API CSRF guard ──────────────────────────────────────────────────────
   // Session-cookie-authenticated routes rely on SameSite=Lax to block
   // cross-site cookie sends, but verify Origin/Referer too as defense in

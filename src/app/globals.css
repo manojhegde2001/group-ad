@@ -165,18 +165,6 @@ h1, h2, h3, h4, h5, h6 {
   @apply bg-secondary-400 dark:bg-secondary-600;
 }
 
-/* Masonry Layout */
-.my-masonry-grid {
-  display: flex;
-  margin-left: -16px;
-  width: auto;
-}
-
-.my-masonry-grid_column {
-  padding-left: 16px;
-  background-clip: padding-box;
-}
-
 /* Pin card hover overlay */
 .pin-card-overlay {
   opacity: 0;
@@ -340,4 +328,50 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Logo loader cascade (see components/ui/logo-loader.tsx).
+   One keyframe drives all 9 paths; per-path length/colour/stagger come from
+   the --ll-len / --ll-fill / --ll-delay custom properties set on each <path>,
+   and --ll-speed (on the wrapper) scales the 3s base cycle. */
+@keyframes vrutta-loader-cascade {
+  /* Phase 1 & 2: borders draw in, then colour fills (0% -> 50%) */
+  0% {
+    stroke-dashoffset: var(--ll-len);
+    stroke-dasharray: var(--ll-len);
+    fill: transparent;
+  }
+  18% {
+    stroke-dashoffset: 0;
+    stroke-dasharray: var(--ll-len);
+    fill: transparent;
+  }
+  35%,
+  50% {
+    stroke-dashoffset: 0;
+    stroke-dasharray: var(--ll-len);
+    fill: var(--ll-fill);
+  }
+  /* Phase 3 & 4: colour drops out, then border retracts (50% -> 100%) */
+  68% {
+    stroke-dashoffset: 0;
+    stroke-dasharray: var(--ll-len);
+    fill: transparent;
+  }
+  85%,
+  100% {
+    stroke-dashoffset: calc(-1 * var(--ll-len));
+    stroke-dasharray: var(--ll-len);
+    fill: transparent;
+  }
+}
+
+.vrutta-loader path {
+  fill: transparent;
+  transform-origin: center;
+}
+
+.vrutta-loader.is-animating path {
+  animation: vrutta-loader-cascade calc(3s * var(--ll-speed, 1))
+    cubic-bezier(0.2, 0.8, 0.2, 1) var(--ll-delay, 0s) infinite both;
 }

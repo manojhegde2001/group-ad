@@ -1,32 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import Masonry from 'react-masonry-css';
-import { PostCard } from './post-card';
-import { CategoryBar } from './category-bar';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Masonry, useInfiniteLoader } from 'masonic';
 import { useFeedFilter, useCreatePostModal } from '@/hooks/use-feed';
 import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
-import { Loader2, ImageOff } from 'lucide-react';
-import { PostCardSkeleton } from './post-card-skeleton';
-import { cn } from '@/lib/utils';
+import { ImageOff } from 'lucide-react';
+import { FeedSkeleton } from './feed-skeleton';
+import { FeedGridItem, type FeedItem } from './feed-grid-item';
 import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { useAuth } from '@/hooks/use-auth';
-import { LogoLoader } from '@/components/ui/logo-loader';
+import { useMounted } from '@/hooks/use-mounted';
+import { useColumnCount } from '@/hooks/use-column-count';
 
-// Demo posts used as fallback when DB is empty  
-const DEMO_POSTS: any[] = [
-];
-
-const breakpointCols = {
-  default: 5,
-  1920: 5,
-  1536: 4,
-  1280: 3,
-  1024: 3,
-  768: 2,
-  480: 2,
-};
+// Demo posts used as fallback when DB is empty
+const DEMO_POSTS: any[] = [];
 
 interface FeedContainerProps {
   categoryId?: string | null;
@@ -39,8 +27,9 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
   const { selectedCategoryId, searchQuery } = useFeedFilter();
   const effectiveCategoryId = initialCategoryId !== undefined ? initialCategoryId : selectedCategoryId;
   const { setOnCreated, setOnDeleted } = useCreatePostModal();
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const { isAuthenticated } = useAuth();
+  const mounted = useMounted();
+  const columnCount = useColumnCount();
 
   const {
     data,
@@ -48,7 +37,6 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    isError,
   } = useInfinitePosts({
     categoryId: effectiveCategoryId,
     boardId,
@@ -59,14 +47,15 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
     initialData: initialData ? { pages: [initialData], pageParams: [1] } : undefined
   });
 
-  const posts = data?.pages.flatMap((page: any) => page.posts) || [];
+  const posts = useMemo(
+    () => data?.pages.flatMap((page: any) => page.posts) ?? [],
+    [data]
+  );
   const isEmpty = !isLoading && posts.length === 0;
   const useDemoData = isEmpty && !searchQuery && !selectedCategoryId;
-
   const displayPosts = useDemoData ? DEMO_POSTS : posts;
 
-  // Prepend new posts and handle deletions
-  // In a real app we'd mutate the cache, but following the existing pattern:
+  // Locally created / deleted posts, merged over the fetched list
   const [localPosts, setLocalPosts] = useState<PostWithRelations[]>([]);
 
   useEffect(() => {
@@ -82,46 +71,52 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
       });
     });
 
-    // Handle deletion
     setOnDeleted((postId: string) => {
       setLocalPosts(prev => prev.filter(p => p.id !== postId));
     });
   }, [setOnCreated, setOnDeleted]);
 
-  const allPosts = [
+  const allPosts = useMemo(() => [
     ...localPosts,
-    ...displayPosts.filter((p: any) => !localPosts.find(lp => lp.id === p.id))
-  ];
+    ...displayPosts.filter((p: any) => !localPosts.some(lp => lp.id === p.id)),
+  ], [localPosts, displayPosts]);
 
-  // Infinite scroll
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
+  // One list for masonic: posts, followed by a short run of skeleton cards
+  // while another page is available so the shortest columns keep filling.
+  const feedItems = useMemo<FeedItem[]>(() => {
+    if (isLoading) {
+      return Array.from({ length: 18 }, (_, i) => ({ type: 'skeleton' as const, id: `sk-${i}`, position: i }));
+    }
+    const items: FeedItem[] = allPosts.map((post, i) => ({ type: 'post', id: post.id, post, position: i }));
+    if (hasNextPage && !useDemoData) {
+      const base = items.length;
+      for (let i = 0; i < 8; i++) {
+        items.push({ type: 'skeleton', id: `sk-more-${i}`, position: base + i });
+      }
+    }
+    return items;
+  }, [isLoading, allPosts, hasNextPage, useDemoData]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: '300px' }
-    );
-
-    if (sentinelRef.current) observer.observe(sentinelRef.current);
-    return () => observer.disconnect();
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const maybeLoadMore = useInfiniteLoader(
+    (_start: number, _stop: number, _items: FeedItem[]) => loadMore(),
+    {
+      isItemLoaded: (index: number, items: FeedItem[]) => items[index]?.type === 'post',
+      minimumBatchSize: 12,
+      threshold: 6,
+    }
+  );
+
+  const gridKey = `${effectiveCategoryId ?? 'all'}|${boardId ?? ''}|${searchQuery ?? ''}`;
+  const showEmptyState = mounted && !isLoading && allPosts.length === 0 && !useDemoData;
 
   return (
     <div className="w-full px-2 sm:px-4 lg:px-3 xl:px-3 2xl:px-3 py-2 md:py-3">
       {/* Visually hidden H1 for SEO stability across auth states */}
       <h1 className="sr-only">Vrutta — Discover Professional Ideas & Business Ecosysteming Feed</h1>
-    
-    
-      {isLoading && (
-        <div className="flex flex-col items-center justify-center py-12 animate-in fade-in slide-in-from-top-4 duration-700">
-          <LogoLoader size={64} className="mb-2" />
-          <p className="text-secondary-400 text-sm font-medium animate-pulse">Curating your feed...</p>
-        </div>
-      )}
 
       {useDemoData && !isLoading && (
         <p className="text-center text-xs text-secondary-400 mb-4">
@@ -135,33 +130,25 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
         </div>
       )}
 
-      <Masonry
-        breakpointCols={breakpointCols}
-        className="flex -ml-1 sm:-ml-1.5 md:-ml-1.5 w-auto"
-        columnClassName="pl-1 sm:pl-1.5 md:pl-1.5 bg-clip-padding"
-      >
-        {isLoading ? (
-          [...Array(12)].map((_, i) => (
-            <div key={`skeleton-${i}`} className="mb-1 sm:mb-1.5 md:mb-1.5">
-              <PostCardSkeleton aspectRatio={['4/5', '1/1', '3/4', '2/3'][i % 4]} />
-            </div>
-          ))
-        ) : allPosts.length > 0 ? (
-          allPosts.map((post, i) => (
-            <div
-              key={`post-wrapper-${post.id}`}
-              className={cn(
-                "mb-1 sm:mb-1.5 md:mb-1.5",
-                !isLoading && (i < 8 ? `animate-slide-up stagger-${(i % 4) + 1}` : "animate-slide-up")
-              )}
-            >
-              <PostCard post={post} priority={i < 4} />
-            </div>
-          ))
-        ) : null}
-      </Masonry>
+      {!mounted ? (
+        // Pre-hydration: CSS-column skeletons (balanced, SSR-safe)
+        <FeedSkeleton />
+      ) : feedItems.length > 0 ? (
+        <Masonry
+          key={gridKey}
+          items={feedItems}
+          columnCount={columnCount}
+          columnGutter={6}
+          rowGutter={6}
+          overscanBy={3}
+          itemHeightEstimate={320}
+          itemKey={(item: FeedItem) => item.id}
+          render={FeedGridItem}
+          onRender={maybeLoadMore}
+        />
+      ) : null}
 
-      {allPosts.length === 0 && !isLoading && (
+      {showEmptyState && (
         <div className="flex flex-col items-center justify-center py-24 text-center px-4">
           <ImageOff className="w-16 h-16 text-secondary-300 mb-4" />
           <h3 className="text-xl font-semibold text-secondary-700 dark:text-secondary-300 mb-2">No posts found</h3>
@@ -170,16 +157,6 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
               ? `No results for "${searchQuery}". Try a different search.`
               : 'No posts in this category yet. Be the first to post!'}
           </p>
-        </div>
-      )}
-
-      {/* Infinite scroll sentinel */}
-      <div ref={sentinelRef} className="h-4" />
-
-      {isFetchingNextPage && (
-        <div className="flex flex-col items-center justify-center py-12 gap-2 animate-in fade-in duration-500">
-          <LogoLoader size={48} />
-          <p className="text-secondary-400 text-xs font-medium">Loading more posts</p>
         </div>
       )}
 

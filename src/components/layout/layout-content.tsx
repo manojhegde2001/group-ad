@@ -1,11 +1,14 @@
 'use client';
 
+import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { useWasAuthenticated, WAS_AUTH_KEY } from '@/hooks/use-was-authenticated';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
+import { AppChromeSkeleton } from '@/components/layout/app-chrome-skeleton';
 import dynamic from 'next/dynamic';
 
 const AuthModal = dynamic(() => import('@/components/layout/auth-modal').then(mod => mod.AuthModal), { ssr: false });
@@ -21,9 +24,25 @@ export function LayoutContent({
   children: React.ReactNode;
   modal?: React.ReactNode;
 }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  const wasAuthenticated = useWasAuthenticated();
   const pathname = usePathname();
-  
+
+  // Remember auth state so a hard refresh can paint the logged-in shell
+  // before next-auth re-confirms. Cleared on sign-out.
+  useEffect(() => {
+    if (loading) return;
+    try {
+      if (isAuthenticated) localStorage.setItem(WAS_AUTH_KEY, '1');
+      else localStorage.removeItem(WAS_AUTH_KEY);
+    } catch {
+      /* storage unavailable — feature just no-ops */
+    }
+  }, [isAuthenticated, loading]);
+
+  // Session not yet confirmed, but this browser was logged in last time.
+  const showAuthedSkeleton = loading && wasAuthenticated && !isAuthenticated;
+
   const NO_FOOTER_ROUTES = ['/messages'];
 
   // Always show mobile nav space since we now have unauthenticated bottom nav
@@ -32,10 +51,12 @@ export function LayoutContent({
   
   return (
     <div className="flex min-h-screen bg-background text-foreground">
+      {showAuthedSkeleton && <AppChromeSkeleton />}
       <Sidebar />
       <div className={cn(
         "flex-1 flex flex-col min-w-0 relative",
-        isAuthenticated ? "md:pl-20" : ""
+        (isAuthenticated || showAuthedSkeleton) ? "md:pl-20" : "",
+        showAuthedSkeleton ? "md:pt-20" : ""
       )}>
         <Navbar />
         <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden">

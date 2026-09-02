@@ -5,8 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
-import { PostCard } from '@/components/feed/post-card';
-import Masonry from 'react-masonry-css';
+import { Masonry } from 'masonic';
+import { FeedGridItem, type FeedItem } from '@/components/feed/feed-grid-item';
+import { useMounted } from '@/hooks/use-mounted';
+import { useColumnCount, PROFILE_COLUMNS } from '@/hooks/use-column-count';
 import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, LayoutDashboard, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff, CalendarRange, ChevronLeft } from 'lucide-react';
 import { AppImage } from '@/components/ui/app-image';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
@@ -24,20 +26,12 @@ import { LogoLoader } from '@/components/ui/logo-loader';
 import RequestMeetingModal from '@/components/meetings/RequestMeetingModal';
 import { useMeetings } from '@/hooks/use-api/use-meetings';
 
-const breakpointCols = {
-    default: 5,
-    1920: 5,
-    1536: 4,
-    1280: 4,
-    1024: 3,
-    768: 2,
-    480: 2,
-};
-
 export default function ProfileView({ username, initialPosts }: { username: string, initialPosts?: any }) {
     const router = useRouter();
     const { data: me } = useMe();
     const isOwnProfile = me?.username === username;
+    const mounted = useMounted();
+    const columnCount = useColumnCount(PROFILE_COLUMNS);
 
     // Safety net: always restore scroll when this page mounts.
     // Guards against scroll lock left behind by post detail modals on hard navigation.
@@ -105,9 +99,14 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
     const [activeTab, setActiveTab] = useState<'created' | 'saved'>('created');
 
-    const createdPosts = useMemo(() => 
-        createdPostsData?.pages.flatMap((page: any) => page.posts) || [], 
+    const createdPosts = useMemo(() =>
+        createdPostsData?.pages.flatMap((page: any) => page.posts) || [],
     [createdPostsData]);
+
+    const createdGridItems = useMemo<FeedItem[]>(
+        () => createdPosts.map((post: PostWithRelations, i: number) => ({ type: 'post', id: post.id, post, position: i })),
+        [createdPosts]
+    );
 
     const savedPosts = useMemo(() => 
         savedPostsData?.pages.flatMap((page: any) => page.posts) || [], 
@@ -375,18 +374,22 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                         <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">No Posts Yet</h3>
                         <p className="text-sm text-secondary-500 max-w-[240px]">Share your first enterprise professional update today.</p>
                     </div>
+                ) : !mounted ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {[...Array(8)].map((_, i) => <div key={i} className="aspect-[4/5] bg-secondary-100 dark:bg-secondary-800 rounded-2xl animate-pulse" />)}
+                    </div>
                 ) : (
                     <Masonry
-                        breakpointCols={breakpointCols}
-                        className="flex -ml-2 sm:-ml-2.5 md:-ml-3 w-auto"
-                        columnClassName="pl-2 sm:pl-2.5 md:pl-3 bg-clip-padding"
-                    >
-                        {createdPosts.map((post: PostWithRelations) => (
-                            <div key={post.id} className="mb-2 sm:mb-2.5 md:mb-3">
-                                <PostCard post={post} />
-                            </div>
-                        ))}
-                    </Masonry>
+                        key={username}
+                        items={createdGridItems}
+                        columnCount={columnCount}
+                        columnGutter={10}
+                        rowGutter={10}
+                        overscanBy={3}
+                        itemHeightEstimate={320}
+                        itemKey={(item: FeedItem) => item.id}
+                        render={FeedGridItem}
+                    />
                 )}
 
                 {/* Load More */}

@@ -50,8 +50,12 @@ import { Drawer, Popover } from 'rizzui';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { useChatbot } from '@/hooks/use-chatbot';
 import { useMounted } from '@/hooks/use-mounted';
-import { ConvertToBusinessModal } from './convert-to-business-modal';
 import { footerLinks } from './footer';
+
+const ConvertToBusinessModal = dynamic(
+  () => import('./convert-to-business-modal').then((mod) => mod.ConvertToBusinessModal),
+  { ssr: false }
+);
 
 const FOOTER_LINK_ICONS: Record<string, any> = {
   '/about': Info,

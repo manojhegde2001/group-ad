@@ -69,6 +69,17 @@ const nextConfig = {
     ],
   },
   serverExternalPackages: ['@prisma/client', 'bcryptjs', 'fluent-ffmpeg', '@ffmpeg-installer/ffmpeg'],
+  experimental: {
+    // Barrel-file tree-shaking: import only the icons/components actually used
+    // instead of the whole package on first load.
+    optimizePackageImports: [
+      'lucide-react',
+      'rizzui',
+      '@heroicons/react',
+      'framer-motion',
+      'date-fns',
+    ],
+  },
 };
 
 module.exports = withSerwist(nextConfig);

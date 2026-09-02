@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io as ClientIO, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { useAuth } from '@/hooks/use-auth';
 import { logger } from '@/lib/logger';
 
@@ -26,41 +26,50 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         if (!isAuthenticated) {
             if (socket) {
                 socket.disconnect();
-                // eslint-disable-next-line react-hooks/set-state-in-effect -- disconnects and clears socket state when auth is lost
                 setSocket(null);
                 setIsConnected(false);
             }
             return;
         }
 
-        const socketInstance = ClientIO(window.location.host === 'localhost:3000' ? 'http://localhost:3000' : window.location.origin, {
-            path: '/api/socket/io',
-            addTrailingSlash: false,
-        });
+        // socket.io-client (~15kb) is loaded on demand — only authenticated
+        // sessions ever open a socket, so anonymous pages never pay for it.
+        let socketInstance: Socket | null = null;
+        let cancelled = false;
 
-        socketInstance.on('connect', () => {
-            logger.debug('Socket.io connected');
-            setIsConnected(true);
-            
-            if (user?.id) {
-                socketInstance.emit('join-user', user.id);
-            }
-        });
+        import('socket.io-client').then(({ io }) => {
+            if (cancelled) return;
 
-        socketInstance.on('disconnect', () => {
-            logger.debug('Socket.io disconnected');
-            setIsConnected(false);
-        });
+            socketInstance = io(window.location.host === 'localhost:3000' ? 'http://localhost:3000' : window.location.origin, {
+                path: '/api/socket/io',
+                addTrailingSlash: false,
+            });
 
-        socketInstance.on('connect_error', (err) => {
-            logger.debug('Socket.io connection error', { message: err.message });
-            setIsConnected(false);
-        });
+            socketInstance.on('connect', () => {
+                logger.debug('Socket.io connected');
+                setIsConnected(true);
 
-        setSocket(socketInstance);
+                if (user?.id) {
+                    socketInstance?.emit('join-user', user.id);
+                }
+            });
+
+            socketInstance.on('disconnect', () => {
+                logger.debug('Socket.io disconnected');
+                setIsConnected(false);
+            });
+
+            socketInstance.on('connect_error', (err) => {
+                logger.debug('Socket.io connection error', { message: err.message });
+                setIsConnected(false);
+            });
+
+            setSocket(socketInstance);
+        });
 
         return () => {
-            socketInstance.disconnect();
+            cancelled = true;
+            socketInstance?.disconnect();
         };
     }, [isAuthenticated, user?.id]);
 

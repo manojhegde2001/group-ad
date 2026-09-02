@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useWasAuthenticated, WAS_AUTH_KEY } from '@/hooks/use-was-authenticated';
+import { useChatbot } from '@/hooks/use-chatbot';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Navbar } from '@/components/layout/navbar';
@@ -27,6 +28,23 @@ export function LayoutContent({
   const { isAuthenticated, loading } = useAuth();
   const wasAuthenticated = useWasAuthenticated();
   const pathname = usePathname();
+  const chatOpen = useChatbot((s) => s.isOpen);
+
+  // Hold the chatbot chunk (and its AI/markdown deps) back until the browser is
+  // idle so it never competes with hydration for the main thread. Once mounted
+  // it stays mounted, so its open/close animation is unaffected.
+  const [deferredReady, setDeferredReady] = useState(false);
+  useEffect(() => {
+    const w = window as typeof window & {
+      requestIdleCallback?: (cb: () => void) => number;
+    };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2000));
+    const id = schedule(() => setDeferredReady(true));
+    return () => {
+      if (w.cancelIdleCallback) w.cancelIdleCallback(id as number);
+      else clearTimeout(id as number);
+    };
+  }, []);
 
   // Remember auth state so a hard refresh can paint the logged-in shell
   // before next-auth re-confirms. Cleared on sign-out.
@@ -71,7 +89,7 @@ export function LayoutContent({
       <CreatePostModal />
       <CreateEventModal />
       <SaveToBoardModal />
-      <ChatbotDrawer />
+      {(deferredReady || chatOpen) && <ChatbotDrawer />}
       {modal}
     </div>
   );

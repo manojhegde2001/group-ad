@@ -7,6 +7,7 @@ import { useInfinitePosts } from '@/hooks/use-api/use-posts';
 import type { PostWithRelations } from '@/types';
 import { ImageOff } from 'lucide-react';
 import { FeedSkeleton } from './feed-skeleton';
+import { FeedInitialGrid } from './feed-initial-grid';
 import { FeedGridItem, type FeedItem } from './feed-grid-item';
 import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { useAuth } from '@/hooks/use-auth';
@@ -113,6 +114,11 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
   const gridKey = `${effectiveCategoryId ?? 'all'}|${boardId ?? ''}|${searchQuery ?? ''}`;
   const showEmptyState = mounted && !isLoading && allPosts.length === 0 && !useDemoData;
 
+  // Pre-hydration real content: only when the server handed us posts for this
+  // exact (unfiltered) view — otherwise fall back to the shimmer skeleton.
+  const initialPosts: PostWithRelations[] =
+    !effectiveCategoryId && !boardId && !searchQuery ? initialData?.posts ?? [] : [];
+
   return (
     <div className="w-full px-2 sm:px-4 lg:px-3 xl:px-3 2xl:px-3 py-2 md:py-3">
       {/* Visually hidden H1 for SEO stability across auth states */}
@@ -131,8 +137,12 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
       )}
 
       {!mounted ? (
-        // Pre-hydration: CSS-column skeletons (balanced, SSR-safe)
-        <FeedSkeleton />
+        // Pre-hydration: real first-screen posts when available (LCP), else skeleton
+        initialPosts.length > 0 ? (
+          <FeedInitialGrid posts={initialPosts} />
+        ) : (
+          <FeedSkeleton />
+        )
       ) : feedItems.length > 0 ? (
         <Masonry
           key={gridKey}
@@ -140,7 +150,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
           columnCount={columnCount}
           columnGutter={6}
           rowGutter={6}
-          overscanBy={3}
+          overscanBy={2}
           itemHeightEstimate={320}
           itemKey={(item: FeedItem) => item.id}
           render={FeedGridItem}

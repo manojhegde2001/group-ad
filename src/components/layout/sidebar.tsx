@@ -23,7 +23,10 @@ import { useCreatePostModal } from '@/hooks/use-feed';
 import { useUnreadMessages } from '@/hooks/use-unread-messages';
 import { useUnreadNotifications } from '@/hooks/use-unread-notifications';
 import { useState } from 'react';
-import { HelpModal } from './help-modal';
+
+const HelpModal = dynamic(() => import('./help-modal').then((mod) => mod.HelpModal), {
+  ssr: false,
+});
 
 const Logo = dynamic(() => import('../ui/logo'), {
   ssr: false,

@@ -5,7 +5,7 @@ export const commonService = {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('resource_type', resourceType);
-        return apiClient.post<{ url: string }>('/api/upload', formData);
+        return apiClient.post<{ url: string; width?: number; height?: number; resourceType?: 'image' | 'video' }>('/api/upload', formData);
     },
     
     getCategories: () => apiClient.get<{ categories: any[] }>('/api/categories'),

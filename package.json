@@ -15,6 +15,7 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
+    "backfill:image-dimensions": "tsx scripts/backfill-image-dimensions.ts",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject .next && sentry-cli sourcemaps upload .next"
   },
   "dependencies": {

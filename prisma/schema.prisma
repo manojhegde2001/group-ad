@@ -362,6 +362,10 @@ model Post {
   type        PostType
   content     String
   images      String[]
+  // Per-image intrinsic dimensions, aligned by index with `images`: an array of
+  // `{ w, h }` objects (or null for videos / unknown). Lets the feed reserve the
+  // correct aspect ratio before the image loads, eliminating layout shift.
+  imageMeta   Json?
   link        String?
   tags        String[]
 

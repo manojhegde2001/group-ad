@@ -34,7 +34,12 @@ interface PostCardProps {
 
 export const PostCard = memo(function PostCard({ post, onLikeChange, showActions = false, priority = false }: PostCardProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [mediaRatio, setMediaRatio] = useState(0.8);
+    // Seed from stored dimensions when we have them so the card reserves the
+    // right height on first paint — no post-load resize, no masonry reflow.
+    const [mediaRatio, setMediaRatio] = useState(() => {
+        const m = post.imageMeta?.[0];
+        return m && m.w > 0 && m.h > 0 ? clampMediaRatio(m.w / m.h) : 0.8;
+    });
     const { user } = useAuth();
     const { openLogin } = useAuthModal();
     const { open: openSaveToBoard } = useSaveToBoard();

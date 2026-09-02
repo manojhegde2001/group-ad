@@ -10,6 +10,9 @@ const createPostSchema = z.object({
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT']),
   content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
   images: z.array(z.string().url()).optional().default([]),
+  imageMeta: z
+    .array(z.object({ w: z.number().positive(), h: z.number().positive() }).nullable())
+    .optional(),
   link: z.string().url('Enter a valid URL').optional().or(z.literal('')),
   tags: z.array(z.string()).optional().default([]),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional().default('PUBLIC'),
@@ -94,6 +97,7 @@ export async function POST(request: NextRequest) {
         type: validatedData.type,
         content: validatedData.content,
         images: validatedData.images,
+        imageMeta: validatedData.imageMeta ?? undefined,
         link: validatedData.link || undefined,
         tags: validatedData.tags,
         visibility: validatedData.visibility,

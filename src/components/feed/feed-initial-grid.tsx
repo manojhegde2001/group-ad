@@ -1,11 +1,17 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { AppImage } from '@/components/ui/app-image';
 import { PostCardSkeleton } from './post-card-skeleton';
 import type { PostWithRelations } from '@/types';
 
-// Same varied spread as PostCardSkeleton so the pre-hydration column flow matches
-// the skeleton it replaces. Once <Masonry> mounts it re-measures from real DOM.
+// Fallback varied spread (posts with no stored dimensions yet) so the
+// pre-hydration column flow still resembles the skeleton it replaces. Once
+// <Masonry> mounts it re-measures from real DOM.
 const HEIGHTS = [232, 300, 208, 344, 260, 372, 220, 312, 244, 332, 284, 292];
+
+// Keep in sync with post-card.tsx's clampMediaRatio so the SSR box matches the
+// aspect ratio <PostCard> will render post-hydration (shift-free hand-off).
+const clampRatio = (ratio: number) => Math.min(Math.max(ratio, 0.5), 2.2);
 
 const isVideo = (src: string) =>
   src.includes('/video/upload/') || /\.(mp4|mov|avi|webm|mkv)/i.test(src);
@@ -32,7 +38,11 @@ export function FeedInitialGrid({ posts, realCount = 8 }: FeedInitialGridProps) 
     <div className="columns-2 md:columns-3 xl:columns-4 2xl:columns-5 gap-1.5 [column-fill:balance]">
       {visible.map((post, i) => {
         const src = post.images?.[0];
-        const height = HEIGHTS[i % HEIGHTS.length];
+        const meta = post.imageMeta?.[0];
+        const ratio = meta && meta.w > 0 && meta.h > 0 ? clampRatio(meta.w / meta.h) : null;
+        const boxStyle: CSSProperties = ratio
+          ? { aspectRatio: ratio, minHeight: 200 }
+          : { height: HEIGHTS[i % HEIGHTS.length] };
         return (
           <div key={post.id} className="mb-1.5 break-inside-avoid">
             <Link
@@ -41,7 +51,7 @@ export function FeedInitialGrid({ posts, realCount = 8 }: FeedInitialGridProps) 
             >
               <div
                 className="relative overflow-hidden bg-secondary-100 dark:bg-secondary-800"
-                style={{ height }}
+                style={boxStyle}
               >
                 {src && !isVideo(src) ? (
                   <AppImage

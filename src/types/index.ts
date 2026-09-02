@@ -108,6 +108,8 @@ export type PostWithRelations = {
   type: string;
   content: string;
   images: string[];
+  /** Per-image intrinsic dimensions, index-aligned with `images` (null = video/unknown). */
+  imageMeta?: ({ w: number; h: number } | null)[] | null;
   link?: string | null;
   tags: string[];
   visibility: string;

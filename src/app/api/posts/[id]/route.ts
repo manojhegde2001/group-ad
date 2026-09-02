@@ -7,6 +7,9 @@ import { logger } from '@/lib/logger';
 const updatePostSchema = z.object({
   content: z.string().min(1).max(5000).optional(),
   images: z.array(z.string().url()).optional(),
+  imageMeta: z
+    .array(z.object({ w: z.number().positive(), h: z.number().positive() }).nullable())
+    .optional(),
   link: z.string().url('Enter a valid URL').optional().or(z.literal('')),
   tags: z.array(z.string()).optional(),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional(),

@@ -53,6 +53,9 @@ const nextConfig = {
     ];
   },
   images: {
+    // Optimized feed images rarely change — hold them in the on-disk optimizer
+    // cache for 31 days so repeat/first-paint requests skip the sharp round-trip.
+    minimumCacheTTL: 2678400,
     remotePatterns: [
       // S3 media uploads (any bucket/region under our AWS account)
       { protocol: 'https', hostname: '**.amazonaws.com' },

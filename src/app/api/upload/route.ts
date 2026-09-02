@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
         const rawBuffer = Buffer.from(await file.arrayBuffer());
 
-        const { buffer, contentType, extension } =
+        const { buffer, contentType, extension, width, height } =
             resourceType === 'video'
                 ? await optimizeVideo(rawBuffer)
                 : await optimizeImage(rawBuffer, file.type, { maxWidth: 1920, quality: 82 });
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             url,
             resourceType,
+            ...(width && height ? { width, height } : {}),
         });
     } catch (error) {
         logger.error('Upload error', error);

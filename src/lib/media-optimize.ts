@@ -19,6 +19,9 @@ interface OptimizedMedia {
   buffer: Buffer;
   contentType: string;
   extension: string;
+  /** Intrinsic pixel dimensions of the output image, when known. */
+  width?: number;
+  height?: number;
 }
 
 interface OptimizeImageOptions {
@@ -30,10 +33,17 @@ interface OptimizeImageOptions {
 
 export async function optimizeImage(buffer: Buffer, mimeType: string, options: OptimizeImageOptions): Promise<OptimizedMedia> {
   if (PASSTHROUGH_IMAGE_TYPES.has(mimeType)) {
-    return { buffer, contentType: mimeType, extension: mimeType === 'image/svg+xml' ? 'svg' : 'gif' };
+    const { width, height } = await sharp(buffer).metadata().catch(() => ({ width: undefined, height: undefined }));
+    return {
+      buffer,
+      contentType: mimeType,
+      extension: mimeType === 'image/svg+xml' ? 'svg' : 'gif',
+      width,
+      height,
+    };
   }
 
-  const optimized = await sharp(buffer)
+  const { data, info } = await sharp(buffer)
     .rotate()
     .resize({
       width: options.maxWidth,
@@ -42,9 +52,9 @@ export async function optimizeImage(buffer: Buffer, mimeType: string, options: O
       withoutEnlargement: true,
     })
     .webp({ quality: options.quality ?? 82 })
-    .toBuffer();
+    .toBuffer({ resolveWithObject: true });
 
-  return { buffer: optimized, contentType: 'image/webp', extension: 'webp' };
+  return { buffer: data, contentType: 'image/webp', extension: 'webp', width: info.width, height: info.height };
 }
 
 export async function optimizeVideo(buffer: Buffer, maxWidth = 1280): Promise<OptimizedMedia> {

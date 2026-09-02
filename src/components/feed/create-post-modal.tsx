@@ -18,6 +18,9 @@ import { AppVideo } from '@/components/ui/app-video';
 
 type PostType = 'IMAGE' | 'VIDEO' | 'TEXT';
 
+/** Intrinsic image dimensions, aligned by index with a post's `images`. */
+type ImageMetaEntry = { w: number; h: number } | null;
+
 const HASHTAG_PATTERN = /#[a-zA-Z0-9_]+/g;
 
 function extractHashtags(text: string): string[] {
@@ -191,25 +194,24 @@ export function CreatePostModal() {
         }
     };
 
-    const uploadMedia = async (): Promise<string[]> => {
+    const uploadMedia = async (): Promise<{ url: string; meta: ImageMetaEntry }[]> => {
         if (mediaFiles.length === 0) return [];
         setUploadProgress(0);
 
-        const uploaded: string[] = [];
+        const uploaded: { url: string; meta: ImageMetaEntry }[] = [];
 
-        try {
-            for (let i = 0; i < mediaFiles.length; i++) {
-                const file = mediaFiles[i];
-                const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
-                
-                const data = await uploadMutation.mutateAsync({ file, resourceType });
-                uploaded.push(data.url);
-                setUploadProgress(Math.round(((i + 1) / mediaFiles.length) * 100));
-            }
-            return uploaded;
-        } catch (err) {
-            throw err;
+        for (let i = 0; i < mediaFiles.length; i++) {
+            const file = mediaFiles[i];
+            const resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+
+            const data = await uploadMutation.mutateAsync({ file, resourceType });
+            uploaded.push({
+                url: data.url,
+                meta: data.width && data.height ? { w: data.width, h: data.height } : null,
+            });
+            setUploadProgress(Math.round(((i + 1) / mediaFiles.length) * 100));
         }
+        return uploaded;
     };
 
     const createMutation = useCreatePost();
@@ -233,9 +235,19 @@ export function CreatePostModal() {
         }
 
         try {
-            const newMediaUrls = await uploadMedia();
+            const newMedia = await uploadMedia();
             const existingUrls = mediaPreviews.filter(p => !p.startsWith('blob:'));
-            const finalMediaUrls = [...existingUrls, ...newMediaUrls];
+            const finalMediaUrls = [...existingUrls, ...newMedia.map(m => m.url)];
+
+            // imageMeta stays index-aligned with finalMediaUrls: retained images
+            // keep their stored dimensions, freshly uploaded ones use what the
+            // upload endpoint just measured.
+            const existingMeta: ImageMetaEntry[] = existingUrls.map(url => {
+                const idx = editingPost?.images?.indexOf(url) ?? -1;
+                const m = idx >= 0 ? ((editingPost as any)?.imageMeta?.[idx] as ImageMetaEntry | undefined) : null;
+                return m && typeof m.w === 'number' && typeof m.h === 'number' ? { w: m.w, h: m.h } : null;
+            });
+            const finalImageMeta: ImageMetaEntry[] = [...existingMeta, ...newMedia.map(m => m.meta)];
 
             const parsedTags = extractHashtags(content);
 
@@ -243,6 +255,7 @@ export function CreatePostModal() {
                 type: postType,
                 content: content.trim(),
                 images: finalMediaUrls,
+                imageMeta: finalMediaUrls.length > 0 ? finalImageMeta : undefined,
                 // When editing, always send the link (including '') so clearing it persists.
                 // When creating, omit it entirely unless the user set one.
                 link: editingPost ? trimmedLink : (trimmedLink || undefined),

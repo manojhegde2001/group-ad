@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
+import { ConnectionsModal } from '@/components/profile/connections-modal';
 import { Masonry } from 'masonic';
 import { FeedGridItem, type FeedItem } from '@/components/feed/feed-grid-item';
 import { useMounted } from '@/hooks/use-mounted';
@@ -52,6 +53,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
     const profile = profileData?.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+    const [isCircleOpen, setIsCircleOpen] = useState(false);
 
     // Fetch meetings to detect an existing request/accepted state with this profile
     const isBothBusiness = (me as any)?.userType === 'BUSINESS' && profile?.userType === 'BUSINESS';
@@ -166,7 +168,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
     return (
         <>
-        <div className="w-full min-w-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
+        <div className="w-full min-w-0 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
             {/* --- Back Button --- */}
             <button
                 onClick={() => router.back()}
@@ -178,7 +180,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
 
             {/* --- Profile Header --- */}
             <div className="relative mb-8 md:mb-12">
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-5 md:gap-12">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-5 md:gap-12 max-w-5xl mx-auto">
                     {/* Avatar with Ring */}
                     <div className="relative group shrink-0">
                         <div className="absolute -inset-1 bg-gradient-to-tr from-primary-500 to-violet-500 rounded-4xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
@@ -236,7 +238,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                         />
 
                                         {profile.messagingEnabled && ((profile as any).visibility === 'PUBLIC' || profile.connectionStatus === 'ACCEPTED') && (
-                                            <Link href={`/messages?userId=${profile.id}`} className="flex items-center justify-center h-10 w-10 sm:w-auto px-0 sm:px-5 shrink-0 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 text-secondary-900 dark:text-white font-black uppercase tracking-widest text-[10px] transition-colors gap-0 sm:gap-2">
+                                            <Link href={`/messages?userId=${profile.id}`} className="flex items-center justify-center h-10 w-10 sm:w-auto px-0 sm:px-5 shrink-0 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 shadow-lg shadow-secondary-900/20 dark:shadow-white/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 gap-0 sm:gap-2">
                                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                                 <span className="hidden sm:inline">Message</span>
                                             </Link>
@@ -302,10 +304,21 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                 <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.posts || 0}</p>
                                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Posts</p>
                             </div>
-                            <div className="text-center md:text-left transition-transform hover:scale-105">
-                                <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.connections || 0}</p>
-                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">In Circle</p>
-                            </div>
+                            {isOwnProfile ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCircleOpen(true)}
+                                    className="text-center md:text-left transition-transform hover:scale-105 cursor-pointer"
+                                >
+                                    <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.connections || 0}</p>
+                                    <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">In Circle</p>
+                                </button>
+                            ) : (
+                                <div className="text-center md:text-left transition-transform hover:scale-105">
+                                    <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.connections || 0}</p>
+                                    <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">In Circle</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Bio & Links */}
@@ -439,6 +452,10 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                 }}
             />
         )} */}
+
+        {isOwnProfile && (
+            <ConnectionsModal isOpen={isCircleOpen} onClose={() => setIsCircleOpen(false)} />
+        )}
         </>
     );
 }

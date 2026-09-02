@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         const otherId = conn.requesterId === userId ? conn.receiverId : conn.requesterId;
         const otherUser = await prisma.user.findUnique({
           where: { id: otherId },
-          select: { id: true, name: true, username: true, avatar: true, userType: true },
+          select: { id: true, name: true, username: true, avatar: true, userType: true, companyName: true },
         });
         return {
           ...conn,

@@ -120,7 +120,7 @@ export function ConnectionButton({
             <Button
                 onClick={() => handleAction('REMOVE')}
                 disabled={loading}
-                className={cn("flex items-center justify-center h-10 px-5 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-secondary-600 dark:text-secondary-300 hover:text-red-600 dark:hover:text-red-400 font-black uppercase tracking-widest text-[10px] group transition-colors", className)}
+                className={cn("flex items-center justify-center h-10 px-5 rounded-full border border-secondary-200 dark:border-secondary-700 bg-secondary-100 dark:bg-secondary-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-secondary-600 dark:text-secondary-300 hover:text-red-600 dark:hover:text-red-400 font-black uppercase tracking-widest text-[10px] group transition-colors", className)}
             >
                 {loading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
@@ -130,8 +130,10 @@ export function ConnectionButton({
                         <X className="w-3.5 h-3.5 mr-2 hidden group-hover:block" />
                     </>
                 )}
-                <span className="group-hover:hidden">Requested</span>
-                <span className="hidden group-hover:block">Cancel</span>
+                <span className="grid text-center whitespace-nowrap">
+                    <span className="col-start-1 row-start-1 transition-opacity group-hover:opacity-0">Requested</span>
+                    <span className="col-start-1 row-start-1 opacity-0 transition-opacity group-hover:opacity-100">Cancel</span>
+                </span>
             </Button>
         );
     }
@@ -166,7 +168,7 @@ export function ConnectionButton({
             <Button
                 onClick={() => handleAction('REMOVE')}
                 disabled={loading}
-                className={cn("flex items-center justify-center h-10 px-6 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-secondary-600 dark:text-secondary-300 hover:text-red-600 dark:hover:text-red-400 font-black uppercase tracking-widest text-[10px] group transition-colors", className)}
+                className={cn("flex items-center justify-center h-10 px-6 rounded-full border border-secondary-200 dark:border-secondary-700 bg-secondary-100 dark:bg-secondary-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-secondary-600 dark:text-secondary-300 hover:text-red-600 dark:hover:text-red-400 font-black uppercase tracking-widest text-[10px] group transition-colors", className)}
             >
                 {loading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
@@ -176,8 +178,10 @@ export function ConnectionButton({
                         <CircleX className="w-3.5 h-3.5 mr-2 hidden group-hover:block" />
                     </>
                 )}
-                <span className="group-hover:hidden">In Circle</span>
-                <span className="hidden group-hover:block">Leave Circle</span>
+                <span className="grid text-center whitespace-nowrap">
+                    <span className="col-start-1 row-start-1 transition-opacity group-hover:opacity-0">In Circle</span>
+                    <span className="col-start-1 row-start-1 opacity-0 transition-opacity group-hover:opacity-100">Leave Circle</span>
+                </span>
             </Button>
         );
     }

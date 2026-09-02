@@ -66,16 +66,19 @@ then `npm start`. No `Procfile` or `railway.json` is required.
 
 ### Environment variables in production
 
-`getEnv()` (called at server startup) **hard-fails the boot** in production when
-any of the required variables below are missing, listing all of them at once.
+`getEnv()` (called at server startup) **hard-fails the boot** only when
+`DATABASE_URL` or an auth secret is missing/invalid. In production it also logs a
+loud warning listing any missing "recommended" var (mailer / S3 / app URL) — the
+related feature is then degraded but the app still serves. Wrapping quotes on a
+pasted `KEY="value"` are stripped automatically.
 
-| Variable                              | Required | Notes                                          |
-| ------------------------------------- | :------: | --------------------------------------------- |
-| `DATABASE_URL`                        | ✅ | MongoDB connection string                           |
-| `NEXTAUTH_SECRET` (or `AUTH_SECRET`)  | ✅ | Session/JWT signing secret                          |
-| `NEXT_PUBLIC_APP_URL`                 | ✅ | Public URL, e.g. `https://vrutta.net` — email/verification links are built from it |
-| `RESEND_API_KEY` / `EMAIL_FROM`       | ✅ | Transactional email — signup requires email verification, so this must work |
-| `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_S3_BUCKET_NAME` | ✅ | S3 media uploads |
+| Variable                              | Boot | Notes                                          |
+| ------------------------------------- | :--: | --------------------------------------------- |
+| `DATABASE_URL`                        | hard | MongoDB connection string                           |
+| `NEXTAUTH_SECRET` (or `AUTH_SECRET`)  | hard | Session/JWT signing secret                          |
+| `NEXT_PUBLIC_APP_URL`                 | warn | Public URL, e.g. `https://vrutta.net` — email/verification links; `RAILWAY_PUBLIC_DOMAIN` covers it if unset |
+| `RESEND_API_KEY` / `EMAIL_FROM`       | warn | Transactional email — signup verification won't send without it |
+| `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_S3_BUCKET_NAME` | warn | S3 media uploads |
 | `AWS_S3_PUBLIC_URL`                   |    | Public base URL for S3 objects (if not the default) |
 | `GOOGLE_CLIENT_ID` / `_SECRET`        |    | Google OAuth (feature-degrades if unset)            |
 | `GEMINI_API_KEY` / `GEMINI_MODEL`     |    | AI assistant                                        |

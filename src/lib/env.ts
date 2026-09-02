@@ -1,15 +1,15 @@
 import { z } from 'zod';
+import { logger } from './logger';
 
-// In development only DATABASE_URL and an auth secret are required — every other
-// integration degrades gracefully per-feature at request time (see e.g.
-// isS3Configured() in src/lib/s3.ts), so a partial local setup still works.
+// Only DATABASE_URL and an auth secret can prevent the app from booting — those
+// stay hard-required. Every other integration degrades gracefully per-feature at
+// request time (see e.g. isS3Configured() in src/lib/s3.ts).
 //
-// In production the bar is higher: signup now requires a working mailer, and
-// uploads require S3, so those are hard-required below (see the superRefine).
-// Google OAuth, Gemini, cron and Sentry stay optional everywhere.
-const REQUIRED_IN_PRODUCTION = [
-  'NEXT_PUBLIC_APP_URL', // verification / reset links are built from this
-  'RESEND_API_KEY',      // email verification is mandatory for signup
+// In production we additionally *warn* (loudly, but non-fatally) when the vars
+// below are missing, since signup needs a mailer and uploads need S3. A gap
+// there breaks a feature, not the whole deployment.
+const RECOMMENDED_IN_PRODUCTION = [
+  'RESEND_API_KEY', // email verification is mandatory for signup
   'EMAIL_FROM',
   'AWS_REGION',
   'AWS_ACCESS_KEY_ID',
@@ -51,17 +51,6 @@ const envSchema = z.object({
   NEXT_PUBLIC_SENTRY_RELEASE: z.string().min(1).optional(),
 }).refine((data) => data.NEXTAUTH_SECRET || data.AUTH_SECRET, {
   message: 'Either NEXTAUTH_SECRET or AUTH_SECRET must be set',
-}).superRefine((data, ctx) => {
-  if (process.env.NODE_ENV !== 'production') return;
-  for (const key of REQUIRED_IN_PRODUCTION) {
-    if (!data[key as keyof typeof data]) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: [key],
-        message: 'required in production',
-      });
-    }
-  }
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -76,10 +65,17 @@ let cachedEnv: Env | undefined;
 export function getEnv(): Env {
   if (cachedEnv) return cachedEnv;
 
-  // Some hosts (e.g. Render) set optional vars to an empty string rather than
-  // leaving them unset. Treat "" as unset so min(1) doesn't reject them.
+  // - Some hosts (e.g. Render) set optional vars to an empty string rather than
+  //   leaving them unset — treat "" as unset so min(1) doesn't reject them.
+  // - Some dashboards (e.g. Railway's raw editor) keep the surrounding quotes
+  //   from a pasted `KEY="value"` line — strip a single matching wrapping pair
+  //   so `https://...` isn't rejected as an invalid URL.
   const sanitizedEnv = Object.fromEntries(
-    Object.entries(process.env).map(([key, value]) => [key, value === '' ? undefined : value])
+    Object.entries(process.env).map(([key, value]) => {
+      if (value == null) return [key, undefined];
+      const unquoted = value.replace(/^(['"])([\s\S]*)\1$/, '$2');
+      return [key, unquoted === '' ? undefined : unquoted];
+    })
   );
 
   const parsed = envSchema.safeParse(sanitizedEnv);
@@ -91,5 +87,21 @@ export function getEnv(): Env {
   }
 
   cachedEnv = parsed.data;
+
+  if (process.env.NODE_ENV === 'production') {
+    const appUrl = parsed.data.NEXT_PUBLIC_APP_URL || process.env.RAILWAY_PUBLIC_DOMAIN;
+    const missing = [
+      !appUrl && 'NEXT_PUBLIC_APP_URL',
+      ...RECOMMENDED_IN_PRODUCTION.filter((k) => !parsed.data[k]),
+    ].filter(Boolean);
+
+    if (missing.length) {
+      logger.warn(
+        'Production environment is missing recommended variables — the related features will be degraded until they are set',
+        { missing },
+      );
+    }
+  }
+
   return cachedEnv;
 }

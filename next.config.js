@@ -56,6 +56,11 @@ const nextConfig = {
     // Optimized feed images rarely change — hold them in the on-disk optimizer
     // cache for 31 days so repeat/first-paint requests skip the sharp round-trip.
     minimumCacheTTL: 2678400,
+    // Nothing in the app renders an image wider than the post-detail view (~1920
+    // at 2× on a large screen). Dropping the 2048/3840 buckets stops the
+    // optimizer being asked to generate multi-MB variants and shrinks the
+    // non-srcset `src` fallback the feed cards ship with.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     remotePatterns: [
       // S3 media uploads (any bucket/region under our AWS account)
       { protocol: 'https', hostname: '**.amazonaws.com' },

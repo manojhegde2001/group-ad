@@ -9,7 +9,7 @@ import { logger } from './logger';
 // below are missing, since signup needs a mailer and uploads need S3. A gap
 // there breaks a feature, not the whole deployment.
 const RECOMMENDED_IN_PRODUCTION = [
-  'RESEND_API_KEY', // email verification is mandatory for signup
+  'ZEPTOMAIL_TOKEN', // email verification is mandatory for signup
   'EMAIL_FROM',
   'AWS_REGION',
   'AWS_ACCESS_KEY_ID',
@@ -29,7 +29,8 @@ const envSchema = z.object({
   // Set automatically by Railway; used as a base-URL fallback for emails/links.
   RAILWAY_PUBLIC_DOMAIN: z.string().min(1).optional(),
 
-  RESEND_API_KEY: z.string().min(1).optional(),
+  ZEPTOMAIL_TOKEN: z.string().min(1).optional(),
+  ZEPTOMAIL_URL: z.string().url().optional(),
   EMAIL_FROM: z.string().min(1).optional(),
 
   AWS_REGION: z.string().min(1).optional(),

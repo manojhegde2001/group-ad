@@ -573,7 +573,6 @@ export function PostDetailContent({ postId, post: initialPost, isModal = false, 
                                     targetName={post.user.companyName || post.user.name}
                                     initialStatus={(post.user as any).connectionStatus}
                                     isInitiator={(post.user as any).connectionInitiator}
-                                    mutualConnections={(post.user as any).mutualConnections}
                                     className="shrink-0 whitespace-nowrap h-9 px-4 text-[10px]"
                                 />
                             )}

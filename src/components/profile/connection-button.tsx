@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { UserPlus, UserCheck, UserX, Loader2, Check, X, Clock } from 'lucide-react';
+import { CirclePlus, CircleCheck, CircleX, Loader2, Check, X, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-modal';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import {
     useUpdateConnectionMutation, 
     useRemoveConnectionMutation 
 } from '@/hooks/use-api/use-connections';
-import { AppImage } from '@/components/ui/app-image';
 
 type ConnectionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED' | null;
 
@@ -19,7 +18,6 @@ interface ConnectionButtonProps {
     targetName?: string;
     initialStatus: ConnectionStatus;
     isInitiator?: boolean; // True if current user sent the request
-    mutualConnections?: { count: number; avatars: string[] };
     size?: 'sm' | 'md' | 'lg' | 'xl';
     className?: string;
     onStatusChange?: (newStatus: ConnectionStatus) => void;
@@ -30,7 +28,6 @@ export function ConnectionButton({
     targetName = 'User',
     initialStatus = null,
     isInitiator = false,
-    mutualConnections = { count: 0, avatars: [] },
     size = 'md',
     className,
     onStatusChange,
@@ -82,7 +79,7 @@ export function ConnectionButton({
 
     const handleAction = (action: 'ACCEPT' | 'REJECT' | 'REMOVE') => {
         if (action === 'REMOVE') {
-            if (window.confirm(`Are you sure you want to remove ${targetName} from your connections?`)) {
+            if (window.confirm(`Are you sure you want to remove ${targetName} from your circle?`)) {
                 removeMutation.mutate(userId, {
                     onSuccess: () => {
                         setStatus(null);
@@ -106,31 +103,14 @@ export function ConnectionButton({
     // 1. Not connected / No request
     if (!status) {
         return (
-            <div className={cn("flex flex-col gap-2", className)}>
-                {mutualConnections.count > 0 && (
-                    <div className="flex items-center gap-1.5 mb-1">
-                        <div className="flex -space-x-2">
-                            {mutualConnections.avatars.map((avatar, i) => (
-                                 <div key={i} className="w-5 h-5 rounded-full border border-white dark:border-secondary-900 overflow-hidden bg-gray-100 relative">
-                                     <AppImage src={avatar} fill className="w-full h-full object-cover" alt="" />
-                                 </div>
-                            ))}
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                            {mutualConnections.count} mutual connection{mutualConnections.count !== 1 ? 's' : ''}
-                        </span>
-                    </div>
-                )}
-
-                <Button
-                    onClick={handleConnect}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center h-10 px-6 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 shadow-lg shadow-secondary-900/20 dark:shadow-white/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
-                >
-                    {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <UserPlus className="w-3.5 h-3.5 mr-2" />}
-                    Connect
-                </Button>
-            </div>
+            <Button
+                onClick={handleConnect}
+                disabled={loading}
+                className={cn("flex items-center justify-center h-10 px-6 rounded-full bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 hover:bg-secondary-800 dark:hover:bg-secondary-100 shadow-lg shadow-secondary-900/20 dark:shadow-white/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95", className)}
+            >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <CirclePlus className="w-3.5 h-3.5 mr-2" />}
+                Add to Circle
+            </Button>
         );
     }
 
@@ -174,7 +154,7 @@ export function ConnectionButton({
                     className="flex-1 min-w-0 flex items-center justify-center h-10 px-5 rounded-full bg-secondary-100 dark:bg-secondary-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-secondary-600 dark:text-secondary-300 hover:text-red-600 dark:hover:text-red-400 font-black uppercase tracking-widest text-[10px] transition-colors"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <X className="w-3.5 h-3.5 mr-2" />}
-                    Reject
+                    Decline
                 </Button>
             </div>
         );
@@ -192,12 +172,12 @@ export function ConnectionButton({
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
                 ) : (
                     <>
-                        <UserCheck className="w-3.5 h-3.5 mr-2 group-hover:hidden" />
-                        <UserX className="w-3.5 h-3.5 mr-2 hidden group-hover:block" />
+                        <CircleCheck className="w-3.5 h-3.5 mr-2 group-hover:hidden" />
+                        <CircleX className="w-3.5 h-3.5 mr-2 hidden group-hover:block" />
                     </>
                 )}
-                <span className="group-hover:hidden">Connected</span>
-                <span className="hidden group-hover:block">Disconnect</span>
+                <span className="group-hover:hidden">In Circle</span>
+                <span className="hidden group-hover:block">Leave Circle</span>
             </Button>
         );
     }

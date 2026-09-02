@@ -1,40 +1,70 @@
-import { Resend } from 'resend';
 import { NextRequest } from 'next/server';
 import { logger } from '@/lib/logger';
 
-let resend: Resend | null = null;
+const ZEPTOMAIL_DEFAULT_URL = 'https://api.zeptomail.in';
 
-function getResendClient() {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-        logger.warn('[mailer] Missing RESEND_API_KEY configuration');
+function getZeptoMailConfig() {
+    const token = process.env.ZEPTOMAIL_TOKEN;
+    if (!token) {
+        logger.warn('[mailer] Missing ZEPTOMAIL_TOKEN configuration');
         return null;
     }
-    if (!resend) {
-        resend = new Resend(apiKey);
-    }
-    return resend;
+    const baseUrl = (process.env.ZEPTOMAIL_URL || ZEPTOMAIL_DEFAULT_URL).replace(/\/$/, '');
+    // Accept either the full "Zoho-enczapikey <key>" string or just the raw key.
+    const authorization = /^Zoho-enczapikey\s/i.test(token) ? token : `Zoho-enczapikey ${token}`;
+    return { url: `${baseUrl}/v1.1/email`, authorization };
 }
 
-const getFromAddress = () => process.env.EMAIL_FROM || 'Vrutta <onboarding@resend.dev>';
+const getFromAddress = () => process.env.EMAIL_FROM || 'Vrutta <noreply@vrutta.net>';
+
+/** Parses an RFC 5322-style "Name <addr@example.com>" (or a bare address) into ZeptoMail's shape. */
+function parseFromAddress(value: string): { address: string; name?: string } {
+    const match = value.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+    if (match) {
+        const name = match[1].replace(/^"|"$/g, '').trim();
+        return name ? { address: match[2].trim(), name } : { address: match[2].trim() };
+    }
+    return { address: value.trim() };
+}
 
 export async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
     logger.info('[mailer] Attempting to send email to', { to });
     logger.info('[mailer] Using APP_URL', { appUrl: process.env.NEXT_PUBLIC_APP_URL });
-    const client = getResendClient();
-    if (!client) {
+    const config = getZeptoMailConfig();
+    if (!config) {
         const error = new Error('Email API configuration is missing');
         logger.error('[mailer] Email configuration error', error);
         throw error;
     }
     try {
-        const from = getFromAddress();
-        const { data, error } = await client.emails.send({ from, to, subject, html });
-        if (error) {
-            throw new Error(error.message);
+        const response = await fetch(config.url, {
+            method: 'POST',
+            headers: {
+                Authorization: config.authorization,
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            },
+            body: JSON.stringify({
+                from: parseFromAddress(getFromAddress()),
+                to: [{ email_address: { address: to } }],
+                subject,
+                htmlbody: html,
+            }),
+        });
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+            const detail =
+                payload?.error?.details?.[0]?.message ||
+                payload?.error?.message ||
+                payload?.message ||
+                `${response.status} ${response.statusText}`;
+            throw new Error(detail);
         }
-        logger.info('[mailer] Email sent successfully', { id: data?.id });
-        return data;
+
+        const id = payload?.request_id ?? payload?.data?.[0]?.message_id;
+        logger.info('[mailer] Email sent successfully', { id });
+        return payload;
     } catch (err) {
         logger.error('[mailer] Failed to send email', err);
         throw err; // Rethrow to let the API handle it

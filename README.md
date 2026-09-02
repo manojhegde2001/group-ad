@@ -13,7 +13,7 @@ Prisma + MongoDB, and NextAuth v5.
 | Database      | MongoDB via Prisma (`provider = "mongodb"`)        |
 | Auth          | NextAuth v5 (Credentials + Google), JWT sessions   |
 | Realtime      | Socket.io (`/api/socket/io`)                       |
-| Email         | Resend                                             |
+| Email         | ZeptoMail (Zoho)                                   |
 | Media         | AWS S3                                             |
 | AI assistant  | Google Gemini                                      |
 | PWA           | Serwist service worker                             |
@@ -77,7 +77,7 @@ pasted `KEY="value"` are stripped automatically.
 | `DATABASE_URL`                        | hard | MongoDB connection string                           |
 | `NEXTAUTH_SECRET` (or `AUTH_SECRET`)  | hard | Session/JWT signing secret                          |
 | `NEXT_PUBLIC_APP_URL`                 | warn | Public URL, e.g. `https://vrutta.net` — email/verification links; `RAILWAY_PUBLIC_DOMAIN` covers it if unset |
-| `RESEND_API_KEY` / `EMAIL_FROM`       | warn | Transactional email — signup verification won't send without it |
+| `ZEPTOMAIL_TOKEN` / `EMAIL_FROM`      | warn | Transactional email (ZeptoMail) — signup verification won't send without it; `ZEPTOMAIL_URL` overrides the data-center endpoint (default `api.zeptomail.in`) |
 | `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_S3_BUCKET_NAME` | warn | S3 media uploads |
 | `AWS_S3_PUBLIC_URL`                   |    | Public base URL for S3 objects (if not the default) |
 | `GOOGLE_CLIENT_ID` / `_SECRET`        |    | Google OAuth (feature-degrades if unset)            |

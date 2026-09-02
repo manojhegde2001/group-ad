@@ -232,7 +232,6 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                             targetName={profile.companyName || profile.name}
                                             initialStatus={profile.connectionStatus}
                                             isInitiator={profile.connectionInitiator}
-                                            mutualConnections={(profile as any).mutualConnections}
                                             className="flex-1 min-w-0 sm:flex-none sm:w-auto h-10 whitespace-nowrap"
                                         />
 
@@ -279,6 +278,24 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                             </div>
                         </div>
 
+                        {/* Shared circle */}
+                        {!isOwnProfile && (profile as any).mutualConnections?.count > 0 && (
+                            <div className="flex items-center justify-center md:justify-start gap-2 mb-4 md:mb-5">
+                                {(profile as any).mutualConnections.avatars?.length > 0 && (
+                                    <div className="flex -space-x-2">
+                                        {(profile as any).mutualConnections.avatars.map((avatar: string, i: number) => (
+                                            <div key={i} className="w-5 h-5 rounded-full border border-white dark:border-secondary-900 overflow-hidden bg-secondary-100 dark:bg-secondary-800 relative">
+                                                <AppImage src={avatar} fill className="w-full h-full object-cover" alt="" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <span className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">
+                                    {(profile as any).mutualConnections.count} in your circle
+                                </span>
+                            </div>
+                        )}
+
                         {/* Stats */}
                         <div className="flex items-center justify-center md:justify-start gap-8 sm:gap-10 md:gap-12 mb-6 md:mb-8">
                             <div className="text-center md:text-left transition-transform hover:scale-105">
@@ -287,7 +304,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                             </div>
                             <div className="text-center md:text-left transition-transform hover:scale-105">
                                 <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{profile._count?.connections || 0}</p>
-                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Connections</p>
+                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">In Circle</p>
                             </div>
                         </div>
 
@@ -364,7 +381,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                             <MapPin className="w-8 h-8 text-secondary-300" />
                         </div>
                         <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">This Account is Private</h3>
-                        <p className="text-sm text-secondary-500 max-w-[240px]">Connect with {profile.companyName || profile.name} to see their professional updates.</p>
+                        <p className="text-sm text-secondary-500 max-w-[240px]">Add {profile.companyName || profile.name} to your circle to see their professional updates.</p>
                     </div>
                 ) : createdPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 text-center">

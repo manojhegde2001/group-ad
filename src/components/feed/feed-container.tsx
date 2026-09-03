@@ -148,8 +148,8 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
           key={gridKey}
           items={feedItems}
           columnCount={columnCount}
-          columnGutter={6}
-          rowGutter={6}
+          columnGutter={2}
+          rowGutter={2}
           overscanBy={2}
           itemHeightEstimate={320}
           itemKey={(item: FeedItem) => item.id}

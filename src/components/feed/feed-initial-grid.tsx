@@ -35,7 +35,7 @@ export function FeedInitialGrid({ posts, realCount = 8 }: FeedInitialGridProps) 
   const remainder = Math.max(0, 12 - visible.length);
 
   return (
-    <div className="columns-2 md:columns-3 xl:columns-4 2xl:columns-5 gap-1.5 [column-fill:balance]">
+    <div className="columns-2 md:columns-3 xl:columns-4 2xl:columns-5 gap-0.5 [column-fill:balance]">
       {visible.map((post, i) => {
         const src = post.images?.[0];
         const meta = post.imageMeta?.[0];
@@ -44,7 +44,7 @@ export function FeedInitialGrid({ posts, realCount = 8 }: FeedInitialGridProps) 
           ? { aspectRatio: ratio, minHeight: 200 }
           : { height: HEIGHTS[i % HEIGHTS.length] };
         return (
-          <div key={post.id} className="mb-1.5 break-inside-avoid">
+          <div key={post.id} className="mb-0.5 break-inside-avoid">
             <Link
               href={`/posts/${post.id}`}
               className="group relative rounded-lg overflow-hidden bg-white dark:bg-secondary-900 shadow-sm block border border-secondary-100/50 dark:border-secondary-800/30"
@@ -81,7 +81,7 @@ export function FeedInitialGrid({ posts, realCount = 8 }: FeedInitialGridProps) 
         );
       })}
       {Array.from({ length: remainder }).map((_, i) => (
-        <div key={`sk-${i}`} className="mb-1.5 break-inside-avoid">
+        <div key={`sk-${i}`} className="mb-0.5 break-inside-avoid">
           <PostCardSkeleton index={visible.length + i} />
         </div>
       ))}

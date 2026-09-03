@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
         const teamMateSuggestions = await prisma.user.findMany({
             where: {
                 id: { notIn: Array.from(connectedIds) },
+                userType: { not: 'ADMIN' },
                 powerTeamMemberships: {
                     some: {
                         powerTeamId: { in: teamIds },
@@ -94,7 +95,8 @@ export async function GET(request: NextRequest) {
 
         const mutualUsers = await prisma.user.findMany({
             where: {
-                id: { in: Array.from(potentialMutualIds) }
+                id: { in: Array.from(potentialMutualIds) },
+                userType: { not: 'ADMIN' }
             },
             select: {
                 id: true,
@@ -129,6 +131,7 @@ export async function GET(request: NextRequest) {
                     where: {
                         categoryId: myProfile.categoryId,
                         id: { notIn: Array.from(connectedIds) },
+                        userType: { not: 'ADMIN' },
                     },
                     select: {
                         id: true,

@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useMounted } from '@/hooks/use-mounted';
 import {
-  Clock, CalendarCheck, Users, RefreshCw, 
-  ArrowRight, ShieldCheck, UserCheck, Play, Grip, ChevronDown
+  Clock, CalendarCheck, Users, RefreshCw,
+  ArrowRight, ShieldCheck, UserCheck, Play, ChevronDown
 } from 'lucide-react';
 
 export default function HowItWorksPage() {
@@ -34,34 +34,34 @@ export default function HowItWorksPage() {
             <Clock className="w-3.5 h-3.5 text-primary-500" />
             The Vrutta Model
           </span>
-          
+
           <h1 className="text-3xl md:text-4xl lg:text-6xl font-black text-secondary-900 dark:text-white mb-4 tracking-tight leading-[1.1]">
-            How Vrutta Meetings <span className="text-primary-600 dark:text-primary-500">Work.</span>
+            How Vrutta Events <span className="text-primary-600 dark:text-primary-500">Work.</span>
           </h1>
-          
+
           <p className="text-base md:text-lg font-bold text-secondary-900 dark:text-white max-w-2xl mx-auto mb-3 leading-tight">
-            One office. One full day. Endless opportunities to connect.
+            Curated events where business owners actually meet.
           </p>
 
           <p className="text-sm md:text-base text-secondary-600 dark:text-secondary-400 max-w-2xl mx-auto mb-8 leading-relaxed font-medium">
-            Every day, from 9 AM to 8 PM, Vrutta offices stay open for structured 2-hour meeting blocks — designed for business owners to meet each other, build relationships, and grow through word of mouth.
+            Vrutta runs curated events — workshops, roundtables and meetups, online or in person. Browse what&apos;s coming up, reserve your spot, and meet other business owners face to face.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
             <div className="bg-secondary-50 dark:bg-secondary-900/50 rounded-2xl p-5 border border-secondary-100 dark:border-secondary-800 flex flex-col items-center justify-center text-center">
-              <Clock className="w-6 h-6 text-primary-500 mb-2" />
-              <h3 className="font-black text-secondary-900 dark:text-white text-base">9 AM – 8 PM</h3>
-              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1 font-medium">Open daily, walk in</p>
+              <CalendarCheck className="w-6 h-6 text-primary-500 mb-2" />
+              <h3 className="font-black text-secondary-900 dark:text-white text-base">Reserve a spot</h3>
+              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1 font-medium">A tap holds your seat</p>
             </div>
             <div className="bg-secondary-50 dark:bg-secondary-900/50 rounded-2xl p-5 border border-secondary-100 dark:border-secondary-800 flex flex-col items-center justify-center text-center">
-              <CalendarCheck className="w-6 h-6 text-primary-500 mb-2" />
-              <h3 className="font-black text-secondary-900 dark:text-white text-base">2 Hours</h3>
-              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1 font-medium">Per structured slot</p>
+              <UserCheck className="w-6 h-6 text-primary-500 mb-2" />
+              <h3 className="font-black text-secondary-900 dark:text-white text-base">One per profession</h3>
+              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1 font-medium">Seats capped by trade</p>
             </div>
             <div className="bg-secondary-50 dark:bg-secondary-900/50 rounded-2xl p-5 border border-secondary-100 dark:border-secondary-800 flex flex-col items-center justify-center text-center">
               <Users className="w-6 h-6 text-primary-500 mb-2" />
-              <h3 className="font-black text-secondary-900 dark:text-white text-base">Up to 40</h3>
-              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1 font-medium">One seat per profession</p>
+              <h3 className="font-black text-secondary-900 dark:text-white text-base">Online or in person</h3>
+              <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1 font-medium">Workshops &amp; meetups</p>
             </div>
           </div>
           
@@ -87,12 +87,12 @@ export default function HowItWorksPage() {
       <section className="py-12 md:py-20 px-4 border-t border-secondary-100 dark:border-secondary-800/50 overflow-hidden bg-secondary-50 dark:bg-secondary-900/10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <span className="inline-block px-3 py-1 rounded-full bg-white dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 text-secondary-600 dark:text-secondary-300 text-[10px] font-black uppercase tracking-widest mb-4">The day, slot by slot</span>
+            <span className="inline-block px-3 py-1 rounded-full bg-white dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 text-secondary-600 dark:text-secondary-300 text-[10px] font-black uppercase tracking-widest mb-4">Inside the room</span>
             <h2 className="text-3xl md:text-5xl font-black text-secondary-900 dark:text-white mb-4 tracking-tight">
-              One room, a new mix of trades every two hours
+              One room, a wide mix of trades
             </h2>
             <p className="text-base text-secondary-600 dark:text-secondary-400 max-w-2xl mx-auto font-medium">
-              Each block below is a real Vrutta meeting slot. Every seat in it belongs to a different profession — so the CA never competes with another CA in the same room.
+              Each event below is a sample. Every seat belongs to a different profession — so the CA never competes with another CA in the same room.
             </p>
           </div>
 
@@ -100,11 +100,11 @@ export default function HowItWorksPage() {
           <div className="relative w-full max-w-6xl mx-auto py-8">
             <div className="flex overflow-x-auto pb-8 snap-x snap-mandatory gap-6 scrollbar-hide px-4 md:px-0">
               {[
-                { time: '9:00 – 11:00', booked: 14, tags: ['Chartered Accountant', 'Interior Designer', 'Printer'], color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' },
-                { time: '11:00 – 1:00', booked: 22, tags: ['Architect', 'Caterer', 'Photographer'], color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800' },
-                { time: '1:00 – 3:00', booked: 31, tags: ['Lawyer', 'Real Estate Broker', 'Event Planner'], color: 'bg-primary-50 text-primary-700 border-primary-200 dark:bg-primary-900/30 dark:text-primary-400 dark:border-primary-800' },
-                { time: '3:00 – 5:00', booked: 9, tags: ['Web Developer', 'Tailor', 'Logistics Owner'], color: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' },
-                { time: '5:00 – 7:00', booked: 18, tags: ['Insurance Agent', 'Bakery Owner', 'Gym Owner'], color: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800' },
+                { name: 'Founders Roundtable', booked: 14, cap: 40, tags: ['Chartered Accountant', 'Interior Designer', 'Printer'], color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' },
+                { name: 'Service Providers Meetup', booked: 22, cap: 40, tags: ['Architect', 'Caterer', 'Photographer'], color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800' },
+                { name: 'Trade & Design Mixer', booked: 31, cap: 40, tags: ['Lawyer', 'Real Estate Broker', 'Event Planner'], color: 'bg-primary-50 text-primary-700 border-primary-200 dark:bg-primary-900/30 dark:text-primary-400 dark:border-primary-800' },
+                { name: 'Growth Workshop', booked: 9, cap: 25, tags: ['Web Developer', 'Tailor', 'Logistics Owner'], color: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' },
+                { name: 'Evening Networking', booked: 18, cap: 40, tags: ['Insurance Agent', 'Bakery Owner', 'Gym Owner'], color: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800' },
               ].map((slot, i) => (
                 <motion.div 
                   key={i}
@@ -115,8 +115,8 @@ export default function HowItWorksPage() {
                   className="shrink-0 w-80 md:w-96 snap-center"
                 >
                   <div className="mb-3 text-sm font-black text-secondary-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-primary-500" />
-                    {slot.time}
+                    <Users className="w-4 h-4 text-primary-500" />
+                    {slot.name}
                   </div>
                   <div className="bg-white dark:bg-secondary-900 rounded-[2rem] p-6 border border-secondary-200 dark:border-secondary-800 shadow-sm relative overflow-hidden group hover:border-primary-300 dark:hover:border-primary-700 transition-colors cursor-pointer h-full flex flex-col">
                     <div className="flex flex-wrap gap-2 mb-8">
@@ -132,10 +132,10 @@ export default function HowItWorksPage() {
                     
                     <div className="mt-auto">
                       <div className="flex justify-between text-xs font-bold text-secondary-500 mb-2">
-                        <span>{slot.booked} / 40 seats booked</span>
+                        <span>{slot.booked} / {slot.cap} seats filled</span>
                       </div>
                       <div className="w-full h-1.5 bg-secondary-100 dark:bg-secondary-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary-500 rounded-full" style={{ width: `${(slot.booked / 40) * 100}%` }} />
+                        <div className="h-full bg-primary-500 rounded-full" style={{ width: `${(slot.booked / slot.cap) * 100}%` }} />
                       </div>
                     </div>
                   </div>
@@ -144,7 +144,7 @@ export default function HowItWorksPage() {
             </div>
             
             <div className="text-center mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-xs font-medium text-secondary-500">
-              <p>Slots are illustrative — the app shows live availability.</p>
+              <p>Events are illustrative — the app shows live availability.</p>
               <div className="hidden md:block w-1 h-1 bg-secondary-300 rounded-full" />
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Services</span>
@@ -164,16 +164,16 @@ export default function HowItWorksPage() {
             Four steps, start to finish
           </h2>
           <p className="text-base text-secondary-600 dark:text-secondary-400 max-w-2xl mx-auto font-medium">
-            No fixed appointment, no crowded waiting room — just a slot that fits your day.
+            No cold outreach, no crowded rooms — just events built for real conversations.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
           {[
-            { num: '01', title: 'Book your slot via the app', desc: 'Open the Vrutta app and pick any 2-hour block between 9 AM and 8 PM — morning, afternoon or evening, whatever suits you.', icon: <Play className="w-5 h-5" /> },
-            { num: '02', title: 'One profession, one seat', desc: 'Every slot holds a single seat per business category, across up to 40 categories — so you\'re never up against someone from your own trade.', icon: <UserCheck className="w-5 h-5" /> },
-            { num: '03', title: 'Meet, talk, connect', desc: 'Walk in, meet fellow business owners face-to-face, and explore referral opportunities — all within a focused 2-hour window.', icon: <Users className="w-5 h-5" /> },
-            { num: '04', title: 'Book more slots, same day', desc: 'Slots run all day, every day. Book several in one day to meet more owners and build visibility faster.', icon: <RefreshCw className="w-5 h-5" /> }
+            { num: '01', title: 'Find an event', desc: 'Browse the Events page or the calendar and open anything that\'s coming up — a workshop, a roundtable or a meetup, online or in your city.', icon: <Play className="w-5 h-5" /> },
+            { num: '02', title: 'One profession, one seat', desc: 'Many events cap seats per business category — so you\'re never up against someone from your own trade.', icon: <UserCheck className="w-5 h-5" /> },
+            { num: '03', title: 'Meet, talk, connect', desc: 'Show up, meet fellow business owners face to face, and explore referral opportunities.', icon: <Users className="w-5 h-5" /> },
+            { num: '04', title: 'Never miss it', desc: 'Get email reminders 24 hours and 1 hour before, plus a calendar invite. If an event is full, join the waitlist — you\'re promoted automatically when a seat opens.', icon: <RefreshCw className="w-5 h-5" /> }
           ].map((step, i) => (
             <motion.div
               key={i}
@@ -207,9 +207,9 @@ export default function HowItWorksPage() {
               40<span className="text-primary-500 text-5xl md:text-6xl align-top">*</span>
             </div>
             <p className="text-lg md:text-xl font-medium text-secondary-600 dark:text-white/80 leading-relaxed max-w-md">
-              Business categories can hold a seat in a single slot — <strong className="text-secondary-900 dark:text-white">one member per profession</strong>, so the mix in the room stays wide and non-competing.
+              Every event has a seat limit — and often a cap <strong className="text-secondary-900 dark:text-white">per profession</strong> too. When your profession&apos;s seats are taken, you&apos;re waitlisted, not squeezed in.
             </p>
-            <p className="text-xs text-secondary-400 dark:text-white/40 mt-6 font-medium italic">*Category count may vary by office and city.</p>
+            <p className="text-xs text-secondary-400 dark:text-white/40 mt-6 font-medium italic">*Limits are set per event by the organiser.</p>
           </div>
 
           <div className="relative">
@@ -241,7 +241,7 @@ export default function HowItWorksPage() {
                 <div className="w-3 h-3 rounded-full bg-primary-500" />
                 <span className="text-xs font-black uppercase tracking-wider">Your Seat</span>
               </div>
-              <p className="text-[10px] text-secondary-500 dark:text-secondary-400 font-medium leading-tight">Exclusive to your profession for this 2-hour block.</p>
+              <p className="text-[10px] text-secondary-500 dark:text-secondary-400 font-medium leading-tight">Held for your profession once you reserve.</p>
             </div>
           </div>
         </div>
@@ -252,12 +252,12 @@ export default function HowItWorksPage() {
         <div className="bg-primary-50/50 dark:bg-primary-900/10 rounded-[3rem] p-8 md:p-16 border border-primary-100 dark:border-primary-800/30">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <span className="inline-block px-3 py-1 rounded-full bg-white dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 text-secondary-600 dark:text-secondary-300 text-[10px] font-black uppercase tracking-widest mb-6">No daily limit</span>
+              <span className="inline-block px-3 py-1 rounded-full bg-white dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 text-secondary-600 dark:text-secondary-300 text-[10px] font-black uppercase tracking-widest mb-6">No limit</span>
               <h2 className="text-3xl md:text-5xl font-black text-secondary-900 dark:text-white mb-6 tracking-tight">
-                Attend as many slots as your day allows
+                Join as many events as you like
               </h2>
               <p className="text-base md:text-lg text-secondary-600 dark:text-secondary-400 font-medium leading-relaxed">
-                Since meetings run back-to-back from 9 AM to 8 PM, you can book and attend multiple different slots in the same day — each one a fresh room of business owners.
+                There&apos;s no cap on how many events you join — reserve a spot in everything that&apos;s relevant, each one a fresh room of business owners.
               </p>
             </div>
             
@@ -306,21 +306,21 @@ export default function HowItWorksPage() {
         <div className="max-w-3xl mx-auto">
           <span className="inline-block px-3 py-1 rounded-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 text-secondary-600 dark:text-secondary-300 text-[10px] font-black uppercase tracking-widest mb-6">Ready when you are</span>
           <h2 className="text-3xl md:text-5xl font-black text-secondary-900 dark:text-white mb-6 tracking-tight">
-            Book your first slot today
+            Find your first event
           </h2>
           <p className="text-base md:text-lg text-secondary-600 dark:text-secondary-400 font-medium mb-10 max-w-xl mx-auto">
-            Real conversations, at your own pace, with the right mix of people — no scheduling conflicts, no crowded rooms, no wasted time.
+            Real conversations, with the right mix of people — no cold outreach, no crowded rooms, no wasted time.
           </p>
           
-          <Link 
-            href="/events/calendar"
+          <Link
+            href="/events"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 text-white rounded-xl font-black hover:bg-primary-700 transition-all shadow-md shadow-primary-500/20 active:scale-95 text-sm uppercase tracking-wider mb-6"
           >
             Explore Vrutta Events <ArrowRight className="w-4 h-4" />
           </Link>
           
           <p className="text-xs text-secondary-500 dark:text-secondary-500 font-medium">
-            Slots are first-come, first-served. One seat per profession, per slot.
+            Seats are limited and first-come. Some events are open to selected professions or account types.
           </p>
         </div>
       </section>

@@ -110,6 +110,10 @@ export async function GET(request: NextRequest) {
             ...event,
             isEnrolled: !!userEnrollmentsMap[event.id],
             enrollmentStatus: userEnrollmentsMap[event.id] || null,
+            seatsLeft:
+                event.maxAttendees != null && event.maxAttendees > 0
+                    ? Math.max(0, event.maxAttendees - (event.currentAttendees ?? 0))
+                    : null,
         }));
 
         logger.debug('Fetched events list successfully', {

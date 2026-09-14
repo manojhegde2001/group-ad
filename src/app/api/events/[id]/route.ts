@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { computeEligibility } from '@/lib/event-eligibility';
 
 const updateEventSchema = z.object({
     title: z.string().min(3).max(200).optional(),
@@ -48,7 +49,7 @@ export const GET = async (
             },
             include: {
                 category: { select: { id: true, name: true, slug: true, icon: true } },
-                organizer: { select: { id: true, name: true, username: true, avatar: true, userType: true, bio: true } },
+                organizer: { select: { id: true, name: true, username: true, avatar: true, userType: true } },
                 company: { select: { id: true, name: true, logo: true } },
                 _count: { select: { enrollments: true } },
             },
@@ -64,16 +65,39 @@ export const GET = async (
             return NextResponse.json({ error: 'Event not found' }, { status: 404 });
         }
 
-        // If user is logged in, check their enrollment status
+        // If user is logged in, check their enrollment status + per-viewer eligibility
         let userEnrollment = null;
+        let eligibility = computeEligibility(event as any, null);
         if (session?.user?.id) {
             userEnrollment = await prisma.eventEnrollment.findUnique({
                 where: { eventId_userId: { eventId: event.id, userId: session.user.id } },
-                select: { id: true, status: true, createdAt: true },
+                select: { id: true, status: true, createdAt: true, attended: true },
             });
+
+            const dbUser = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { userType: true, categoryId: true },
+            });
+
+            const limits = (event.categoryLimits ?? []) as { categoryId: string }[];
+            let viewerCategoryCount = 0;
+            if (dbUser?.categoryId && limits.some((l) => l.categoryId === dbUser.categoryId)) {
+                viewerCategoryCount = await prisma.eventEnrollment.count({
+                    where: {
+                        eventId: event.id,
+                        status: { in: ['APPROVED', 'PENDING'] },
+                        user: { categoryId: dbUser.categoryId },
+                    },
+                });
+            }
+
+            eligibility = computeEligibility(event as any, dbUser, viewerCategoryCount);
         }
 
-        return NextResponse.json({ event, userEnrollment });
+        return NextResponse.json({
+            event: { ...event, seatsLeft: eligibility.seatsLeft, eligibility },
+            userEnrollment,
+        });
     } catch (error) {
         logger.error('Error fetching event', error);
         return NextResponse.json({ error: 'Failed to fetch event' }, { status: 500 });

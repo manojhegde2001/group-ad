@@ -10,6 +10,7 @@ import { Masonry } from 'masonic';
 import { FeedGridItem, type FeedItem } from '@/components/feed/feed-grid-item';
 import { useMounted } from '@/hooks/use-mounted';
 import { useColumnCount, PROFILE_COLUMNS } from '@/hooks/use-column-count';
+import { useMasonryRemountKey } from '@/hooks/use-masonry-remount-key';
 import { Loader2, ImageOff, Link as LinkIcon, BadgeCheck, Share2, Plus, LayoutDashboard, Phone, MapPin, MoreHorizontal, Flag, Ban, MessageSquare, Globe, EyeOff, CalendarRange, ChevronLeft } from 'lucide-react';
 import { AppImage } from '@/components/ui/app-image';
 import { useUserByUsername, useMe } from '@/hooks/use-api/use-user';
@@ -109,6 +110,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
         () => createdPosts.map((post: PostWithRelations, i: number) => ({ type: 'post', id: post.id, post, position: i })),
         [createdPosts]
     );
+    const createdGridKey = useMasonryRemountKey(username, createdGridItems.length);
 
     const savedPosts = useMemo(() => 
         savedPostsData?.pages.flatMap((page: any) => page.posts) || [], 
@@ -410,14 +412,14 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                     </div>
                 ) : (
                     <Masonry
-                        key={username}
+                        key={createdGridKey}
                         items={createdGridItems}
                         columnCount={columnCount}
                         columnGutter={10}
                         rowGutter={10}
                         overscanBy={3}
                         itemHeightEstimate={320}
-                        itemKey={(item: FeedItem) => item.id}
+                        itemKey={(item: FeedItem) => item?.id ?? ''}
                         render={FeedGridItem}
                     />
                 )}

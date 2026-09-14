@@ -9,19 +9,14 @@ import {
     Globe,
     Share2,
     ExternalLink,
-    ShieldCheck,
-    ArrowLeft,
-    CheckCircle2,
+    ChevronLeft,
     Info,
     Loader2
 } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
 import EnrollmentButton from '@/components/events/EnrollmentButton';
 import { useEvent } from '@/hooks/use-api/use-events';
-import { notFound } from 'next/navigation';
-import AttendeeConnectBanner from '@/components/events/AttendeeConnectBanner';
+import { notFound, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { AttendanceTicket } from '@/components/events/attendance-ticket';
 import { AppImage } from '@/components/ui/app-image';
@@ -34,6 +29,7 @@ import { downloadICSFile } from '@/lib/calendar-export';
 const QRScannerModal = dynamic(() => import('@/components/events/qr-scanner-modal').then(mod => mod.QRScannerModal), { ssr: false });
 
 export default function EventDetailClient({ slug }: { slug: string }) {
+    const router = useRouter();
     const { user: currentUser } = useAuth();
     const { data, isLoading, error, refetch } = useEvent(slug);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -52,60 +48,90 @@ export default function EventDetailClient({ slug }: { slug: string }) {
     }
 
     const userEnrollment = data?.userEnrollment;
-    const isEnrolled = userEnrollment?.status === 'APPROVED' || userEnrollment?.status === 'PENDING';
-    const isPast = new Date(event.endDate) < new Date();
+    const now = new Date();
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    const isPast = end < now;
+    const isCancelled = event.status === 'CANCELLED';
+    const isLive = start <= now && !isPast;
+    const statusLabel = isCancelled ? 'Cancelled' : isPast ? 'Ended' : isLive ? 'Live now' : 'Upcoming';
+    const statusTone = isCancelled
+        ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+        : isPast
+            ? 'bg-secondary-200 text-secondary-600 dark:bg-secondary-800 dark:text-secondary-400'
+            : isLive
+                ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400';
+    const seatsLeft: number | null = event.seatsLeft ?? null;
+    const ineligibleReason: string | null =
+        event.eligibility && !event.eligibility.ok ? event.eligibility.message : null;
+    const hasCover = !!event.coverImage;
+
+    const badges = (
+        <div className="flex flex-wrap gap-2">
+            <span className="px-2.5 py-1 rounded-full bg-primary-500 text-white text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm">
+                {event.eventType}
+            </span>
+            {event.isOnline && (
+                <span className="px-2.5 py-1 rounded-full bg-green-500 text-white text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                    <Globe className="w-3 h-3" /> Online
+                </span>
+            )}
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
-            {/* Hero Section */}
-            <div className="relative h-[45vh] md:h-[60vh] w-full overflow-hidden">
-                 {event.coverImage ? (
-                     <>
-                         <AppImage
-                             src={event.coverImage}
-                             alt={event.title}
-                             fill
-                             className="object-cover"
-                             priority
-                         />
-                         <div className="absolute inset-0 bg-gradient-to-t from-secondary-900 via-secondary-900/40 to-transparent opacity-80" />
-                     </>
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary-600 to-primary-900" />
-                )}
-
-                <div className="absolute inset-0 flex flex-col justify-end px-4 py-8 md:px-12 md:py-16 max-w-screen-xl mx-auto w-full">
-                    <Link
-                        href="/events/calendar"
-                        className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6 text-xs md:text-sm font-bold transition-all backdrop-blur-md bg-white/10 hover:bg-white/20 w-fit px-4 py-2 rounded-full border border-white/10 shadow-lg"
+            {hasCover ? (
+                /* Hero with cover image */
+                <div className="relative h-[32vh] min-h-[240px] md:h-[42vh] md:min-h-[340px] w-full overflow-hidden">
+                    <AppImage
+                        src={event.coverImage}
+                        alt={event.title}
+                        fill
+                        className="object-cover"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary-900 via-secondary-900/40 to-transparent opacity-80" />
+                    <button
+                        onClick={() => router.back()}
+                        aria-label="Go back"
+                        className="absolute top-4 left-4 md:top-6 md:left-6 z-20 flex items-center justify-center w-10 h-10 rounded-full bg-white/80 dark:bg-secondary-900/70 backdrop-blur-xl text-secondary-900 dark:text-white shadow-lg border border-white/40 dark:border-secondary-700/50 hover:bg-white dark:hover:bg-secondary-900 transition-all active:scale-95"
                     >
-                        <ArrowLeft className="w-4 h-4" /> Back to Calendar
-                    </Link>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="px-2.5 py-1 rounded-full bg-primary-500 text-white text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm">
-                            {event.eventType}
-                        </span>
-                        {event.isOnline && (
-                            <span className="px-2.5 py-1 rounded-full bg-green-500 text-white text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                                <Globe className="w-3 h-3" /> Online
-                            </span>
-                        )}
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div className="absolute inset-x-0 bottom-0 w-full px-4 sm:px-6 lg:px-8 pb-6 md:pb-10 space-y-3">
+                        {badges}
+                        <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-white leading-tight max-w-4xl drop-shadow-2xl">
+                            {event.title}
+                        </h1>
                     </div>
-                    <h1 className="text-2xl md:text-5xl lg:text-6xl font-black text-white leading-tight max-w-4xl drop-shadow-2xl">
-                        {event.title}
-                    </h1>
                 </div>
-            </div>
+            ) : (
+                /* Compact header (no cover image) */
+                <div className="w-full px-4 sm:px-6 lg:px-8 pt-6 md:pt-10">
+                    <button
+                        onClick={() => router.back()}
+                        aria-label="Go back"
+                        className="mb-6 flex items-center justify-center w-10 h-10 rounded-full bg-secondary-100 dark:bg-secondary-800/50 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors active:scale-95"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div className="space-y-3">
+                        {badges}
+                        <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-secondary-900 dark:text-white leading-tight max-w-4xl">
+                            {event.title}
+                        </h1>
+                    </div>
+                </div>
+            )}
 
             {/* Content Section */}
-            <div className="max-w-screen-xl mx-auto px-4 py-8 md:py-12 md:px-12">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+            <div className={`w-full px-4 sm:px-6 lg:px-8 pb-8 md:pb-12 ${hasCover ? 'pt-8 md:pt-12' : 'pt-6 md:pt-8'}`}>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
 
                     {/* Main Info */}
                     <div className="lg:col-span-2 space-y-12">
-                        {isPast && isEnrolled && (
-                            <AttendeeConnectBanner eventId={event.id} />
-                        )}
                         {(currentUser?.id === event.organizerId || (currentUser as any)?.userType === 'ADMIN') && (
                             <AttendeesManager eventId={event.id} />
                         )}
@@ -113,40 +139,9 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                             <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-4 flex items-center gap-2">
                                 <Info className="w-5 h-5 text-primary-500" /> About this Event
                             </h2>
-                            <div className="prose dark:prose-invert max-w-none text-secondary-600 dark:text-secondary-400 leading-relaxed text-lg whitespace-pre-wrap">
+                            <div className="prose dark:prose-invert max-w-3xl text-secondary-600 dark:text-secondary-400 leading-relaxed text-lg whitespace-pre-wrap">
                                 {event.description}
                             </div>
-                        </section>
-
-                        <section className="bg-white dark:bg-secondary-900 p-8 rounded-3xl border border-secondary-100 dark:border-secondary-800">
-                            <h2 className="text-xl font-bold text-secondary-900 dark:text-white mb-6">Hosted by</h2>
-                            <div className="flex items-center gap-4">
-                                <Avatar
-                                    src={event.organizer.avatar || undefined}
-                                    name={event.organizer.name}
-                                    size="lg"
-                                    className="ring-4 ring-primary-50 dark:ring-primary-900/20"
-                                />
-                                <div>
-                                    <p className="font-bold text-lg text-secondary-900 dark:text-white leading-none">
-                                        {event.organizer.name}
-                                    </p>
-                                    <p className="text-sm text-secondary-500 mt-1">
-                                        @{event.organizer.username} · {event.organizer.userType}
-                                    </p>
-                                </div>
-                                <Link
-                                    href={`/profile/${event.organizer.username}`}
-                                    className="ml-auto text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline uppercase tracking-widest"
-                                >
-                                    View Profile
-                                </Link>
-                            </div>
-                            {event.organizer.bio && (
-                                <p className="mt-4 text-sm text-secondary-500 border-t border-secondary-50 dark:border-secondary-800 pt-4 italic">
-                                    &quot;{event.organizer.bio}&quot;
-                                </p>
-                            )}
                         </section>
 
                         {/* Venue / Link */}
@@ -187,9 +182,8 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-xs font-bold text-secondary-400 uppercase tracking-widest mb-1">Status</p>
-                                            <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest ${isPast ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
-                                                }`}>
-                                                {isPast ? 'Past' : 'Live'}
+                                            <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest ${statusTone}`}>
+                                                {statusLabel}
                                             </span>
                                         </div>
                                     </div>
@@ -203,19 +197,23 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                                             <Clock className="w-5 h-5 text-primary-500" />
                                             <span className="text-sm font-semibold">Ends at {format(new Date(event.endDate), 'h:mm a')}</span>
                                         </div>
-                                        <div className="flex items-center gap-3 text-secondary-600 dark:text-secondary-400">
-                                            <Users className="w-5 h-5 text-primary-500" />
-                                            <span className="text-sm font-semibold">
-                                                {event._count?.enrollments || 0} Guests {event.maxAttendees ? `/ ${event.maxAttendees} max` : 'enrolled'}
-                                            </span>
-                                        </div>
+                                        {seatsLeft != null && (
+                                            <div className="flex items-center gap-3 text-secondary-600 dark:text-secondary-400">
+                                                <Users className="w-5 h-5 text-primary-500" />
+                                                <span className="text-sm font-semibold">
+                                                    {seatsLeft > 0 ? `${seatsLeft} seat${seatsLeft === 1 ? '' : 's'} left` : 'Fully booked'}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <EnrollmentButton
                                         eventId={event.id}
                                         enrollmentStatus={userEnrollment?.status || null}
                                         isPast={isPast}
-                                        isFull={event.maxAttendees !== null && event.currentAttendees >= event.maxAttendees}
+                                        isCancelled={isCancelled}
+                                        seatsLeft={seatsLeft}
+                                        ineligibleReason={ineligibleReason}
                                     />
 
                                     <div className="pt-4 flex flex-col gap-3">
@@ -260,16 +258,6 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                                             </div>
                                             <span className="text-[10px] font-bold text-secondary-400 group-hover:text-secondary-900 dark:group-hover:text-white uppercase tracking-tighter transition-colors">Add to Cal</span>
                                         </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-primary-50 dark:bg-primary-900/10 rounded-3xl p-6 border border-primary-100 dark:border-primary-900/20">
-                                <div className="flex items-center gap-3">
-                                    <ShieldCheck className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                                    <div>
-                                        <p className="text-sm font-bold text-primary-900 dark:text-primary-100 leading-none">Verified Event</p>
-                                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 opacity-80">Moderated by Vrutta HQ</p>
                                     </div>
                                 </div>
                             </div>

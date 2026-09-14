@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, MapPin, Users, Search, Globe, Clock, Filter, ChevronRight, Video, Plus, CalendarRange } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Calendar, MapPin, Users, Search, Globe, Clock, Video, Plus, X, Loader2, ChevronRight } from 'lucide-react';
 import { format, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,53 +11,93 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCreateEvent } from '@/hooks/use-feed';
 import { Button } from '@/components/ui/button';
 import { AppImage } from '@/components/ui/app-image';
+import CalendarPageClient from '@/components/events/CalendarPageClient';
+import EventSheet from '@/components/events/EventSheet';
 
-import { useEvents, useMyEvents } from '@/hooks/use-api/use-events';
-import { useUnreadMeetings } from '@/hooks/use-unread-meetings';
-import EventsMeetingsTab from '@/components/meetings/EventsMeetingsTab';
+import { useEvents, useInfiniteEvents, useMyEvents } from '@/hooks/use-api/use-events';
 
-export default function EventsPage() {
-  const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'all' | 'my' | 'attended' | 'meetings'>('upcoming');
-  const [searchInput, setSearchInput] = useState('');
+type Tab = 'upcoming' | 'calendar' | 'my' | 'attended';
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'upcoming', label: 'Upcoming' },
+  { key: 'calendar', label: 'Calendar' },
+  { key: 'my', label: 'My Events' },
+  { key: 'attended', label: 'Attended' },
+];
+
+function EventsView() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { open: openCreateEvent } = useCreateEvent();
-  const { pendingCount: pendingMeetings } = useUnreadMeetings();
 
-  const { data, isLoading: loadingEvents } = useEvents({
-    search,
-    upcoming: activeTab === 'upcoming' ? 'true' : '',
-    status: 'PUBLISHED',
-  }, {
-    enabled: activeTab !== 'meetings'
-  });
+  const [tab, setTab] = useState<Tab>(searchParams.get('view') === 'calendar' ? 'calendar' : 'upcoming');
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
 
-  const { data: myData, isLoading: loadingMy } = useMyEvents({
-    enabled: activeTab !== 'meetings'
-  });
+  // Live search: filter as you type, no need to press Enter. A short debounce
+  // avoids firing a request on every keystroke; Enter (form submit) still
+  // applies immediately for anyone who does press it.
+  useEffect(() => {
+    const id = setTimeout(() => setSearch(searchInput.trim()), 350);
+    return () => clearTimeout(id);
+  }, [searchInput]);
 
-  const isLoading = activeTab === 'my' || activeTab === 'attended' ? loadingMy : loadingEvents;
+  const changeTab = (next: Tab) => {
+    setTab(next);
+    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    if (next === 'calendar') params.set('view', 'calendar');
+    else params.delete('view');
+    const qs = params.toString();
+    router.replace(qs ? `/events?${qs}` : '/events', { scroll: false });
+  };
+
+  // Upcoming: paginated "load more" browsing — the API caps a single page at
+  // 12 events, so without this a user could never see past the first page.
+  const {
+    data: upcomingPages,
+    isLoading: loadingUpcoming,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteEvents(
+    { search, location: search, upcoming: 'true', status: 'PUBLISHED' },
+    { enabled: tab === 'upcoming' }
+  );
+  // Calendar needs its whole working set in memory to bucket by day/month, so
+  // it gets one larger single-shot fetch instead of pagination.
+  const { data: calendarData, isLoading: loadingCalendar } = useEvents(
+    { search, location: search, status: 'PUBLISHED', limit: 100 },
+    { enabled: tab === 'calendar' }
+  );
+  const { data: myData, isLoading: loadingMy } = useMyEvents();
+  const myCount = myData?.enrollments?.length ?? 0;
+  const attendedCount = myData?.enrollments?.filter((en: any) => en.attended).length ?? 0;
+  const tabCounts: Partial<Record<Tab, number>> = { my: myCount, attended: attendedCount };
+
+  const isLoading =
+    tab === 'my' || tab === 'attended' ? loadingMy : tab === 'calendar' ? loadingCalendar : loadingUpcoming;
+
+  const matchesSearch = (e: any) => e.title?.toLowerCase().includes(search.toLowerCase());
 
   let events: any[] = [];
-  if (activeTab === 'my') {
-    events = (myData?.enrollments || []).map((en: any) => ({
-      ...en.event,
-      enrollmentStatus: en.status,
-      isEnrolled: true,
-      attended: en.attended,
-    })).filter((e: any) => e.title.toLowerCase().includes(search.toLowerCase()));
-  } else if (activeTab === 'attended') {
+  if (tab === 'my') {
+    events = (myData?.enrollments || [])
+      .map((en: any) => ({ ...en.event, enrollmentStatus: en.status, isEnrolled: true, attended: en.attended }))
+      .filter(matchesSearch);
+  } else if (tab === 'attended') {
     events = (myData?.enrollments || [])
       .filter((en: any) => en.attended)
-      .map((en: any) => ({
-        ...en.event,
-        enrollmentStatus: en.status,
-        isEnrolled: true,
-        attended: en.attended,
-      })).filter((e: any) => e.title.toLowerCase().includes(search.toLowerCase()));
+      .map((en: any) => ({ ...en.event, enrollmentStatus: en.status, isEnrolled: true, attended: en.attended }))
+      .filter(matchesSearch);
+  } else if (tab === 'calendar') {
+    events = calendarData?.events || [];
   } else {
-    events = data?.events || [];
+    events = upcomingPages?.pages.flatMap((p: any) => p.events) || [];
   }
+
+  const [sheetId, setSheetId] = useState<string | null>(null);
+  const sheetEvent = sheetId ? events.find((e: any) => e.id === sheetId) ?? null : null;
 
   if (user && user.userType !== 'ADMIN' && user.userType !== 'BUSINESS') {
     return (
@@ -69,8 +109,8 @@ export default function EventsPage() {
         <p className="text-secondary-500 dark:text-secondary-400 max-w-sm mx-auto font-medium">
           The events feature is currently only available for Business and Admin accounts.
         </p>
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="mt-8 px-8 py-3 bg-primary-500 text-white font-bold rounded-2xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20"
         >
           Return to Feed
@@ -79,171 +119,143 @@ export default function EventsPage() {
     );
   }
 
-  const isBusiness = (user as any)?.userType === 'BUSINESS';
   const isAdmin = (user as any)?.userType === 'ADMIN';
 
   return (
     <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-primary-600 via-primary-500 to-indigo-600 text-white py-14 px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-semibold mb-2">
-            <Calendar className="w-4 h-4" />
-            Live Events & Meetups
-          </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight">
-            Find Events That Matter
-          </h1>
-          <p className="text-primary-100 text-lg max-w-xl mx-auto font-medium">
-            Discover workshops, collaboration sessions, and exclusive meetups tailored to your community.
-          </p>
-
-          {/* Search */}
-          <div className="max-w-lg mx-auto mt-6">
+      {/* Header — `top-0`, not `md:top-20`: the app shell's <main> is `overflow-x-hidden`
+          (a scroll container), so this header sticks to the top of <main>, which already
+          begins right below the navbar. Adding the navbar height again (`md:top-20`) is
+          what pushed it 80px down on desktop. */}
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-secondary-950/95 backdrop-blur-xl border-b border-secondary-100 dark:border-secondary-800 shadow-sm">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          {/* Row 1 — title + create + search */}
+          <div className="flex items-center gap-3 pt-3 pb-2.5">
+            <h1 className="text-base sm:text-lg font-black tracking-tight text-secondary-900 dark:text-white shrink-0">Events</h1>
             <form
-              onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); }}
-              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setSearch(searchInput.trim());
+              }}
+              className="relative flex-1 min-w-0 max-w-md"
             >
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-400" />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search events..."
-                  className="w-full bg-white text-secondary-900 rounded-2xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 ring-white/40"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-white text-primary-600 font-bold px-5 py-3 rounded-2xl hover:bg-primary-50 transition-colors text-sm"
-              >
-                Search
-              </button>
+              {searchInput && (searchInput !== search || isLoading) ? (
+                <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-500 animate-spin" />
+              ) : (
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary-400" />
+              )}
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search events, city…"
+                aria-label="Search events"
+                className="w-full bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 text-secondary-900 dark:text-white rounded-xl pl-9 pr-9 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearch('');
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-secondary-400 hover:bg-secondary-200 dark:hover:bg-secondary-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </form>
+            {isAdmin && (
+              <Button
+                onClick={openCreateEvent}
+                variant="solid"
+                color="primary"
+                rounded="pill"
+                size="sm"
+                className="font-bold shadow-lg shadow-primary-500/20 shrink-0 ml-auto"
+              >
+                <Plus className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Create</span>
+              </Button>
+            )}
           </div>
+
+          {/* Row 2 — underline tabs; the 2px active bar sits on the header's own bottom border */}
+          <nav
+            aria-label="Event views"
+            className="flex items-center gap-6 overflow-x-auto scrollbar-hide"
+          >
+            {TABS.map((t) => {
+              const active = tab === t.key;
+              const count = tabCounts[t.key];
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => changeTab(t.key)}
+                  aria-current={active ? 'page' : undefined}
+                  className={cn(
+                    'shrink-0 -mb-px flex items-center gap-1.5 border-b-2 pt-0.5 pb-2.5 text-sm font-bold whitespace-nowrap transition-colors',
+                    active
+                      ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                      : 'border-transparent text-secondary-500 hover:text-secondary-800 dark:hover:text-secondary-300'
+                  )}
+                >
+                  {t.label}
+                  {!!count && (
+                    <span
+                      className={cn(
+                        'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black',
+                        active
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-secondary-200 dark:bg-secondary-700 text-secondary-600 dark:text-secondary-300'
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
         </div>
-      </div>
+      </header>
 
-
-      {/* Filters */}
-      <div className="sticky top-16 md:top-0 z-30 bg-white/90 dark:bg-secondary-900/90 backdrop-blur-xl border-b border-secondary-100 dark:border-secondary-800">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto scrollbar-none">
-          <Filter className="w-4 h-4 text-secondary-400 shrink-0" />
-          <button
-            onClick={() => setActiveTab('upcoming')}
-            className={cn(
-              'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-              activeTab === 'upcoming'
-                ? 'bg-primary-500 text-white shadow-sm'
-                : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
-            )}
-          >
-            Upcoming
-          </button>
-          <button
-            onClick={() => setActiveTab('all')}
-            className={cn(
-              'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-              activeTab === 'all'
-                ? 'bg-primary-500 text-white shadow-sm'
-                : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
-            )}
-          >
-            All Events
-          </button>
-          {user && (
-            <>
-              <button
-                onClick={() => setActiveTab('my')}
-                className={cn(
-                  'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-                  activeTab === 'my'
-                    ? 'bg-primary-500 text-white shadow-sm'
-                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
-                )}
-              >
-                My Registrations
-              </button>
-              <button
-                onClick={() => setActiveTab('attended')}
-                className={cn(
-                  'px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-                  activeTab === 'attended'
-                    ? 'bg-primary-500 text-white shadow-sm'
-                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
-                )}
-              >
-                Attended History
-              </button>
-              {/* 1:1 Meetings tab — BUSINESS + ADMIN only (Disabled/Commented for future use) */}
-              {/* <button
-                onClick={() => setActiveTab('meetings')}
-                className={cn(
-                  'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-                  activeTab === 'meetings'
-                    ? 'bg-primary-500 text-white shadow-sm'
-                    : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200'
-                )}
-              >
-                <CalendarRange className="w-3.5 h-3.5" />
-                1:1 Meetings
-                {pendingMeetings > 0 && (
-                  <span className={cn(
-                    'min-w-[16px] h-4 rounded-full text-[9px] font-black flex items-center justify-center px-1',
-                    activeTab === 'meetings' ? 'bg-white/30 text-white' : 'bg-primary-500 text-white'
-                  )}>
-                    {pendingMeetings}
-                  </span>
-                )}
-              </button> */}
-            </>
-          )}
-          <Link
-            href="/events/calendar"
-            className="ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-secondary-100 dark:bg-secondary-800 text-xs font-bold text-secondary-600 dark:text-secondary-400 hover:bg-secondary-200 transition-all whitespace-nowrap"
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            Calendar View
-          </Link>
-
-          {user?.userType === 'ADMIN' && (
-            <Button
-              onClick={openCreateEvent}
-              variant="solid"
-              color="primary"
-              rounded="pill"
-              size="sm"
-              className="ml-2 font-bold shadow-lg shadow-primary-500/20"
-            >
-              <Plus className="w-4 h-4 mr-1.5" />
-              Create Event
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Meetings Tab Content (Disabled/Commented for future use) */}
-      {/* {activeTab === 'meetings' && <EventsMeetingsTab />} */}
-
-      {/* Events Grid */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[...Array(6)].map((_, i) => (
+      {/* Content */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-5 pb-6">
+        {tab === 'calendar' ? (
+          isLoading ? (
+            <div className="h-[60vh] min-h-[420px] bg-white dark:bg-secondary-900 rounded-2xl border border-secondary-100 dark:border-secondary-800 flex items-center justify-center">
+              <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <CalendarPageClient events={events} />
+          )
+        ) : isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+            {[...Array(10)].map((_, i) => (
               <Skeleton key={i} className="h-64 rounded-2xl" />
             ))}
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-20">
-            <Calendar className="w-16 h-16 text-secondary-200 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-secondary-700 dark:text-secondary-300">No events found</h3>
+            <Calendar className="w-16 h-16 text-secondary-200 dark:text-secondary-700 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-secondary-700 dark:text-secondary-300">
+              {tab === 'my'
+                ? "You haven't registered for any events yet"
+                : tab === 'attended'
+                  ? 'No attended events yet'
+                  : 'No events found'}
+            </h3>
             <p className="text-secondary-500 text-sm mt-1">
-              {search ? `No events matching "${search}"` : 'No upcoming events at the moment.'}
+              {search ? 'Try a different search.' : 'Check back soon for new events.'}
             </p>
             {search && (
               <button
-                onClick={() => { setSearch(''); setSearchInput(''); }}
+                onClick={() => {
+                  setSearch('');
+                  setSearchInput('');
+                }}
                 className="mt-4 text-primary-500 text-sm font-semibold hover:underline"
               >
                 Clear search
@@ -251,39 +263,84 @@ export default function EventsPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} onQuickView={setSheetId} />
+              ))}
+            </div>
+            {tab === 'upcoming' && hasNextPage && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="px-6 py-2.5 rounded-full text-sm font-bold bg-secondary-100 dark:bg-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-colors disabled:opacity-60"
+                >
+                  {isFetchingNextPage ? 'Loading…' : 'Load more events'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
+
+      <EventSheet event={sheetEvent} onClose={() => setSheetId(null)} />
     </div>
   );
 }
 
-function EventCard({ event }: { event: any }) {
+export default function EventsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-secondary-50 dark:bg-secondary-950 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <EventsView />
+    </Suspense>
+  );
+}
+
+function EventCard({ event, onQuickView }: { event: any; onQuickView: (id: string) => void }) {
   const startDate = new Date(event.startDate);
   const ended = isPast(new Date(event.endDate));
+  const cancelled = event.status === 'CANCELLED';
+  const seatsLeft: number | null = event.seatsLeft ?? null;
+  const actionable = !cancelled && !ended;
+  const quickViewLabel =
+    event.enrollmentStatus === 'APPROVED'
+      ? "You're going · Manage"
+      : event.enrollmentStatus === 'PENDING'
+        ? 'On the waitlist · Manage'
+        : 'Quick reserve';
 
   return (
     <Link
       href={`/events/${event.slug}`}
-      className="group block bg-white dark:bg-secondary-900 rounded-2xl overflow-hidden border border-secondary-100 dark:border-secondary-800 hover:shadow-lg hover:shadow-primary-500/5 hover:-translate-y-0.5 transition-all duration-200"
+      className="group flex flex-col bg-white dark:bg-secondary-900 rounded-2xl overflow-hidden border border-secondary-100 dark:border-secondary-800 hover:border-primary-200 dark:hover:border-primary-800 hover:shadow-xl hover:shadow-primary-500/5 hover:-translate-y-0.5 transition-all duration-200"
     >
       {/* Cover image or gradient */}
-      <div className={cn(
-        'h-36 relative overflow-hidden',
-        !event.coverImage && 'bg-gradient-to-br from-primary-400 via-primary-500 to-indigo-600'
-      )}>
-         {event.coverImage ? (
-           <AppImage src={event.coverImage} alt={event.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-         ) : (
+      <div
+        className={cn(
+          'h-40 relative overflow-hidden',
+          !event.coverImage && 'bg-gradient-to-br from-primary-400 via-primary-500 to-indigo-600'
+        )}
+      >
+        {event.coverImage ? (
+          <AppImage
+            src={event.coverImage}
+            alt={event.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <Calendar className="w-16 h-16 text-white/30" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
@@ -292,14 +349,18 @@ function EventCard({ event }: { event: any }) {
               <Video className="w-2.5 h-2.5" /> Online
             </span>
           )}
-          {ended && (
+          {cancelled ? (
+            <span className="inline-flex items-center bg-red-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Cancelled
+            </span>
+          ) : ended && (
             <span className="inline-flex items-center bg-secondary-700/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
               Ended
             </span>
           )}
           {event.enrollmentStatus === 'APPROVED' && !event.attended && (
             <span className="inline-flex items-center bg-green-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Approved
+              Going
             </span>
           )}
           {event.enrollmentStatus === 'PENDING' && (
@@ -315,13 +376,13 @@ function EventCard({ event }: { event: any }) {
         </div>
 
         {/* Date badge */}
-        <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg px-2.5 py-1.5 text-center shadow">
+        <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 text-center shadow">
           <p className="text-[10px] font-bold text-primary-600 uppercase tracking-widest leading-none">{format(startDate, 'MMM')}</p>
           <p className="text-lg font-black text-secondary-900 leading-tight">{format(startDate, 'd')}</p>
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="flex-1 p-4 flex flex-col">
         <h3 className="font-bold text-secondary-900 dark:text-white text-sm leading-snug line-clamp-2 mb-2 group-hover:text-primary-600 transition-colors">
           {event.title}
         </h3>
@@ -346,36 +407,41 @@ function EventCard({ event }: { event: any }) {
             </div>
           )}
 
-          {event._count?.enrollments !== undefined && (
-            <div className="flex items-center gap-1.5 text-xs text-secondary-500">
+          {!ended && !cancelled && seatsLeft != null && seatsLeft <= 5 && (
+            <div
+              className={cn(
+                'flex items-center gap-1.5 text-xs font-semibold',
+                seatsLeft <= 0 ? 'text-secondary-400' : 'text-amber-600 dark:text-amber-500'
+              )}
+            >
               <Users className="w-3.5 h-3.5 shrink-0" />
-              <span>
-                {event._count.enrollments} enrolled
-                {event.maxAttendees ? ` / ${event.maxAttendees} max` : ''}
-              </span>
+              <span>{seatsLeft <= 0 ? 'Fully booked' : `Only ${seatsLeft} seat${seatsLeft === 1 ? '' : 's'} left`}</span>
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-secondary-50 dark:border-secondary-800">
-          {event.organizer && (
-            <div className="flex items-center gap-1.5">
-               <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900 overflow-hidden shrink-0 relative">
-                 {event.organizer.avatar ? (
-                   <AppImage src={event.organizer.avatar} alt="" fill className="object-cover" />
-                 ) : (
-                  <span className="flex items-center justify-center h-full text-[9px] font-bold text-primary-600">
-                    {event.organizer.name?.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-secondary-500 font-medium truncate max-w-[100px]">{event.organizer.name}</span>
-            </div>
-          )}
-          <span className="flex items-center gap-0.5 text-[10px] font-bold text-primary-600 group-hover:gap-1 transition-all">
-            View <ChevronRight className="w-3 h-3" />
-          </span>
-        </div>
+        {actionable && (
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label={`${quickViewLabel} — ${event.title}`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onQuickView(event.id);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onQuickView(event.id);
+              }
+            }}
+            className="mt-3 pt-3 border-t border-secondary-50 dark:border-secondary-800 flex items-center justify-center gap-1 text-xs font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 cursor-pointer"
+          >
+            {quickViewLabel} <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        )}
       </div>
     </Link>
   );

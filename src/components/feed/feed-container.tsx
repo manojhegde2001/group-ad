@@ -13,6 +13,7 @@ import { TeammateSuggestions } from '@/components/widgets/TeammateSuggestions';
 import { useAuth } from '@/hooks/use-auth';
 import { useMounted } from '@/hooks/use-mounted';
 import { useColumnCount } from '@/hooks/use-column-count';
+import { useMasonryRemountKey } from '@/hooks/use-masonry-remount-key';
 
 // Demo posts used as fallback when DB is empty
 const DEMO_POSTS: any[] = [];
@@ -112,6 +113,7 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
   );
 
   const gridKey = `${effectiveCategoryId ?? 'all'}|${boardId ?? ''}|${searchQuery ?? ''}`;
+  const masonryKey = useMasonryRemountKey(gridKey, feedItems.length);
   const showEmptyState = mounted && !isLoading && allPosts.length === 0 && !useDemoData;
 
   // Pre-hydration real content: only when the server handed us posts for this
@@ -145,14 +147,14 @@ export function FeedContainer({ categoryId: initialCategoryId, boardId, initialD
         )
       ) : feedItems.length > 0 ? (
         <Masonry
-          key={gridKey}
+          key={masonryKey}
           items={feedItems}
           columnCount={columnCount}
           columnGutter={2}
           rowGutter={2}
           overscanBy={2}
           itemHeightEstimate={320}
-          itemKey={(item: FeedItem) => item.id}
+          itemKey={(item: FeedItem) => item?.id ?? ''}
           render={FeedGridItem}
           onRender={maybeLoadMore}
         />

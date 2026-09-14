@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { eventService } from '@/services/api/events';
 import toast from 'react-hot-toast';
 
@@ -6,6 +6,22 @@ export const useEvents = (params: Record<string, any> = {}, options: any = {}) =
     return useQuery<{ events: any[] }>({
         queryKey: ['events', params],
         queryFn: () => eventService.getEvents(params),
+        ...options,
+    });
+};
+
+// Paginated "load more" browsing — mirrors useInfinitePosts (use-posts.ts).
+export const useInfiniteEvents = (params: Record<string, any> = {}, options: any = {}) => {
+    return useInfiniteQuery({
+        queryKey: ['events', 'infinite', params],
+        queryFn: ({ pageParam = 1 }) => eventService.getEvents({ ...params, page: pageParam }),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage: any) => {
+            if (lastPage.pagination && lastPage.pagination.page < lastPage.pagination.totalPages) {
+                return lastPage.pagination.page + 1;
+            }
+            return undefined;
+        },
         ...options,
     });
 };
@@ -81,14 +97,6 @@ export const useUpdateEvent = () => {
         },
     });
 };
-export const useCoAttendees = (eventId: string) => {
-    return useQuery<{ coAttendees: any[] }>({
-        queryKey: ['events', eventId, 'co-attendees'],
-        queryFn: () => eventService.getCoAttendees(eventId),
-        enabled: !!eventId,
-    });
-};
-
 export const useSubmitAttendance = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -102,15 +110,6 @@ export const useSubmitAttendance = () => {
         onError: (error: any) => {
             toast.error(error.message || 'Failed to record attendance');
         }
-    });
-};
-
-export const useAttendanceTicket = (eventId: string, options: any = {}) => {
-    return useQuery({
-        queryKey: ['event', eventId, 'attendance-ticket'],
-        queryFn: () => eventService.getAttendanceTicket(eventId),
-        enabled: !!eventId,
-        ...options,
     });
 };
 

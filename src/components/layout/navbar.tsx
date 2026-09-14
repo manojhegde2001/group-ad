@@ -370,7 +370,7 @@ export function Navbar() {
                       <div className="space-y-0.5">
                         {((user as any).userType === 'ADMIN' || (user as any).userType === 'BUSINESS') && (
                           <Link
-                            href="/events/calendar"
+                            href="/events?view=calendar"
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary-50 dark:hover:bg-secondary-800/50 font-bold text-xs text-secondary-700 dark:text-secondary-300 transition-colors"
                           >
@@ -513,7 +513,7 @@ export function Navbar() {
               <DrawerLink href="/messages" icon={MessageSquare} label="Messages" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/messages'} badge={unreadMessages} />
               <DrawerLink href="/boards" icon={Library} label="Boards" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/boards'} />
               {((user as any)?.userType === 'ADMIN' || (user as any)?.userType === 'BUSINESS') && (
-                <DrawerLink href="/events/calendar" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname === '/events/calendar'} />
+                <DrawerLink href="/events" icon={Calendar} label="Events" onClick={() => setMobileDrawerOpen(false)} active={pathname?.startsWith('/events')} />
               )}
             </div>
 

@@ -48,7 +48,7 @@ export function AttendanceTicket({ eventId, eventName }: AttendanceTicketProps) 
 
           <div className="flex flex-col items-center text-center space-y-6 pt-4">
             <div className="space-y-1">
-                <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">Event Ticket</h3>
+                <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">Event Ticket</h3>
                 <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">{eventName}</p>
             </div>
 

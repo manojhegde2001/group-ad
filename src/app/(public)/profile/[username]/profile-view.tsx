@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
 import { ConnectionButton } from '@/components/profile/connection-button';
 import { ConnectionsModal } from '@/components/profile/connections-modal';
+import { CircleRequestsModal } from '@/components/profile/circle-requests-modal';
+import { usePendingConnections } from '@/hooks/use-api/use-connections';
 import { Masonry } from 'masonic';
 import { FeedGridItem, type FeedItem } from '@/components/feed/feed-grid-item';
 import { useMounted } from '@/hooks/use-mounted';
@@ -55,6 +57,9 @@ export default function ProfileView({ username, initialPosts }: { username: stri
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
     const [isCircleOpen, setIsCircleOpen] = useState(false);
+    const [isRequestsOpen, setIsRequestsOpen] = useState(false);
+    const { data: pendingData } = usePendingConnections(isOwnProfile);
+    const receivedRequestCount = (pendingData?.connections || []).filter((c: any) => c.direction === 'received').length;
 
     // Fetch meetings to detect an existing request/accepted state with this profile
     const isBothBusiness = (me as any)?.userType === 'BUSINESS' && profile?.userType === 'BUSINESS';
@@ -321,6 +326,19 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                                     <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">In Circle</p>
                                 </div>
                             )}
+                            {isOwnProfile && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsRequestsOpen(true)}
+                                    className="relative text-center md:text-left transition-transform hover:scale-105 cursor-pointer"
+                                >
+                                    {receivedRequestCount > 0 && (
+                                        <span className="absolute -top-1 -right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white dark:border-secondary-950" />
+                                    )}
+                                    <p className="text-xl sm:text-2xl font-black text-secondary-900 dark:text-white leading-none">{receivedRequestCount}</p>
+                                    <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Requests</p>
+                                </button>
+                            )}
                         </div>
 
                         {/* Bio & Links */}
@@ -395,7 +413,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                         <div className="w-16 h-16 bg-secondary-50 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-6">
                             <MapPin className="w-8 h-8 text-secondary-300" />
                         </div>
-                        <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">This Account is Private</h3>
+                        <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal mb-2">This Account is Private</h3>
                         <p className="text-sm text-secondary-500 max-w-[240px]">Add {profile.companyName || profile.name} to your circle to see their professional updates.</p>
                     </div>
                 ) : createdPosts.length === 0 ? (
@@ -403,7 +421,7 @@ export default function ProfileView({ username, initialPosts }: { username: stri
                         <div className="w-16 h-16 bg-secondary-50 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-6">
                             <ImageOff className="w-8 h-8 text-secondary-300" />
                         </div>
-                        <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">No Posts Yet</h3>
+                        <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal mb-2">No Posts Yet</h3>
                         <p className="text-sm text-secondary-500 max-w-[240px]">Share your first enterprise professional update today.</p>
                     </div>
                 ) : !mounted ? (
@@ -456,7 +474,10 @@ export default function ProfileView({ username, initialPosts }: { username: stri
         )} */}
 
         {isOwnProfile && (
-            <ConnectionsModal isOpen={isCircleOpen} onClose={() => setIsCircleOpen(false)} />
+            <>
+                <ConnectionsModal isOpen={isCircleOpen} onClose={() => setIsCircleOpen(false)} />
+                <CircleRequestsModal isOpen={isRequestsOpen} onClose={() => setIsRequestsOpen(false)} />
+            </>
         )}
         </>
     );

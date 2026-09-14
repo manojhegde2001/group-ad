@@ -58,7 +58,7 @@ export default async function ExplorePage() {
                 <div className="p-2 rounded-xl bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400">
                     <Layout className="w-4 h-4" />
                 </div>
-                <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+                <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">
                     All Topics
                 </h2>
             </div>

@@ -120,7 +120,7 @@ export default function PowerTeamDetailPage() {
           <div className="lg:col-span-2 space-y-10">
             <div>
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-secondary-900 dark:bg-white text-white dark:text-secondary-900 flex items-center justify-center">
                     <User className="w-5 h-5" />
                   </div>
@@ -178,7 +178,7 @@ export default function PowerTeamDetailPage() {
 
             {/* About / Description */}
             <div className="p-8 sm:p-10 rounded-[3rem] bg-secondary-50 dark:bg-secondary-800/40 border border-secondary-100 dark:border-secondary-800/50">
-               <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-4">Mission Statement</h3>
+               <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal mb-4">Mission Statement</h3>
                <p className="text-secondary-600 dark:text-secondary-400 leading-relaxed font-medium">
                   {team.description || "This power team is dedicated to fostering high-level strategic partnerships. Our members collaborate to share specialized knowledge, referral opportunities, and professional growth."}
                </p>

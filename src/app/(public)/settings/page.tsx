@@ -487,7 +487,7 @@ export default function SettingsPage() {
                   <div className="p-6 border-2 border-dashed border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
                     <div className="w-16 h-16 rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shrink-0"><Building2 className="w-8 h-8" /></div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Convert to Business</h3>
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal">Convert to Business</h3>
                       <p className="text-sm text-secondary-500 font-medium mt-1">Unlock professional features — events, verified badge, and business profile.</p>
                     </div>
                     <Button variant="outline" onClick={() => setShowBusinessForm(true)} rounded="pill" className="font-black uppercase tracking-widest text-xs h-11 px-8">Get Started</Button>
@@ -499,7 +499,7 @@ export default function SettingsPage() {
                   <div className="p-6 border-2 border-dashed border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
                     <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-white shadow-lg shrink-0"><Clock className="w-8 h-8" /></div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Business Conversion Pending</h3>
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal">Business Conversion Pending</h3>
                       <p className="text-sm text-secondary-500 font-medium mt-1">Your request is under review. We&apos;ll notify you once a decision is made.</p>
                     </div>
                     <div className="px-6 py-2 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-amber-200 dark:border-amber-800">Under Review</div>
@@ -511,7 +511,7 @@ export default function SettingsPage() {
                   <div className="p-6 border-2 border-dashed border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-950/20 rounded-3xl flex flex-col sm:flex-row items-center gap-6">
                     <div className="w-16 h-16 rounded-2xl bg-red-500 flex items-center justify-center text-white shadow-lg shrink-0"><X className="w-8 h-8" /></div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Request Rejected</h3>
+                      <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal">Request Rejected</h3>
                       <p className="text-sm text-secondary-500 font-medium mt-1">
                         Your Business conversion request was not approved.
                         {pendingRequest?.reviewNote && <span className="block mt-1 text-red-500">Reason: {pendingRequest.reviewNote}</span>}
@@ -526,7 +526,7 @@ export default function SettingsPage() {
                   <SettingsCard className="p-6 sm:p-8 border-2 border-indigo-500/20 animate-in slide-in-from-bottom-4">
                     <div className="flex items-center justify-between mb-8">
                        <div>
-                         <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Convert to Business</h3>
+                         <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal">Convert to Business</h3>
                          <p className="text-xs text-secondary-400 font-bold uppercase tracking-wider mt-1">Tell us about your business</p>
                        </div>
                        <button onClick={() => setShowBusinessForm(false)} className="p-2 hover:bg-secondary-50 dark:hover:bg-secondary-800 rounded-xl transition-colors"><X className="w-5 h-5 text-secondary-400" /></button>
@@ -817,7 +817,7 @@ export default function SettingsPage() {
                                      {myTeam.members?.[0]?.status === 'APPROVED' ? <CheckCircle className="w-8 h-8" /> : <Clock className="w-8 h-8" />}
                                   </div>
                                   <div>
-                                     <p className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+                                     <p className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-normal">
                                         {myTeam.members?.[0]?.status === 'APPROVED' ? 'Active Alliance Member' : 'Request is Under Review'}
                                      </p>
                                      <p className="text-xs text-secondary-500 font-medium mt-1">

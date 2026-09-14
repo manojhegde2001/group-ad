@@ -26,7 +26,7 @@ export function PowerTeamGrid({ teams, isLoading }: PowerTeamGridProps) {
         <div className="w-20 h-20 rounded-[2rem] bg-secondary-50 dark:bg-secondary-800/50 flex items-center justify-center text-secondary-200 dark:text-secondary-700 mb-6">
           <Building className="w-10 h-10" />
         </div>
-        <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">
+        <h3 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal mb-2">
           No Power Teams Found
         </h3>
         <p className="text-sm text-secondary-500 max-w-xs mx-auto">

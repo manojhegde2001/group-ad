@@ -87,7 +87,7 @@ export default function PowerTeamSettingsPage() {
                     <SettingsIcon className="w-5 h-5" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">Alliance Settings</h1>
+                    <h1 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">Alliance Settings</h1>
                     <p className="text-[9px] font-black text-secondary-400 uppercase tracking-widest leading-none mt-0.5">{team.name}</p>
                 </div>
             </div>

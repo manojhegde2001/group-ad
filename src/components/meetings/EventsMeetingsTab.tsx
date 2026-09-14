@@ -56,7 +56,7 @@ export default function EventsMeetingsTab() {
             <div className="mb-6">
                 <div className="flex items-center gap-3 mb-1">
                     <CalendarRange className="w-5 h-5 text-primary-500" />
-                    <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+                    <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">
                         1:1 Business Meetings
                     </h2>
                 </div>
@@ -104,7 +104,7 @@ export default function EventsMeetingsTab() {
                     <div className="w-14 h-14 bg-secondary-50 dark:bg-secondary-800 rounded-full flex items-center justify-center mb-4">
                         <CalendarRange className="w-7 h-7 text-secondary-300" />
                     </div>
-                    <h3 className="text-base font-black text-secondary-900 dark:text-white uppercase tracking-tight mb-2">
+                    <h3 className="text-base font-black text-secondary-900 dark:text-white uppercase tracking-normal mb-2">
                         {emptyMessages[subTab].title}
                     </h3>
                     <p className="text-sm text-secondary-500 dark:text-secondary-400 max-w-xs">

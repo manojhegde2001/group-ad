@@ -45,7 +45,7 @@ export function ConnectionsModal({ isOpen, onClose }: ConnectionsModalProps) {
         <div className="flex flex-col flex-1 min-h-0">
             {/* Header */}
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-secondary-100 dark:border-secondary-800 shrink-0">
-                <h2 className="text-lg sm:text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">
+                <h2 className="text-lg sm:text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">
                     Your Circle
                     {connections.length > 0 && (
                         <span className="ml-2 text-secondary-400 dark:text-secondary-500">{connections.length}</span>

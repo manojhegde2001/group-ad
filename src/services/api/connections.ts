@@ -25,8 +25,8 @@ export const connectionService = {
     removeConnection: (targetUserId: string) => 
         apiClient.delete<any>(`/api/connections/by-user/${targetUserId}`),
         
-    getConnections: () => 
-        apiClient.get<{ connections: Connection[] }>('/api/connections'),
+    getConnections: (status?: 'PENDING' | 'ACCEPTED') =>
+        apiClient.get<{ connections: Connection[] }>(`/api/connections${status ? `?status=${status}` : ''}`),
         
     getConnectionWithUser: (userId: string) => 
         apiClient.get<any>(`/api/connections/by-user/${userId}`),

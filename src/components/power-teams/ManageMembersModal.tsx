@@ -54,7 +54,7 @@ export function ManageMembersModal() {
                             <Users className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">Manage Partners</h2>
+                            <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">Manage Partners</h2>
                             <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-0.5">{activeTeam.name}</p>
                         </div>
                     </div>

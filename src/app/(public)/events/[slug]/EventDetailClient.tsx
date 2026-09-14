@@ -256,7 +256,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                                             <div className="w-10 h-10 rounded-full border border-secondary-100 dark:border-secondary-800 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-all font-semibold">
                                                 <ExternalLink className="w-4 h-4 text-secondary-400 group-hover:text-primary-500" />
                                             </div>
-                                            <span className="text-[10px] font-bold text-secondary-400 group-hover:text-secondary-900 dark:group-hover:text-white uppercase tracking-tighter transition-colors">Add to Cal</span>
+                                            <span className="text-[10px] font-bold text-secondary-400 group-hover:text-secondary-900 dark:group-hover:text-white uppercase tracking-normal transition-colors">Add to Cal</span>
                                         </button>
                                     </div>
                                 </div>

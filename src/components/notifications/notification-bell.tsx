@@ -150,7 +150,7 @@ export function NotificationBell({ isOpen: controlledOpen, onOpenChange }: Notif
                                 <div className="w-16 h-16 bg-secondary-50 dark:bg-secondary-800 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
                                     <Bell className="w-8 h-8 text-secondary-200 dark:text-secondary-700" />
                                 </div>
-                                <h4 className="text-secondary-900 dark:text-white font-black uppercase text-xs tracking-tight">All caught up!</h4>
+                                <h4 className="text-secondary-900 dark:text-white font-black uppercase text-xs tracking-normal">All caught up!</h4>
                                 <p className="text-[11px] text-secondary-500 mt-1 uppercase tracking-widest leading-relaxed">Notifications will appear here as they arrive.</p>
                             </div>
                         ) : (

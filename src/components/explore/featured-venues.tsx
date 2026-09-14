@@ -31,7 +31,7 @@ export function FeaturedVenues() {
           <div className="p-2 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400">
             <Building2 className="w-4 h-4" />
           </div>
-          <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+          <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">
             Discovery Spaces
           </h2>
         </div>

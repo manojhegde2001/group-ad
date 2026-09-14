@@ -73,7 +73,7 @@ export function SaveToBoardModal() {
     >
       <div className="relative w-full max-w-sm bg-white dark:bg-secondary-950 rounded-3xl shadow-2xl overflow-hidden m-auto border border-secondary-100 dark:border-secondary-800 animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-secondary-100 dark:border-secondary-800">
-          <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tighter">Save to board</h2>
+          <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">Save to board</h2>
           <button 
             onClick={close}
             className="p-1.5 rounded-full hover:bg-secondary-100 dark:hover:bg-secondary-800 text-secondary-500 transition-colors"
@@ -172,7 +172,7 @@ export function SaveToBoardModal() {
                         <Plus className="w-8 h-8 text-secondary-200" />
                     </div>
                     <div>
-                        <p className="font-black text-secondary-900 dark:text-white uppercase tracking-tight">No boards yet</p>
+                        <p className="font-black text-secondary-900 dark:text-white uppercase tracking-normal">No boards yet</p>
                         <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-widest mt-1">Create your first board above</p>
                     </div>
                 </div>

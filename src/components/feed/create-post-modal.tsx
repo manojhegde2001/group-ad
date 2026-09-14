@@ -314,7 +314,7 @@ export function CreatePostModal() {
                     <div className="absolute inset-0 z-50 bg-primary-500/10 backdrop-blur-[2px] flex flex-col items-center justify-center border-4 border-dashed border-primary-500 rounded-3xl animate-in fade-in duration-200 pointer-events-none">
                         <div className="bg-white dark:bg-secondary-900 p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
                             <Upload className="w-10 h-10 text-primary-500 animate-bounce" />
-                            <p className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Drop to Upload</p>
+                            <p className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal">Drop to Upload</p>
                             <p className="text-sm text-secondary-500">Release to add files to your post</p>
                         </div>
                     </div>
@@ -356,7 +356,7 @@ export function CreatePostModal() {
                             <CheckCircle className="w-10 h-10 text-green-500" />
                         </div>
                         <div>
-                            <p className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">Post Published!</p>
+                            <p className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">Post Published!</p>
                             <p className="text-sm text-secondary-500">Your content is now visible to the community.</p>
                         </div>
                     </div>

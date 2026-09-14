@@ -83,7 +83,7 @@ export function CreateTeamModal() {
               <Building className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">Create Power Team</h2>
+              <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">Create Power Team</h2>
               <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-0.5">Start your industry alliance</p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export function CreateTeamModal() {
                   {visibility === 'PUBLIC' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                </div>
                <div>
-                  <p className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-tight">{visibility} TEAM</p>
+                  <p className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-normal">{visibility} TEAM</p>
                   <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-widest">{visibility === 'PUBLIC' ? 'Visible to everyone' : 'By invite only'}</p>
                </div>
             </div>

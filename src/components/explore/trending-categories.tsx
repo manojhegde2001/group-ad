@@ -64,7 +64,7 @@ export function TrendingCategories({ initialData }: { initialData?: any }) {
           <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
             <Flame className="w-4 h-4" />
           </div>
-          <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+          <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">
             Trending Hubs
           </h2>
         </div>

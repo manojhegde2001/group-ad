@@ -41,7 +41,7 @@ export const PowerTeamSuggestions = memo(function PowerTeamSuggestions({ team, v
             <Zap className="w-4 h-4 fill-current" />
           </div>
           <div>
-            <h3 className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+            <h3 className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-normal">
               Alliance Partners
             </h3>
             <p className="text-[9px] font-black text-secondary-400 uppercase tracking-widest mt-0.5 leading-none">

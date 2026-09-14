@@ -86,7 +86,7 @@ export function EditTeamModal() {
               <Building className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-tight">Edit Power Team</h2>
+              <h2 className="text-xl font-black text-secondary-900 dark:text-white uppercase tracking-normal">Edit Power Team</h2>
               <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-0.5">Adjust your alliance settings</p>
             </div>
           </div>
@@ -131,7 +131,7 @@ export function EditTeamModal() {
                   {visibility === 'PUBLIC' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                </div>
                <div>
-                  <p className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-tight">{visibility} TEAM</p>
+                  <p className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-normal">{visibility} TEAM</p>
                </div>
             </div>
             <div className="flex items-center gap-1">

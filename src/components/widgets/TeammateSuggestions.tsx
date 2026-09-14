@@ -49,7 +49,7 @@ export const TeammateSuggestions = memo(function TeammateSuggestions({ className
                 <div className="w-7 h-7 rounded-lg bg-primary-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-primary-500/20">
                     <Zap className="w-3.5 h-3.5 fill-current" />
                 </div>
-                <h3 className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+                <h3 className="text-xs font-black text-secondary-900 dark:text-white uppercase tracking-normal">
                     Alliance Discovery
                 </h3>
             </div>

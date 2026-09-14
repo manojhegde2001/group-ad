@@ -135,7 +135,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
       {/* Visual Identity Section */}
       <section className="space-y-6">
         <div>
-          <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">Visual Identity</h3>
+          <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal">Visual Identity</h3>
           <p className="text-xs text-secondary-500 font-medium mt-1 uppercase tracking-widest">Update your team&apos;s logo and banner</p>
         </div>
 
@@ -239,7 +239,7 @@ export function TeamSettingsForm({ team }: TeamSettingsFormProps) {
                 {visibility === 'PUBLIC' ? <Globe className="w-7 h-7" /> : <Lock className="w-7 h-7" />}
              </div>
              <div>
-                <h4 className="font-black text-secondary-900 dark:text-white uppercase tracking-tight">{visibility} ALLIANCE</h4>
+                <h4 className="font-black text-secondary-900 dark:text-white uppercase tracking-normal">{visibility} ALLIANCE</h4>
                 <p className="text-[10px] text-secondary-500 font-bold uppercase tracking-widest mt-1">
                   {visibility === 'PUBLIC' ? 'Visible to all members' : 'Visible only to team members'}
                 </p>

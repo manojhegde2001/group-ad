@@ -47,7 +47,7 @@ export function PowerTeamCard({ team, className }: PowerTeamCardProps) {
         {/* Pending Badge Notification */}
         {(isCreator || isAdmin) && pendingCount > 0 && (
           <div className="absolute top-4 right-4 animate-pulse">
-            <div className="px-2 py-1 rounded-lg bg-red-500 text-white text-[8px] font-black uppercase tracking-tighter shadow-lg border border-red-400">
+            <div className="px-2 py-1 rounded-lg bg-red-500 text-white text-[8px] font-black uppercase tracking-normal shadow-lg border border-red-400">
               {pendingCount} Pending Requests
             </div>
           </div>

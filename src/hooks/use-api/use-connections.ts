@@ -9,6 +9,14 @@ export const useConnections = () => {
     });
 };
 
+export const usePendingConnections = (enabled: boolean = true) => {
+    return useQuery({
+        queryKey: ['connections', 'pending'],
+        queryFn: () => connectionService.getConnections('PENDING'),
+        enabled,
+    });
+};
+
 export const useConnectionWithUser = (userId: string) => {
     return useQuery({
         queryKey: ['connections', 'user', userId],

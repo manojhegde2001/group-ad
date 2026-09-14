@@ -60,7 +60,7 @@ export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userTy
         <X className="w-8 h-8 text-red-500" />
       </div>
       <div className="text-center">
-        <p className="font-black uppercase tracking-tight">Analysis Interrupted</p>
+        <p className="font-black uppercase tracking-normal">Analysis Interrupted</p>
         <p className="text-[10px] font-bold text-secondary-400 mt-1 uppercase">{(error as any)?.message || 'Failed to fetch data'}</p>
       </div>
       <button 
@@ -75,7 +75,7 @@ export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userTy
   if (!data) return (
     <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 text-secondary-500 bg-white dark:bg-secondary-900 rounded-[2rem] border border-secondary-100 dark:border-secondary-800">
       <BarChart3 className="w-12 h-12 text-secondary-200" />
-      <p className="font-bold text-sm uppercase tracking-tight">No analytics data available yet</p>
+      <p className="font-bold text-sm uppercase tracking-normal">No analytics data available yet</p>
     </div>
   );
 
@@ -142,7 +142,7 @@ export default function AnalyticsDashboard({ userType = 'INDIVIDUAL' }: { userTy
       {/* Main Chart */}
       <Card className="p-6 border-none shadow-sm dark:bg-secondary-900/50 rounded-[2rem] overflow-hidden">
         <div className="mb-8">
-            <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-tight">
+            <h3 className="text-lg font-black text-secondary-900 dark:text-white uppercase tracking-normal">
                 {activeView === 'profile' ? 'Profile Visibility' : activeView === 'posts' ? 'Reach Trend' : 'Brand vs Market Growth'}
             </h3>
             <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mt-1">Last 30 Days Activity</p>

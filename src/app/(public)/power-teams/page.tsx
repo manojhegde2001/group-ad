@@ -58,7 +58,7 @@ export default function PowerTeamsPage() {
                       </div>
                   </div>
                   <div className="text-center space-y-2">
-                      <h2 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-tighter">Accessing Alliance</h2>
+                      <h2 className="text-sm font-black text-secondary-900 dark:text-white uppercase tracking-normal">Accessing Alliance</h2>
                       <p className="text-[10px] text-secondary-400 font-bold uppercase tracking-[0.2em]">
                           Entering {myTeam.name}...
                       </p>
